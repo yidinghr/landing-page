@@ -1,97 +1,453 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="facebook-domain-verification" content="jdcub9gljdlknfpaf0fwhvzg61k2nw" />
-    <title>YiDing International</title>
-    <style>
-    body {
-        margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
-        background-color: #000000; /* nền đen */
-        color: #FFD700; /* vàng */
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YiDing International — Business Verification</title>
+  <meta name="description" content="Official business verification page for YiDing International." />
+
+  <style>
+    :root{
+      --bg:#07070a;
+      --panel:#0c0c12;
+      --panel2:#0a0a10;
+      --text:#eaeaf0;
+      --muted:#a7a7b8;
+      --gold:#d6b25e;
+      --gold2:#f1d58a;
+      --line:rgba(214,178,94,.22);
+      --shadow: 0 24px 60px rgba(0,0,0,.55);
+      --radius: 18px;
     }
 
-    .container {
-        max-width: 900px;
-        margin: 60px auto;
-        background: #111111;
-        padding: 50px;
-        border-radius: 12px;
-        box-shadow: 0 0 40px rgba(255, 215, 0, 0.15);
-        border: 1px solid #FFD70033;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", "Noto Sans", "Liberation Sans", sans-serif;
+      background:
+        radial-gradient(900px 600px at 15% 10%, rgba(214,178,94,.12), transparent 60%),
+        radial-gradient(700px 500px at 85% 15%, rgba(241,213,138,.10), transparent 55%),
+        radial-gradient(900px 700px at 50% 120%, rgba(214,178,94,.08), transparent 55%),
+        linear-gradient(180deg, #050508, #07070a 30%, #050508);
+      color:var(--text);
+      line-height:1.5;
     }
 
-    h1 {
-        margin-top: 0;
-        font-size: 34px;
-        color: #FFD700;
-        text-align: center;
-        letter-spacing: 1px;
+    a{color:var(--gold2); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .container{
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 28px 18px 80px;
     }
 
-    h2 {
-        margin-top: 40px;
-        font-size: 20px;
-        color: #FFC300;
-        border-bottom: 1px solid #FFD70055;
-        padding-bottom: 8px;
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding: 14px 16px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(10,10,16,.55);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
     }
 
-    p {
-        line-height: 1.7;
-        margin: 10px 0;
-        color: #FFD700;
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 220px;
+    }
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      border:1px solid rgba(214,178,94,.45);
+      background:
+        radial-gradient(circle at 30% 25%, rgba(241,213,138,.45), transparent 55%),
+        linear-gradient(135deg, rgba(214,178,94,.20), rgba(0,0,0,.0)),
+        #0b0b10;
+      display:grid; place-items:center;
+      font-weight:700; letter-spacing:.5px;
+      color:var(--gold2);
+    }
+    .brand h1{
+      font-size: 14px;
+      margin:0;
+      letter-spacing:.4px;
+      font-weight:650;
+    }
+    .brand p{
+      margin:2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
     }
 
-    .highlight {
-        font-weight: bold;
-        color: #FFC300;
+    .pill{
+      display:flex; align-items:center; gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(214,178,94,.25);
+      background: rgba(12,12,18,.65);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: rgba(214,178,94,.9);
+      box-shadow: 0 0 0 4px rgba(214,178,94,.18);
     }
 
-    .footer {
-        margin-top: 50px;
-        font-size: 14px;
-        color: #B8860B;
-        text-align: center;
+    .hero{
+      margin-top: 22px;
+      padding: 28px 20px;
+      border-radius: calc(var(--radius) + 8px);
+      border: 1px solid rgba(214,178,94,.28);
+      background:
+        linear-gradient(180deg, rgba(12,12,18,.65), rgba(10,10,16,.55)),
+        radial-gradient(800px 400px at 20% 0%, rgba(241,213,138,.12), transparent 60%),
+        radial-gradient(600px 350px at 90% 10%, rgba(214,178,94,.10), transparent 55%);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
     }
-</style>
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:-40px -60px auto auto;
+      width: 240px; height: 240px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(214,178,94,.18), transparent 62%);
+      filter: blur(2px);
+      pointer-events:none;
+    }
+
+    .hero h2{
+      margin:0 0 10px;
+      font-size: 28px;
+      letter-spacing:.2px;
+      line-height:1.15;
+    }
+    .hero h2 span{
+      color: var(--gold2);
+      text-shadow: 0 0 20px rgba(214,178,94,.12);
+    }
+    .hero p{
+      margin:0;
+      color: var(--muted);
+      max-width: 72ch;
+      font-size: 14px;
+    }
+
+    .grid{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+    }
+    @media (max-width: 920px){
+      .grid{grid-template-columns:1fr}
+      .brand{min-width:unset}
+    }
+
+    .card{
+      border:1px solid rgba(214,178,94,.22);
+      background: linear-gradient(180deg, rgba(12,12,18,.72), rgba(10,10,16,.60));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(214,178,94,.18);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background: rgba(8,8,12,.35);
+    }
+    .card .hd h3{
+      margin:0;
+      font-size: 13px;
+      letter-spacing:.35px;
+      text-transform: uppercase;
+      color: rgba(241,213,138,.95);
+    }
+    .tag{
+      font-size: 12px;
+      color: var(--muted);
+      border:1px solid rgba(214,178,94,.22);
+      background: rgba(12,12,18,.55);
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+    .card .bd{
+      padding: 16px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px 12px;
+      align-items:start;
+    }
+    @media (max-width: 520px){
+      .kv{grid-template-columns:1fr}
+    }
+    .k{
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing:.15px;
+    }
+    .v{
+      color: var(--text);
+      font-size: 13px;
+      line-height:1.45;
+    }
+
+    .note{
+      margin-top: 14px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(214,178,94,.28);
+      background: rgba(10,10,16,.45);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .list{
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .list li{margin: 8px 0}
+    .list strong{color: rgba(241,213,138,.92); font-weight: 650}
+
+    .btnrow{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(214,178,94,.26);
+      background: rgba(12,12,18,.60);
+      color: var(--text);
+      font-size: 13px;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: rgba(241,213,138,.38)}
+    .btn .ic{
+      width:26px;height:26px;border-radius:10px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(214,178,94,.22);
+      color: var(--gold2);
+      background: rgba(10,10,16,.55);
+      font-weight: 700;
+    }
+
+    .footer{
+      margin-top: 18px;
+      color: rgba(167,167,184,.85);
+      font-size: 12px;
+      text-align:center;
+      padding: 14px 6px 0;
+      opacity: .95;
+    }
+    .hr{
+      height:1px;
+      background: linear-gradient(90deg, transparent, rgba(214,178,94,.30), transparent);
+      margin: 18px 0 10px;
+    }
+    code.inline{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border:1px solid rgba(214,178,94,.18);
+      background: rgba(10,10,16,.55);
+      color: rgba(241,213,138,.92);
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Yi Ding International</h1>
-        <p>
-            YiDing is the Human Resources and Recruitment division responsible for talent acquisition, employee management, and workforce development.
-        </p>
-
-        <h2>Legal Business Information</h2>
-        <p><span class="highlight">Legal Name:</span> Công Ty TNHH Nhất Đỉnh Quốc Tế</p>
-        <p><span class="highlight">Business Registration Number:</span> 0402310065 </p>
-        <p><span class="highlight">Head Office Address:</span> 45 Hưng Hóa 2, Phường Hòa Cường, Quận Hải Châu, Đà Nẵng, Việt Nam</p>
-
-        <h2>Operational Location</h2>
-        <p><span class="highlight">Recruitment & Operations Location:</span> Hoiana Resort & Golf, Duy Hải, Duy Xuyên, Quảng Nam, Việt Nam</p>
-
-        <h2>Contact Information</h2>
-        <p><span class="highlight">HR Contact:</span> +84 886399787</p>
-        <p><span class="highlight">Email:</span> yidinghr999@gmail.com</p>
-
-        <h2>About Us</h2>
-        <p>
-            YiDing specializes in recruitment, employee coordination, attendance management systems, and internal HR operations. 
-            We focus on structured workforce development and professional talent solutions.
-        </p>
-
-        <div class="footer">
-            © 2026 YiDing International. All rights reserved.
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">YI</div>
+        <div>
+          <h1>YiDing International</h1>
+          <p>Official Business Verification Page</p>
         </div>
+      </div>
+
+      <div class="pill" title="Status">
+        <span class="dot"></span>
+        <span>Verification Info • Updated: <span id="updatedAt">2026-02-23</span></span>
+      </div>
     </div>
+
+    <section class="hero">
+      <h2><span>Business Verification</span> — Company Identity & Contact</h2>
+      <p>
+        This page provides official company details for verification and compliance checks.
+        If you are a platform reviewer, please use the information below to validate business identity.
+      </p>
+      <div class="btnrow">
+        <a class="btn" href="#company">
+          <span class="ic">1</span> Company Details
+        </a>
+        <a class="btn" href="#contact">
+          <span class="ic">2</span> Contact & Support
+        </a>
+        <a class="btn" href="#docs">
+          <span class="ic">3</span> Verification Documents
+        </a>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- LEFT: company -->
+      <section class="card" id="company">
+        <div class="hd">
+          <h3>Company Information</h3>
+          <div class="tag">Legal identity</div>
+        </div>
+        <div class="bd">
+          <div class="kv">
+            <div class="k">Legal Company Name</div>
+            <div class="v"><strong>YiDing International</strong> (TODO: full legal name as on registration)</div>
+
+            <div class="k">Business Registration No.</div>
+            <div class="v">TODO: registration / tax ID number</div>
+
+            <div class="k">Date of Incorporation</div>
+            <div class="v">TODO: dd/mm/yyyy</div>
+
+            <div class="k">Country / Region</div>
+            <div class="v">Vietnam (TODO: confirm)</div>
+
+            <div class="k">Registered Address</div>
+            <div class="v">
+              TODO: full registered address (street, ward, district, city, postal code)
+            </div>
+
+            <div class="k">Operating Address</div>
+            <div class="v">
+              TODO: office/operational address (if different)
+            </div>
+
+            <div class="k">Business Scope</div>
+            <div class="v">
+              TODO: short description (e.g., recruitment & staffing services, HR operations support, etc.)
+            </div>
+
+            <div class="k">Website / Domain</div>
+            <div class="v">
+              <a href="https://chichiacompanion.com" target="_blank" rel="noopener">https://chichiacompanion.com</a>
+              <span class="k"> •</span> <span class="v">Hosted on Vercel</span>
+            </div>
+
+            <div class="k">Representative</div>
+            <div class="v">TODO: full name + title (e.g., Director / Legal Representative)</div>
+          </div>
+
+          <div class="note">
+            Reviewer note: If you need additional proof, please request it via the contacts below.
+            We can provide certified registration documents, address proof, and authorization letters.
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: contact -->
+      <section class="card" id="contact">
+        <div class="hd">
+          <h3>Contact</h3>
+          <div class="tag">For verification</div>
+        </div>
+        <div class="bd">
+          <div class="kv">
+            <div class="k">Email</div>
+            <div class="v">
+              <a href="mailto:chichicompanion@gmail.com">chichicompanion@gmail.com</a>
+              <div class="k">TODO: replace with official company email if available</div>
+            </div>
+
+            <div class="k">Phone</div>
+            <div class="v">TODO: official phone number</div>
+
+            <div class="k">Support Hours</div>
+            <div class="v">Mon–Sat, 09:00–18:00 (GMT+7) (TODO)</div>
+
+            <div class="k">Primary Contact</div>
+            <div class="v">TODO: name + department (e.g., HR Admin / Compliance)</div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="k">Quick Actions</div>
+          <div class="btnrow">
+            <a class="btn" href="mailto:chichicompanion@gmail.com?subject=Business%20Verification%20Request">
+              <span class="ic">@</span> Email Verification Team
+            </a>
+            <a class="btn" href="#docs">
+              <span class="ic">✓</span> See Documents
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- FULL WIDTH: docs -->
+      <section class="card" id="docs" style="grid-column: 1 / -1;">
+        <div class="hd">
+          <h3>Verification Documents</h3>
+          <div class="tag">Available upon request</div>
+        </div>
+        <div class="bd">
+          <p class="v" style="margin-top:0; color:var(--muted);">
+            For privacy and compliance, we do not publish sensitive documents publicly.
+            We can provide the following items to authorized reviewers.
+          </p>
+
+          <ul class="list">
+            <li><strong>Business Registration Certificate</strong> (scanned copy / certified copy)</li>
+            <li><strong>Tax Identification</strong> (if separate)</li>
+            <li><strong>Proof of Address</strong> (utility bill / lease / official letter)</li>
+            <li><strong>Representative ID</strong> (masked where required)</li>
+            <li><strong>Authorization Letter</strong> (if verification is handled by an authorized staff)</li>
+          </ul>
+
+          <div class="note">
+            Technical note: This site is a static verification page (HTML).
+            Deployment source: <code class="inline">yidinghr/landing-page</code> → Vercel.
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">
+      <div class="hr"></div>
+      © <span id="year"></span> YiDing International. All rights reserved.
+    </div>
+  </div>
+
+  <script>
+    // Auto year
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Update date label (you can hardcode if you want)
+    // document.getElementById("updatedAt").textContent = new Date().toISOString().slice(0,10);
+  </script>
 </body>
-
 </html>
-
-
-
-
-
