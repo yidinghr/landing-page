@@ -1,1 +1,362 @@
 
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+<meta charset="UTF-8">
+<title>修改工作排班</title>
+
+<style>
+
+body{
+margin:0;
+background:#000;
+color:#f4d51f;
+font-family:Arial;
+padding:20px;
+}
+
+/* header */
+
+.topBar{
+display:flex;
+gap:20px;
+align-items:center;
+margin-bottom:20px;
+}
+
+/* table */
+
+table{
+border-collapse:collapse;
+}
+
+th,td{
+border:2px solid #f4d51f;
+min-width:40px;
+height:40px;
+text-align:center;
+color:#f4d51f;
+}
+
+th{
+background:#111;
+}
+
+td{
+background:#000;
+}
+
+td input{
+width:100%;
+height:100%;
+background:none;
+border:none;
+text-align:center;
+color:#fff;
+font-weight:bold;
+}
+
+/* employee column */
+
+.nameCol{
+min-width:120px;
+}
+
+/* add button */
+
+.addBtn{
+background:#000;
+border:2px solid #f4d51f;
+color:#f4d51f;
+cursor:pointer;
+padding:5px 10px;
+}
+
+/* layout */
+
+.container{
+display:flex;
+gap:40px;
+}
+
+/* statistics */
+
+.statTable td{
+min-width:40px;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<h2>修改工作排班</h2>
+
+<div class="topBar">
+
+<label>開始</label>
+<input type="date" id="start">
+
+<label>結束</label>
+<input type="date" id="end">
+
+<button onclick="generateTable()">生成</button>
+
+<button onclick="addEmployee()" class="addBtn">+ 新員工</button>
+
+</div>
+
+<div class="container">
+
+<!-- MAIN TABLE -->
+
+<div>
+
+<table id="scheduleTable">
+<thead>
+<tr id="dateRow">
+<th class="nameCol">姓名</th>
+</tr>
+</thead>
+
+<tbody id="bodyRows">
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- RIGHT STAT TABLE -->
+
+<div>
+
+<h3>統計</h3>
+
+<table id="statTable" class="statTable">
+<thead>
+<tr id="statHeader"></tr>
+</thead>
+
+<tbody id="statBody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<!-- BOTTOM STAT -->
+
+<h3>每日統計</h3>
+
+<table id="bottomStat">
+<thead>
+<tr id="bottomHeader"></tr>
+</thead>
+
+<tbody id="bottomBody"></tbody>
+</table>
+
+
+<script>
+
+let dayCount=0
+let employees=[]
+
+/* generate table */
+
+function generateTable(){
+
+const start=new Date(document.getElementById("start").value)
+const end=new Date(document.getElementById("end").value)
+
+if(!start || !end)return
+
+const diff=(end-start)/(1000*60*60*24)+1
+
+dayCount=diff
+
+createHeader()
+renderEmployees()
+
+}
+
+
+/* create header */
+
+function createHeader(){
+
+const dateRow=document.getElementById("dateRow")
+dateRow.innerHTML='<th class="nameCol">姓名</th>'
+
+const start=new Date(document.getElementById("start").value)
+
+for(let i=0;i<dayCount;i++){
+
+let d=new Date(start)
+d.setDate(start.getDate()+i)
+
+let th=document.createElement("th")
+th.innerText=d.getDate()
+
+dateRow.appendChild(th)
+
+}
+
+}
+
+
+/* add employee */
+
+function addEmployee(){
+
+employees.push({
+name:"員工"+(employees.length+1),
+data:new Array(dayCount).fill("")
+})
+
+renderEmployees()
+
+}
+
+
+/* render table */
+
+function renderEmployees(){
+
+const body=document.getElementById("bodyRows")
+body.innerHTML=""
+
+employees.forEach((emp,empIndex)=>{
+
+let tr=document.createElement("tr")
+
+let nameCell=document.createElement("td")
+nameCell.innerText=emp.name
+tr.appendChild(nameCell)
+
+for(let i=0;i<dayCount;i++){
+
+let td=document.createElement("td")
+
+let input=document.createElement("input")
+
+input.value=emp.data[i]
+
+input.oninput=function(){
+
+emp.data[i]=this.value
+colorCell(td,this.value)
+updateStats()
+
+}
+
+colorCell(td,input.value)
+
+td.appendChild(input)
+
+tr.appendChild(td)
+
+}
+
+body.appendChild(tr)
+
+})
+
+updateStats()
+
+}
+
+
+/* color rules */
+
+function colorCell(cell,val){
+
+cell.style.background="#000"
+
+if(val=="休") cell.style.background="#444"
+if(val=="A") cell.style.background="green"
+if(val=="B") cell.style.background="blue"
+if(val=="C") cell.style.background="orange"
+
+}
+
+
+/* stats */
+
+function updateStats(){
+
+let map={}
+
+employees.forEach(emp=>{
+
+emp.data.forEach((v,i)=>{
+
+if(v==="")return
+
+if(!map[v]) map[v]=new Array(dayCount).fill(0)
+
+map[v][i]++
+
+})
+
+})
+
+renderStats(map)
+
+}
+
+
+/* render stats */
+
+function renderStats(map){
+
+const header=document.getElementById("statHeader")
+const body=document.getElementById("statBody")
+
+header.innerHTML=""
+body.innerHTML=""
+
+let hrow=document.createElement("tr")
+hrow.innerHTML="<th>符號</th>"
+header.appendChild(hrow)
+
+for(let i=0;i<dayCount;i++){
+
+let th=document.createElement("th")
+th.innerText=i+1
+hrow.appendChild(th)
+
+}
+
+Object.keys(map).forEach(k=>{
+
+let tr=document.createElement("tr")
+
+let td=document.createElement("td")
+td.innerText=k
+tr.appendChild(td)
+
+map[k].forEach(v=>{
+
+let t=document.createElement("td")
+t.innerText=v
+tr.appendChild(t)
+
+})
+
+body.appendChild(tr)
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
