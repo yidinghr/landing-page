@@ -531,7 +531,7 @@
 
     if (field.type === "file") {
       const attachments = normalizeAttachmentList(value, draft);
-      const pendingAttachment = options.pendingAttachment;
+      const pendingAttachments = Array.isArray(options.pendingAttachments) ? options.pendingAttachments : [];
 
       return [
         '<div class="employee-form__attachments">',
@@ -548,11 +548,11 @@
             "</div>"
           ].join("");
         }).join(""),
-        pendingAttachment
-          ? '<div class="employee-form__attachment-item employee-form__attachment-item--pending"><div class="employee-form__attachment-link employee-form__attachment-link--static">' + escapeHtml(pendingAttachment.name) + '</div><div class="employee-form__attachment-actions"><button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="confirm-pending-attachment" aria-label="確認檔案">✓</button><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="cancel-pending-attachment" aria-label="取消檔案">✕</button></div></div>'
-          : "",
+        pendingAttachments.map(function (attachment, index) {
+          return '<div class="employee-form__attachment-item employee-form__attachment-item--pending"><div class="employee-form__attachment-link employee-form__attachment-link--static">' + escapeHtml(attachment.name) + '</div><div class="employee-form__attachment-actions"><button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="confirm-pending-attachment" data-pending-index="' + String(index) + '" aria-label="確認檔案">✓</button><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="cancel-pending-attachment" data-pending-index="' + String(index) + '" aria-label="取消檔案">✕</button></div></div>';
+        }).join(""),
         '<div class="employee-form__file-row"><button type="button" class="employee-form__ghost-button employee-form__attachment-add" data-action="choose-employee-file"' + (!options.isEditable ? " disabled" : "") + ">" + escapeHtml(attachments.length ? "新增檔案" : "選擇檔案") + "</button></div>",
-        pendingAttachment ? '<div class="employee-form__field-hint">按 Enter 可直接確認目前檔案。</div>' : "",
+        pendingAttachments.length ? '<div class="employee-form__field-hint">按 Enter 可直接確認最上方待確認檔案。</div>' : "",
         "</div>"
       ].join("");
     }

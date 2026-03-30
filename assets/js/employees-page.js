@@ -12,6 +12,8 @@
     titleDraft: "",
     editingSubtitle: false,
     subtitleDraft: "",
+    editingMainNote: false,
+    mainNoteDraft: "",
     addingDepartment: false,
     departmentDraft: "",
     editingDepartmentId: "",
@@ -19,7 +21,8 @@
     openDepartmentMenuId: "",
     draggingDepartmentId: "",
     creatingTab: false,
-    tabDraft: { name: "", fieldId: "work.status", operator: "is", value: "在職" },
+    editingTabId: "",
+    tabDraft: { name: "", conditions: [] },
     openMoreTabs: false,
     showSearchInput: false,
     showFilterMenu: false,
@@ -34,21 +37,23 @@
     passwordError: "",
     noticeText: "",
     previewImageSrc: "",
-    pendingAttachment: null,
+    pendingAttachments: [],
     attachmentDeleteIndex: -1
   };
 
   let state = loadState();
   const dom = {};
   const TAB_FILTER_FIELDS = [
-    { id: "work.department", label: "部門", type: "select" },
     { id: "work.status", label: "狀態", type: "select", options: dataApi.STATUS_OPTIONS },
     { id: "basic.engName", label: "英文姓名", type: "text" },
     { id: "basic.vieName", label: "越文姓名", type: "text" },
+    { id: "basic.language", label: "語言", type: "text" },
     { id: "work.position", label: "職位", type: "select", options: dataApi.POSITION_OPTIONS },
+    { id: "work.titleJob", label: "職務", type: "select", options: dataApi.TITLE_JOB_OPTIONS },
     { id: "work.onboardDate", label: "入職日期", type: "date" },
     { id: "basic.age", label: "年齡", type: "number" },
-    { id: "basic.sex", label: "性別", type: "select", options: dataApi.SEX_OPTIONS }
+    { id: "basic.sex", label: "性別", type: "select", options: dataApi.SEX_OPTIONS },
+    { id: "basic.nationality", label: "國籍", type: "text" }
   ];
   const TAB_OPERATORS_BY_TYPE = {
     text: [
@@ -93,23 +98,56 @@
     return TAB_OPERATORS_BY_TYPE[field.type] || TAB_OPERATORS_BY_TYPE.text;
   }
 
-  function normalizeTab(tab, sourceState) {
-    const fieldId = getTabFieldConfig(tab && tab.fieldId).id;
-    const operators = getTabOperators(fieldId);
+  function createEmptyTabCondition(fieldId, sourceState) {
+    const resolvedFieldId = getTabFieldConfig(fieldId).id;
+    const field = getTabFieldConfig(resolvedFieldId);
+    const operators = getTabOperators(resolvedFieldId);
     const defaultOperator = operators[0] ? operators[0].id : "is";
-    const field = getTabFieldConfig(fieldId);
-    let nextValue = tab && tab.value !== undefined ? String(tab.value) : "";
+    let defaultValue = "";
 
-    if (field.type === "select" && !nextValue) {
-      nextValue = getFieldOptionList(fieldId, sourceState)[0] || "";
+    if (field.type === "select") {
+      defaultValue = getFieldOptionList(resolvedFieldId, sourceState)[0] || "";
     }
+
+    return {
+      id: "condition-" + String(Date.now()) + "-" + String(Math.random()).slice(2, 8),
+      fieldId: resolvedFieldId,
+      operator: defaultOperator,
+      value: defaultValue
+    };
+  }
+
+  function normalizeTabCondition(condition, sourceState) {
+    const baseCondition = createEmptyTabCondition(condition && condition.fieldId, sourceState);
+    const field = getTabFieldConfig(baseCondition.fieldId);
+    const operators = getTabOperators(baseCondition.fieldId);
+    const nextValue = condition && condition.value !== undefined ? String(condition.value) : baseCondition.value;
+
+    return {
+      id: condition && condition.id ? condition.id : baseCondition.id,
+      fieldId: baseCondition.fieldId,
+      operator: operators.some(function (option) {
+        return option.id === (condition && condition.operator);
+      }) ? condition.operator : baseCondition.operator,
+      value: field.type === "select" && !nextValue ? (getFieldOptionList(baseCondition.fieldId, sourceState)[0] || "") : nextValue
+    };
+  }
+
+  function normalizeTab(tab, sourceState) {
+    const conditions = Array.isArray(tab && tab.conditions) && tab.conditions.length
+      ? tab.conditions.map(function (condition) {
+        return normalizeTabCondition(condition, sourceState);
+      })
+      : [normalizeTabCondition({
+        fieldId: tab && tab.fieldId,
+        operator: tab && tab.operator,
+        value: tab && tab.value
+      }, sourceState)];
 
     return {
       id: tab && tab.id ? tab.id : "tab-" + Date.now(),
       name: tab && tab.name ? String(tab.name) : "",
-      fieldId: fieldId,
-      operator: operators.some(function (option) { return option.id === (tab && tab.operator); }) ? tab.operator : defaultOperator,
-      value: nextValue
+      conditions: conditions
     };
   }
 
@@ -172,6 +210,7 @@
     const nextState = Object.assign({}, initialState, rawState || {});
 
     nextState.interfaceMeta = Object.assign({}, initialState.interfaceMeta, rawState.interfaceMeta || {});
+    nextState.interfaceMeta.mainNotes = Object.assign({}, nextState.interfaceMeta.mainNotes || {}, rawState && rawState.interfaceMeta && rawState.interfaceMeta.mainNotes || {});
     nextState.departments = Array.isArray(rawState.departments) && rawState.departments.length ? rawState.departments : dataApi.cloneValue(initialState.departments);
     nextState.tabsByDepartment = Object.assign({}, initialState.tabsByDepartment, rawState.tabsByDepartment || {});
     nextState.activeTabByDepartment = Object.assign({}, initialState.activeTabByDepartment, rawState.activeTabByDepartment || {});
@@ -218,6 +257,17 @@
     return getDepartmentMap(state)[state.selectedDepartmentId] || getAllDepartments()[0];
   }
 
+  function getDefaultMainNote(departmentId) {
+    return departmentId === dataApi.RETIRED_DEPARTMENT.id
+      ? "離職名單預設依最後工作日排序。"
+      : "點擊員工卡片可展開右側詳細資料。";
+  }
+
+  function getMainNote(departmentId) {
+    const noteMap = state.interfaceMeta.mainNotes || {};
+    return noteMap[departmentId] || getDefaultMainNote(departmentId);
+  }
+
   function isRetiredView() {
     return state.selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id;
   }
@@ -252,10 +302,10 @@
     const currentDraft = getCurrentDraftEmployee();
 
     if (uiState.detailMode === "add") {
-      return formApi.hasMeaningfulEmployeeData(currentDraft) || uiState.avatarDirty || Boolean(uiState.pendingAttachment);
+      return formApi.hasMeaningfulEmployeeData(currentDraft) || uiState.avatarDirty || uiState.pendingAttachments.length > 0;
     }
 
-    return JSON.stringify(currentDraft) !== JSON.stringify(getCurrentReferenceEmployee()) || uiState.avatarDirty || Boolean(uiState.pendingAttachment);
+    return JSON.stringify(currentDraft) !== JSON.stringify(getCurrentReferenceEmployee()) || uiState.avatarDirty || uiState.pendingAttachments.length > 0;
   }
 
   function buildShell() {
@@ -273,7 +323,7 @@
       '<div id="employeesModalMount" class="employees-modal-root"></div>',
       '<input id="employeesInterfaceIconInput" class="employees-hidden" type="file" accept="image/*">',
       '<input id="employeesAvatarInput" class="employees-hidden" type="file" accept="image/*">',
-      '<input id="employeesFileInput" class="employees-hidden" type="file">',
+      '<input id="employeesFileInput" class="employees-hidden" type="file" multiple>',
       "</div>"
     ].join("");
 
@@ -317,6 +367,10 @@
       return employee.work.department.preset === "其他" ? employee.work.department.other || "其他" : employee.work.department.preset;
     }
 
+    if (fieldId === "work.titleJob") {
+      return employee.work.titleJob.preset === "其他" ? employee.work.titleJob.other || "其他" : employee.work.titleJob.preset;
+    }
+
     if (fieldId === "work.onboardDate") {
       return formApi.formatDateParts(employee.work.onboardDate);
     }
@@ -337,24 +391,36 @@
     }) || null;
   }
 
-  function formatTabSummary(tab) {
-    const field = getTabFieldConfig(tab.fieldId);
-    const operator = getTabOperators(tab.fieldId).find(function (option) {
-      return option.id === tab.operator;
+  function formatTabConditionSummary(condition) {
+    const field = getTabFieldConfig(condition.fieldId);
+    const operator = getTabOperators(condition.fieldId).find(function (option) {
+      return option.id === condition.operator;
     });
 
-    return [field.label, operator ? operator.label : "", tab.value].filter(Boolean).join(" ");
+    return [field.label, operator ? operator.label : "", condition.value].filter(Boolean).join(" ");
   }
 
-  function doesEmployeeMatchTab(employee, tab) {
-    if (!tab || !tab.fieldId || !tab.operator) {
+  function formatTabSummary(tab) {
+    const conditions = Array.isArray(tab && tab.conditions) ? tab.conditions : [];
+
+    if (!conditions.length) {
+      return "";
+    }
+
+    return conditions.map(function (condition) {
+      return formatTabConditionSummary(condition);
+    }).join(" 且 ");
+  }
+
+  function doesEmployeeMatchCondition(employee, condition) {
+    if (!condition || !condition.fieldId || !condition.operator) {
       return true;
     }
 
-    const field = getTabFieldConfig(tab.fieldId);
-    const rawValue = resolveEmployeeFieldValue(employee, tab.fieldId);
+    const field = getTabFieldConfig(condition.fieldId);
+    const rawValue = resolveEmployeeFieldValue(employee, condition.fieldId);
     const employeeValue = String(rawValue || "").trim();
-    const filterValue = String(tab.value || "").trim();
+    const filterValue = String(condition.value || "").trim();
 
     if (!filterValue) {
       return true;
@@ -365,11 +431,11 @@
         return false;
       }
 
-      if (tab.operator === "before") {
+      if (condition.operator === "before") {
         return employeeValue < filterValue;
       }
 
-      if (tab.operator === "after") {
+      if (condition.operator === "after") {
         return employeeValue > filterValue;
       }
 
@@ -384,11 +450,11 @@
         return false;
       }
 
-      if (tab.operator === "before") {
+      if (condition.operator === "before") {
         return employeeNumber < filterNumber;
       }
 
-      if (tab.operator === "after") {
+      if (condition.operator === "after") {
         return employeeNumber > filterNumber;
       }
 
@@ -398,15 +464,27 @@
     const left = employeeValue.toLowerCase();
     const right = filterValue.toLowerCase();
 
-    if (tab.operator === "contains") {
+    if (condition.operator === "contains") {
       return left.indexOf(right) >= 0;
     }
 
-    if (tab.operator === "isNot") {
+    if (condition.operator === "isNot") {
       return left !== right;
     }
 
     return left === right;
+  }
+
+  function doesEmployeeMatchTab(employee, tab) {
+    const conditions = Array.isArray(tab && tab.conditions) ? tab.conditions : [];
+
+    if (!conditions.length) {
+      return true;
+    }
+
+    return conditions.every(function (condition) {
+      return doesEmployeeMatchCondition(employee, condition);
+    });
   }
 
   function getVisibleEmployees() {
@@ -556,10 +634,9 @@
       '<button type="button" class="employees-sidebar__icon-button" data-action="choose-interface-icon" data-tooltip="點擊更換介面圖片">',
       '<img class="employees-sidebar__icon-preview" src="' + escapeHtml(state.interfaceMeta.iconSrc) + '" alt="介面圖示">',
       "</button>",
-      '<div class="employees-sidebar__icon-tools">',
-      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="choose-interface-icon" aria-label="更換介面圖片">' + getIconSvg("edit") + "</button>",
-      '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="reset-interface-icon" ' + (state.interfaceMeta.customIcon ? "" : "disabled") + ' aria-label="還原介面圖片">' + getIconSvg("trash") + "</button>",
-      "</div>",
+      state.interfaceMeta.customIcon
+        ? '<div class="employees-sidebar__icon-tools"><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="reset-interface-icon" aria-label="還原介面圖片">' + getIconSvg("trash") + "</button></div>"
+        : "",
       "</div>",
       '<div class="employees-sidebar__text">',
       '<div class="employees-sidebar__title-row">',
@@ -604,7 +681,7 @@
         ].join("");
       }).join(""),
       '<div class="employees-department-fixed employees-department--retired">',
-      '<button type="button" class="employees-department' + (selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id ? " employees-department--active" : "") + '" data-action="select-department" data-department-id="' + escapeHtml(dataApi.RETIRED_DEPARTMENT.id) + '"><div class="employees-department__grip employees-department__grip--empty" aria-hidden="true"></div><div class="employees-department__name">' + escapeHtml(dataApi.RETIRED_DEPARTMENT.name) + '</div><div class="employees-department__menu employees-department__menu--empty"></div></button>',
+      '<button type="button" class="employees-department employees-department--retired-row' + (selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id ? " employees-department--active" : "") + '" data-action="select-department" data-department-id="' + escapeHtml(dataApi.RETIRED_DEPARTMENT.id) + '"><div class="employees-department__grip employees-department__grip--empty" aria-hidden="true"></div><div class="employees-department__name">' + escapeHtml(dataApi.RETIRED_DEPARTMENT.name) + "</div></button>",
       "</div>",
       '<div class="employees-department-add">',
       uiState.addingDepartment
@@ -618,13 +695,20 @@
 
   function renderMainHeader() {
     const selectedDepartment = getSelectedDepartment();
-    const isRetired = isRetiredView();
+    const mainNote = getMainNote(selectedDepartment.id);
 
     dom.mainHeaderMount.innerHTML = [
       '<div class="employees-main__title-row">',
       '<div class="employees-main__title-wrap">',
       '<h1>' + escapeHtml(selectedDepartment.name) + "</h1>",
-      '<div class="employees-main__title-note">' + (isRetired ? "離職名單預設依最後工作日排序。" : "點擊員工卡片可展開右側詳細資料。") + "</div>",
+      '<div class="employees-main__note-row">',
+      uiState.editingMainNote
+        ? '<input id="employeesMainNoteInput" class="employees-main__title-note-input" type="text" value="' + escapeHtml(uiState.mainNoteDraft) + '">'
+        : '<div class="employees-main__title-note">' + escapeHtml(mainNote) + "</div>",
+      '<div class="employees-main__note-actions">',
+      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-main-note-edit" aria-label="編輯主區說明">' + getIconSvg("edit") + "</button>",
+      "</div>",
+      "</div>",
       "</div>",
       '<div class="employees-main__actions"></div>',
       "</div>"
@@ -672,29 +756,50 @@
     ].join("");
   }
 
-  function renderTabValueControl() {
-    const draftField = getTabFieldConfig(uiState.tabDraft.fieldId);
+  function renderTabValueControl(condition, conditionIndex) {
+    const draftField = getTabFieldConfig(condition.fieldId);
+    const inputAttrs = 'data-tab-condition-index="' + String(conditionIndex) + '" data-tab-condition-key="value"';
 
     if (draftField.type === "select") {
-      return '<div class="employees-toolbar__composer-field"><label>內容</label><select id="employeesTabValueInput">' + getFieldOptionList(draftField.id).map(function (option) {
-        return '<option value="' + escapeHtml(option) + '"' + (uiState.tabDraft.value === option ? " selected" : "") + ">" + escapeHtml(option) + "</option>";
+      return '<div class="employees-toolbar__composer-field"><label>內容</label><select ' + inputAttrs + '>' + getFieldOptionList(draftField.id).map(function (option) {
+        return '<option value="' + escapeHtml(option) + '"' + (condition.value === option ? " selected" : "") + ">" + escapeHtml(option) + "</option>";
       }).join("") + "</select></div>";
     }
 
     if (draftField.type === "date") {
-      return '<div class="employees-toolbar__composer-field"><label>日期</label><input type="text" id="employeesTabValueInput" value="' + escapeHtml(uiState.tabDraft.value) + '" placeholder="2026-03-31"></div>';
+      return '<div class="employees-toolbar__composer-field"><label>日期</label><input type="text" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="2026-03-31"></div>';
     }
 
     if (draftField.type === "number") {
-      return '<div class="employees-toolbar__composer-field"><label>數值</label><input type="number" id="employeesTabValueInput" value="' + escapeHtml(uiState.tabDraft.value) + '" placeholder="0"></div>';
+      return '<div class="employees-toolbar__composer-field"><label>數值</label><input type="number" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="0"></div>';
     }
 
-    return '<div class="employees-toolbar__composer-field"><label>內容</label><input type="text" id="employeesTabValueInput" value="' + escapeHtml(uiState.tabDraft.value) + '" placeholder="請輸入條件"></div>';
+    return '<div class="employees-toolbar__composer-field"><label>內容</label><input type="text" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="請輸入條件"></div>';
+  }
+
+  function renderTabConditionComposer(condition, conditionIndex, totalConditions) {
+    return [
+      '<div class="employees-toolbar__condition-row">',
+      '<div class="employees-toolbar__composer-field"><label>欄位</label><select data-tab-condition-index="' + String(conditionIndex) + '" data-tab-condition-key="fieldId">' + TAB_FILTER_FIELDS.map(function (field) {
+        return '<option value="' + escapeHtml(field.id) + '"' + (condition.fieldId === field.id ? " selected" : "") + ">" + escapeHtml(field.label) + "</option>";
+      }).join("") + "</select></div>",
+      '<div class="employees-toolbar__composer-field"><label>條件</label><select data-tab-condition-index="' + String(conditionIndex) + '" data-tab-condition-key="operator">' + getTabOperators(condition.fieldId).map(function (operator) {
+        return '<option value="' + escapeHtml(operator.id) + '"' + (condition.operator === operator.id ? " selected" : "") + ">" + escapeHtml(operator.label) + "</option>";
+      }).join("") + "</select></div>",
+      renderTabValueControl(condition, conditionIndex),
+      '<div class="employees-toolbar__condition-actions">' +
+        (totalConditions > 1
+          ? '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="remove-tab-condition" data-tab-condition-index="' + String(conditionIndex) + '" aria-label="移除條件">✕</button>'
+          : "") +
+      "</div>",
+      "</div>"
+    ].join("");
   }
 
   function renderToolbar() {
     const visibleTabsData = getVisibleTabs();
     const activeTabId = state.activeTabByDepartment[state.selectedDepartmentId] || "";
+    const activeTab = getActiveTabConfig();
 
     if (isRetiredView()) {
       dom.toolbarMount.innerHTML = [
@@ -729,18 +834,18 @@
           "</div>"
         : "",
       '<button type="button" class="employees-tab" data-action="start-create-tab" title="新增分頁">' + getIconSvg("plus") + "</button>",
+      activeTab && !uiState.creatingTab
+        ? '<div class="employees-tabs__actions"><button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="start-edit-tab" aria-label="編輯分頁">' + getIconSvg("edit") + '</button><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="delete-active-tab" aria-label="刪除分頁">✕</button></div>'
+        : "",
       "</div>",
       uiState.creatingTab
         ? '<div class="employees-toolbar__composer">' +
-          '<div class="employees-toolbar__composer-field"><label>分頁名稱</label><input type="text" id="employeesTabNameInput" value="' + escapeHtml(uiState.tabDraft.name) + '" placeholder="可留空，由條件自動命名"></div>' +
-          '<div class="employees-toolbar__composer-field"><label>欄位</label><select id="employeesTabFieldInput">' + TAB_FILTER_FIELDS.map(function (field) {
-            return '<option value="' + escapeHtml(field.id) + '"' + (uiState.tabDraft.fieldId === field.id ? " selected" : "") + ">" + escapeHtml(field.label) + "</option>";
-          }).join("") + "</select></div>" +
-          '<div class="employees-toolbar__composer-field"><label>條件</label><select id="employeesTabOperatorInput">' + getTabOperators(uiState.tabDraft.fieldId).map(function (operator) {
-            return '<option value="' + escapeHtml(operator.id) + '"' + (uiState.tabDraft.operator === operator.id ? " selected" : "") + ">" + escapeHtml(operator.label) + "</option>";
-          }).join("") + "</select></div>" +
-          renderTabValueControl() +
-          '<button type="button" class="employees-primary-button employees-toolbar__composer-confirm" data-action="confirm-create-tab">建立</button>' +
+          '<div class="employees-toolbar__composer-field employees-toolbar__composer-field--wide"><label>分頁名稱</label><input type="text" id="employeesTabNameInput" value="' + escapeHtml(uiState.tabDraft.name) + '" placeholder="可留空，由條件自動命名"></div>' +
+          '<div class="employees-toolbar__composer-note">同一分頁內的條件必須全部成立，才會顯示在這個分頁。</div>' +
+          uiState.tabDraft.conditions.map(function (condition, index) {
+            return renderTabConditionComposer(condition, index, uiState.tabDraft.conditions.length);
+          }).join("") +
+          '<div class="employees-toolbar__composer-footer"><button type="button" class="employees-secondary-button" data-action="add-tab-condition">' + getIconSvg("plus") + '<span>新增條件</span></button><button type="button" class="employees-secondary-button" data-action="cancel-tab-composer">取消</button><button type="button" class="employees-primary-button employees-toolbar__composer-confirm" data-action="confirm-create-tab">' + (uiState.editingTabId ? "儲存分頁" : "建立分頁") + "</button></div>" +
           "</div>"
         : "",
       "</div>",
@@ -886,7 +991,7 @@
       "</div>",
       '<div class="employees-avatar-box__meta">' + (isEditable ? "點擊頭像可預覽或更換" : "點擊頭像可放大預覽") + "</div>",
       "</div>",
-      '<div class="employee-form">' + formApi.renderEmployeeFormSections(draft, { isEditable: isEditable, statusLocked: uiState.detailMode === "add", pendingAttachment: uiState.pendingAttachment }) + "</div>",
+      '<div class="employee-form">' + formApi.renderEmployeeFormSections(draft, { isEditable: isEditable, statusLocked: uiState.detailMode === "add", pendingAttachments: uiState.pendingAttachments }) + "</div>",
       "</div>",
       !inRetired ? [
         '<div class="employees-detail__footer">',
@@ -999,12 +1104,21 @@
 
   function focusPendingInputs() {
     window.requestAnimationFrame(function () {
+      if (uiState.openModal === "password-delete" || uiState.openModal === "password-delete-attachment") {
+        const passwordInput = document.getElementById("employeesPasswordInput");
+        if (passwordInput) {
+          passwordInput.focus();
+        }
+        return;
+      }
+
       if (uiState.editingTitle) {
         const titleInput = document.getElementById("employeesTitleInput");
         if (titleInput) {
           titleInput.focus();
           titleInput.select();
         }
+        return;
       }
 
       if (uiState.editingSubtitle) {
@@ -1013,6 +1127,16 @@
           subtitleInput.focus();
           subtitleInput.select();
         }
+        return;
+      }
+
+      if (uiState.editingMainNote) {
+        const mainNoteInput = document.getElementById("employeesMainNoteInput");
+        if (mainNoteInput) {
+          mainNoteInput.focus();
+          mainNoteInput.select();
+        }
+        return;
       }
 
       if (uiState.addingDepartment) {
@@ -1021,20 +1145,7 @@
           departmentInput.focus();
           departmentInput.select();
         }
-      }
-
-      if (uiState.creatingTab) {
-        const tabInput = document.getElementById("employeesTabFieldInput") || document.getElementById("employeesTabNameInput");
-        if (tabInput) {
-          tabInput.focus();
-        }
-      }
-
-      if (uiState.openModal === "password-delete") {
-        const passwordInput = document.getElementById("employeesPasswordInput");
-        if (passwordInput) {
-          passwordInput.focus();
-        }
+        return;
       }
 
       if (uiState.editingDepartmentId) {
@@ -1042,6 +1153,14 @@
         if (editInput) {
           editInput.focus();
           editInput.select();
+        }
+        return;
+      }
+
+      if (uiState.creatingTab) {
+        const tabInput = document.getElementById("employeesTabNameInput") || document.querySelector("[data-tab-condition-index]");
+        if (tabInput) {
+          tabInput.focus();
         }
       }
     });
@@ -1082,7 +1201,7 @@
     uiState.draftEmployee = formApi.applyDerivedFields(draft);
     uiState.referenceEmployee = null;
     uiState.avatarDirty = false;
-    uiState.pendingAttachment = null;
+    uiState.pendingAttachments = [];
     renderAll();
   }
 
@@ -1098,7 +1217,7 @@
     uiState.draftEmployee = formApi.cloneDraft(employee);
     uiState.referenceEmployee = formApi.cloneDraft(employee);
     uiState.avatarDirty = false;
-    uiState.pendingAttachment = null;
+    uiState.pendingAttachments = [];
     renderAll();
   }
 
@@ -1112,8 +1231,8 @@
   }
 
   function saveEmployee() {
-    if (uiState.pendingAttachment) {
-      confirmPendingAttachment();
+    while (uiState.pendingAttachments.length) {
+      confirmPendingAttachment(0);
     }
 
     const draft = getCurrentDraftEmployee();
@@ -1145,7 +1264,7 @@
     uiState.draftEmployee = formApi.cloneDraft(serialized);
     uiState.referenceEmployee = formApi.cloneDraft(serialized);
     uiState.avatarDirty = false;
-    uiState.pendingAttachment = null;
+    uiState.pendingAttachments = [];
     renderAll();
   }
 
@@ -1155,7 +1274,7 @@
     uiState.draftEmployee = null;
     uiState.referenceEmployee = null;
     uiState.avatarDirty = false;
-    uiState.pendingAttachment = null;
+    uiState.pendingAttachments = [];
     uiState.attachmentDeleteIndex = -1;
     uiState.openModal = null;
     renderAll();
@@ -1249,11 +1368,42 @@
     renderSidebar();
   }
 
+  function toggleMainNoteEdit() {
+    uiState.editingMainNote = !uiState.editingMainNote;
+    uiState.mainNoteDraft = uiState.editingMainNote ? getMainNote(state.selectedDepartmentId) : "";
+    renderMainHeader();
+    focusPendingInputs();
+  }
+
+  function cancelMainNoteEdit() {
+    uiState.editingMainNote = false;
+    uiState.mainNoteDraft = "";
+    renderMainHeader();
+  }
+
+  function confirmMainNoteEdit() {
+    const trimmed = uiState.mainNoteDraft.trim();
+    state.interfaceMeta.mainNotes = Object.assign({}, state.interfaceMeta.mainNotes || {});
+
+    if (!trimmed) {
+      delete state.interfaceMeta.mainNotes[state.selectedDepartmentId];
+    } else {
+      state.interfaceMeta.mainNotes[state.selectedDepartmentId] = trimmed;
+    }
+
+    persistState();
+    uiState.editingMainNote = false;
+    uiState.mainNoteDraft = "";
+    renderMainHeader();
+  }
+
   function startAddDepartment() {
     uiState.editingTitle = false;
     uiState.titleDraft = "";
     uiState.editingSubtitle = false;
     uiState.subtitleDraft = "";
+    uiState.editingMainNote = false;
+    uiState.mainNoteDraft = "";
     uiState.editingDepartmentId = "";
     uiState.departmentEditDraft = "";
     uiState.openDepartmentMenuId = "";
@@ -1396,41 +1546,105 @@
 
   function startCreateTab() {
     uiState.creatingTab = true;
+    uiState.editingTabId = "";
     uiState.tabDraft = normalizeTab({
       name: "",
-      fieldId: "work.status",
-      operator: "is",
-      value: "在職"
+      conditions: [createEmptyTabCondition("work.status", state)]
     }, state);
     uiState.openMoreTabs = false;
     renderToolbar();
     focusPendingInputs();
   }
 
+  function cancelTabComposer() {
+    uiState.creatingTab = false;
+    uiState.editingTabId = "";
+    uiState.tabDraft = { name: "", conditions: [] };
+    renderToolbar();
+  }
+
+  function startEditTab() {
+    const activeTab = getActiveTabConfig();
+
+    if (!activeTab) {
+      return;
+    }
+
+    uiState.creatingTab = true;
+    uiState.editingTabId = activeTab.id;
+    uiState.tabDraft = normalizeTab(activeTab, state);
+    uiState.openMoreTabs = false;
+    renderToolbar();
+    focusPendingInputs();
+  }
+
+  function addTabCondition() {
+    if (!uiState.creatingTab) {
+      return;
+    }
+
+    uiState.tabDraft.conditions.push(createEmptyTabCondition("", state));
+    renderToolbar();
+  }
+
+  function removeTabCondition(conditionIndex) {
+    if (!uiState.creatingTab || uiState.tabDraft.conditions.length <= 1) {
+      return;
+    }
+
+    uiState.tabDraft.conditions.splice(conditionIndex, 1);
+    renderToolbar();
+  }
+
+  function deleteActiveTab() {
+    const activeTabId = state.activeTabByDepartment[state.selectedDepartmentId];
+    const departmentTabs = state.tabsByDepartment[state.selectedDepartmentId] || [];
+
+    if (!activeTabId) {
+      return;
+    }
+
+    state.tabsByDepartment[state.selectedDepartmentId] = departmentTabs.filter(function (tab) {
+      return tab.id !== activeTabId;
+    });
+    state.activeTabByDepartment[state.selectedDepartmentId] = state.tabsByDepartment[state.selectedDepartmentId][0]
+      ? state.tabsByDepartment[state.selectedDepartmentId][0].id
+      : "";
+    persistState();
+    renderToolbar();
+    renderCards();
+  }
+
   function confirmCreateTab() {
     const normalizedDraft = normalizeTab(uiState.tabDraft, state);
-    const trimmedValue = String(normalizedDraft.value || "").trim();
 
-    if (!trimmedValue) {
+    if (!normalizedDraft.conditions.length || normalizedDraft.conditions.some(function (condition) {
+      return !String(condition.value || "").trim();
+    })) {
       openNotice("請先設定分組條件。");
       return;
     }
 
     const nextTab = {
-      id: "tab-" + Date.now(),
+      id: uiState.editingTabId || "tab-" + Date.now(),
       name: normalizedDraft.name.trim() || formatTabSummary(normalizedDraft),
-      fieldId: normalizedDraft.fieldId,
-      operator: normalizedDraft.operator,
-      value: trimmedValue
+      conditions: normalizedDraft.conditions
     };
     const departmentTabs = state.tabsByDepartment[state.selectedDepartmentId] || [];
 
-    departmentTabs.push(nextTab);
-    state.tabsByDepartment[state.selectedDepartmentId] = departmentTabs;
+    if (uiState.editingTabId) {
+      state.tabsByDepartment[state.selectedDepartmentId] = departmentTabs.map(function (tab) {
+        return tab.id === uiState.editingTabId ? nextTab : tab;
+      });
+    } else {
+      departmentTabs.push(nextTab);
+      state.tabsByDepartment[state.selectedDepartmentId] = departmentTabs;
+    }
     state.activeTabByDepartment[state.selectedDepartmentId] = nextTab.id;
     persistState();
     uiState.creatingTab = false;
-    uiState.tabDraft = { name: "", fieldId: "work.status", operator: "is", value: "在職" };
+    uiState.editingTabId = "";
+    uiState.tabDraft = { name: "", conditions: [] };
     renderToolbar();
     renderCards();
   }
@@ -1444,6 +1658,10 @@
     return uiState.draftEmployee.other.attachments;
   }
 
+  function getPendingAttachments() {
+    return Array.isArray(uiState.pendingAttachments) ? uiState.pendingAttachments : [];
+  }
+
   function openAttachmentFileDialog(targetIndex) {
     if (!uiState.draftEmployee) {
       return;
@@ -1454,8 +1672,10 @@
     dom.fileInput.click();
   }
 
-  function confirmPendingAttachment() {
-    const pendingAttachment = uiState.pendingAttachment;
+  function confirmPendingAttachment(pendingIndex) {
+    const pendingAttachments = getPendingAttachments();
+    const resolvedIndex = typeof pendingIndex === "number" ? pendingIndex : 0;
+    const pendingAttachment = pendingAttachments[resolvedIndex];
 
     if (!pendingAttachment || !uiState.draftEmployee) {
       return;
@@ -1477,12 +1697,19 @@
       });
     }
 
-    uiState.pendingAttachment = null;
+    pendingAttachments.splice(resolvedIndex, 1);
     renderDetailPanel(true);
   }
 
-  function cancelPendingAttachment() {
-    uiState.pendingAttachment = null;
+  function cancelPendingAttachment(pendingIndex) {
+    const pendingAttachments = getPendingAttachments();
+    const resolvedIndex = typeof pendingIndex === "number" ? pendingIndex : 0;
+
+    if (resolvedIndex < 0 || resolvedIndex >= pendingAttachments.length) {
+      return;
+    }
+
+    pendingAttachments.splice(resolvedIndex, 1);
     renderDetailPanel(true);
   }
 
@@ -1628,10 +1855,22 @@
       return;
     }
 
+    if (action === "toggle-main-note-edit") {
+      if (uiState.editingMainNote) {
+        confirmMainNoteEdit();
+      } else {
+        toggleMainNoteEdit();
+      }
+      return;
+    }
+
     if (action === "select-department") {
       state.selectedDepartmentId = button.getAttribute("data-department-id") || departmentId;
       uiState.openDepartmentMenuId = "";
+      uiState.editingMainNote = false;
+      uiState.mainNoteDraft = "";
       uiState.creatingTab = false;
+      uiState.editingTabId = "";
       uiState.openMoreTabs = false;
       uiState.showDisplayMenu = false;
       uiState.showFilterMenu = false;
@@ -1723,6 +1962,31 @@
 
     if (action === "start-create-tab") {
       startCreateTab();
+      return;
+    }
+
+    if (action === "start-edit-tab") {
+      startEditTab();
+      return;
+    }
+
+    if (action === "delete-active-tab") {
+      deleteActiveTab();
+      return;
+    }
+
+    if (action === "add-tab-condition") {
+      addTabCondition();
+      return;
+    }
+
+    if (action === "remove-tab-condition") {
+      removeTabCondition(Number(button.getAttribute("data-tab-condition-index")));
+      return;
+    }
+
+    if (action === "cancel-tab-composer") {
+      cancelTabComposer();
       return;
     }
 
@@ -1821,12 +2085,12 @@
     }
 
     if (action === "confirm-pending-attachment") {
-      confirmPendingAttachment();
+      confirmPendingAttachment(Number(button.getAttribute("data-pending-index")));
       return;
     }
 
     if (action === "cancel-pending-attachment") {
-      cancelPendingAttachment();
+      cancelPendingAttachment(Number(button.getAttribute("data-pending-index")));
       return;
     }
 
@@ -1867,6 +2131,7 @@
       const clickedInsideEditableInput = event.target.closest("#employeesDepartmentInput")
         || event.target.closest("#employeesTitleInput")
         || event.target.closest("#employeesSubtitleInput")
+        || event.target.closest("#employeesMainNoteInput")
         || event.target.closest('[data-role="department-edit-input"]');
       let sidebarChanged = false;
       let toolbarChanged = false;
@@ -1922,6 +2187,11 @@
       return;
     }
 
+    if (target.id === "employeesMainNoteInput") {
+      uiState.mainNoteDraft = target.value;
+      return;
+    }
+
     if (target.id === "employeesDepartmentInput") {
       uiState.departmentDraft = target.value;
       return;
@@ -1937,25 +2207,34 @@
       return;
     }
 
-    if (target.id === "employeesTabFieldInput") {
-      const field = getTabFieldConfig(target.value);
-      const operators = getTabOperators(field.id);
+    if (target.hasAttribute("data-tab-condition-index")) {
+      const conditionIndex = Number(target.getAttribute("data-tab-condition-index"));
+      const conditionKey = target.getAttribute("data-tab-condition-key");
+      const draftCondition = uiState.tabDraft.conditions[conditionIndex];
 
-      uiState.tabDraft.fieldId = field.id;
-      uiState.tabDraft.operator = operators[0] ? operators[0].id : "is";
-      uiState.tabDraft.value = field.type === "select" ? (getFieldOptionList(field.id)[0] || "") : "";
-      renderToolbar();
-      focusPendingInputs();
-      return;
-    }
+      if (!draftCondition) {
+        return;
+      }
 
-    if (target.id === "employeesTabOperatorInput") {
-      uiState.tabDraft.operator = target.value;
-      return;
-    }
+      if (conditionKey === "fieldId") {
+        const field = getTabFieldConfig(target.value);
+        const operators = getTabOperators(field.id);
 
-    if (target.id === "employeesTabValueInput") {
-      uiState.tabDraft.value = target.value;
+        draftCondition.fieldId = field.id;
+        draftCondition.operator = operators[0] ? operators[0].id : "is";
+        draftCondition.value = field.type === "select" ? (getFieldOptionList(field.id)[0] || "") : "";
+
+        renderToolbar();
+        window.requestAnimationFrame(function () {
+          const nextTarget = dom.toolbarMount.querySelector('[data-tab-condition-index="' + String(conditionIndex) + '"][data-tab-condition-key="fieldId"]');
+          if (nextTarget) {
+            nextTarget.focus();
+          }
+        });
+        return;
+      } else {
+        draftCondition[conditionKey] = target.value;
+      }
       return;
     }
 
@@ -2035,6 +2314,22 @@
 
         cancelSubtitleEdit();
       }, 0);
+      return;
+    }
+
+    if (target.id === "employeesMainNoteInput") {
+      window.setTimeout(function () {
+        if (!uiState.editingMainNote || document.activeElement === target) {
+          return;
+        }
+
+        if (uiState.mainNoteDraft.trim()) {
+          confirmMainNoteEdit();
+          return;
+        }
+
+        cancelMainNoteEdit();
+      }, 0);
     }
   }
 
@@ -2064,11 +2359,15 @@
         return;
       }
 
-      if (event.target.id === "employeesTabNameInput" || event.target.id === "employeesTabFieldInput" || event.target.id === "employeesTabOperatorInput" || event.target.id === "employeesTabValueInput") {
+      if (event.target.id === "employeesMainNoteInput") {
         event.preventDefault();
-        uiState.creatingTab = false;
-        uiState.tabDraft = { name: "", fieldId: "work.status", operator: "is", value: "在職" };
-        renderToolbar();
+        cancelMainNoteEdit();
+        return;
+      }
+
+      if (event.target.id === "employeesTabNameInput" || event.target.hasAttribute("data-tab-condition-index")) {
+        event.preventDefault();
+        cancelTabComposer();
         return;
       }
     }
@@ -2089,6 +2388,12 @@
       return;
     }
 
+    if (event.target.id === "employeesMainNoteInput") {
+      event.preventDefault();
+      confirmMainNoteEdit();
+      return;
+    }
+
     if (event.target.id === "employeesDepartmentInput") {
       event.preventDefault();
       confirmAddDepartment();
@@ -2101,7 +2406,7 @@
       return;
     }
 
-    if (event.target.id === "employeesTabNameInput" || event.target.id === "employeesTabFieldInput" || event.target.id === "employeesTabOperatorInput" || event.target.id === "employeesTabValueInput") {
+    if (event.target.id === "employeesTabNameInput" || event.target.hasAttribute("data-tab-condition-index")) {
       event.preventDefault();
       confirmCreateTab();
       return;
@@ -2118,9 +2423,9 @@
       return;
     }
 
-    if (uiState.pendingAttachment) {
+    if (uiState.pendingAttachments.length) {
       event.preventDefault();
-      confirmPendingAttachment();
+      confirmPendingAttachment(0);
     }
   }
 
@@ -2223,20 +2528,40 @@
     });
 
     dom.fileInput.addEventListener("change", function () {
-      const file = dom.fileInput.files[0];
+      const selectedFiles = Array.prototype.slice.call(dom.fileInput.files || []);
+      const targetIndex = dom.fileInput.dataset.targetIndex === "" ? null : Number(dom.fileInput.dataset.targetIndex);
 
-      if (!file || !uiState.draftEmployee) {
+      if (!selectedFiles.length || !uiState.draftEmployee) {
         return;
       }
 
-      readFileAsDataUrl(file, function (result) {
-        uiState.pendingAttachment = {
-          name: file.name,
-          data: result,
-          targetIndex: dom.fileInput.dataset.targetIndex === "" ? null : Number(dom.fileInput.dataset.targetIndex)
-        };
-        dom.fileInput.dataset.targetIndex = "";
-        renderDetailPanel(true);
+      const filesToRead = targetIndex === null ? selectedFiles : selectedFiles.slice(0, 1);
+      const pendingItems = new Array(filesToRead.length);
+      let remaining = filesToRead.length;
+
+      filesToRead.forEach(function (file, index) {
+        readFileAsDataUrl(file, function (result) {
+          pendingItems[index] = {
+            name: file.name,
+            data: result,
+            targetIndex: targetIndex
+          };
+          remaining -= 1;
+
+          if (remaining > 0) {
+            return;
+          }
+
+          if (targetIndex !== null) {
+            uiState.pendingAttachments = getPendingAttachments().filter(function (attachment) {
+              return attachment.targetIndex !== targetIndex;
+            });
+          }
+
+          uiState.pendingAttachments = getPendingAttachments().concat(pendingItems);
+          dom.fileInput.dataset.targetIndex = "";
+          renderDetailPanel(true);
+        });
       });
     });
   }
