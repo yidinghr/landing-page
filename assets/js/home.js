@@ -3,10 +3,10 @@
   const homeMenu = document.getElementById("homeMenu");
 
   const dashboardButtons = [
-    { id: "employees", label: "弈鼎員工" },
+    { id: "employees", label: "員工" },
     { id: "schedule", label: "班表" },
     { id: "attendance", label: "打卡" },
-    { id: "profile", label: "弈鼎资料" }
+    { id: "profile", label: "資料" }
   ];
 
   const dashboardActions = {
