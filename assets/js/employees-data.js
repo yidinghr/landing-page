@@ -62,18 +62,18 @@
   ];
 
   const CARD_FIELD_OPTIONS = [
-    { id: "vieName", label: "Vie Name" },
-    { id: "engName", label: "Eng Name" },
-    { id: "ydiId", label: "YDI ID" },
-    { id: "haId", label: "HA ID" },
-    { id: "position", label: "Position" },
-    { id: "titleJob", label: "Title Job" },
-    { id: "phoneNumber", label: "Phone Number" },
-    { id: "dateOfBirth", label: "Date of birth" },
-    { id: "onboardDate", label: "Onboard date" },
-    { id: "nationality", label: "Nationality" },
-    { id: "status", label: "Status" },
-    { id: "lastDay", label: "Last day" }
+    { id: "vieName", label: "越文姓名" },
+    { id: "engName", label: "英文姓名" },
+    { id: "ydiId", label: "弈鼎編號" },
+    { id: "haId", label: "HA 編號" },
+    { id: "position", label: "職位" },
+    { id: "titleJob", label: "職務" },
+    { id: "phoneNumber", label: "電話號碼" },
+    { id: "dateOfBirth", label: "出生日期" },
+    { id: "onboardDate", label: "入職日期" },
+    { id: "nationality", label: "國籍" },
+    { id: "status", label: "狀態" },
+    { id: "lastDay", label: "最後工作日" }
   ];
 
   const SEED_EMPLOYEES = [
@@ -377,7 +377,7 @@
       employees: cloneValue(SEED_EMPLOYEES),
       cardDisplay: {
         titleField: "engName",
-        extraFieldIds: ["vieName", "dateOfBirth", "position"]
+        extraFieldIds: ["vieName", "position"]
       },
       sortMode: "createdAsc",
       searchQuery: "",

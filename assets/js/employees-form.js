@@ -7,64 +7,64 @@
       id: "basic",
       title: "基本資料",
       fields: [
-        { type: "text", path: "basic.vieName", label: "Vie Name" },
-        { type: "text", path: "basic.engName", label: "Eng Name" },
-        { type: "text", path: "basic.ydiId", label: "YDI ID" },
-        { type: "text", path: "basic.haId", label: "HA ID" },
-        { type: "select", path: "basic.sex", label: "Sex", options: dataApi.SEX_OPTIONS },
-        { type: "dateTriple", path: "basic.dateOfBirth", label: "Date of birth", startYear: 1960, endYear: currentYear },
-        { type: "computed", path: "basic.age", label: "Age" },
-        { type: "computed", path: "basic.zodiac", label: "Zodiac" },
-        { type: "text", path: "basic.nationality", label: "Nationality" },
-        { type: "text", path: "basic.language", label: "Language" }
+        { type: "text", path: "basic.vieName", label: "越文姓名" },
+        { type: "text", path: "basic.engName", label: "英文姓名" },
+        { type: "text", path: "basic.ydiId", label: "弈鼎編號" },
+        { type: "text", path: "basic.haId", label: "HA 編號" },
+        { type: "select", path: "basic.sex", label: "性別", options: dataApi.SEX_OPTIONS },
+        { type: "dateTriple", path: "basic.dateOfBirth", label: "出生日期", startYear: 1960, endYear: currentYear },
+        { type: "computed", path: "basic.age", label: "年齡" },
+        { type: "computed", path: "basic.zodiac", label: "星座" },
+        { type: "text", path: "basic.nationality", label: "國籍" },
+        { type: "text", path: "basic.language", label: "語言" }
       ]
     },
     {
       id: "contact",
       title: "聯絡資料",
       fields: [
-        { type: "phone", path: "contact.phoneNumber", label: "Phone Number" },
-        { type: "phone", path: "contact.emergencyPhone", label: "Emergency phone" },
-        { type: "relationship", path: "contact.emergencyRelationship", label: "Emergency Relationship" },
-        { type: "text", path: "contact.email", label: "Email" },
-        { type: "text", path: "contact.nationId", label: "Nation ID" },
-        { type: "text", path: "contact.placeOfOrigin", label: "Place of origin" },
-        { type: "text", path: "contact.placeOfResidence", label: "Place of residence" }
+        { type: "phone", path: "contact.phoneNumber", label: "電話號碼" },
+        { type: "phone", path: "contact.emergencyPhone", label: "緊急電話" },
+        { type: "relationship", path: "contact.emergencyRelationship", label: "緊急關係" },
+        { type: "text", path: "contact.email", label: "電子郵件" },
+        { type: "text", path: "contact.nationId", label: "身分證號" },
+        { type: "text", path: "contact.placeOfOrigin", label: "籍貫" },
+        { type: "text", path: "contact.placeOfResidence", label: "現居地址" }
       ]
     },
     {
       id: "work",
       title: "工作資料",
       fields: [
-        { type: "selectOther", path: "work.department", label: "Department", options: dataApi.BASE_DEPARTMENT_OPTIONS },
-        { type: "select", path: "work.position", label: "Position", options: dataApi.POSITION_OPTIONS },
-        { type: "selectOther", path: "work.titleJob", label: "Title Job", options: dataApi.TITLE_JOB_OPTIONS },
-        { type: "text", path: "work.directBoss", label: "Direct Boss" },
-        { type: "text", path: "work.recruitmentDept", label: "Recruitment Dept" },
-        { type: "status", path: "work.status", label: "Status" },
-        { type: "dateTriple", path: "work.onboardDate", label: "Onboard date", startYear: 2020, endYear: currentYear + 1 },
-        { type: "select", path: "work.probationDays", label: "Probation Days", options: createNumberOptions(1, 200) },
-        { type: "dateTriple", path: "work.probEndDate", label: "Prob End Date", startYear: 2020, endYear: currentYear + 2 },
-        { type: "dateTriple", path: "work.officialDate", label: "Official date", startYear: 2020, endYear: currentYear + 2 },
-        { type: "room", path: "work.roomNumber", label: "Room Number" }
+        { type: "selectOther", path: "work.department", label: "部門", options: dataApi.BASE_DEPARTMENT_OPTIONS },
+        { type: "select", path: "work.position", label: "職位", options: dataApi.POSITION_OPTIONS },
+        { type: "selectOther", path: "work.titleJob", label: "職務", options: dataApi.TITLE_JOB_OPTIONS },
+        { type: "text", path: "work.directBoss", label: "直屬上司" },
+        { type: "text", path: "work.recruitmentDept", label: "招募部門" },
+        { type: "status", path: "work.status", label: "狀態" },
+        { type: "dateTriple", path: "work.onboardDate", label: "入職日期", startYear: 2020, endYear: currentYear + 1 },
+        { type: "select", path: "work.probationDays", label: "試用天數", options: createNumberOptions(1, 200) },
+        { type: "dateTriple", path: "work.probEndDate", label: "試用期結束日", startYear: 2020, endYear: currentYear + 2 },
+        { type: "dateTriple", path: "work.officialDate", label: "轉正日期", startYear: 2020, endYear: currentYear + 2 },
+        { type: "room", path: "work.roomNumber", label: "房號" }
       ]
     },
     {
       id: "bank",
       title: "銀行資料",
       fields: [
-        { type: "text", path: "bank.bankNumber", label: "Bank Number" },
-        { type: "text", path: "bank.bankName", label: "Bank Name" },
-        { type: "text", path: "bank.probationSalary", label: "Probation Salary" },
-        { type: "text", path: "bank.officialSalary", label: "Official Salary" }
+        { type: "text", path: "bank.bankNumber", label: "銀行帳號" },
+        { type: "text", path: "bank.bankName", label: "銀行名稱" },
+        { type: "text", path: "bank.probationSalary", label: "試用薪資" },
+        { type: "text", path: "bank.officialSalary", label: "正式薪資" }
       ]
     },
     {
       id: "other",
       title: "其他",
       fields: [
-        { type: "file", path: "other.employeesFileData", label: "Employees' file" },
-        { type: "textarea", path: "other.remark", label: "Remark", placeholder: "请输⼊数据" }
+        { type: "file", path: "other.employeesFileData", label: "員工檔案" },
+        { type: "textarea", path: "other.remark", label: "備註", placeholder: "請輸入資料" }
       ]
     }
   ];
@@ -342,6 +342,18 @@
     }).join("");
   }
 
+  function renderDatePart(label, path, options, selectedValue, disabled) {
+    return [
+      '<label class="employee-form__date-part">',
+      '<select data-path="' + escapeHtml(path) + '"' + (disabled ? " disabled" : "") + ">",
+      '<option value="">' + escapeHtml(label) + "</option>",
+      renderOptionList(options, selectedValue),
+      "</select>",
+      '<span class="employee-form__date-unit">' + escapeHtml(label) + "</span>",
+      "</label>"
+    ].join("");
+  }
+
   function renderDateTripleField(field, value, disabled) {
     const years = [];
     const startYear = field.startYear || 1990;
@@ -355,9 +367,9 @@
 
     return [
       '<div class="employee-form__date-grid">',
-      '<select data-path="' + escapeHtml(field.path) + '.year"' + (disabled ? " disabled" : "") + '><option value="">年</option>' + renderOptionList(years, value.year) + "</select>",
-      '<select data-path="' + escapeHtml(field.path) + '.month"' + (disabled ? " disabled" : "") + '><option value="">月</option>' + renderOptionList(createNumberOptions(1, 12).map(function (option) { return option.padStart(2, "0"); }), value.month) + "</select>",
-      '<select data-path="' + escapeHtml(field.path) + '.day"' + (disabled ? " disabled" : "") + '><option value="">日</option>' + renderOptionList(createNumberOptions(1, 31).map(function (option) { return option.padStart(2, "0"); }), value.day) + "</select>",
+      renderDatePart("年", field.path + ".year", years, value.year, disabled),
+      renderDatePart("月", field.path + ".month", createNumberOptions(1, 12).map(function (option) { return option.padStart(2, "0"); }), value.month, disabled),
+      renderDatePart("日", field.path + ".day", createNumberOptions(1, 31).map(function (option) { return option.padStart(2, "0"); }), value.day, disabled),
       "</div>"
     ].join("");
   }
@@ -375,7 +387,7 @@
     }
 
     if (field.type === "computed") {
-      return '<div class="employee-form__readonly">' + escapeHtml(value || "自動生成") + "</div>";
+      return '<div class="employee-form__readonly">' + escapeHtml(value || "自動計算") + "</div>";
     }
 
     if (field.type === "dateTriple") {
@@ -397,7 +409,7 @@
       return [
         '<div class="employee-form__compound">',
         '<select data-path="' + escapeHtml(field.path) + '.preset"' + (disabled ? " disabled" : "") + ">" + renderOptionList(dataApi.RELATIONSHIP_OPTIONS, value.preset) + "</select>",
-        '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="其他關係"' + (disabled || !otherVisible ? " disabled" : "") + ">",
+        '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="請輸入關係"' + (disabled || !otherVisible ? " disabled" : "") + ">",
         "</div>"
       ].join("");
     }
@@ -424,7 +436,7 @@
             return '<option value="' + escapeHtml(statusValue) + '"' + selected + disabledOption + ">" + escapeHtml(statusValue) + "</option>";
           }).join("") +
         "</select>",
-        value === "離職" ? '<div class="employee-form__nested"><div class="employee-form__field-label employee-form__field-label--nested">Last day</div>' + renderDateTripleField({ path: "work.lastDay" }, draft.work.lastDay, !options.isEditable) + "</div>" : "",
+        value === "離職" ? '<div class="employee-form__nested"><div class="employee-form__field-label employee-form__field-label--nested">最後工作日</div>' + renderDateTripleField({ path: "work.lastDay" }, draft.work.lastDay, !options.isEditable) + "</div>" : "",
         "</div>"
       ].join("");
     }

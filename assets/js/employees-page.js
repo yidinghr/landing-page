@@ -73,6 +73,7 @@
     nextState.employees = (rawState.employees || initialState.employees).map(function (employee) {
       return formApi.applyDerivedFields(employee);
     });
+    nextState.cardDisplay.extraFieldIds = (nextState.cardDisplay.extraFieldIds || initialState.cardDisplay.extraFieldIds).slice(0, 2);
 
     if (!nextState.selectedDepartmentId || !getDepartmentMap(nextState)[nextState.selectedDepartmentId]) {
       nextState.selectedDepartmentId = nextState.departments[0].id;
@@ -349,13 +350,15 @@
       uiState.editingTitle
         ? '<input id="employeesTitleInput" class="employees-sidebar__title-input" type="text" value="' + escapeHtml(uiState.titleDraft) + '">'
         : '<h1 class="employees-sidebar__title">' + escapeHtml(state.interfaceMeta.title) + "</h1>",
+      '<div class="employees-sidebar__title-actions">',
       '<button type="button" class="employees-icon-button" data-action="toggle-title-edit" aria-label="編輯標題">' + getIconSvg("edit") + "</button>",
       "</div>",
-      '<div class="employees-sidebar__caption">點擊部門切換名單，拖曳可以重排順序。</div>',
+      "</div>",
+      '<div class="employees-sidebar__caption">點擊部門切換名單，拖曳即可重新排序。</div>',
       "</div>",
       "</div>",
       '<div class="employees-sidebar__body">',
-      '<h2 class="employees-sidebar__section-title">Departments</h2>',
+      '<h2 class="employees-sidebar__section-title">部門</h2>',
       '<div class="employees-sidebar__list" id="employeesDepartmentList">',
       state.departments.map(function (department) {
         const isEditing = uiState.editingDepartmentId === department.id;
@@ -366,12 +369,12 @@
           '<div class="employees-department' + (isActive ? " employees-department--active" : "") + '" draggable="true" data-department-id="' + escapeHtml(department.id) + '" data-action="select-department">',
           '<div class="employees-department__grip" aria-hidden="true">' + escapeHtml(getIconSvg("grip")) + "</div>",
           isEditing
-            ? '<input class="employees-sidebar__title-input" data-role="department-edit-input" type="text" value="' + escapeHtml(uiState.departmentEditDraft) + '">'
+            ? '<input class="employees-department__edit-input" data-role="department-edit-input" type="text" value="' + escapeHtml(uiState.departmentEditDraft) + '">'
             : '<div class="employees-department__name">' + escapeHtml(department.name) + "</div>",
           '<div class="employees-department__menu">',
-          '<button type="button" class="employees-icon-button" data-action="toggle-department-menu" data-department-id="' + escapeHtml(department.id) + '" aria-label="部門選單">' + getIconSvg("more") + "</button>",
+          '<button type="button" class="employees-icon-button employees-department__menu-button" data-action="toggle-department-menu" data-department-id="' + escapeHtml(department.id) + '" aria-label="部門選單">' + getIconSvg("more") + "</button>",
           isMenuOpen
-            ? '<div class="employees-department__menu-panel"><button type="button" data-action="start-edit-department" data-department-id="' + escapeHtml(department.id) + '">Edit</button><button type="button" data-action="delete-department" data-department-id="' + escapeHtml(department.id) + '">Delete</button></div>'
+            ? '<div class="employees-department__menu-panel"><button type="button" data-action="start-edit-department" data-department-id="' + escapeHtml(department.id) + '">編輯</button><button type="button" data-action="delete-department" data-department-id="' + escapeHtml(department.id) + '">刪除</button></div>'
             : "",
           "</div>",
           "</div>"
@@ -380,10 +383,10 @@
       '<div class="employees-department-add">',
       uiState.addingDepartment
         ? '<input id="employeesDepartmentInput" class="employees-department-add__input" type="text" value="' + escapeHtml(uiState.departmentDraft) + '" placeholder="請輸入部門名稱">'
-        : '<button type="button" class="employees-department-add__button" data-action="start-add-department"><span>' + getIconSvg("plus") + '</span><strong>Add department</strong></button>',
+        : '<button type="button" class="employees-department-add__button" data-action="start-add-department"><span>' + getIconSvg("plus") + '</span><strong>新增部門</strong></button>',
       "</div>",
-      '<div class="employees-department-fixed">',
-      '<button type="button" class="employees-department' + (selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id ? " employees-department--active" : "") + '" data-action="select-department" data-department-id="' + escapeHtml(dataApi.RETIRED_DEPARTMENT.id) + '"><div class="employees-department__name" style="text-align:center;">' + escapeHtml(dataApi.RETIRED_DEPARTMENT.name) + "</div></button>",
+      '<div class="employees-department-fixed employees-department--retired">',
+      '<button type="button" class="employees-department' + (selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id ? " employees-department--active" : "") + '" data-action="select-department" data-department-id="' + escapeHtml(dataApi.RETIRED_DEPARTMENT.id) + '"><div class="employees-department__grip" aria-hidden="true"></div><div class="employees-department__name">' + escapeHtml(dataApi.RETIRED_DEPARTMENT.name) + '</div><div></div></button>',
       "</div>",
       "</div>",
       "</div>"
@@ -396,16 +399,16 @@
     const selectedEmployee = getEmployeeById(uiState.selectedEmployeeId);
     const normalActions = [
       selectedEmployee && uiState.detailMode !== "add"
-        ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">Delete</button>'
+        ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">刪除</button>'
         : "",
-      '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>Add</span></button>'
+      '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>新增</span></button>'
     ].join("");
 
     const retiredActions = selectedEmployee
       ? [
-          '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">Delete</button>',
-          '<button type="button" class="employees-secondary-button" data-action="start-edit-employee"' + (uiState.detailMode === "edit" ? " disabled" : "") + ">Edit</button>",
-          '<button type="button" class="employees-primary-button" data-action="save-employee"' + (uiState.detailMode !== "edit" ? " disabled" : "") + ">Save</button>"
+          '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">刪除</button>',
+          '<button type="button" class="employees-secondary-button" data-action="start-edit-employee"' + (uiState.detailMode === "edit" ? " disabled" : "") + ">編輯</button>",
+          '<button type="button" class="employees-primary-button" data-action="save-employee"' + (uiState.detailMode !== "edit" ? " disabled" : "") + ">儲存</button>"
         ].join("")
       : "";
 
@@ -413,7 +416,7 @@
       '<div class="employees-main__title-row">',
       '<div class="employees-main__title-wrap">',
       '<h1>' + escapeHtml(selectedDepartment.name) + "</h1>",
-      '<div class="employees-main__title-note">' + (isRetired ? "離職名單預設依離職日期排序。" : "點擊員工卡片可展開右側詳細資料。") + "</div>",
+      '<div class="employees-main__title-note">' + (isRetired ? "離職名單預設依最後工作日排序。" : "點擊員工卡片可展開右側詳細資料。") + "</div>",
       "</div>",
       '<div class="employees-main__actions">' + (isRetired ? retiredActions : normalActions) + "</div>",
       "</div>"
@@ -422,17 +425,17 @@
 
   function renderFilterPopover() {
     return [
-      '<div class="employees-popover">',
-      '<div class="employees-popover__section-title">Filter</div>',
-      '<div class="employees-popover__field"><label>Position</label><select data-setting="filter-position"><option value="全部">全部</option>' + dataApi.POSITION_OPTIONS.map(function (option) {
+      '<div class="employees-popover" data-modal-body="true">',
+      '<div class="employees-popover__section-title">篩選</div>',
+      '<div class="employees-popover__field"><label>職位</label><select data-setting="filter-position"><option value="全部">全部</option>' + dataApi.POSITION_OPTIONS.map(function (option) {
         return '<option value="' + escapeHtml(option) + '"' + (state.filters.position === option ? " selected" : "") + ">" + escapeHtml(option) + "</option>";
       }).join("") + "</select></div>",
-      '<div class="employees-popover__field"><label>Status</label><select data-setting="filter-status">' +
+      '<div class="employees-popover__field"><label>狀態</label><select data-setting="filter-status">' +
       ['全部'].concat(dataApi.STATUS_OPTIONS).map(function (option) {
         return '<option value="' + escapeHtml(option) + '"' + (state.filters.status === option ? " selected" : "") + ">" + escapeHtml(option) + "</option>";
       }).join("") +
       "</select></div>",
-      '<button type="button" class="employees-inline-action" data-action="clear-filters">Clear filters</button>',
+      '<button type="button" class="employees-inline-action" data-action="clear-filters">清除篩選</button>',
       "</div>"
     ].join("");
   }
@@ -441,18 +444,18 @@
     const selectedSort = isRetiredView() ? "retiredSoonest" : state.sortMode;
 
     return [
-      '<div class="employees-popover">',
-      '<div class="employees-popover__section-title">Card display</div>',
-      '<div class="employees-popover__field"><label>Title</label><select data-setting="card-title">' + dataApi.CARD_FIELD_OPTIONS.map(function (field) {
+      '<div class="employees-popover" data-modal-body="true">',
+      '<div class="employees-popover__section-title">卡片顯示</div>',
+      '<div class="employees-popover__field"><label>主標題</label><select data-setting="card-title">' + dataApi.CARD_FIELD_OPTIONS.map(function (field) {
         return '<option value="' + escapeHtml(field.id) + '"' + (state.cardDisplay.titleField === field.id ? " selected" : "") + ">" + escapeHtml(field.label) + "</option>";
       }).join("") + "</select></div>",
       state.cardDisplay.extraFieldIds.map(function (fieldId, index) {
-        return '<div class="employees-popover__field"><label>Field ' + String(index + 1) + '</label><select data-setting="card-extra-' + String(index) + '">' + dataApi.CARD_FIELD_OPTIONS.map(function (field) {
+        return '<div class="employees-popover__field"><label>欄位 ' + String(index + 1) + '</label><select data-setting="card-extra-' + String(index) + '">' + dataApi.CARD_FIELD_OPTIONS.map(function (field) {
           return '<option value="' + escapeHtml(field.id) + '"' + (fieldId === field.id ? " selected" : "") + ">" + escapeHtml(field.label) + "</option>";
         }).join("") + "</select></div>";
       }).join(""),
-      '<div class="employees-popover__section-title">Sort</div>',
-      '<div class="employees-popover__field"><label>Sort mode</label><select data-setting="sort-mode">' + dataApi.SORT_OPTIONS.filter(function (option) {
+      '<div class="employees-popover__section-title">排序</div>',
+      '<div class="employees-popover__field"><label>排序方式</label><select data-setting="sort-mode">' + dataApi.SORT_OPTIONS.filter(function (option) {
         return !isRetiredView() || option.id === "retiredSoonest";
       }).map(function (option) {
         return '<option value="' + escapeHtml(option.id) + '"' + (selectedSort === option.id ? " selected" : "") + ">" + escapeHtml(option.label) + "</option>";
@@ -464,17 +467,16 @@
   function renderToolbar() {
     const visibleTabsData = getVisibleTabs();
     const activeTabId = state.activeTabByDepartment[state.selectedDepartmentId] || "";
-    const tabs = state.tabsByDepartment[state.selectedDepartmentId] || [];
 
     if (isRetiredView()) {
       dom.toolbarMount.innerHTML = [
         '<div class="employees-toolbar">',
         '<div class="employees-toolbar__left"></div>',
         '<div class="employees-toolbar__right">',
-        uiState.showSearchInput ? '<input class="employees-search-box" data-path="searchQuery" value="' + escapeHtml(state.searchQuery) + '" placeholder="Search employee">' : "",
-        '<button type="button" class="employees-tool-icon" data-action="toggle-search" data-tooltip="Search">' + getIconSvg("search") + "</button>",
-        '<div style="position:relative;">',
-        '<button type="button" class="employees-tool-icon" data-action="toggle-filter-menu" data-tooltip="Filter">' + getIconSvg("filter") + "</button>",
+        uiState.showSearchInput ? '<input class="employees-search-box" data-path="searchQuery" value="' + escapeHtml(state.searchQuery) + '" placeholder="搜尋員工">' : "",
+        '<button type="button" class="employees-tool-icon" data-action="toggle-search" data-tooltip="搜尋">' + getIconSvg("search") + "</button>",
+        '<div class="employees-tool-group" data-tool-group="filter">',
+        '<button type="button" class="employees-tool-icon" data-action="toggle-filter-menu" data-tooltip="篩選">' + getIconSvg("filter") + "</button>",
         uiState.showFilterMenu ? renderFilterPopover() : "",
         "</div>",
         "</div>",
@@ -492,27 +494,27 @@
         return '<button type="button" class="employees-tab' + (activeTabId === tab.id ? " employees-tab--active" : "") + '" data-action="select-tab" data-tab-id="' + escapeHtml(tab.id) + '" title="' + escapeHtml(tab.condition || "") + '">' + escapeHtml(tab.name) + (tab.condition ? '<span class="employees-tab__condition">' + escapeHtml(tab.condition) + "</span>" : "") + "</button>";
       }).join(""),
       visibleTabsData.hiddenTabs.length
-        ? '<div style="position:relative;"><button type="button" class="employees-tab" data-action="toggle-more-tabs">More</button>' +
-          (uiState.openMoreTabs ? '<div class="employees-popover">' + visibleTabsData.hiddenTabs.map(function (tab) {
+        ? '<div class="employees-tool-group" data-tool-group="more-tabs"><button type="button" class="employees-tab" data-action="toggle-more-tabs">更多</button>' +
+          (uiState.openMoreTabs ? '<div class="employees-popover" data-modal-body="true">' + visibleTabsData.hiddenTabs.map(function (tab) {
             return '<button type="button" class="employees-inline-action" data-action="select-tab" data-tab-id="' + escapeHtml(tab.id) + '">' + escapeHtml(tab.name) + "</button>";
           }).join("") + "</div>" : "") +
           "</div>"
         : "",
-      '<button type="button" class="employees-tab" data-action="start-create-tab">' + getIconSvg("plus") + "</button>",
+      '<button type="button" class="employees-tab" data-action="start-create-tab" title="新增分頁">' + getIconSvg("plus") + "</button>",
       "</div>",
       uiState.creatingTab
-        ? '<div class="employees-toolbar__composer"><input type="text" id="employeesTabNameInput" value="' + escapeHtml(uiState.tabDraft.name) + '" placeholder="Tab 名稱"><input type="text" id="employeesTabConditionInput" value="' + escapeHtml(uiState.tabDraft.condition) + '" placeholder="條件（選填）"></div>'
+        ? '<div class="employees-toolbar__composer"><input type="text" id="employeesTabNameInput" value="' + escapeHtml(uiState.tabDraft.name) + '" placeholder="分頁名稱"><input type="text" id="employeesTabConditionInput" value="' + escapeHtml(uiState.tabDraft.condition) + '" placeholder="條件說明（選填）"></div>'
         : "",
       "</div>",
       '<div class="employees-toolbar__right">',
-      uiState.showSearchInput ? '<input class="employees-search-box" data-path="searchQuery" value="' + escapeHtml(state.searchQuery) + '" placeholder="Search employee">' : "",
-      '<button type="button" class="employees-tool-icon" data-action="toggle-search" data-tooltip="Search">' + getIconSvg("search") + "</button>",
-      '<div style="position:relative;">',
-      '<button type="button" class="employees-tool-icon" data-action="toggle-filter-menu" data-tooltip="Filter">' + getIconSvg("filter") + "</button>",
+      uiState.showSearchInput ? '<input class="employees-search-box" data-path="searchQuery" value="' + escapeHtml(state.searchQuery) + '" placeholder="搜尋員工">' : "",
+      '<button type="button" class="employees-tool-icon" data-action="toggle-search" data-tooltip="搜尋">' + getIconSvg("search") + "</button>",
+      '<div class="employees-tool-group" data-tool-group="filter">',
+      '<button type="button" class="employees-tool-icon" data-action="toggle-filter-menu" data-tooltip="篩選">' + getIconSvg("filter") + "</button>",
       uiState.showFilterMenu ? renderFilterPopover() : "",
       "</div>",
-      '<div style="position:relative;">',
-      '<button type="button" class="employees-tool-icon" data-action="toggle-display-menu" data-tooltip="More">' + getIconSvg("more") + "</button>",
+      '<div class="employees-tool-group" data-tool-group="display">',
+      '<button type="button" class="employees-tool-icon" data-action="toggle-display-menu" data-tooltip="顯示設定">' + getIconSvg("more") + "</button>",
       uiState.showDisplayMenu ? renderDisplayPopover() : "",
       "</div>",
       "</div>",
@@ -524,11 +526,11 @@
     const employees = getVisibleEmployees();
 
     if (!employees.length) {
-      dom.cardsMount.innerHTML = '<div class="employees-empty">目前沒有符合條件的員工卡片。</div>';
+      dom.cardsMount.innerHTML = '<div class="employees-cards-panel"><div class="employees-empty">目前沒有符合條件的員工資料。</div></div>';
       return;
     }
 
-    dom.cardsMount.innerHTML = '<div class="employees-cards">' + employees.map(function (employee) {
+    dom.cardsMount.innerHTML = '<div class="employees-cards-panel"><div class="employees-cards">' + employees.map(function (employee) {
       const lines = state.cardDisplay.extraFieldIds.map(function (fieldId) {
         const fieldOption = dataApi.CARD_FIELD_OPTIONS.find(function (option) { return option.id === fieldId; });
 
@@ -549,7 +551,7 @@
         "</div>",
         "</article>"
       ].join("");
-    }).join("") + "</div>";
+    }).join("") + "</div></div>";
   }
 
   function autoResizeRemark() {
@@ -562,12 +564,63 @@
     remarkField.style.height = String(remarkField.scrollHeight) + "px";
   }
 
-  function renderDetailPanel() {
+  function captureDetailContext() {
+    const content = dom.detailMount.querySelector(".employees-detail__content");
+    const activeElement = document.activeElement;
+
+    if (!content) {
+      return null;
+    }
+
+    return {
+      scrollTop: content.scrollTop,
+      selector: activeElement && dom.detailMount.contains(activeElement)
+        ? (activeElement.getAttribute("data-path")
+          ? '[data-path="' + activeElement.getAttribute("data-path") + '"]'
+          : activeElement.id
+            ? "#" + activeElement.id
+            : activeElement.getAttribute("data-role")
+              ? '[data-role="' + activeElement.getAttribute("data-role") + '"]'
+              : "")
+        : "",
+      selectionStart: activeElement && typeof activeElement.selectionStart === "number" ? activeElement.selectionStart : null,
+      selectionEnd: activeElement && typeof activeElement.selectionEnd === "number" ? activeElement.selectionEnd : null
+    };
+  }
+
+  function restoreDetailContext(context) {
+    const content = dom.detailMount.querySelector(".employees-detail__content");
+
+    if (!context || !content) {
+      return;
+    }
+
+    content.scrollTop = context.scrollTop;
+
+    if (!context.selector) {
+      return;
+    }
+
+    const target = dom.detailMount.querySelector(context.selector);
+
+    if (!target) {
+      return;
+    }
+
+    target.focus();
+
+    if (typeof context.selectionStart === "number" && typeof target.setSelectionRange === "function") {
+      target.setSelectionRange(context.selectionStart, context.selectionEnd);
+    }
+  }
+
+  function renderDetailPanel(preserveContext) {
     const draft = getCurrentDraftEmployee();
     const isPanelOpen = isDetailOpen();
     const isEditable = uiState.detailMode === "add" || uiState.detailMode === "edit";
     const selectedEmployee = getEmployeeById(uiState.selectedEmployeeId);
     const inRetired = isRetiredView();
+    const detailContext = preserveContext ? captureDetailContext() : null;
 
     dom.workspace.className = "employees-workspace" + (isPanelOpen ? " employees-workspace--panel-open" : "");
 
@@ -578,30 +631,35 @@
 
     dom.detailMount.innerHTML = [
       '<div class="employees-detail__actions">',
-      '<div>' + (inRetired && selectedEmployee ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">Delete</button>' : "") + "</div>",
-      '<div>' + (!inRetired ? '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>Add</span></button>' : "") + "</div>",
+      '<div>' + (inRetired && selectedEmployee ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">刪除</button>' : "") + "</div>",
+      '<div>' + (!inRetired ? '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>新增</span></button>' : "") + "</div>",
       "</div>",
       '<button type="button" class="employees-secondary-button employees-detail__collapse" data-action="request-close-panel">&gt;&gt;</button>',
+      '<div class="employees-detail__content">',
       '<div class="employees-avatar-box">',
-      '<button type="button" class="employees-avatar-box__preview" data-action="preview-avatar" data-tooltip="點擊查看頭像預覽">',
+      '<div class="employees-avatar-box__preview-wrap">',
+      '<button type="button" class="employees-avatar-box__preview" data-action="preview-avatar" data-tooltip="點擊查看頭像">',
       '<img src="' + escapeHtml(draft.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="員工頭像">',
       "</button>",
       '<div class="employees-avatar-box__actions">',
-      '<button type="button" class="employees-secondary-button" data-action="choose-avatar"' + (!isEditable ? " disabled" : "") + ">Edit</button>",
-      draft.avatarChanged ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="reset-avatar"' + (!isEditable ? " disabled" : "") + ">Delete</button>" : "",
-      (draft.avatarChanged && uiState.avatarDirty) ? '<button type="button" class="employees-primary-button" data-action="save-avatar-local">Save</button>' : "",
+      '<button type="button" class="employees-secondary-button" data-action="choose-avatar"' + (!isEditable ? " disabled" : "") + ">更換</button>",
+      draft.avatarChanged ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="reset-avatar"' + (!isEditable ? " disabled" : "") + ">還原</button>" : "",
       "</div>",
+      "</div>",
+      '<div class="employees-avatar-box__meta">' + (isEditable ? "點擊頭像可預覽或更換" : "點擊頭像可放大預覽") + "</div>",
       "</div>",
       '<div class="employee-form">' + formApi.renderEmployeeFormSections(draft, { isEditable: isEditable, statusLocked: uiState.detailMode === "add" }) + "</div>",
+      "</div>",
       !inRetired ? [
         '<div class="employees-detail__footer">',
-        '<button type="button" class="employees-primary-button" data-action="save-employee"' + (uiState.detailMode === "view" ? " disabled" : "") + ">Save</button>",
-        '<button type="button" class="employees-secondary-button" data-action="start-edit-employee"' + (uiState.detailMode !== "view" ? " disabled" : "") + ">Edit</button>",
+        '<button type="button" class="employees-primary-button" data-action="save-employee"' + (uiState.detailMode === "view" ? " disabled" : "") + ">儲存</button>",
+        '<button type="button" class="employees-secondary-button" data-action="start-edit-employee"' + (uiState.detailMode !== "view" ? " disabled" : "") + ">編輯</button>",
         "</div>"
       ].join("") : ""
     ].join("");
 
     autoResizeRemark();
+    restoreDetailContext(detailContext);
   }
 
   function renderModal() {
@@ -615,7 +673,7 @@
 
     if (uiState.openModal === "confirm-delete") {
       dom.modalMount.innerHTML = [
-        '<div class="employees-modal"><div class="employees-modal__card">',
+        '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
         '<h2 class="employees-modal__title">確認刪除</h2>',
         '<div class="employees-modal__text">確定要刪除此員工資料嗎？</div>',
         '<div class="employees-modal__actions">',
@@ -628,14 +686,14 @@
 
     if (uiState.openModal === "password-delete") {
       dom.modalMount.innerHTML = [
-        '<div class="employees-modal"><div class="employees-modal__card">',
+        '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
         '<h2 class="employees-modal__title">請輸入刪除密碼</h2>',
         '<div class="employees-modal__text">密碼固定為：091100</div>',
         '<input id="employeesPasswordInput" class="employees-modal__input" type="password" value="' + escapeHtml(uiState.passwordDraft) + '">',
         uiState.passwordError ? '<div class="employees-modal__text" style="color:#ff8a80;">' + escapeHtml(uiState.passwordError) + "</div>" : "",
         '<div class="employees-modal__actions">',
         '<button type="button" class="employees-secondary-button" data-action="close-modal">取消</button>',
-        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="confirm-delete-employee">Delete</button>',
+        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="confirm-delete-employee">刪除</button>',
         "</div></div></div>"
       ].join("");
       return;
@@ -643,7 +701,7 @@
 
     if (uiState.openModal === "confirm-close") {
       dom.modalMount.innerHTML = [
-        '<div class="employees-modal"><div class="employees-modal__card">',
+        '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
         '<h2 class="employees-modal__title">確認關閉</h2>',
         '<div class="employees-modal__text">各項資料可能不會儲存，是否確認繼續？</div>',
         '<div class="employees-modal__actions">',
@@ -656,7 +714,7 @@
 
     if (uiState.openModal === "notice") {
       dom.modalMount.innerHTML = [
-        '<div class="employees-modal"><div class="employees-modal__card">',
+        '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
         '<h2 class="employees-modal__title">提示</h2>',
         '<div class="employees-modal__text">' + escapeHtml(uiState.noticeText) + "</div>",
         '<div class="employees-modal__actions"><button type="button" class="employees-primary-button" data-action="close-modal">確認</button></div>',
@@ -667,52 +725,64 @@
 
     if (uiState.openModal === "preview-avatar") {
       dom.modalMount.innerHTML = [
-        '<div class="employees-modal"><div class="employees-modal__card">',
-        '<h2 class="employees-modal__title">頭像預覽</h2>',
-        '<div class="employees-avatar-box__preview" style="cursor:default;"><img src="' + escapeHtml(uiState.previewImageSrc) + '" alt="頭像預覽"></div>',
-        '<div class="employees-modal__actions"><button type="button" class="employees-primary-button" data-action="close-modal">關閉</button></div>',
+        '<div class="employees-modal">',
+        '<button type="button" class="employees-image-preview__backdrop" data-action="close-modal" aria-label="關閉預覽"></button>',
+        '<div class="employees-image-preview" data-modal-body="true">',
+        '<div class="employees-image-preview__frame">',
+        '<button type="button" class="employees-icon-button employees-image-preview__close" data-action="close-modal" aria-label="關閉預覽">✕</button>',
+        '<img src="' + escapeHtml(uiState.previewImageSrc) + '" alt="頭像預覽">',
+        "</div>",
+        '<div class="employees-image-preview__actions">' +
+          (uiState.detailMode === "add" || uiState.detailMode === "edit"
+            ? '<button type="button" class="employees-secondary-button" data-action="choose-avatar">更換</button>' +
+              (uiState.draftEmployee && uiState.draftEmployee.avatarChanged ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="reset-avatar">還原</button>' : "")
+            : "") +
+        "</div>",
         "</div></div>"
       ].join("");
     }
   }
 
   function focusPendingInputs() {
-    if (uiState.editingTitle) {
-      const titleInput = document.getElementById("employeesTitleInput");
-      if (titleInput) {
-        titleInput.focus();
-        titleInput.select();
+    window.requestAnimationFrame(function () {
+      if (uiState.editingTitle) {
+        const titleInput = document.getElementById("employeesTitleInput");
+        if (titleInput) {
+          titleInput.focus();
+          titleInput.select();
+        }
       }
-    }
 
-    if (uiState.addingDepartment) {
-      const departmentInput = document.getElementById("employeesDepartmentInput");
-      if (departmentInput) {
-        departmentInput.focus();
+      if (uiState.addingDepartment) {
+        const departmentInput = document.getElementById("employeesDepartmentInput");
+        if (departmentInput) {
+          departmentInput.focus();
+          departmentInput.select();
+        }
       }
-    }
 
-    if (uiState.creatingTab) {
-      const tabInput = document.getElementById("employeesTabNameInput");
-      if (tabInput) {
-        tabInput.focus();
+      if (uiState.creatingTab) {
+        const tabInput = document.getElementById("employeesTabNameInput");
+        if (tabInput) {
+          tabInput.focus();
+        }
       }
-    }
 
-    if (uiState.openModal === "password-delete") {
-      const passwordInput = document.getElementById("employeesPasswordInput");
-      if (passwordInput) {
-        passwordInput.focus();
+      if (uiState.openModal === "password-delete") {
+        const passwordInput = document.getElementById("employeesPasswordInput");
+        if (passwordInput) {
+          passwordInput.focus();
+        }
       }
-    }
 
-    if (uiState.editingDepartmentId) {
-      const editInput = document.querySelector('[data-role="department-edit-input"]');
-      if (editInput) {
-        editInput.focus();
-        editInput.select();
+      if (uiState.editingDepartmentId) {
+        const editInput = document.querySelector('[data-role="department-edit-input"]');
+        if (editInput) {
+          editInput.focus();
+          editInput.select();
+        }
       }
-    }
+    });
   }
 
   function renderAll() {
@@ -855,6 +925,12 @@
     focusPendingInputs();
   }
 
+  function cancelTitleEdit() {
+    uiState.editingTitle = false;
+    uiState.titleDraft = "";
+    renderSidebar();
+  }
+
   function confirmTitleEdit() {
     const trimmed = uiState.titleDraft.trim();
 
@@ -871,15 +947,31 @@
   }
 
   function startAddDepartment() {
+    uiState.editingDepartmentId = "";
+    uiState.departmentEditDraft = "";
+    uiState.openDepartmentMenuId = "";
     uiState.addingDepartment = true;
+    uiState.departmentDraft = "";
+    renderSidebar();
+    focusPendingInputs();
+  }
+
+  function cancelAddDepartment() {
+    uiState.addingDepartment = false;
     uiState.departmentDraft = "";
     renderSidebar();
   }
 
-  function confirmAddDepartment() {
+  function confirmAddDepartment(options) {
     const trimmed = uiState.departmentDraft.trim();
+    const shouldSilentlyCancel = options && options.silentIfEmpty;
 
     if (!trimmed) {
+      if (shouldSilentlyCancel) {
+        cancelAddDepartment();
+        return;
+      }
+
       openNotice("請輸入部門名稱。");
       return;
     }
@@ -911,15 +1003,28 @@
     uiState.departmentEditDraft = department.name;
     uiState.openDepartmentMenuId = "";
     renderSidebar();
+    focusPendingInputs();
   }
 
-  function confirmEditDepartment() {
+  function cancelEditDepartment() {
+    uiState.editingDepartmentId = "";
+    uiState.departmentEditDraft = "";
+    renderSidebar();
+  }
+
+  function confirmEditDepartment(options) {
     const department = state.departments.find(function (item) {
       return item.id === uiState.editingDepartmentId;
     });
     const trimmed = uiState.departmentEditDraft.trim();
+    const shouldSilentlyCancel = options && options.silentIfEmpty;
 
     if (!department || !trimmed) {
+      if (shouldSilentlyCancel) {
+        cancelEditDepartment();
+        return;
+      }
+
       openNotice("請輸入有效的部門名稱。");
       return;
     }
@@ -987,13 +1092,14 @@
     uiState.tabDraft = { name: "", condition: "" };
     uiState.openMoreTabs = false;
     renderToolbar();
+    focusPendingInputs();
   }
 
   function confirmCreateTab() {
     const trimmedName = uiState.tabDraft.name.trim();
 
     if (!trimmedName) {
-      openNotice("請輸入 tab 名稱。");
+      openNotice("請輸入分頁名稱。");
       return;
     }
 
@@ -1017,7 +1123,7 @@
     uiState.draftEmployee = formApi.cloneDraft(uiState.draftEmployee);
     formApi.setValueAtPath(uiState.draftEmployee, path, value);
     uiState.draftEmployee = formApi.applyDerivedFields(uiState.draftEmployee);
-    renderDetailPanel();
+    renderDetailPanel(true);
   }
 
   function updateSetting(settingKey, value) {
@@ -1093,11 +1199,11 @@
       state.selectedDepartmentId = button.getAttribute("data-department-id") || departmentId;
       uiState.openDepartmentMenuId = "";
       uiState.creatingTab = false;
+      uiState.openMoreTabs = false;
       uiState.showDisplayMenu = false;
       uiState.showFilterMenu = false;
       persistState();
       closePanelImmediately();
-      renderAll();
       return;
     }
 
@@ -1203,6 +1309,17 @@
     if (action === "toggle-search") {
       uiState.showSearchInput = !uiState.showSearchInput;
       renderToolbar();
+
+      if (uiState.showSearchInput) {
+        window.requestAnimationFrame(function () {
+          const searchInput = dom.toolbarMount.querySelector(".employees-search-box");
+
+          if (searchInput) {
+            searchInput.focus();
+          }
+        });
+      }
+
       return;
     }
 
@@ -1234,13 +1351,15 @@
       uiState.draftEmployee.avatarSrc = dataApi.DEFAULT_IMAGE_SRC;
       uiState.draftEmployee.avatarChanged = false;
       uiState.avatarDirty = false;
-      renderDetailPanel();
+      uiState.previewImageSrc = dataApi.DEFAULT_IMAGE_SRC;
+      renderDetailPanel(true);
+      renderModal();
       return;
     }
 
     if (action === "save-avatar-local") {
       uiState.avatarDirty = false;
-      renderDetailPanel();
+      renderDetailPanel(true);
       return;
     }
 
@@ -1260,9 +1379,43 @@
     const actionButton = event.target.closest("[data-action]");
 
     if (!actionButton) {
-      if (!event.target.closest(".employees-department__menu")) {
+      const clickedInsideModal = event.target.closest('[data-modal-body="true"]');
+      const clickedInsideEditableInput = event.target.closest("#employeesDepartmentInput")
+        || event.target.closest("#employeesTitleInput")
+        || event.target.closest('[data-role="department-edit-input"]');
+      let sidebarChanged = false;
+      let toolbarChanged = false;
+
+      if (clickedInsideModal || clickedInsideEditableInput) {
+        return;
+      }
+
+      if (uiState.openDepartmentMenuId && !event.target.closest(".employees-department__menu")) {
         uiState.openDepartmentMenuId = "";
+        sidebarChanged = true;
+      }
+
+      if (uiState.showFilterMenu && !event.target.closest('[data-tool-group="filter"]')) {
+        uiState.showFilterMenu = false;
+        toolbarChanged = true;
+      }
+
+      if (uiState.showDisplayMenu && !event.target.closest('[data-tool-group="display"]')) {
+        uiState.showDisplayMenu = false;
+        toolbarChanged = true;
+      }
+
+      if (uiState.openMoreTabs && !event.target.closest('[data-tool-group="more-tabs"]')) {
+        uiState.openMoreTabs = false;
+        toolbarChanged = true;
+      }
+
+      if (sidebarChanged) {
         renderSidebar();
+      }
+
+      if (toolbarChanged) {
+        renderToolbar();
       }
 
       return;
@@ -1321,7 +1474,76 @@
     }
   }
 
+  function handleRootFocusOut(event) {
+    const target = event.target;
+
+    if (target.id === "employeesDepartmentInput") {
+      window.setTimeout(function () {
+        if (!uiState.addingDepartment || document.activeElement === target) {
+          return;
+        }
+
+        confirmAddDepartment({ silentIfEmpty: true });
+      }, 0);
+      return;
+    }
+
+    if (target.getAttribute("data-role") === "department-edit-input") {
+      window.setTimeout(function () {
+        if (!uiState.editingDepartmentId || document.activeElement === target) {
+          return;
+        }
+
+        confirmEditDepartment({ silentIfEmpty: true });
+      }, 0);
+      return;
+    }
+
+    if (target.id === "employeesTitleInput") {
+      window.setTimeout(function () {
+        if (!uiState.editingTitle || document.activeElement === target) {
+          return;
+        }
+
+        if (uiState.titleDraft.trim()) {
+          confirmTitleEdit();
+          return;
+        }
+
+        cancelTitleEdit();
+      }, 0);
+    }
+  }
+
   function handleRootKeydown(event) {
+    if (event.key === "Escape") {
+      if (event.target.id === "employeesDepartmentInput") {
+        event.preventDefault();
+        cancelAddDepartment();
+        return;
+      }
+
+      if (event.target.getAttribute("data-role") === "department-edit-input") {
+        event.preventDefault();
+        cancelEditDepartment();
+        return;
+      }
+
+      if (event.target.id === "employeesTitleInput") {
+        event.preventDefault();
+        cancelTitleEdit();
+        return;
+      }
+
+      if (event.target.id === "employeesTabNameInput" || event.target.id === "employeesTabConditionInput") {
+        event.preventDefault();
+        uiState.creatingTab = false;
+        uiState.tabDraft = { name: "", condition: "" };
+        renderToolbar();
+        return;
+      }
+    }
+
     if (event.key !== "Enter") {
       return;
     }
@@ -1416,6 +1638,7 @@
     root.addEventListener("input", handleRootInput);
     root.addEventListener("change", handleRootInput);
     root.addEventListener("keydown", handleRootKeydown);
+    root.addEventListener("focusout", handleRootFocusOut);
     root.addEventListener("dragstart", handleDragStart);
     root.addEventListener("dragend", handleDragEnd);
     root.addEventListener("dragover", handleDragOver);
@@ -1447,7 +1670,9 @@
         uiState.draftEmployee.avatarSrc = result;
         uiState.draftEmployee.avatarChanged = true;
         uiState.avatarDirty = true;
-        renderDetailPanel();
+        uiState.previewImageSrc = result;
+        renderDetailPanel(true);
+        renderModal();
       });
     });
 
@@ -1461,7 +1686,7 @@
       readFileAsDataUrl(file, function (result) {
         uiState.draftEmployee.other.employeesFileName = file.name;
         uiState.draftEmployee.other.employeesFileData = result;
-        renderDetailPanel();
+        renderDetailPanel(true);
       });
     });
   }
