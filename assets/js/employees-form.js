@@ -26,7 +26,7 @@
         { type: "phone", path: "contact.phoneNumber", label: "電話號碼" },
         { type: "phone", path: "contact.emergencyPhone", label: "緊急電話" },
         { type: "relationship", path: "contact.emergencyRelationship", label: "緊急關係" },
-        { type: "text", path: "contact.email", label: "電子郵件" },
+        { type: "text", path: "contact.email", label: "Gmail" },
         { type: "text", path: "contact.nationId", label: "身分證號" },
         { type: "text", path: "contact.placeOfOrigin", label: "籍貫" },
         { type: "text", path: "contact.placeOfResidence", label: "現居地址" }
@@ -63,7 +63,7 @@
       id: "other",
       title: "其他",
       fields: [
-        { type: "file", path: "other.employeesFileData", label: "員工檔案" },
+        { type: "file", path: "other.attachments", label: "員工檔案" },
         { type: "textarea", path: "other.remark", label: "備註", placeholder: "請輸入資料" }
       ]
     }
@@ -237,7 +237,7 @@
     const probEndDate = createDateFromParts(work.probEndDate);
     const officialDate = createDateFromParts(work.officialDate);
 
-    if (onboardDate && probationDays && !probEndDate) {
+    if (onboardDate && probationDays) {
       work.probEndDate = createDatePartsFromDate(addDays(onboardDate, probationDays - 1));
     }
 
@@ -245,7 +245,11 @@
       work.probationDays = String(Math.round((probEndDate - onboardDate) / 86400000) + 1);
     }
 
-    if (onboardDate && officialDate && !probEndDate) {
+    if (onboardDate && officialDate && !probationDays) {
+      work.probationDays = String(Math.max(1, Math.round((officialDate - onboardDate) / 86400000)));
+    }
+
+    if (onboardDate && officialDate) {
       work.probEndDate = createDatePartsFromDate(addDays(officialDate, -1));
     }
 
@@ -257,18 +261,19 @@
       work.onboardDate = createDatePartsFromDate(addDays(officialDate, -probationDays));
     }
 
-    if (createDateFromParts(work.probEndDate) && !createDateFromParts(work.officialDate)) {
+    if (createDateFromParts(work.probEndDate)) {
       work.officialDate = createDatePartsFromDate(addDays(createDateFromParts(work.probEndDate), 1));
-    }
-
-    if (!createDateFromParts(work.probEndDate) && createDateFromParts(work.officialDate)) {
-      work.probEndDate = createDatePartsFromDate(addDays(createDateFromParts(work.officialDate), -1));
     }
   }
 
   function applyDerivedFields(draft) {
     const nextDraft = cloneDraft(draft);
 
+    nextDraft.contact.phoneNumber = normalizePhoneValue(nextDraft.contact.phoneNumber);
+    nextDraft.contact.emergencyPhone = normalizePhoneValue(nextDraft.contact.emergencyPhone);
+    nextDraft.other = Object.assign({}, nextDraft.other, {
+      attachments: normalizeAttachmentList(nextDraft.other && nextDraft.other.attachments, nextDraft)
+    });
     nextDraft.basic.age = calculateAge(nextDraft.basic.dateOfBirth);
     nextDraft.basic.zodiac = getZodiac(nextDraft.basic.dateOfBirth);
     syncEmploymentDates(nextDraft);
@@ -288,6 +293,43 @@
     return [parts.year, parts.month, parts.day].join("-");
   }
 
+  function normalizePhoneValue(value) {
+    if (!value) {
+      return {
+        countryCode: dataApi.PHONE_COUNTRY_OPTIONS[0],
+        number: ""
+      };
+    }
+
+    if (value.countryCode !== undefined || value.number !== undefined) {
+      return {
+        countryCode: value.countryCode || dataApi.PHONE_COUNTRY_OPTIONS[0],
+        number: value.number || ""
+      };
+    }
+
+    return {
+      countryCode: dataApi.PHONE_COUNTRY_OPTIONS[0],
+      number: value.value || ""
+    };
+  }
+
+  function normalizeAttachmentList(value, draft) {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (draft && draft.other && draft.other.employeesFileName) {
+      return [{
+        id: "attachment-legacy",
+        name: draft.other.employeesFileName,
+        data: draft.other.employeesFileData || ""
+      }];
+    }
+
+    return [];
+  }
+
   function getFieldDisplayValue(employee, fieldId) {
     switch (fieldId) {
       case "vieName":
@@ -303,7 +345,10 @@
       case "titleJob":
         return employee.work.titleJob.preset === "其他" ? employee.work.titleJob.other || "其他" : employee.work.titleJob.preset || "未設定";
       case "phoneNumber":
-        return employee.contact.phoneNumber.value || "未設定";
+        return [
+          normalizePhoneValue(employee.contact.phoneNumber).countryCode,
+          normalizePhoneValue(employee.contact.phoneNumber).number
+        ].filter(Boolean).join(" ").trim() || "未設定";
       case "dateOfBirth":
         return formatDateParts(employee.basic.dateOfBirth);
       case "onboardDate":
@@ -324,7 +369,7 @@
       draft.basic.vieName,
       draft.basic.engName,
       draft.basic.ydiId,
-      draft.contact.phoneNumber.value,
+      normalizePhoneValue(draft.contact.phoneNumber).number,
       draft.work.directBoss,
       draft.other.remark
     ].some(function (value) {
@@ -342,13 +387,22 @@
     }).join("");
   }
 
+  function renderSelectControl(attributes, optionMarkup) {
+    return [
+      '<div class="employee-form__select-wrap">',
+      '<select ' + attributes + '>' + optionMarkup + "</select>",
+      '<span class="employee-form__select-arrow" aria-hidden="true">▾</span>',
+      "</div>"
+    ].join("");
+  }
+
   function renderDatePart(label, path, options, selectedValue, disabled) {
     return [
       '<label class="employee-form__date-part">',
-      '<select data-path="' + escapeHtml(path) + '"' + (disabled ? " disabled" : "") + ">",
-      '<option value="">' + escapeHtml(label) + "</option>",
-      renderOptionList(options, selectedValue),
-      "</select>",
+      renderSelectControl(
+        'data-path="' + escapeHtml(path) + '"' + (disabled ? " disabled" : ""),
+        '<option value="">' + escapeHtml(label) + "</option>" + renderOptionList(options, selectedValue)
+      ),
       '<span class="employee-form__date-unit">' + escapeHtml(label) + "</span>",
       "</label>"
     ].join("");
@@ -383,7 +437,10 @@
     }
 
     if (field.type === "select") {
-      return '<select data-path="' + escapeHtml(field.path) + '"' + (disabled ? " disabled" : "") + '><option value="">請選擇</option>' + renderOptionList(field.options, value) + "</select>";
+      return renderSelectControl(
+        'data-path="' + escapeHtml(field.path) + '"' + (disabled ? " disabled" : ""),
+        '<option value=""></option>' + renderOptionList(field.options, value)
+      );
     }
 
     if (field.type === "computed") {
@@ -395,10 +452,18 @@
     }
 
     if (field.type === "phone") {
+      const phoneValue = normalizePhoneValue(value);
+      const listId = "phone-country-" + field.path.replace(/[.]/g, "-");
+
       return [
         '<div class="employee-form__compound employee-form__compound--phone">',
-        '<select data-path="' + escapeHtml(field.path) + '.mode"' + (disabled ? " disabled" : "") + ">" + renderOptionList(dataApi.PHONE_MODE_OPTIONS, value.mode) + "</select>",
-        '<input type="text" data-path="' + escapeHtml(field.path) + '.value" value="' + escapeHtml(value.value) + '"' + (disabled ? " disabled" : "") + ">",
+        '<div class="employee-form__country-wrap">',
+        '<input class="employee-form__country-input" type="text" list="' + escapeHtml(listId) + '" data-path="' + escapeHtml(field.path) + '.countryCode" value="' + escapeHtml(phoneValue.countryCode) + '" placeholder="國家 + 區碼"' + (disabled ? " disabled" : "") + '>',
+        '<datalist id="' + escapeHtml(listId) + '">' + dataApi.PHONE_COUNTRY_OPTIONS.map(function (option) {
+          return '<option value="' + escapeHtml(option) + '"></option>';
+        }).join("") + "</datalist>",
+        "</div>",
+        '<input type="text" data-path="' + escapeHtml(field.path) + '.number" value="' + escapeHtml(phoneValue.number) + '" placeholder="電話號碼"' + (disabled ? " disabled" : "") + '>',
         "</div>"
       ].join("");
     }
@@ -407,9 +472,14 @@
       const otherVisible = value.preset === "其他";
 
       return [
-        '<div class="employee-form__compound">',
-        '<select data-path="' + escapeHtml(field.path) + '.preset"' + (disabled ? " disabled" : "") + ">" + renderOptionList(dataApi.RELATIONSHIP_OPTIONS, value.preset) + "</select>",
-        '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="請輸入關係"' + (disabled || !otherVisible ? " disabled" : "") + ">",
+        '<div class="employee-form__compound employee-form__compound--stack">',
+        renderSelectControl(
+          'data-path="' + escapeHtml(field.path) + '.preset"' + (disabled ? " disabled" : ""),
+          renderOptionList(dataApi.RELATIONSHIP_OPTIONS, value.preset)
+        ),
+        otherVisible
+          ? '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="請輸入關係"' + (disabled ? " disabled" : "") + '>'
+          : "",
         "</div>"
       ].join("");
     }
@@ -418,9 +488,14 @@
       const otherVisible = value.preset === "其他";
 
       return [
-        '<div class="employee-form__compound">',
-        '<select data-path="' + escapeHtml(field.path) + '.preset"' + (disabled ? " disabled" : "") + ">" + renderOptionList(field.options, value.preset) + "</select>",
-        '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="請輸入其他"' + (disabled || !otherVisible ? " disabled" : "") + ">",
+        '<div class="employee-form__compound employee-form__compound--stack">',
+        renderSelectControl(
+          'data-path="' + escapeHtml(field.path) + '.preset"' + (disabled ? " disabled" : ""),
+          renderOptionList(field.options, value.preset)
+        ),
+        otherVisible
+          ? '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="請輸入其他"' + (disabled ? " disabled" : "") + '>'
+          : "",
         "</div>"
       ].join("");
     }
@@ -428,14 +503,15 @@
     if (field.type === "status") {
       return [
         '<div class="employee-form__status-stack">',
-        '<select data-path="' + escapeHtml(field.path) + '"' + (disabled ? " disabled" : "") + '><option value="">請選擇</option>' +
+        renderSelectControl(
+          'data-path="' + escapeHtml(field.path) + '"' + (disabled ? " disabled" : ""),
           dataApi.STATUS_OPTIONS.map(function (statusValue) {
             const selected = statusValue === value ? " selected" : "";
             const disabledOption = options.statusLocked && statusValue === "離職" ? " disabled" : "";
 
             return '<option value="' + escapeHtml(statusValue) + '"' + selected + disabledOption + ">" + escapeHtml(statusValue) + "</option>";
-          }).join("") +
-        "</select>",
+          }).join("")
+        ),
         value === "離職" ? '<div class="employee-form__nested"><div class="employee-form__field-label employee-form__field-label--nested">最後工作日</div>' + renderDateTripleField({ path: "work.lastDay" }, draft.work.lastDay, !options.isEditable) + "</div>" : "",
         "</div>"
       ].join("");
@@ -444,17 +520,39 @@
     if (field.type === "room") {
       return [
         '<div class="employee-form__compound">',
-        '<select data-path="' + escapeHtml(field.path) + '.type"' + (disabled ? " disabled" : "") + ">" + renderOptionList(dataApi.ROOM_TYPE_OPTIONS, value.type) + "</select>",
+        renderSelectControl(
+          'data-path="' + escapeHtml(field.path) + '.type"' + (disabled ? " disabled" : ""),
+          renderOptionList(dataApi.ROOM_TYPE_OPTIONS, value.type)
+        ),
         '<input type="text" data-path="' + escapeHtml(field.path) + '.value" value="' + escapeHtml(value.value) + '"' + (disabled ? " disabled" : "") + ">",
         "</div>"
       ].join("");
     }
 
     if (field.type === "file") {
+      const attachments = normalizeAttachmentList(value, draft);
+      const pendingAttachment = options.pendingAttachment;
+
       return [
-        '<div class="employee-form__file-row">',
-        '<div class="employee-form__file-name">' + escapeHtml(draft.other.employeesFileName || "尚未上傳檔案") + "</div>",
-        '<button type="button" class="employee-form__ghost-button" data-action="choose-employee-file"' + (!options.isEditable ? " disabled" : "") + ">選擇檔案</button>",
+        '<div class="employee-form__attachments">',
+        attachments.map(function (attachment, index) {
+          return [
+            '<div class="employee-form__attachment-item">',
+            '<button type="button" class="employee-form__attachment-link" data-action="preview-attachment" data-attachment-index="' + String(index) + '">' + escapeHtml(attachment.name) + "</button>",
+            '<div class="employee-form__attachment-actions">',
+            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="replace-attachment" data-attachment-index="' + String(index) + '"' + (!options.isEditable ? " disabled" : "") + ' aria-label="更換檔案">↺</button>',
+            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="move-attachment-up" data-attachment-index="' + String(index) + '"' + (!options.isEditable || index === 0 ? " disabled" : "") + ' aria-label="上移檔案">↑</button>',
+            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="move-attachment-down" data-attachment-index="' + String(index) + '"' + (!options.isEditable || index === attachments.length - 1 ? " disabled" : "") + ' aria-label="下移檔案">↓</button>',
+            '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="request-delete-attachment" data-attachment-index="' + String(index) + '"' + (!options.isEditable ? " disabled" : "") + ' aria-label="刪除檔案">✕</button>',
+            "</div>",
+            "</div>"
+          ].join("");
+        }).join(""),
+        pendingAttachment
+          ? '<div class="employee-form__attachment-item employee-form__attachment-item--pending"><div class="employee-form__attachment-link employee-form__attachment-link--static">' + escapeHtml(pendingAttachment.name) + '</div><div class="employee-form__attachment-actions"><button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="confirm-pending-attachment" aria-label="確認檔案">✓</button><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="cancel-pending-attachment" aria-label="取消檔案">✕</button></div></div>'
+          : "",
+        '<div class="employee-form__file-row"><button type="button" class="employee-form__ghost-button employee-form__attachment-add" data-action="choose-employee-file"' + (!options.isEditable ? " disabled" : "") + ">" + escapeHtml(attachments.length ? "新增檔案" : "選擇檔案") + "</button></div>",
+        pendingAttachment ? '<div class="employee-form__field-hint">按 Enter 可直接確認目前檔案。</div>' : "",
         "</div>"
       ].join("");
     }
@@ -505,6 +603,8 @@
     createDateFromParts: createDateFromParts,
     createDatePartsFromDate: createDatePartsFromDate,
     formatDateParts: formatDateParts,
+    normalizePhoneValue: normalizePhoneValue,
+    normalizeAttachmentList: normalizeAttachmentList,
     getFieldDisplayValue: getFieldDisplayValue,
     hasMeaningfulEmployeeData: hasMeaningfulEmployeeData,
     renderEmployeeFormSections: renderEmployeeFormSections,

@@ -1,5 +1,6 @@
 (function () {
   const DEFAULT_INTERFACE_TITLE = "弈鼎員工";
+  const DEFAULT_INTERFACE_SUBTITLE = "點擊部門切換名單，拖曳即可重新排序。";
   const DEFAULT_IMAGE_SRC = "../image/logo.png";
   const STORAGE_KEY = "yiding_employees_module_state_v1";
 
@@ -48,7 +49,19 @@
   const STATUS_OPTIONS = ["在職", "離職"];
   const RELATIONSHIP_OPTIONS = ["父親", "母親", "哥哥", "姐姐", "弟弟", "妹妹", "親戚", "朋友", "其他"];
   const ROOM_TYPE_OPTIONS = ["別墅", "員工宿舍"];
-  const PHONE_MODE_OPTIONS = ["一般", "國際"];
+  const PHONE_COUNTRY_OPTIONS = [
+    "越南 +84",
+    "澳門 +853",
+    "台灣 +886",
+    "香港 +852",
+    "中國 +86",
+    "韓國 +82",
+    "菲律賓 +63",
+    "寮國 +856",
+    "柬埔寨 +855",
+    "馬來西亞 +60",
+    "日本 +81"
+  ];
 
   const SORT_OPTIONS = [
     { id: "createdAsc", label: "依新增順序" },
@@ -96,8 +109,8 @@
         language: "越南語 / 中文"
       },
       contact: {
-        phoneNumber: { mode: "一般", value: "0911 223 344" },
-        emergencyPhone: { mode: "國際", value: "+84 912 888 199" },
+        phoneNumber: { countryCode: "越南 +84", number: "0911 223 344" },
+        emergencyPhone: { countryCode: "越南 +84", number: "912 888 199" },
         emergencyRelationship: { preset: "母親", other: "" },
         email: "candy@yiding.local",
         nationId: "VN0921200",
@@ -125,8 +138,7 @@
         officialSalary: "22000"
       },
       other: {
-        employeesFileName: "",
-        employeesFileData: "",
+        attachments: [],
         remark: "熟悉賬務流程。"
       }
     },
@@ -149,8 +161,8 @@
         language: "越南語 / 中文"
       },
       contact: {
-        phoneNumber: { mode: "一般", value: "0908 777 991" },
-        emergencyPhone: { mode: "一般", value: "0901 000 998" },
+        phoneNumber: { countryCode: "越南 +84", number: "0908 777 991" },
+        emergencyPhone: { countryCode: "越南 +84", number: "0901 000 998" },
         emergencyRelationship: { preset: "姐姐", other: "" },
         email: "alice@yiding.local",
         nationId: "VN222880",
@@ -178,8 +190,7 @@
         officialSalary: "18000"
       },
       other: {
-        employeesFileName: "",
-        employeesFileData: "",
+        attachments: [],
         remark: "負責前線接待。"
       }
     },
@@ -202,8 +213,8 @@
         language: "越南語 / 英語"
       },
       contact: {
-        phoneNumber: { mode: "一般", value: "0912 112 233" },
-        emergencyPhone: { mode: "一般", value: "0933 889 221" },
+        phoneNumber: { countryCode: "越南 +84", number: "0912 112 233" },
+        emergencyPhone: { countryCode: "越南 +84", number: "0933 889 221" },
         emergencyRelationship: { preset: "父親", other: "" },
         email: "leo@yiding.local",
         nationId: "VN887733",
@@ -231,8 +242,7 @@
         officialSalary: "30000"
       },
       other: {
-        employeesFileName: "",
-        employeesFileData: "",
+        attachments: [],
         remark: "現場管理經驗完整。"
       }
     },
@@ -255,8 +265,8 @@
         language: "越南語 / 中文 / 英語"
       },
       contact: {
-        phoneNumber: { mode: "國際", value: "+84 936 552 889" },
-        emergencyPhone: { mode: "一般", value: "0981 115 779" },
+        phoneNumber: { countryCode: "越南 +84", number: "936 552 889" },
+        emergencyPhone: { countryCode: "越南 +84", number: "0981 115 779" },
         emergencyRelationship: { preset: "朋友", other: "" },
         email: "may@yiding.local",
         nationId: "VN112288",
@@ -284,8 +294,7 @@
         officialSalary: "15000"
       },
       other: {
-        employeesFileName: "",
-        employeesFileData: "",
+        attachments: [],
         remark: "已完成離職交接。"
       }
     }
@@ -299,7 +308,19 @@
     return { year: "", month: "", day: "" };
   }
 
+  function createTodayDateParts() {
+    const now = new Date();
+
+    return {
+      year: String(now.getFullYear()),
+      month: String(now.getMonth() + 1).padStart(2, "0"),
+      day: String(now.getDate()).padStart(2, "0")
+    };
+  }
+
   function createEmptyEmployeeDraft(departmentName) {
+    const today = createTodayDateParts();
+
     return {
       id: "",
       createdAt: 0,
@@ -312,15 +333,15 @@
         ydiId: "",
         haId: "",
         sex: "",
-        dateOfBirth: createEmptyDateParts(),
+        dateOfBirth: cloneValue(today),
         age: "",
         zodiac: "",
         nationality: "",
         language: ""
       },
       contact: {
-        phoneNumber: { mode: "一般", value: "" },
-        emergencyPhone: { mode: "一般", value: "" },
+        phoneNumber: { countryCode: PHONE_COUNTRY_OPTIONS[0], number: "" },
+        emergencyPhone: { countryCode: PHONE_COUNTRY_OPTIONS[0], number: "" },
         emergencyRelationship: { preset: "父親", other: "" },
         email: "",
         nationId: "",
@@ -334,12 +355,12 @@
         directBoss: "",
         recruitmentDept: "",
         status: "在職",
-        onboardDate: createEmptyDateParts(),
+        onboardDate: cloneValue(today),
         probationDays: "",
-        probEndDate: createEmptyDateParts(),
-        officialDate: createEmptyDateParts(),
+        probEndDate: cloneValue(today),
+        officialDate: cloneValue(today),
         roomNumber: { type: "別墅", value: "" },
-        lastDay: createEmptyDateParts()
+        lastDay: cloneValue(today)
       },
       bank: {
         bankNumber: "",
@@ -348,8 +369,7 @@
         officialSalary: ""
       },
       other: {
-        employeesFileName: "",
-        employeesFileData: "",
+        attachments: [],
         remark: ""
       }
     };
@@ -367,6 +387,7 @@
     return {
       interfaceMeta: {
         title: DEFAULT_INTERFACE_TITLE,
+        subtitle: DEFAULT_INTERFACE_SUBTITLE,
         iconSrc: DEFAULT_IMAGE_SRC,
         customIcon: false
       },
@@ -390,6 +411,7 @@
 
   window.YiDingEmployeesData = {
     DEFAULT_INTERFACE_TITLE: DEFAULT_INTERFACE_TITLE,
+    DEFAULT_INTERFACE_SUBTITLE: DEFAULT_INTERFACE_SUBTITLE,
     DEFAULT_IMAGE_SRC: DEFAULT_IMAGE_SRC,
     STORAGE_KEY: STORAGE_KEY,
     DEFAULT_DEPARTMENTS: DEFAULT_DEPARTMENTS,
@@ -401,12 +423,13 @@
     STATUS_OPTIONS: STATUS_OPTIONS,
     RELATIONSHIP_OPTIONS: RELATIONSHIP_OPTIONS,
     ROOM_TYPE_OPTIONS: ROOM_TYPE_OPTIONS,
-    PHONE_MODE_OPTIONS: PHONE_MODE_OPTIONS,
+    PHONE_COUNTRY_OPTIONS: PHONE_COUNTRY_OPTIONS,
     SORT_OPTIONS: SORT_OPTIONS,
     CARD_FIELD_OPTIONS: CARD_FIELD_OPTIONS,
     SEED_EMPLOYEES: SEED_EMPLOYEES,
     cloneValue: cloneValue,
     createEmptyDateParts: createEmptyDateParts,
+    createTodayDateParts: createTodayDateParts,
     createEmptyEmployeeDraft: createEmptyEmployeeDraft,
     createInitialState: createInitialState
   };

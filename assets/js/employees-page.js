@@ -10,6 +10,8 @@
   const uiState = {
     editingTitle: false,
     titleDraft: "",
+    editingSubtitle: false,
+    subtitleDraft: "",
     addingDepartment: false,
     departmentDraft: "",
     editingDepartmentId: "",
@@ -17,7 +19,7 @@
     openDepartmentMenuId: "",
     draggingDepartmentId: "",
     creatingTab: false,
-    tabDraft: { name: "", condition: "" },
+    tabDraft: { name: "", fieldId: "work.status", operator: "is", value: "在職" },
     openMoreTabs: false,
     showSearchInput: false,
     showFilterMenu: false,
@@ -31,11 +33,45 @@
     passwordDraft: "",
     passwordError: "",
     noticeText: "",
-    previewImageSrc: ""
+    previewImageSrc: "",
+    pendingAttachment: null,
+    attachmentDeleteIndex: -1
   };
 
   let state = loadState();
   const dom = {};
+  const TAB_FILTER_FIELDS = [
+    { id: "work.department", label: "部門", type: "select" },
+    { id: "work.status", label: "狀態", type: "select", options: dataApi.STATUS_OPTIONS },
+    { id: "basic.engName", label: "英文姓名", type: "text" },
+    { id: "basic.vieName", label: "越文姓名", type: "text" },
+    { id: "work.position", label: "職位", type: "select", options: dataApi.POSITION_OPTIONS },
+    { id: "work.onboardDate", label: "入職日期", type: "date" },
+    { id: "basic.age", label: "年齡", type: "number" },
+    { id: "basic.sex", label: "性別", type: "select", options: dataApi.SEX_OPTIONS }
+  ];
+  const TAB_OPERATORS_BY_TYPE = {
+    text: [
+      { id: "contains", label: "包含" },
+      { id: "equals", label: "等於" },
+      { id: "is", label: "是" },
+      { id: "isNot", label: "不是" }
+    ],
+    select: [
+      { id: "is", label: "是" },
+      { id: "isNot", label: "不是" }
+    ],
+    date: [
+      { id: "equals", label: "等於" },
+      { id: "before", label: "早於" },
+      { id: "after", label: "晚於" }
+    ],
+    number: [
+      { id: "equals", label: "等於" },
+      { id: "before", label: "小於" },
+      { id: "after", label: "大於" }
+    ]
+  };
 
   function escapeHtml(value) {
     return String(value || "")
@@ -44,6 +80,77 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function getTabFieldConfig(fieldId) {
+    return TAB_FILTER_FIELDS.find(function (field) {
+      return field.id === fieldId;
+    }) || TAB_FILTER_FIELDS[0];
+  }
+
+  function getTabOperators(fieldId) {
+    const field = getTabFieldConfig(fieldId);
+    return TAB_OPERATORS_BY_TYPE[field.type] || TAB_OPERATORS_BY_TYPE.text;
+  }
+
+  function normalizeTab(tab, sourceState) {
+    const fieldId = getTabFieldConfig(tab && tab.fieldId).id;
+    const operators = getTabOperators(fieldId);
+    const defaultOperator = operators[0] ? operators[0].id : "is";
+    const field = getTabFieldConfig(fieldId);
+    let nextValue = tab && tab.value !== undefined ? String(tab.value) : "";
+
+    if (field.type === "select" && !nextValue) {
+      nextValue = getFieldOptionList(fieldId, sourceState)[0] || "";
+    }
+
+    return {
+      id: tab && tab.id ? tab.id : "tab-" + Date.now(),
+      name: tab && tab.name ? String(tab.name) : "",
+      fieldId: fieldId,
+      operator: operators.some(function (option) { return option.id === (tab && tab.operator); }) ? tab.operator : defaultOperator,
+      value: nextValue
+    };
+  }
+
+  function normalizePhoneEntry(entry) {
+    return formApi.normalizePhoneValue(entry);
+  }
+
+  function normalizeAttachments(otherSection) {
+    const attachments = formApi.normalizeAttachmentList(otherSection && otherSection.attachments, { other: otherSection || {} });
+
+    return attachments.map(function (attachment, index) {
+      return {
+        id: attachment.id || "attachment-" + String(Date.now()) + "-" + String(index),
+        name: attachment.name || attachment.fileName || "未命名檔案",
+        data: attachment.data || attachment.url || ""
+      };
+    });
+  }
+
+  function normalizeEmployee(employee) {
+    const nextEmployee = formApi.applyDerivedFields(employee);
+
+    nextEmployee.contact.phoneNumber = normalizePhoneEntry(nextEmployee.contact.phoneNumber);
+    nextEmployee.contact.emergencyPhone = normalizePhoneEntry(nextEmployee.contact.emergencyPhone);
+    nextEmployee.other = Object.assign({}, nextEmployee.other, {
+      attachments: normalizeAttachments(nextEmployee.other)
+    });
+
+    return nextEmployee;
+  }
+
+  function getFieldOptionList(fieldId, sourceState) {
+    if (fieldId === "work.department") {
+      const currentState = sourceState || state;
+
+      return currentState.departments.map(function (department) {
+        return department.name;
+      }).concat([dataApi.RETIRED_DEPARTMENT.name]);
+    }
+
+    return (getTabFieldConfig(fieldId).options || []).slice();
   }
 
   function loadState() {
@@ -70,8 +177,14 @@
     nextState.activeTabByDepartment = Object.assign({}, initialState.activeTabByDepartment, rawState.activeTabByDepartment || {});
     nextState.cardDisplay = Object.assign({}, initialState.cardDisplay, rawState.cardDisplay || {});
     nextState.filters = Object.assign({}, initialState.filters, rawState.filters || {});
+    nextState.interfaceMeta.subtitle = nextState.interfaceMeta.subtitle || dataApi.DEFAULT_INTERFACE_SUBTITLE;
     nextState.employees = (rawState.employees || initialState.employees).map(function (employee) {
-      return formApi.applyDerivedFields(employee);
+      return normalizeEmployee(employee);
+    });
+    Object.keys(nextState.tabsByDepartment).forEach(function (departmentId) {
+      nextState.tabsByDepartment[departmentId] = (nextState.tabsByDepartment[departmentId] || []).map(function (tab) {
+        return normalizeTab(tab, nextState);
+      });
     });
     nextState.cardDisplay.extraFieldIds = (nextState.cardDisplay.extraFieldIds || initialState.cardDisplay.extraFieldIds).slice(0, 2);
 
@@ -139,10 +252,10 @@
     const currentDraft = getCurrentDraftEmployee();
 
     if (uiState.detailMode === "add") {
-      return formApi.hasMeaningfulEmployeeData(currentDraft) || uiState.avatarDirty;
+      return formApi.hasMeaningfulEmployeeData(currentDraft) || uiState.avatarDirty || Boolean(uiState.pendingAttachment);
     }
 
-    return JSON.stringify(currentDraft) !== JSON.stringify(getCurrentReferenceEmployee()) || uiState.avatarDirty;
+    return JSON.stringify(currentDraft) !== JSON.stringify(getCurrentReferenceEmployee()) || uiState.avatarDirty || Boolean(uiState.pendingAttachment);
   }
 
   function buildShell() {
@@ -199,9 +312,107 @@
     });
   }
 
+  function resolveEmployeeFieldValue(employee, fieldId) {
+    if (fieldId === "work.department") {
+      return employee.work.department.preset === "其他" ? employee.work.department.other || "其他" : employee.work.department.preset;
+    }
+
+    if (fieldId === "work.onboardDate") {
+      return formApi.formatDateParts(employee.work.onboardDate);
+    }
+
+    if (fieldId === "basic.age") {
+      return employee.basic.age || "";
+    }
+
+    return formApi.getValueAtPath(employee, fieldId) || "";
+  }
+
+  function getActiveTabConfig() {
+    const activeId = state.activeTabByDepartment[state.selectedDepartmentId];
+    const tabs = state.tabsByDepartment[state.selectedDepartmentId] || [];
+
+    return tabs.find(function (tab) {
+      return tab.id === activeId;
+    }) || null;
+  }
+
+  function formatTabSummary(tab) {
+    const field = getTabFieldConfig(tab.fieldId);
+    const operator = getTabOperators(tab.fieldId).find(function (option) {
+      return option.id === tab.operator;
+    });
+
+    return [field.label, operator ? operator.label : "", tab.value].filter(Boolean).join(" ");
+  }
+
+  function doesEmployeeMatchTab(employee, tab) {
+    if (!tab || !tab.fieldId || !tab.operator) {
+      return true;
+    }
+
+    const field = getTabFieldConfig(tab.fieldId);
+    const rawValue = resolveEmployeeFieldValue(employee, tab.fieldId);
+    const employeeValue = String(rawValue || "").trim();
+    const filterValue = String(tab.value || "").trim();
+
+    if (!filterValue) {
+      return true;
+    }
+
+    if (field.type === "date") {
+      if (!employeeValue) {
+        return false;
+      }
+
+      if (tab.operator === "before") {
+        return employeeValue < filterValue;
+      }
+
+      if (tab.operator === "after") {
+        return employeeValue > filterValue;
+      }
+
+      return employeeValue === filterValue;
+    }
+
+    if (field.type === "number") {
+      const employeeNumber = Number(employeeValue);
+      const filterNumber = Number(filterValue);
+
+      if (!Number.isFinite(employeeNumber) || !Number.isFinite(filterNumber)) {
+        return false;
+      }
+
+      if (tab.operator === "before") {
+        return employeeNumber < filterNumber;
+      }
+
+      if (tab.operator === "after") {
+        return employeeNumber > filterNumber;
+      }
+
+      return employeeNumber === filterNumber;
+    }
+
+    const left = employeeValue.toLowerCase();
+    const right = filterValue.toLowerCase();
+
+    if (tab.operator === "contains") {
+      return left.indexOf(right) >= 0;
+    }
+
+    if (tab.operator === "isNot") {
+      return left !== right;
+    }
+
+    return left === right;
+  }
+
   function getVisibleEmployees() {
     const searchQuery = state.searchQuery.trim().toLowerCase();
     const selectedDepartmentId = state.selectedDepartmentId;
+    const activeTab = isRetiredView() ? null : getActiveTabConfig();
     const filteredEmployees = state.employees.filter(function (employee) {
       const inDepartment = isRetiredView()
         ? employee.work.status === "離職"
@@ -219,6 +430,10 @@
         return false;
       }
 
+      if (activeTab && !doesEmployeeMatchTab(employee, activeTab)) {
+        return false;
+      }
+
       if (!searchQuery) {
         return true;
       }
@@ -227,7 +442,7 @@
         employee.basic.vieName,
         employee.basic.engName,
         employee.basic.ydiId,
-        employee.contact.phoneNumber.value,
+        formApi.normalizePhoneValue(employee.contact.phoneNumber).number,
         employee.work.position
       ].some(function (value) {
         return String(value || "").toLowerCase().indexOf(searchQuery) >= 0;
@@ -333,6 +548,7 @@
 
   function renderSidebar() {
     const selectedDepartmentId = state.selectedDepartmentId;
+    const subtitleText = state.interfaceMeta.subtitle || dataApi.DEFAULT_INTERFACE_SUBTITLE;
 
     dom.sidebarMount.innerHTML = [
       '<div class="employees-sidebar__header">',
@@ -341,8 +557,8 @@
       '<img class="employees-sidebar__icon-preview" src="' + escapeHtml(state.interfaceMeta.iconSrc) + '" alt="介面圖示">',
       "</button>",
       '<div class="employees-sidebar__icon-tools">',
-      '<button type="button" class="employees-icon-button" data-action="choose-interface-icon" aria-label="更換介面圖片">' + getIconSvg("edit") + "</button>",
-      '<button type="button" class="employees-icon-button employees-icon-button--danger" data-action="reset-interface-icon" ' + (state.interfaceMeta.customIcon ? "" : "disabled") + ' aria-label="還原介面圖片">' + getIconSvg("trash") + "</button>",
+      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="choose-interface-icon" aria-label="更換介面圖片">' + getIconSvg("edit") + "</button>",
+      '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="reset-interface-icon" ' + (state.interfaceMeta.customIcon ? "" : "disabled") + ' aria-label="還原介面圖片">' + getIconSvg("trash") + "</button>",
       "</div>",
       "</div>",
       '<div class="employees-sidebar__text">',
@@ -351,10 +567,17 @@
         ? '<input id="employeesTitleInput" class="employees-sidebar__title-input" type="text" value="' + escapeHtml(uiState.titleDraft) + '">'
         : '<h1 class="employees-sidebar__title">' + escapeHtml(state.interfaceMeta.title) + "</h1>",
       '<div class="employees-sidebar__title-actions">',
-      '<button type="button" class="employees-icon-button" data-action="toggle-title-edit" aria-label="編輯標題">' + getIconSvg("edit") + "</button>",
+      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-title-edit" aria-label="編輯標題">' + getIconSvg("edit") + "</button>",
       "</div>",
       "</div>",
-      '<div class="employees-sidebar__caption">點擊部門切換名單，拖曳即可重新排序。</div>',
+      '<div class="employees-sidebar__subtitle-row">',
+      uiState.editingSubtitle
+        ? '<input id="employeesSubtitleInput" class="employees-sidebar__title-input employees-sidebar__subtitle-input" type="text" value="' + escapeHtml(uiState.subtitleDraft) + '">'
+        : '<div class="employees-sidebar__caption">' + escapeHtml(subtitleText) + "</div>",
+      '<div class="employees-sidebar__title-actions">',
+      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-subtitle-edit" aria-label="編輯說明">' + getIconSvg("edit") + "</button>",
+      "</div>",
+      "</div>",
       "</div>",
       "</div>",
       '<div class="employees-sidebar__body">',
@@ -372,7 +595,7 @@
             ? '<input class="employees-department__edit-input" data-role="department-edit-input" type="text" value="' + escapeHtml(uiState.departmentEditDraft) + '">'
             : '<div class="employees-department__name">' + escapeHtml(department.name) + "</div>",
           '<div class="employees-department__menu">',
-          '<button type="button" class="employees-icon-button employees-department__menu-button" data-action="toggle-department-menu" data-department-id="' + escapeHtml(department.id) + '" aria-label="部門選單">' + getIconSvg("more") + "</button>",
+          '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-department__menu-button" data-action="toggle-department-menu" data-department-id="' + escapeHtml(department.id) + '" aria-label="部門選單">' + getIconSvg("more") + "</button>",
           isMenuOpen
             ? '<div class="employees-department__menu-panel"><button type="button" data-action="start-edit-department" data-department-id="' + escapeHtml(department.id) + '">編輯</button><button type="button" data-action="delete-department" data-department-id="' + escapeHtml(department.id) + '">刪除</button></div>'
             : "",
@@ -380,13 +603,13 @@
           "</div>"
         ].join("");
       }).join(""),
+      '<div class="employees-department-fixed employees-department--retired">',
+      '<button type="button" class="employees-department' + (selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id ? " employees-department--active" : "") + '" data-action="select-department" data-department-id="' + escapeHtml(dataApi.RETIRED_DEPARTMENT.id) + '"><div class="employees-department__grip employees-department__grip--empty" aria-hidden="true"></div><div class="employees-department__name">' + escapeHtml(dataApi.RETIRED_DEPARTMENT.name) + '</div><div class="employees-department__menu employees-department__menu--empty"></div></button>',
+      "</div>",
       '<div class="employees-department-add">',
       uiState.addingDepartment
         ? '<input id="employeesDepartmentInput" class="employees-department-add__input" type="text" value="' + escapeHtml(uiState.departmentDraft) + '" placeholder="請輸入部門名稱">'
         : '<button type="button" class="employees-department-add__button" data-action="start-add-department"><span>' + getIconSvg("plus") + '</span><strong>新增部門</strong></button>',
-      "</div>",
-      '<div class="employees-department-fixed employees-department--retired">',
-      '<button type="button" class="employees-department' + (selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id ? " employees-department--active" : "") + '" data-action="select-department" data-department-id="' + escapeHtml(dataApi.RETIRED_DEPARTMENT.id) + '"><div class="employees-department__grip" aria-hidden="true"></div><div class="employees-department__name">' + escapeHtml(dataApi.RETIRED_DEPARTMENT.name) + '</div><div></div></button>',
       "</div>",
       "</div>",
       "</div>"
@@ -396,21 +619,6 @@
   function renderMainHeader() {
     const selectedDepartment = getSelectedDepartment();
     const isRetired = isRetiredView();
-    const selectedEmployee = getEmployeeById(uiState.selectedEmployeeId);
-    const normalActions = [
-      selectedEmployee && uiState.detailMode !== "add"
-        ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">刪除</button>'
-        : "",
-      '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>新增</span></button>'
-    ].join("");
-
-    const retiredActions = selectedEmployee
-      ? [
-          '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">刪除</button>',
-          '<button type="button" class="employees-secondary-button" data-action="start-edit-employee"' + (uiState.detailMode === "edit" ? " disabled" : "") + ">編輯</button>",
-          '<button type="button" class="employees-primary-button" data-action="save-employee"' + (uiState.detailMode !== "edit" ? " disabled" : "") + ">儲存</button>"
-        ].join("")
-      : "";
 
     dom.mainHeaderMount.innerHTML = [
       '<div class="employees-main__title-row">',
@@ -418,7 +626,7 @@
       '<h1>' + escapeHtml(selectedDepartment.name) + "</h1>",
       '<div class="employees-main__title-note">' + (isRetired ? "離職名單預設依最後工作日排序。" : "點擊員工卡片可展開右側詳細資料。") + "</div>",
       "</div>",
-      '<div class="employees-main__actions">' + (isRetired ? retiredActions : normalActions) + "</div>",
+      '<div class="employees-main__actions"></div>',
       "</div>"
     ].join("");
   }
@@ -464,6 +672,26 @@
     ].join("");
   }
 
+  function renderTabValueControl() {
+    const draftField = getTabFieldConfig(uiState.tabDraft.fieldId);
+
+    if (draftField.type === "select") {
+      return '<div class="employees-toolbar__composer-field"><label>內容</label><select id="employeesTabValueInput">' + getFieldOptionList(draftField.id).map(function (option) {
+        return '<option value="' + escapeHtml(option) + '"' + (uiState.tabDraft.value === option ? " selected" : "") + ">" + escapeHtml(option) + "</option>";
+      }).join("") + "</select></div>";
+    }
+
+    if (draftField.type === "date") {
+      return '<div class="employees-toolbar__composer-field"><label>日期</label><input type="text" id="employeesTabValueInput" value="' + escapeHtml(uiState.tabDraft.value) + '" placeholder="2026-03-31"></div>';
+    }
+
+    if (draftField.type === "number") {
+      return '<div class="employees-toolbar__composer-field"><label>數值</label><input type="number" id="employeesTabValueInput" value="' + escapeHtml(uiState.tabDraft.value) + '" placeholder="0"></div>';
+    }
+
+    return '<div class="employees-toolbar__composer-field"><label>內容</label><input type="text" id="employeesTabValueInput" value="' + escapeHtml(uiState.tabDraft.value) + '" placeholder="請輸入條件"></div>';
+  }
+
   function renderToolbar() {
     const visibleTabsData = getVisibleTabs();
     const activeTabId = state.activeTabByDepartment[state.selectedDepartmentId] || "";
@@ -491,19 +719,29 @@
       '<div class="employees-toolbar__left">',
       '<div class="employees-tabs">',
       visibleTabsData.visibleTabs.map(function (tab) {
-        return '<button type="button" class="employees-tab' + (activeTabId === tab.id ? " employees-tab--active" : "") + '" data-action="select-tab" data-tab-id="' + escapeHtml(tab.id) + '" title="' + escapeHtml(tab.condition || "") + '">' + escapeHtml(tab.name) + (tab.condition ? '<span class="employees-tab__condition">' + escapeHtml(tab.condition) + "</span>" : "") + "</button>";
+        return '<button type="button" class="employees-tab' + (activeTabId === tab.id ? " employees-tab--active" : "") + '" data-action="select-tab" data-tab-id="' + escapeHtml(tab.id) + '" title="' + escapeHtml(formatTabSummary(tab)) + '">' + escapeHtml(tab.name || formatTabSummary(tab)) + '<span class="employees-tab__condition">' + escapeHtml(formatTabSummary(tab)) + "</span></button>";
       }).join(""),
       visibleTabsData.hiddenTabs.length
         ? '<div class="employees-tool-group" data-tool-group="more-tabs"><button type="button" class="employees-tab" data-action="toggle-more-tabs">更多</button>' +
           (uiState.openMoreTabs ? '<div class="employees-popover" data-modal-body="true">' + visibleTabsData.hiddenTabs.map(function (tab) {
-            return '<button type="button" class="employees-inline-action" data-action="select-tab" data-tab-id="' + escapeHtml(tab.id) + '">' + escapeHtml(tab.name) + "</button>";
+            return '<button type="button" class="employees-inline-action" data-action="select-tab" data-tab-id="' + escapeHtml(tab.id) + '">' + escapeHtml(tab.name || formatTabSummary(tab)) + "</button>";
           }).join("") + "</div>" : "") +
           "</div>"
         : "",
       '<button type="button" class="employees-tab" data-action="start-create-tab" title="新增分頁">' + getIconSvg("plus") + "</button>",
       "</div>",
       uiState.creatingTab
-        ? '<div class="employees-toolbar__composer"><input type="text" id="employeesTabNameInput" value="' + escapeHtml(uiState.tabDraft.name) + '" placeholder="分頁名稱"><input type="text" id="employeesTabConditionInput" value="' + escapeHtml(uiState.tabDraft.condition) + '" placeholder="條件說明（選填）"></div>'
+        ? '<div class="employees-toolbar__composer">' +
+          '<div class="employees-toolbar__composer-field"><label>分頁名稱</label><input type="text" id="employeesTabNameInput" value="' + escapeHtml(uiState.tabDraft.name) + '" placeholder="可留空，由條件自動命名"></div>' +
+          '<div class="employees-toolbar__composer-field"><label>欄位</label><select id="employeesTabFieldInput">' + TAB_FILTER_FIELDS.map(function (field) {
+            return '<option value="' + escapeHtml(field.id) + '"' + (uiState.tabDraft.fieldId === field.id ? " selected" : "") + ">" + escapeHtml(field.label) + "</option>";
+          }).join("") + "</select></div>" +
+          '<div class="employees-toolbar__composer-field"><label>條件</label><select id="employeesTabOperatorInput">' + getTabOperators(uiState.tabDraft.fieldId).map(function (operator) {
+            return '<option value="' + escapeHtml(operator.id) + '"' + (uiState.tabDraft.operator === operator.id ? " selected" : "") + ">" + escapeHtml(operator.label) + "</option>";
+          }).join("") + "</select></div>" +
+          renderTabValueControl() +
+          '<button type="button" class="employees-primary-button employees-toolbar__composer-confirm" data-action="confirm-create-tab">建立</button>' +
+          "</div>"
         : "",
       "</div>",
       '<div class="employees-toolbar__right">',
@@ -631,24 +869,24 @@
 
     dom.detailMount.innerHTML = [
       '<div class="employees-detail__actions">',
-      '<div>' + (inRetired && selectedEmployee ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">刪除</button>' : "") + "</div>",
-      '<div>' + (!inRetired ? '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>新增</span></button>' : "") + "</div>",
-      "</div>",
       '<button type="button" class="employees-secondary-button employees-detail__collapse" data-action="request-close-panel">&gt;&gt;</button>',
+      '<div class="employees-detail__actions-right">' +
+        (selectedEmployee && uiState.detailMode !== "add"
+          ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">刪除</button>'
+          : "") +
+        (!inRetired ? '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>新增</span></button>' : "") +
+      "</div>",
+      "</div>",
       '<div class="employees-detail__content">',
       '<div class="employees-avatar-box">',
       '<div class="employees-avatar-box__preview-wrap">',
-      '<button type="button" class="employees-avatar-box__preview" data-action="preview-avatar" data-tooltip="點擊查看頭像">',
+      '<button type="button" class="employees-avatar-box__preview" data-action="preview-avatar" data-tooltip="' + escapeHtml(isEditable ? "點擊查看或更換頭像" : "點擊查看頭像") + '">',
       '<img src="' + escapeHtml(draft.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="員工頭像">',
       "</button>",
-      '<div class="employees-avatar-box__actions">',
-      '<button type="button" class="employees-secondary-button" data-action="choose-avatar"' + (!isEditable ? " disabled" : "") + ">更換</button>",
-      draft.avatarChanged ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="reset-avatar"' + (!isEditable ? " disabled" : "") + ">還原</button>" : "",
-      "</div>",
       "</div>",
       '<div class="employees-avatar-box__meta">' + (isEditable ? "點擊頭像可預覽或更換" : "點擊頭像可放大預覽") + "</div>",
       "</div>",
-      '<div class="employee-form">' + formApi.renderEmployeeFormSections(draft, { isEditable: isEditable, statusLocked: uiState.detailMode === "add" }) + "</div>",
+      '<div class="employee-form">' + formApi.renderEmployeeFormSections(draft, { isEditable: isEditable, statusLocked: uiState.detailMode === "add", pendingAttachment: uiState.pendingAttachment }) + "</div>",
       "</div>",
       !inRetired ? [
         '<div class="employees-detail__footer">',
@@ -699,6 +937,21 @@
       return;
     }
 
+    if (uiState.openModal === "password-delete-attachment") {
+      dom.modalMount.innerHTML = [
+        '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
+        '<h2 class="employees-modal__title">請輸入檔案刪除密碼</h2>',
+        '<div class="employees-modal__text">密碼固定為：09110</div>',
+        '<input id="employeesPasswordInput" class="employees-modal__input" type="password" value="' + escapeHtml(uiState.passwordDraft) + '">',
+        uiState.passwordError ? '<div class="employees-modal__text" style="color:#ff8a80;">' + escapeHtml(uiState.passwordError) + "</div>" : "",
+        '<div class="employees-modal__actions">',
+        '<button type="button" class="employees-secondary-button" data-action="close-modal">取消</button>',
+        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="confirm-delete-attachment">刪除</button>',
+        "</div></div></div>"
+      ].join("");
+      return;
+    }
+
     if (uiState.openModal === "confirm-close") {
       dom.modalMount.innerHTML = [
         '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
@@ -728,10 +981,11 @@
         '<div class="employees-modal">',
         '<button type="button" class="employees-image-preview__backdrop" data-action="close-modal" aria-label="關閉預覽"></button>',
         '<div class="employees-image-preview" data-modal-body="true">',
+        '<div class="employees-image-preview__frame-wrap">',
+        '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-image-preview__close" data-action="close-modal" aria-label="關閉預覽">✕</button>',
         '<div class="employees-image-preview__frame">',
-        '<button type="button" class="employees-icon-button employees-image-preview__close" data-action="close-modal" aria-label="關閉預覽">✕</button>',
         '<img src="' + escapeHtml(uiState.previewImageSrc) + '" alt="頭像預覽">',
-        "</div>",
+        "</div></div>",
         '<div class="employees-image-preview__actions">' +
           (uiState.detailMode === "add" || uiState.detailMode === "edit"
             ? '<button type="button" class="employees-secondary-button" data-action="choose-avatar">更換</button>' +
@@ -753,6 +1007,14 @@
         }
       }
 
+      if (uiState.editingSubtitle) {
+        const subtitleInput = document.getElementById("employeesSubtitleInput");
+        if (subtitleInput) {
+          subtitleInput.focus();
+          subtitleInput.select();
+        }
+      }
+
       if (uiState.addingDepartment) {
         const departmentInput = document.getElementById("employeesDepartmentInput");
         if (departmentInput) {
@@ -762,7 +1024,7 @@
       }
 
       if (uiState.creatingTab) {
-        const tabInput = document.getElementById("employeesTabNameInput");
+        const tabInput = document.getElementById("employeesTabFieldInput") || document.getElementById("employeesTabNameInput");
         if (tabInput) {
           tabInput.focus();
         }
@@ -820,6 +1082,7 @@
     uiState.draftEmployee = formApi.applyDerivedFields(draft);
     uiState.referenceEmployee = null;
     uiState.avatarDirty = false;
+    uiState.pendingAttachment = null;
     renderAll();
   }
 
@@ -835,6 +1098,7 @@
     uiState.draftEmployee = formApi.cloneDraft(employee);
     uiState.referenceEmployee = formApi.cloneDraft(employee);
     uiState.avatarDirty = false;
+    uiState.pendingAttachment = null;
     renderAll();
   }
 
@@ -848,6 +1112,10 @@
   }
 
   function saveEmployee() {
+    if (uiState.pendingAttachment) {
+      confirmPendingAttachment();
+    }
+
     const draft = getCurrentDraftEmployee();
 
     if (!draft) {
@@ -877,6 +1145,7 @@
     uiState.draftEmployee = formApi.cloneDraft(serialized);
     uiState.referenceEmployee = formApi.cloneDraft(serialized);
     uiState.avatarDirty = false;
+    uiState.pendingAttachment = null;
     renderAll();
   }
 
@@ -886,6 +1155,8 @@
     uiState.draftEmployee = null;
     uiState.referenceEmployee = null;
     uiState.avatarDirty = false;
+    uiState.pendingAttachment = null;
+    uiState.attachmentDeleteIndex = -1;
     uiState.openModal = null;
     renderAll();
   }
@@ -919,6 +1190,8 @@
   }
 
   function toggleTitleEdit() {
+    uiState.editingSubtitle = false;
+    uiState.subtitleDraft = "";
     uiState.editingTitle = !uiState.editingTitle;
     uiState.titleDraft = uiState.editingTitle ? state.interfaceMeta.title : "";
     renderSidebar();
@@ -946,7 +1219,41 @@
     renderSidebar();
   }
 
+  function toggleSubtitleEdit() {
+    uiState.editingTitle = false;
+    uiState.titleDraft = "";
+    uiState.editingSubtitle = !uiState.editingSubtitle;
+    uiState.subtitleDraft = uiState.editingSubtitle ? (state.interfaceMeta.subtitle || dataApi.DEFAULT_INTERFACE_SUBTITLE) : "";
+    renderSidebar();
+    focusPendingInputs();
+  }
+
+  function cancelSubtitleEdit() {
+    uiState.editingSubtitle = false;
+    uiState.subtitleDraft = "";
+    renderSidebar();
+  }
+
+  function confirmSubtitleEdit() {
+    const trimmed = uiState.subtitleDraft.trim();
+
+    if (!trimmed) {
+      cancelSubtitleEdit();
+      return;
+    }
+
+    state.interfaceMeta.subtitle = trimmed;
+    persistState();
+    uiState.editingSubtitle = false;
+    uiState.subtitleDraft = "";
+    renderSidebar();
+  }
+
   function startAddDepartment() {
+    uiState.editingTitle = false;
+    uiState.titleDraft = "";
+    uiState.editingSubtitle = false;
+    uiState.subtitleDraft = "";
     uiState.editingDepartmentId = "";
     uiState.departmentEditDraft = "";
     uiState.openDepartmentMenuId = "";
@@ -1089,24 +1396,32 @@
 
   function startCreateTab() {
     uiState.creatingTab = true;
-    uiState.tabDraft = { name: "", condition: "" };
+    uiState.tabDraft = normalizeTab({
+      name: "",
+      fieldId: "work.status",
+      operator: "is",
+      value: "在職"
+    }, state);
     uiState.openMoreTabs = false;
     renderToolbar();
     focusPendingInputs();
   }
 
   function confirmCreateTab() {
-    const trimmedName = uiState.tabDraft.name.trim();
+    const normalizedDraft = normalizeTab(uiState.tabDraft, state);
+    const trimmedValue = String(normalizedDraft.value || "").trim();
 
-    if (!trimmedName) {
-      openNotice("請輸入分頁名稱。");
+    if (!trimmedValue) {
+      openNotice("請先設定分組條件。");
       return;
     }
 
     const nextTab = {
       id: "tab-" + Date.now(),
-      name: trimmedName,
-      condition: uiState.tabDraft.condition.trim()
+      name: normalizedDraft.name.trim() || formatTabSummary(normalizedDraft),
+      fieldId: normalizedDraft.fieldId,
+      operator: normalizedDraft.operator,
+      value: trimmedValue
     };
     const departmentTabs = state.tabsByDepartment[state.selectedDepartmentId] || [];
 
@@ -1115,13 +1430,122 @@
     state.activeTabByDepartment[state.selectedDepartmentId] = nextTab.id;
     persistState();
     uiState.creatingTab = false;
-    uiState.tabDraft = { name: "", condition: "" };
+    uiState.tabDraft = { name: "", fieldId: "work.status", operator: "is", value: "在職" };
     renderToolbar();
+    renderCards();
+  }
+
+  function getDraftAttachments() {
+    if (!uiState.draftEmployee) {
+      return [];
+    }
+
+    uiState.draftEmployee.other.attachments = formApi.normalizeAttachmentList(uiState.draftEmployee.other.attachments, uiState.draftEmployee);
+    return uiState.draftEmployee.other.attachments;
+  }
+
+  function openAttachmentFileDialog(targetIndex) {
+    if (!uiState.draftEmployee) {
+      return;
+    }
+
+    dom.fileInput.dataset.targetIndex = typeof targetIndex === "number" ? String(targetIndex) : "";
+    dom.fileInput.value = "";
+    dom.fileInput.click();
+  }
+
+  function confirmPendingAttachment() {
+    const pendingAttachment = uiState.pendingAttachment;
+
+    if (!pendingAttachment || !uiState.draftEmployee) {
+      return;
+    }
+
+    const attachments = getDraftAttachments();
+
+    if (typeof pendingAttachment.targetIndex === "number") {
+      attachments.splice(pendingAttachment.targetIndex, 1, {
+        id: attachments[pendingAttachment.targetIndex] ? attachments[pendingAttachment.targetIndex].id : "attachment-" + Date.now(),
+        name: pendingAttachment.name,
+        data: pendingAttachment.data
+      });
+    } else {
+      attachments.push({
+        id: "attachment-" + Date.now(),
+        name: pendingAttachment.name,
+        data: pendingAttachment.data
+      });
+    }
+
+    uiState.pendingAttachment = null;
+    renderDetailPanel(true);
+  }
+
+  function cancelPendingAttachment() {
+    uiState.pendingAttachment = null;
+    renderDetailPanel(true);
+  }
+
+  function moveAttachment(currentIndex, direction) {
+    const attachments = getDraftAttachments();
+    const nextIndex = currentIndex + direction;
+
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= attachments.length) {
+      return;
+    }
+
+    const movedAttachment = attachments.splice(currentIndex, 1)[0];
+    attachments.splice(nextIndex, 0, movedAttachment);
+    renderDetailPanel(true);
+  }
+
+  function openAttachmentPreview(index) {
+    const attachment = getDraftAttachments()[index];
+
+    if (!attachment || !attachment.data) {
+      return;
+    }
+
+    window.open(attachment.data, "_blank", "noopener,noreferrer");
+  }
+
+  function deleteSelectedAttachment() {
+    if (uiState.passwordDraft !== "09110") {
+      uiState.passwordError = "密碼錯誤。";
+      renderModal();
+      return;
+    }
+
+    const attachments = getDraftAttachments();
+
+    if (uiState.attachmentDeleteIndex >= 0) {
+      attachments.splice(uiState.attachmentDeleteIndex, 1);
+    }
+
+    uiState.passwordDraft = "";
+    uiState.passwordError = "";
+    uiState.attachmentDeleteIndex = -1;
+    uiState.openModal = null;
+    renderModal();
+    renderDetailPanel(true);
   }
 
   function updateDraftEmployee(path, value) {
     uiState.draftEmployee = formApi.cloneDraft(uiState.draftEmployee);
     formApi.setValueAtPath(uiState.draftEmployee, path, value);
+
+    if ((path === "contact.emergencyRelationship.preset" || path === "work.department.preset" || path === "work.titleJob.preset") && value !== "其他") {
+      formApi.setValueAtPath(uiState.draftEmployee, path.replace(".preset", ".other"), "");
+    }
+
+    if ((path === "contact.phoneNumber.countryCode" || path === "contact.emergencyPhone.countryCode") && !value) {
+      formApi.setValueAtPath(uiState.draftEmployee, path, dataApi.PHONE_COUNTRY_OPTIONS[0]);
+    }
+
+    if (path === "work.status" && value !== "離職") {
+      uiState.draftEmployee.work.lastDay = dataApi.createEmptyDateParts();
+    }
+
     uiState.draftEmployee = formApi.applyDerivedFields(uiState.draftEmployee);
     renderDetailPanel(true);
   }
@@ -1191,6 +1615,15 @@
         confirmTitleEdit();
       } else {
         toggleTitleEdit();
+      }
+      return;
+    }
+
+    if (action === "toggle-subtitle-edit") {
+      if (uiState.editingSubtitle) {
+        confirmSubtitleEdit();
+      } else {
+        toggleSubtitleEdit();
       }
       return;
     }
@@ -1273,6 +1706,7 @@
       uiState.openModal = null;
       uiState.passwordDraft = "";
       uiState.passwordError = "";
+      uiState.attachmentDeleteIndex = -1;
       renderModal();
       return;
     }
@@ -1292,6 +1726,11 @@
       return;
     }
 
+    if (action === "confirm-create-tab") {
+      confirmCreateTab();
+      return;
+    }
+
     if (action === "toggle-more-tabs") {
       uiState.openMoreTabs = !uiState.openMoreTabs;
       renderToolbar();
@@ -1303,6 +1742,7 @@
       persistState();
       uiState.openMoreTabs = false;
       renderToolbar();
+      renderCards();
       return;
     }
 
@@ -1371,7 +1811,51 @@
     }
 
     if (action === "choose-employee-file") {
-      dom.fileInput.click();
+      openAttachmentFileDialog();
+      return;
+    }
+
+    if (action === "replace-attachment") {
+      openAttachmentFileDialog(Number(button.getAttribute("data-attachment-index")));
+      return;
+    }
+
+    if (action === "confirm-pending-attachment") {
+      confirmPendingAttachment();
+      return;
+    }
+
+    if (action === "cancel-pending-attachment") {
+      cancelPendingAttachment();
+      return;
+    }
+
+    if (action === "move-attachment-up") {
+      moveAttachment(Number(button.getAttribute("data-attachment-index")), -1);
+      return;
+    }
+
+    if (action === "move-attachment-down") {
+      moveAttachment(Number(button.getAttribute("data-attachment-index")), 1);
+      return;
+    }
+
+    if (action === "preview-attachment") {
+      openAttachmentPreview(Number(button.getAttribute("data-attachment-index")));
+      return;
+    }
+
+    if (action === "request-delete-attachment") {
+      uiState.attachmentDeleteIndex = Number(button.getAttribute("data-attachment-index"));
+      uiState.passwordDraft = "";
+      uiState.passwordError = "";
+      uiState.openModal = "password-delete-attachment";
+      renderModal();
+      return;
+    }
+
+    if (action === "confirm-delete-attachment") {
+      deleteSelectedAttachment();
     }
   }
 
@@ -1382,6 +1866,7 @@
       const clickedInsideModal = event.target.closest('[data-modal-body="true"]');
       const clickedInsideEditableInput = event.target.closest("#employeesDepartmentInput")
         || event.target.closest("#employeesTitleInput")
+        || event.target.closest("#employeesSubtitleInput")
         || event.target.closest('[data-role="department-edit-input"]');
       let sidebarChanged = false;
       let toolbarChanged = false;
@@ -1432,6 +1917,11 @@
       return;
     }
 
+    if (target.id === "employeesSubtitleInput") {
+      uiState.subtitleDraft = target.value;
+      return;
+    }
+
     if (target.id === "employeesDepartmentInput") {
       uiState.departmentDraft = target.value;
       return;
@@ -1447,8 +1937,25 @@
       return;
     }
 
-    if (target.id === "employeesTabConditionInput") {
-      uiState.tabDraft.condition = target.value;
+    if (target.id === "employeesTabFieldInput") {
+      const field = getTabFieldConfig(target.value);
+      const operators = getTabOperators(field.id);
+
+      uiState.tabDraft.fieldId = field.id;
+      uiState.tabDraft.operator = operators[0] ? operators[0].id : "is";
+      uiState.tabDraft.value = field.type === "select" ? (getFieldOptionList(field.id)[0] || "") : "";
+      renderToolbar();
+      focusPendingInputs();
+      return;
+    }
+
+    if (target.id === "employeesTabOperatorInput") {
+      uiState.tabDraft.operator = target.value;
+      return;
+    }
+
+    if (target.id === "employeesTabValueInput") {
+      uiState.tabDraft.value = target.value;
       return;
     }
 
@@ -1512,6 +2019,22 @@
 
         cancelTitleEdit();
       }, 0);
+      return;
+    }
+
+    if (target.id === "employeesSubtitleInput") {
+      window.setTimeout(function () {
+        if (!uiState.editingSubtitle || document.activeElement === target) {
+          return;
+        }
+
+        if (uiState.subtitleDraft.trim()) {
+          confirmSubtitleEdit();
+          return;
+        }
+
+        cancelSubtitleEdit();
+      }, 0);
     }
   }
 
@@ -1535,10 +2058,16 @@
         return;
       }
 
-      if (event.target.id === "employeesTabNameInput" || event.target.id === "employeesTabConditionInput") {
+      if (event.target.id === "employeesSubtitleInput") {
+        event.preventDefault();
+        cancelSubtitleEdit();
+        return;
+      }
+
+      if (event.target.id === "employeesTabNameInput" || event.target.id === "employeesTabFieldInput" || event.target.id === "employeesTabOperatorInput" || event.target.id === "employeesTabValueInput") {
         event.preventDefault();
         uiState.creatingTab = false;
-        uiState.tabDraft = { name: "", condition: "" };
+        uiState.tabDraft = { name: "", fieldId: "work.status", operator: "is", value: "在職" };
         renderToolbar();
         return;
       }
@@ -1554,6 +2083,12 @@
       return;
     }
 
+    if (event.target.id === "employeesSubtitleInput") {
+      event.preventDefault();
+      confirmSubtitleEdit();
+      return;
+    }
+
     if (event.target.id === "employeesDepartmentInput") {
       event.preventDefault();
       confirmAddDepartment();
@@ -1566,7 +2101,7 @@
       return;
     }
 
-    if (event.target.id === "employeesTabNameInput" || event.target.id === "employeesTabConditionInput") {
+    if (event.target.id === "employeesTabNameInput" || event.target.id === "employeesTabFieldInput" || event.target.id === "employeesTabOperatorInput" || event.target.id === "employeesTabValueInput") {
       event.preventDefault();
       confirmCreateTab();
       return;
@@ -1574,7 +2109,18 @@
 
     if (event.target.id === "employeesPasswordInput") {
       event.preventDefault();
+      if (uiState.openModal === "password-delete-attachment") {
+        deleteSelectedAttachment();
+        return;
+      }
+
       deleteSelectedEmployee();
+      return;
+    }
+
+    if (uiState.pendingAttachment) {
+      event.preventDefault();
+      confirmPendingAttachment();
     }
   }
 
@@ -1684,8 +2230,12 @@
       }
 
       readFileAsDataUrl(file, function (result) {
-        uiState.draftEmployee.other.employeesFileName = file.name;
-        uiState.draftEmployee.other.employeesFileData = result;
+        uiState.pendingAttachment = {
+          name: file.name,
+          data: result,
+          targetIndex: dom.fileInput.dataset.targetIndex === "" ? null : Number(dom.fileInput.dataset.targetIndex)
+        };
+        dom.fileInput.dataset.targetIndex = "";
         renderDetailPanel(true);
       });
     });
