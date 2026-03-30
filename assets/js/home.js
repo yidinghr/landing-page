@@ -16,7 +16,9 @@
   ];
 
   const mainMenuPlaceholderActions = {
-    employees: function () {},
+    employees: function () {
+      window.location.href = "employees.html";
+    },
     schedule: function () {},
     attendance: function () {},
     yidingInfo: function () {}
