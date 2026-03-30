@@ -6,14 +6,16 @@
     { id: "employees", label: "員工" },
     { id: "schedule", label: "班表" },
     { id: "attendance", label: "打卡" },
-    { id: "profile", label: "資料" }
+    { id: "profile", label: "資料" },
+    { id: "settings", label: "設定", layout: "centered" }
   ];
 
   const dashboardActions = {
     employees: function () {},
     schedule: function () {},
     attendance: function () {},
-    profile: function () {}
+    profile: function () {},
+    settings: function () {}
   };
 
   if (!homeGreeting && !homeMenu) {
@@ -34,6 +36,11 @@
       button.id = "dashboardButton-" + buttonConfig.id;
       button.dataset.buttonId = buttonConfig.id;
       button.className = "home-menu__item";
+
+      if (buttonConfig.layout === "centered") {
+        button.classList.add("home-menu__item--centered");
+      }
+
       button.textContent = buttonConfig.label;
 
       homeMenu.appendChild(button);
