@@ -1,49 +1,80 @@
 (function () {
   const homeGreeting = document.getElementById("homeGreeting");
   const homeMenu = document.getElementById("homeMenu");
+  const homeTopActions = document.getElementById("homeTopActions");
 
-  const dashboardButtons = [
-    { id: "employees", label: "員工" },
+  const mainMenuButtons = [
+    { id: "employees", label: "弈鼎員工" },
     { id: "schedule", label: "班表" },
     { id: "attendance", label: "打卡" },
-    { id: "profile", label: "資料" },
-    { id: "settings", label: "設定", layout: "centered" }
+    { id: "yidingInfo", label: "弈鼎资料" }
   ];
 
-  const dashboardActions = {
+  const topActionIcons = [
+    { id: "help", icon: "?", tooltip: "說明" },
+    { id: "settings", icon: "⚙", tooltip: "設定" }
+  ];
+
+  const mainMenuPlaceholderActions = {
     employees: function () {},
     schedule: function () {},
     attendance: function () {},
-    profile: function () {},
+    yidingInfo: function () {}
+  };
+
+  const topActionPlaceholderActions = {
+    help: function () {},
     settings: function () {}
   };
 
-  if (!homeGreeting && !homeMenu) {
+  if (!homeGreeting && !homeMenu && !homeTopActions) {
     return;
   }
 
-  function renderDashboardButtons() {
+  function renderMainMenu() {
     if (!homeMenu) {
       return;
     }
 
     homeMenu.innerHTML = "";
 
-    dashboardButtons.forEach(function (buttonConfig) {
+    mainMenuButtons.forEach(function (buttonConfig) {
       const button = document.createElement("button");
 
       button.type = "button";
-      button.id = "dashboardButton-" + buttonConfig.id;
-      button.dataset.buttonId = buttonConfig.id;
+      button.id = "dashboardMainButton-" + buttonConfig.id;
+      button.dataset.mainMenuId = buttonConfig.id;
       button.className = "home-menu__item";
-
-      if (buttonConfig.layout === "centered") {
-        button.classList.add("home-menu__item--centered");
-      }
-
       button.textContent = buttonConfig.label;
 
       homeMenu.appendChild(button);
+    });
+  }
+
+  function renderTopActionIcons() {
+    if (!homeTopActions) {
+      return;
+    }
+
+    homeTopActions.innerHTML = "";
+
+    topActionIcons.forEach(function (iconConfig) {
+      const button = document.createElement("button");
+      const icon = document.createElement("span");
+
+      button.type = "button";
+      button.id = "dashboardTopAction-" + iconConfig.id;
+      button.dataset.topActionId = iconConfig.id;
+      button.className = "home-top-action";
+      button.setAttribute("aria-label", iconConfig.tooltip);
+      button.setAttribute("data-tooltip", iconConfig.tooltip);
+
+      icon.className = "home-top-action__icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = iconConfig.icon;
+
+      button.appendChild(icon);
+      homeTopActions.appendChild(button);
     });
   }
 
@@ -72,7 +103,7 @@
     homeGreeting.textContent = "燈哥，晚安！";
   }
 
-  function bindDashboardActions() {
+  function bindMainMenuClicks() {
     if (!homeMenu) {
       return;
     }
@@ -86,8 +117,8 @@
 
       event.preventDefault();
 
-      const buttonId = button.dataset.buttonId;
-      const action = dashboardActions[buttonId];
+      const buttonId = button.dataset.mainMenuId;
+      const action = mainMenuPlaceholderActions[buttonId];
 
       if (typeof action === "function") {
         action();
@@ -97,8 +128,35 @@
     });
   }
 
-  renderDashboardButtons();
-  bindDashboardActions();
+  function bindTopActionClicks() {
+    if (!homeTopActions) {
+      return;
+    }
+
+    homeTopActions.addEventListener("click", function (event) {
+      const button = event.target.closest(".home-top-action");
+
+      if (!button) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const actionId = button.dataset.topActionId;
+      const action = topActionPlaceholderActions[actionId];
+
+      if (typeof action === "function") {
+        action();
+      }
+
+      button.blur();
+    });
+  }
+
+  renderTopActionIcons();
+  renderMainMenu();
+  bindTopActionClicks();
+  bindMainMenuClicks();
   updateGreeting();
   window.setInterval(updateGreeting, 60000);
 })();
