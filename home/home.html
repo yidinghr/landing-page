@@ -112,10 +112,10 @@ body{
 
 <body>
 
-<img src="../image/logoweb.png" class="logo">
+<img src="../image/logo.png" class="logo">
 
-<div class="welcome">
-Welcome !
+<div class="welcome" id="greetingText">
+燈哥，早安！
 </div>
 
 <div class="menu">
@@ -152,6 +152,30 @@ src="https://docs.google.com/spreadsheets/d/1pKdVcLqjYl3vduHvgI8V3LTbPuzGDWsj/pr
 
 <script>
 
+function updateGreeting(){
+    const currentHour = new Date().getHours();
+    const greeting = document.getElementById("greetingText");
+
+    if(!greeting)return;
+
+    if(currentHour >= 5 && currentHour < 11){
+        greeting.textContent = "燈哥，早安！";
+        return;
+    }
+
+    if(currentHour >= 11 && currentHour < 13){
+        greeting.textContent = "燈哥，中午好！";
+        return;
+    }
+
+    if(currentHour >= 13 && currentHour < 18){
+        greeting.textContent = "燈哥，下午好！";
+        return;
+    }
+
+    greeting.textContent = "燈哥，晚安！";
+}
+
 function openSheet(){
     document.getElementById("sheetPage").style.display="block";
 }
@@ -159,6 +183,9 @@ function openSheet(){
 function closeSheet(){
     document.getElementById("sheetPage").style.display="none";
 }
+
+updateGreeting();
+window.setInterval(updateGreeting, 60000);
 
 </script>
 

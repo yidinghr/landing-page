@@ -13,6 +13,12 @@
     return;
   }
 
+  resetLoginState();
+
+  window.addEventListener("pageshow", function () {
+    resetLoginState();
+  });
+
   loginForm.addEventListener("submit", function (event) {
     event.preventDefault();
 
@@ -34,6 +40,13 @@
   registerButton.addEventListener("click", function () {
     setMessage("註冊功能尚未開放。", true);
   });
+
+  function resetLoginState() {
+    accountInput.value = "";
+    passwordInput.value = "";
+    setMessage("", false);
+    sessionStorage.removeItem("yd_temp_auth");
+  }
 
   function setMessage(message, isError) {
     loginMessage.textContent = message;
