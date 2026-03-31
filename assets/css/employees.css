@@ -346,6 +346,8 @@ textarea {
 
 .employees-department__name {
   min-width: 0;
+  justify-self: stretch;
+  text-align: left;
   font-size: 15px;
   font-weight: 600;
   line-height: 1.3;
