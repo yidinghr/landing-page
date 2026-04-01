@@ -1773,7 +1773,7 @@
       uiState.draftEmployee.work.lastDay = dataApi.createEmptyDateParts();
     }
 
-    uiState.draftEmployee = formApi.applyDerivedFields(uiState.draftEmployee);
+    uiState.draftEmployee = formApi.applyDerivedFields(uiState.draftEmployee, path);
     renderDetailPanel(true);
   }
 

@@ -1034,6 +1034,11 @@ textarea {
   gap: 8px;
 }
 
+.employee-form__date-grid {
+  align-items: center;
+  gap: 10px;
+}
+
 .employee-form__compound--phone {
   grid-template-columns: 150px minmax(0, 1fr);
 }
@@ -1046,7 +1051,8 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .employee-form__select-wrap {
@@ -1055,6 +1061,18 @@ textarea {
 
 .employee-form__select-wrap select {
   padding-right: 34px;
+}
+
+.employee-form__date-part .employee-form__select-wrap {
+  min-width: 0;
+}
+
+.employee-form__date-part .employee-form__select-wrap select {
+  min-height: 46px;
+  padding-right: 26px;
+  padding-left: 14px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .employee-form__select-arrow {
@@ -1073,10 +1091,19 @@ textarea {
   opacity: 1;
 }
 
+.employee-form__date-part .employee-form__select-arrow {
+  right: 10px;
+  font-size: 11px;
+}
+
 .employee-form__date-unit {
   position: static;
-  color: var(--employees-text-muted);
-  font-size: 12px;
+  min-width: 16px;
+  color: var(--employees-text-soft);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: left;
   pointer-events: none;
   white-space: nowrap;
 }
@@ -1265,29 +1292,41 @@ textarea {
   display: none !important;
 }
 
-.employees-app__sidebar *,
-.employees-cards-panel *,
-.employees-detail__content * {
+.employees-sidebar__body,
+.employees-cards-panel,
+.employees-detail__content,
+.employee-form__field textarea,
+.employees-popover,
+.employees-modal__card {
   scrollbar-width: thin;
   scrollbar-color: rgba(244, 213, 31, 0.72) transparent;
 }
 
 .employees-sidebar__body::-webkit-scrollbar,
 .employees-cards-panel::-webkit-scrollbar,
-.employees-detail__content::-webkit-scrollbar {
+.employees-detail__content::-webkit-scrollbar,
+.employee-form__field textarea::-webkit-scrollbar,
+.employees-popover::-webkit-scrollbar,
+.employees-modal__card::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 .employees-sidebar__body::-webkit-scrollbar-track,
 .employees-cards-panel::-webkit-scrollbar-track,
-.employees-detail__content::-webkit-scrollbar-track {
+.employees-detail__content::-webkit-scrollbar-track,
+.employee-form__field textarea::-webkit-scrollbar-track,
+.employees-popover::-webkit-scrollbar-track,
+.employees-modal__card::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .employees-sidebar__body::-webkit-scrollbar-thumb,
 .employees-cards-panel::-webkit-scrollbar-thumb,
-.employees-detail__content::-webkit-scrollbar-thumb {
+.employees-detail__content::-webkit-scrollbar-thumb,
+.employee-form__field textarea::-webkit-scrollbar-thumb,
+.employees-popover::-webkit-scrollbar-thumb,
+.employees-modal__card::-webkit-scrollbar-thumb {
   background: rgba(244, 213, 31, 0.6);
   border-radius: 999px;
 }

@@ -155,6 +155,44 @@
     return next;
   }
 
+  function getDateDiffInDays(startDate, endDate) {
+    return Math.round((endDate - startDate) / 86400000);
+  }
+
+  function normalizeProbationDays(value) {
+    const numberValue = Number(value);
+
+    if (!Number.isFinite(numberValue) || numberValue <= 0) {
+      return null;
+    }
+
+    return Math.max(1, Math.round(numberValue));
+  }
+
+  function getChangedEmploymentField(changedPath) {
+    if (!changedPath || changedPath.indexOf("work.") !== 0) {
+      return "";
+    }
+
+    if (changedPath.indexOf("work.onboardDate.") === 0) {
+      return "onboardDate";
+    }
+
+    if (changedPath.indexOf("work.probEndDate.") === 0) {
+      return "probEndDate";
+    }
+
+    if (changedPath.indexOf("work.officialDate.") === 0) {
+      return "officialDate";
+    }
+
+    if (changedPath === "work.probationDays") {
+      return "probationDays";
+    }
+
+    return "";
+  }
+
   function calculateAge(parts) {
     const birthday = createDateFromParts(parts);
 
@@ -230,43 +268,181 @@
     return "♓ 雙魚";
   }
 
-  function syncEmploymentDates(draft) {
+  function syncEmploymentDates(draft, changedPath) {
     const work = draft.work;
-    const onboardDate = createDateFromParts(work.onboardDate);
-    const probationDays = Number(work.probationDays);
-    const probEndDate = createDateFromParts(work.probEndDate);
-    const officialDate = createDateFromParts(work.officialDate);
+    let onboardDate = createDateFromParts(work.onboardDate);
+    let probationDays = normalizeProbationDays(work.probationDays);
+    let probEndDate = createDateFromParts(work.probEndDate);
+    let officialDate = createDateFromParts(work.officialDate);
+    const changedField = getChangedEmploymentField(changedPath);
 
-    if (onboardDate && probationDays) {
-      work.probEndDate = createDatePartsFromDate(addDays(onboardDate, probationDays - 1));
+    function setOnboardDate(date) {
+      if (!date) {
+        return;
+      }
+
+      onboardDate = date;
+      work.onboardDate = createDatePartsFromDate(date);
     }
 
-    if (onboardDate && probEndDate && !probationDays) {
-      work.probationDays = String(Math.round((probEndDate - onboardDate) / 86400000) + 1);
+    function setProbationDays(days) {
+      const normalizedDays = normalizeProbationDays(days);
+
+      if (!normalizedDays) {
+        return;
+      }
+
+      probationDays = normalizedDays;
+      work.probationDays = String(normalizedDays);
     }
 
-    if (onboardDate && officialDate && !probationDays) {
-      work.probationDays = String(Math.max(1, Math.round((officialDate - onboardDate) / 86400000)));
+    function setProbEndDate(date) {
+      if (!date) {
+        return;
+      }
+
+      probEndDate = date;
+      work.probEndDate = createDatePartsFromDate(date);
     }
 
-    if (onboardDate && officialDate) {
-      work.probEndDate = createDatePartsFromDate(addDays(officialDate, -1));
+    function setOfficialDate(date) {
+      if (!date) {
+        return;
+      }
+
+      officialDate = date;
+      work.officialDate = createDatePartsFromDate(date);
     }
 
-    if (!onboardDate && probEndDate && probationDays) {
-      work.onboardDate = createDatePartsFromDate(addDays(probEndDate, -(probationDays - 1)));
+    function resolveSyncMode() {
+      if (changedField === "onboardDate") {
+        if (onboardDate && probationDays) {
+          return "onboard+probationDays";
+        }
+
+        if (onboardDate && probEndDate) {
+          return "onboard+probEndDate";
+        }
+
+        if (onboardDate && officialDate) {
+          return "onboard+officialDate";
+        }
+      }
+
+      if (changedField === "probationDays") {
+        if (onboardDate && probationDays) {
+          return "onboard+probationDays";
+        }
+
+        if (probationDays && probEndDate) {
+          return "probationDays+probEndDate";
+        }
+
+        if (probationDays && officialDate) {
+          return "probationDays+officialDate";
+        }
+      }
+
+      if (changedField === "probEndDate") {
+        if (onboardDate && probEndDate) {
+          return "onboard+probEndDate";
+        }
+
+        if (probationDays && probEndDate) {
+          return "probationDays+probEndDate";
+        }
+
+        if (probEndDate && officialDate) {
+          return "probEndDate+officialDate";
+        }
+      }
+
+      if (changedField === "officialDate") {
+        if (onboardDate && officialDate) {
+          return "onboard+officialDate";
+        }
+
+        if (probationDays && officialDate) {
+          return "probationDays+officialDate";
+        }
+
+        if (probEndDate && officialDate) {
+          return "probEndDate+officialDate";
+        }
+      }
+
+      if (onboardDate && probationDays) {
+        return "onboard+probationDays";
+      }
+
+      if (onboardDate && probEndDate) {
+        return "onboard+probEndDate";
+      }
+
+      if (onboardDate && officialDate) {
+        return "onboard+officialDate";
+      }
+
+      if (probationDays && probEndDate) {
+        return "probationDays+probEndDate";
+      }
+
+      if (probationDays && officialDate) {
+        return "probationDays+officialDate";
+      }
+
+      if (probEndDate && officialDate) {
+        return "probEndDate+officialDate";
+      }
+
+      return "";
     }
 
-    if (!onboardDate && officialDate && probationDays) {
-      work.onboardDate = createDatePartsFromDate(addDays(officialDate, -probationDays));
-    }
+    switch (resolveSyncMode()) {
+      case "onboard+probationDays": {
+        setProbEndDate(addDays(onboardDate, probationDays - 1));
+        setOfficialDate(addDays(probEndDate, 1));
+        break;
+      }
+      case "onboard+probEndDate": {
+        setProbationDays(getDateDiffInDays(onboardDate, probEndDate) + 1);
+        setProbEndDate(addDays(onboardDate, probationDays - 1));
+        setOfficialDate(addDays(probEndDate, 1));
+        break;
+      }
+      case "onboard+officialDate": {
+        setProbationDays(getDateDiffInDays(onboardDate, officialDate));
+        setProbEndDate(addDays(onboardDate, probationDays - 1));
+        setOfficialDate(addDays(probEndDate, 1));
+        break;
+      }
+      case "probationDays+probEndDate": {
+        setOnboardDate(addDays(probEndDate, -(probationDays - 1)));
+        setProbEndDate(addDays(onboardDate, probationDays - 1));
+        setOfficialDate(addDays(probEndDate, 1));
+        break;
+      }
+      case "probationDays+officialDate": {
+        setOnboardDate(addDays(officialDate, -probationDays));
+        setProbEndDate(addDays(onboardDate, probationDays - 1));
+        setOfficialDate(addDays(probEndDate, 1));
+        break;
+      }
+      case "probEndDate+officialDate": {
+        if (changedField === "officialDate") {
+          setProbEndDate(addDays(officialDate, -1));
+          break;
+        }
 
-    if (createDateFromParts(work.probEndDate)) {
-      work.officialDate = createDatePartsFromDate(addDays(createDateFromParts(work.probEndDate), 1));
+        setOfficialDate(addDays(probEndDate, 1));
+        break;
+      }
+      default:
+        break;
     }
   }
 
-  function applyDerivedFields(draft) {
+  function applyDerivedFields(draft, changedPath) {
     const nextDraft = cloneDraft(draft);
 
     nextDraft.contact.phoneNumber = normalizePhoneValue(nextDraft.contact.phoneNumber);
@@ -276,7 +452,7 @@
     });
     nextDraft.basic.age = calculateAge(nextDraft.basic.dateOfBirth);
     nextDraft.basic.zodiac = getZodiac(nextDraft.basic.dateOfBirth);
-    syncEmploymentDates(nextDraft);
+    syncEmploymentDates(nextDraft, changedPath);
 
     if (nextDraft.work.status !== "離職") {
       nextDraft.work.lastDay = dataApi.createEmptyDateParts();
