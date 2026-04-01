@@ -2557,7 +2557,7 @@
       });
     });
 
-    dom.fileInput.addEventListener("change", function () {
+    dom.fileInput.addEventListener("change", async function () {
       const selectedFiles = Array.from(dom.fileInput.files || []);
       const targetIndex = dom.fileInput.dataset.targetIndex === "" ? null : Number(dom.fileInput.dataset.targetIndex);
 
@@ -2566,15 +2566,19 @@
       }
 
       const filesToRead = targetIndex === null ? selectedFiles : selectedFiles.slice(0, 1);
-      Promise.all(filesToRead.map(function (file) {
-        return readFileAsDataUrlAsync(file).then(function (result) {
-          return {
+      try {
+        const pendingItems = [];
+
+        for (const file of filesToRead) {
+          const result = await readFileAsDataUrlAsync(file);
+
+          pendingItems.push({
             name: file.name,
             data: result,
             targetIndex: targetIndex
-          };
-        });
-      })).then(function (pendingItems) {
+          });
+        }
+
         if (targetIndex !== null) {
           uiState.pendingAttachments = getPendingAttachments().filter(function (attachment) {
             return attachment.targetIndex !== targetIndex;
@@ -2584,10 +2588,10 @@
         uiState.pendingAttachments = getPendingAttachments().concat(pendingItems);
         dom.fileInput.dataset.targetIndex = "";
         renderDetailPanel(true);
-      }).catch(function () {
+      } catch (error) {
         dom.fileInput.dataset.targetIndex = "";
         openNotice("檔案讀取失敗，請再試一次。");
-      });
+      }
     });
   }
 
