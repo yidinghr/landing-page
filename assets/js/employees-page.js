@@ -887,7 +887,7 @@
 
       return [
         '<article class="employees-card' + (uiState.selectedEmployeeId === employee.id ? " employees-card--active" : "") + '" data-action="select-employee" data-employee-id="' + escapeHtml(employee.id) + '">',
-        '<img class="employees-card__avatar" src="' + escapeHtml(employee.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="' + escapeHtml(employee.basic.engName || employee.basic.vieName || "員工頭像") + '">',
+        '<img class="employees-card__avatar" data-image-kind="employee-avatar" src="' + escapeHtml(employee.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="' + escapeHtml(employee.basic.engName || employee.basic.vieName || "員工頭像") + '">',
         '<div class="employees-card__body">',
         '<h2 class="employees-card__title">' + escapeHtml(formApi.getFieldDisplayValue(employee, state.cardDisplay.titleField)) + "</h2>",
         lines,
@@ -986,7 +986,7 @@
       '<div class="employees-avatar-box">',
       '<div class="employees-avatar-box__preview-wrap">',
       '<button type="button" class="employees-avatar-box__preview" data-action="preview-avatar" data-tooltip="' + escapeHtml(isEditable ? "點擊查看或更換頭像" : "點擊查看頭像") + '">',
-      '<img src="' + escapeHtml(draft.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="員工頭像">',
+      '<img data-image-kind="employee-avatar" src="' + escapeHtml(draft.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="員工頭像">',
       "</button>",
       "</div>",
       '<div class="employees-avatar-box__meta">' + (isEditable ? "點擊頭像可預覽或更換" : "點擊頭像可放大預覽") + "</div>",
@@ -1089,7 +1089,7 @@
         '<div class="employees-image-preview__frame-wrap">',
         '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-image-preview__close" data-action="close-modal" aria-label="關閉預覽">✕</button>',
         '<div class="employees-image-preview__frame">',
-        '<img src="' + escapeHtml(uiState.previewImageSrc) + '" alt="頭像預覽">',
+        '<img data-image-kind="employee-avatar" src="' + escapeHtml(uiState.previewImageSrc) + '" alt="頭像預覽">',
         "</div></div>",
         '<div class="employees-image-preview__actions">' +
           (uiState.detailMode === "add" || uiState.detailMode === "edit"
@@ -2494,6 +2494,19 @@
     root.addEventListener("dragend", handleDragEnd);
     root.addEventListener("dragover", handleDragOver);
     root.addEventListener("drop", handleDrop);
+    root.addEventListener("error", function (event) {
+      const target = event.target;
+
+      if (!target || target.tagName !== "IMG" || target.getAttribute("data-image-kind") !== "employee-avatar") {
+        return;
+      }
+
+      if (target.getAttribute("src") === dataApi.DEFAULT_IMAGE_SRC) {
+        return;
+      }
+
+      target.setAttribute("src", dataApi.DEFAULT_IMAGE_SRC);
+    }, true);
 
     dom.interfaceIconInput.addEventListener("change", function () {
       const file = dom.interfaceIconInput.files[0];
