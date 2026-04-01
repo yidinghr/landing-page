@@ -856,7 +856,7 @@ textarea {
   height: 100vh;
   padding: 18px 18px 26px 16px;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 12px;
   background: rgba(4, 4, 4, 0.95);
 }
@@ -887,6 +887,10 @@ textarea {
 }
 
 .employees-detail__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
   padding-top: 10px;
 }
 
@@ -1036,7 +1040,7 @@ textarea {
 
 .employee-form__date-grid {
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .employee-form__compound--phone {
@@ -1051,7 +1055,7 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -1069,7 +1073,7 @@ textarea {
 
 .employee-form__date-part .employee-form__select-wrap select {
   min-height: 46px;
-  padding-right: 26px;
+  padding-right: 22px;
   padding-left: 14px;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
@@ -1092,16 +1096,16 @@ textarea {
 }
 
 .employee-form__date-part .employee-form__select-arrow {
-  right: 10px;
+  right: 8px;
   font-size: 11px;
 }
 
 .employee-form__date-unit {
   position: static;
-  min-width: 16px;
+  min-width: 18px;
   color: var(--employees-text-soft);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   letter-spacing: 0.04em;
   text-align: left;
   pointer-events: none;
