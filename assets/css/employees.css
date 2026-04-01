@@ -1073,10 +1073,13 @@ textarea {
 
 .employee-form__date-part .employee-form__select-wrap select {
   min-height: 46px;
-  padding-right: 22px;
+  padding-right: 14px;
   padding-left: 14px;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
+  text-align: left;
+  color-scheme: dark;
+  scrollbar-color: rgba(244, 213, 31, 0.72) #050505;
 }
 
 .employee-form__select-arrow {
@@ -1096,8 +1099,27 @@ textarea {
 }
 
 .employee-form__date-part .employee-form__select-arrow {
-  right: 8px;
-  font-size: 11px;
+  right: 6px;
+  font-size: 10px;
+  opacity: 0.22;
+}
+
+.employee-form__date-part .employee-form__select-wrap:hover .employee-form__select-arrow,
+.employee-form__date-part .employee-form__select-wrap:focus-within .employee-form__select-arrow {
+  opacity: 0.82;
+}
+
+.employee-form__date-part .employee-form__select-wrap select::-webkit-scrollbar {
+  width: 8px;
+}
+
+.employee-form__date-part .employee-form__select-wrap select::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+.employee-form__date-part .employee-form__select-wrap select::-webkit-scrollbar-thumb {
+  background: rgba(244, 213, 31, 0.72);
+  border-radius: 999px;
 }
 
 .employee-form__date-unit {
