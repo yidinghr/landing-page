@@ -2559,7 +2559,10 @@
 
     dom.fileInput.addEventListener("change", async function () {
       const selectedFiles = Array.from(dom.fileInput.files || []);
-      const targetIndex = dom.fileInput.dataset.targetIndex === "" ? null : Number(dom.fileInput.dataset.targetIndex);
+      const rawTargetIndex = dom.fileInput.dataset.targetIndex;
+      const targetIndex = rawTargetIndex === undefined || rawTargetIndex === "" || Number.isNaN(Number(rawTargetIndex))
+        ? null
+        : Number(rawTargetIndex);
 
       if (!selectedFiles.length || !uiState.draftEmployee) {
         return;
