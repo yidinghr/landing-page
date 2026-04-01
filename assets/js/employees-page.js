@@ -2555,7 +2555,7 @@
     });
 
     dom.fileInput.addEventListener("change", function () {
-      const selectedFiles = Array.prototype.slice.call(dom.fileInput.files || []);
+      const selectedFiles = Array.from(dom.fileInput.files || []);
       const targetIndex = dom.fileInput.dataset.targetIndex === "" ? null : Number(dom.fileInput.dataset.targetIndex);
 
       if (!selectedFiles.length || !uiState.draftEmployee) {
