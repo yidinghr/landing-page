@@ -2484,6 +2484,20 @@
     reader.readAsDataURL(file);
   }
 
+  function readFileAsDataUrlAsync(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+
+      reader.onload = function () {
+        resolve(reader.result);
+      };
+      reader.onerror = function () {
+        reject(reader.error || new Error("read-file-failed"));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   function attachStaticListeners() {
     root.addEventListener("click", handleRootClick);
     root.addEventListener("input", handleRootInput);
@@ -2549,32 +2563,27 @@
       }
 
       const filesToRead = targetIndex === null ? selectedFiles : selectedFiles.slice(0, 1);
-      const pendingItems = new Array(filesToRead.length);
-      let remaining = filesToRead.length;
-
-      filesToRead.forEach(function (file, index) {
-        readFileAsDataUrl(file, function (result) {
-          pendingItems[index] = {
+      Promise.all(filesToRead.map(function (file) {
+        return readFileAsDataUrlAsync(file).then(function (result) {
+          return {
             name: file.name,
             data: result,
             targetIndex: targetIndex
           };
-          remaining -= 1;
-
-          if (remaining > 0) {
-            return;
-          }
-
-          if (targetIndex !== null) {
-            uiState.pendingAttachments = getPendingAttachments().filter(function (attachment) {
-              return attachment.targetIndex !== targetIndex;
-            });
-          }
-
-          uiState.pendingAttachments = getPendingAttachments().concat(pendingItems);
-          dom.fileInput.dataset.targetIndex = "";
-          renderDetailPanel(true);
         });
+      })).then(function (pendingItems) {
+        if (targetIndex !== null) {
+          uiState.pendingAttachments = getPendingAttachments().filter(function (attachment) {
+            return attachment.targetIndex !== targetIndex;
+          });
+        }
+
+        uiState.pendingAttachments = getPendingAttachments().concat(pendingItems);
+        dom.fileInput.dataset.targetIndex = "";
+        renderDetailPanel(true);
+      }).catch(function () {
+        dom.fileInput.dataset.targetIndex = "";
+        openNotice("檔案讀取失敗，請再試一次。");
       });
     });
   }
