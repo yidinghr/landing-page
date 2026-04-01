@@ -2485,16 +2485,19 @@
   }
 
   function readFileAsDataUrlAsync(file) {
-    return new Promise(function (resolve, reject) {
-      const reader = new FileReader();
+    return file.arrayBuffer().then(function (buffer) {
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 32768;
+      let binary = "";
+      let index = 0;
 
-      reader.onload = function () {
-        resolve(reader.result);
-      };
-      reader.onerror = function () {
-        reject(reader.error || new Error("read-file-failed"));
-      };
-      reader.readAsDataURL(file);
+      while (index < bytes.length) {
+        const chunk = bytes.subarray(index, index + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+        index += chunkSize;
+      }
+
+      return "data:" + (file.type || "application/octet-stream") + ";base64," + window.btoa(binary);
     });
   }
 
