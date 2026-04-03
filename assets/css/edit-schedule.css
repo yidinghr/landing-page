@@ -130,9 +130,8 @@
   z-index: 35;
   min-height: var(--schedule-period-height);
   border-bottom: 1px solid rgba(244, 213, 31, 0.14);
-  padding: 5px calc(18px + var(--legend-panel-offset)) 5px 18px;
+  padding: 5px 18px;
   background: rgba(3, 3, 3, 0.98);
-  transition: padding-right 0.18s ease;
 }
 
 .schedule-period-bar__inner {
@@ -159,6 +158,8 @@
   align-items: center;
   gap: 8px;
   justify-self: end;
+  margin-right: var(--legend-panel-offset);
+  transition: margin-right 0.18s ease;
 }
 
 .schedule-code-entry {
