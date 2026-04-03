@@ -492,7 +492,7 @@ test.describe("Schedule module", () => {
     });
 
     const engHandle = page.locator(".schedule-table__meta-head .schedule-column-resizer[data-resize-key='eng']").first();
-    const before = await page.locator("#scheduleApp").evaluate((node) =>
+    const before = await page.locator(".schedule-workspace").evaluate((node) =>
       getComputedStyle(node).getPropertyValue("--col-eng").trim()
     );
 
@@ -503,13 +503,13 @@ test.describe("Schedule module", () => {
     await page.mouse.move(box.x + box.width / 2 + 36, box.y + box.height / 2, { steps: 8 });
     await page.mouse.up();
 
-    const afterDrag = await page.locator("#scheduleApp").evaluate((node) =>
+    const afterDrag = await page.locator(".schedule-workspace").evaluate((node) =>
       getComputedStyle(node).getPropertyValue("--col-eng").trim()
     );
     expect(Number.parseInt(afterDrag, 10)).toBeGreaterThan(Number.parseInt(before, 10));
 
     await engHandle.dblclick();
-    const afterAutoFit = await page.locator("#scheduleApp").evaluate((node) =>
+    const afterAutoFit = await page.locator(".schedule-workspace").evaluate((node) =>
       getComputedStyle(node).getPropertyValue("--col-eng").trim()
     );
     expect(Number.parseInt(afterAutoFit, 10)).toBeGreaterThanOrEqual(Number.parseInt(afterDrag, 10));
@@ -656,6 +656,73 @@ test.describe("Schedule module", () => {
     expect(Math.abs(positions.scheduleY - positions.summaryY)).toBeLessThanOrEqual(1);
     expect(Math.abs(positions.scheduleH - positions.summaryH)).toBeLessThanOrEqual(2);
     expect(Math.abs(positions.headY - positions.summaryHeadY)).toBeLessThanOrEqual(1);
+  });
+
+  test("main header stays frozen when scrolling into the daily summary block", async ({ page }) => {
+    const codes = ["A", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "B", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "C", "C1", "C2", "C3", "C4", "C5", "C6", "C7"];
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState(codes.map((code, index) => createScheduleRow("daily-" + index, {
+        ydiId: "YDI" + index,
+        department: "Cage",
+        vieName: "VO " + index,
+        engName: "EMP " + index,
+        position: "Staff"
+      }, { "1": code })), 2025, 3)
+    });
+
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(150);
+
+    const positions = await page.evaluate(() => {
+      const periodBar = document.querySelector(".schedule-period-bar");
+      const mainHead = document.querySelector("[data-day-head='1']");
+      const mainWeek = document.querySelector(".schedule-table thead tr:nth-child(2) th");
+      const dailySection = document.getElementById("dailySummarySection");
+      if (!periodBar || !mainHead || !mainWeek || !dailySection) {
+        return null;
+      }
+      const periodRect = periodBar.getBoundingClientRect();
+      return {
+        dailyTop: Math.round(dailySection.getBoundingClientRect().top),
+        periodBottom: Math.round(periodRect.bottom),
+        mainY: Math.round(mainHead.getBoundingClientRect().y),
+        mainWeekY: Math.round(mainWeek.getBoundingClientRect().y)
+      };
+    });
+
+    expect(positions).not.toBeNull();
+    expect(positions.dailyTop).toBeLessThanOrEqual(positions.periodBottom + 4);
+    expect(Math.abs(positions.mainY - positions.periodBottom)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.mainWeekY - (positions.periodBottom + 22))).toBeLessThanOrEqual(2);
+  });
+
+  test("daily summary block extends to the same right edge as the top sheet", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a", {}, { "1": "A", "2": "B", "3": "C", "4": "A3" }),
+        createScheduleRow("b", {}, { "1": "A7", "2": "B2", "3": "C1", "4": "B5" })
+      ], 2025, 3)
+    });
+
+    const positions = await page.evaluate(() => {
+      const summaryLast = document.querySelector("#scheduleSummaryTable tbody tr:first-child td:last-child");
+      const dailyLastSpacer = document.querySelector("#dailySummarySpacerTable tbody tr:first-child td:last-child");
+      const topDay = document.querySelector("[data-day-head='31']") || document.querySelector("[data-day-head='1']");
+      const dailyDay = document.querySelector("[data-daily-day-head='31']") || document.querySelector("[data-daily-day-head='1']");
+      if (!summaryLast || !dailyLastSpacer || !topDay || !dailyDay) {
+        return null;
+      }
+      return {
+        summaryRight: Math.round(summaryLast.getBoundingClientRect().right),
+        dailyRight: Math.round(dailyLastSpacer.getBoundingClientRect().right),
+        topDayX: Math.round(topDay.getBoundingClientRect().x),
+        dailyDayX: Math.round(dailyDay.getBoundingClientRect().x)
+      };
+    });
+
+    expect(positions).not.toBeNull();
+    expect(Math.abs(positions.summaryRight - positions.dailyRight)).toBeLessThanOrEqual(1);
+    expect(Math.abs(positions.topDayX - positions.dailyDayX)).toBeLessThanOrEqual(1);
   });
 
   test("Ctrl plus and reset update sheet zoom without touching the header", async ({ page }) => {

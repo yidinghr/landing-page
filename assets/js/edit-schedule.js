@@ -91,6 +91,7 @@
   const MAJOR_SHIFT_CODES = VALID_SHIFT_CODES.slice(0, 24);
   const dom = {
     app: document.getElementById("scheduleApp"),
+    workspace: document.querySelector(".schedule-workspace"),
     header: document.querySelector(".schedule-header"),
     periodBar: document.querySelector(".schedule-period-bar"),
     headerTitle: document.getElementById("scheduleHeaderTitle"),
@@ -126,6 +127,9 @@
     dailySection: document.getElementById("dailySummarySection"),
     dailyHead: document.getElementById("dailySummaryHead"),
     dailyBody: document.getElementById("dailySummaryBody"),
+    dailySpacerTable: document.getElementById("dailySummarySpacerTable"),
+    dailySpacerHead: document.getElementById("dailySummarySpacerHead"),
+    dailySpacerBody: document.getElementById("dailySummarySpacerBody"),
     legendTitle: document.querySelector(".schedule-legend__title")
   };
 
@@ -382,10 +386,11 @@
   }
 
   function applyColumnWidths() {
+    const target = dom.workspace || dom.app;
     Object.keys(DEFAULT_COLUMN_WIDTHS).forEach(function (key) {
-      dom.app.style.setProperty("--col-" + key, String(state.columnWidths[key]) + "px");
+      target.style.setProperty("--col-" + key, String(state.columnWidths[key]) + "px");
     });
-    dom.app.style.setProperty("--summary-col", String(state.columnWidths.summary) + "px");
+    target.style.setProperty("--summary-col", String(state.columnWidths.summary) + "px");
   }
 
   function getVisibleColumnCount() {
@@ -564,6 +569,7 @@
     renderTableBody(monthState);
     renderSummary(monthState);
     renderDailySummary(monthState);
+    syncSummarySpacerWidth();
     updateStickyMetrics();
     updateSheetOverflowState();
     renderSelectionState();
@@ -651,6 +657,12 @@
       dom.dailySection.hidden = true;
       dom.dailyHead.innerHTML = "";
       dom.dailyBody.innerHTML = "";
+      if (dom.dailySpacerHead) {
+        dom.dailySpacerHead.innerHTML = "";
+      }
+      if (dom.dailySpacerBody) {
+        dom.dailySpacerBody.innerHTML = "";
+      }
       return;
     }
 
@@ -665,6 +677,11 @@
       head += '<th data-daily-day-head="' + day + '">' + day + "</th>";
     }
     dom.dailyHead.innerHTML = head + "</tr>";
+    if (dom.dailySpacerHead) {
+      dom.dailySpacerHead.innerHTML = "<tr>" + SUMMARY_FIELDS.map(function () {
+        return "<th></th>";
+      }).join("") + "</tr>";
+    }
 
     dom.dailyBody.innerHTML = activeCodes.map(function (code) {
       let row = '<tr data-daily-code-row="' + escapeHtml(code) + '">';
@@ -678,6 +695,13 @@
       }
       return row + "</tr>";
     }).join("");
+    if (dom.dailySpacerBody) {
+      dom.dailySpacerBody.innerHTML = activeCodes.map(function () {
+        return "<tr>" + SUMMARY_FIELDS.map(function () {
+          return "<td></td>";
+        }).join("") + "</tr>";
+      }).join("");
+    }
   }
 
   function getDailyCount(rows, code, day) {
@@ -1393,15 +1417,28 @@
   }
 
   function updateStickyMetrics() {
+    const target = dom.workspace || dom.app;
     const headerHeight = dom.header ? Math.round(dom.header.getBoundingClientRect().height) : 56;
     const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
     const firstHeadRow = dom.tableHead.querySelector("tr");
     const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
-    dom.app.style.setProperty("--schedule-header-height", String(headerHeight) + "px");
-    dom.app.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
-    dom.app.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
-    dom.app.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
+    target.style.setProperty("--schedule-header-height", String(headerHeight) + "px");
+    target.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
+    target.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
+    target.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
+    syncSummarySpacerWidth();
     requestFrozenHeaderSync();
+  }
+
+  function syncSummarySpacerWidth() {
+    const target = dom.workspace || dom.app;
+    if (!dom.summaryTable || !target) {
+      return;
+    }
+    const summaryWidth = Math.round(dom.summaryTable.getBoundingClientRect().width || dom.summaryTable.offsetWidth || 0);
+    if (summaryWidth > 0) {
+      target.style.setProperty("--summary-table-total", String(summaryWidth) + "px");
+    }
   }
 
   function requestFrozenHeaderSync() {
@@ -1416,18 +1453,19 @@
 
   function syncFrozenHeaders() {
     const stickyTop = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().bottom) : 0;
-    syncSingleFrozenHead(dom.table, dom.tableHead, stickyTop);
+    syncSingleFrozenHead(dom.table, dom.tableHead, stickyTop, dom.dailySection && !dom.dailySection.hidden ? dom.dailySection : dom.table);
     syncSingleFrozenHead(dom.summaryTable, dom.summaryHead, stickyTop);
-    syncSingleFrozenHead(dom.dailyTable, dom.dailyHead, stickyTop);
   }
 
-  function syncSingleFrozenHead(table, head, stickyTop) {
+  function syncSingleFrozenHead(table, head, stickyTop, bottomAnchor) {
     if (!table || !head) {
       return;
     }
     setHeaderTransform(head, 0);
     const tableRect = table.getBoundingClientRect();
-    const maxTranslate = Math.max(0, table.offsetHeight - head.offsetHeight);
+    const limitRect = bottomAnchor && bottomAnchor.getBoundingClientRect ? bottomAnchor.getBoundingClientRect() : tableRect;
+    const availableHeight = Math.max(0, Math.round(limitRect.bottom - tableRect.top));
+    const maxTranslate = Math.max(0, availableHeight - head.offsetHeight);
     const translate = Math.max(0, Math.min(maxTranslate, stickyTop - Math.round(tableRect.top)));
     setHeaderTransform(head, translate);
   }

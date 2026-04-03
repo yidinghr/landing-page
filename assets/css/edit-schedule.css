@@ -30,6 +30,7 @@
   --col-position: 92px;
   --col-day: 38px;
   --summary-col: 58px;
+  --summary-table-total: calc(var(--summary-col) * 4);
   --sticky-left-id: 0px;
   --sticky-left-dept: var(--col-id);
   --sticky-left-vie: calc(var(--col-id) + var(--col-dept));
@@ -451,6 +452,7 @@
 .schedule-table,
 .schedule-summary-table,
 .schedule-daily-table,
+.schedule-daily-spacer-table,
 .schedule-legend-table {
   border-collapse: separate;
   border-spacing: 0;
@@ -464,6 +466,8 @@
 .schedule-summary-table td,
 .schedule-daily-table th,
 .schedule-daily-table td,
+.schedule-daily-spacer-table th,
+.schedule-daily-spacer-table td,
 .schedule-legend-table th,
 .schedule-legend-table td {
   border: 1px solid rgba(244, 213, 31, 0.22);
@@ -479,6 +483,7 @@
 .schedule-table__weekday-head,
 .schedule-summary-table th,
 .schedule-daily-table th,
+.schedule-daily-spacer-table th,
 .schedule-legend-table th {
   background: rgba(18, 18, 18, 0.98);
   color: var(--color-text);
@@ -742,8 +747,24 @@
   opacity: 0.2;
 }
 
-.schedule-daily-block {
-  margin-top: 12px;
+.schedule-daily-stage {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 0;
+  align-items: start;
+  margin-top: -1px;
+}
+
+.schedule-daily-stage__main,
+.schedule-daily-stage__summary {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-daily-stage__summary {
+  margin-left: -1px;
 }
 
 .schedule-summary-table {
@@ -792,6 +813,11 @@
   width: max-content;
 }
 
+.schedule-daily-spacer-table {
+  width: var(--summary-table-total);
+  min-width: var(--summary-table-total);
+}
+
 .schedule-daily-table__sticky {
   position: sticky;
   z-index: 7;
@@ -826,6 +852,20 @@
 .schedule-daily-table th {
   box-sizing: border-box;
   white-space: nowrap;
+}
+
+.schedule-daily-spacer-table th,
+.schedule-daily-spacer-table td {
+  min-width: var(--summary-col);
+  width: var(--summary-col);
+  height: var(--schedule-row-height);
+  box-sizing: border-box;
+  white-space: nowrap;
+  background: #050505;
+}
+
+.schedule-daily-spacer-table th {
+  background: rgba(18, 18, 18, 0.98);
 }
 
 .schedule-daily-table .schedule-daily-table__spacer--id {
