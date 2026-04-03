@@ -5,16 +5,16 @@
 }
 
 .schedule-app {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 0;
+  --legend-panel-width: clamp(620px, 46vw, 760px);
+  --legend-panel-offset: 0px;
+  position: relative;
   min-height: 100vh;
   background: #000000;
   overflow: visible;
-  transition: grid-template-columns 0.18s ease;
 }
 
 .schedule-app--legend-open {
-  grid-template-columns: minmax(0, 1fr) 360px;
+  --legend-panel-offset: var(--legend-panel-width);
 }
 
 .schedule-workspace {
@@ -47,7 +47,7 @@
 .schedule-header {
   position: sticky;
   top: 0;
-  z-index: 28;
+  z-index: 36;
   min-height: var(--schedule-header-height);
   border-bottom: 1px solid rgba(244, 213, 31, 0.2);
   display: grid;
@@ -127,11 +127,12 @@
 .schedule-period-bar {
   position: sticky;
   top: var(--schedule-header-height);
-  z-index: 24;
+  z-index: 35;
   min-height: var(--schedule-period-height);
   border-bottom: 1px solid rgba(244, 213, 31, 0.14);
-  padding: 5px 18px;
+  padding: 5px calc(18px + var(--legend-panel-offset)) 5px 18px;
   background: rgba(3, 3, 3, 0.98);
+  transition: padding-right 0.18s ease;
 }
 
 .schedule-period-bar__inner {
@@ -388,7 +389,8 @@
   min-width: 0;
   min-height: 0;
   overflow: visible;
-  padding: 0 0 14px;
+  padding: 0 var(--legend-panel-offset) 14px 0;
+  transition: padding-right 0.18s ease;
 }
 
 .schedule-frozen-layer {
@@ -964,30 +966,35 @@
 }
 
 .schedule-legend {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 0;
   min-width: 0;
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
   border-left: 0 solid transparent;
-  transition: opacity 0.18s ease, border-color 0.18s ease;
+  z-index: 30;
+  transition: width 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
 }
 
 .schedule-app--legend-open .schedule-legend {
-  width: 360px;
+  width: var(--legend-panel-width);
   opacity: 1;
   pointer-events: auto;
   border-left: 1px solid rgba(244, 213, 31, 0.18);
 }
 
 .schedule-legend__inner {
-  width: 360px;
-  max-width: 360px;
+  width: var(--legend-panel-width);
+  max-width: var(--legend-panel-width);
   height: 100vh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 6px;
-  padding: 10px;
+  padding: 10px 14px 14px;
   background: rgba(4, 4, 4, 0.98);
 }
 
@@ -1014,16 +1021,14 @@
 
 .schedule-legend__content {
   min-height: 0;
-  overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(244, 213, 31, 0.6) transparent;
+  overflow: hidden;
 }
 
 .schedule-legend-table th,
 .schedule-legend-table td {
-  padding: 4px 6px;
+  padding: 4px 8px;
   text-align: left;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -1031,8 +1036,33 @@
 }
 
 .schedule-legend-table {
-  width: max-content;
+  width: 100%;
   min-width: 100%;
+  table-layout: fixed;
+}
+
+.schedule-legend-table th:nth-child(1),
+.schedule-legend-table td:nth-child(1) {
+  width: 10%;
+}
+
+.schedule-legend-table th:nth-child(2),
+.schedule-legend-table td:nth-child(2),
+.schedule-legend-table th:nth-child(3),
+.schedule-legend-table td:nth-child(3) {
+  width: 16%;
+}
+
+.schedule-legend-table th:nth-child(4),
+.schedule-legend-table td:nth-child(4),
+.schedule-legend-table th:nth-child(5),
+.schedule-legend-table td:nth-child(5) {
+  width: 10%;
+}
+
+.schedule-legend-table th:nth-child(6),
+.schedule-legend-table td:nth-child(6) {
+  width: 38%;
 }
 
 .schedule-legend-table thead th {
@@ -1059,6 +1089,26 @@
 
 .schedule-legend-table td[data-code-group="off"] {
   background: rgba(72, 72, 72, 0.24);
+}
+
+.schedule-legend-table__remark-cell {
+  padding: 0;
+}
+
+.schedule-legend-table__remark-input {
+  width: 100%;
+  min-height: calc(var(--schedule-row-height) - 2px);
+  border: 0;
+  background: transparent;
+  color: rgba(255, 243, 160, 0.94);
+  font-size: 10px;
+  line-height: calc(var(--schedule-row-height) - 2px);
+  padding: 0 8px;
+  outline: none;
+}
+
+.schedule-legend-table__remark-input::placeholder {
+  color: rgba(255, 243, 160, 0.32);
 }
 
 .schedule-assistive,
@@ -1105,8 +1155,8 @@
 }
 
 @media (max-width: 1100px) {
-  .schedule-app--legend-open {
-    grid-template-columns: minmax(0, 1fr) 320px;
+  .schedule-app {
+    --legend-panel-width: 320px;
   }
 
   .schedule-app--legend-open .schedule-legend,
@@ -1117,9 +1167,8 @@
 }
 
 @media (max-width: 920px) {
-  .schedule-app,
   .schedule-app--legend-open {
-    grid-template-columns: 1fr;
+    --legend-panel-offset: 0px;
   }
 
   .schedule-legend,

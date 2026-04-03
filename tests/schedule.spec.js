@@ -408,6 +408,21 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "false");
   });
 
+  test("opening the legend panel does not shift the fixed header title", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    const before = await page.locator("#scheduleHeaderTitle").boundingBox();
+    expect(before).not.toBeNull();
+
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "true");
+
+    const after = await page.locator("#scheduleHeaderTitle").boundingBox();
+    expect(after).not.toBeNull();
+    expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.width - before.width)).toBeLessThanOrEqual(1);
+  });
+
   test("legend panel keeps rows single-line without zoom controls", async ({ page }) => {
     await prepareSchedulePage(page);
 
@@ -415,6 +430,18 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleLegendBody td").last()).toHaveCSS("white-space", "nowrap");
     await expect(page.locator("#scheduleLegendZoomOut")).toHaveCount(0);
     await expect(page.locator("#scheduleLegendZoomIn")).toHaveCount(0);
+    await expect(page.locator("#scheduleLegendContent")).toHaveCSS("overflow-y", "hidden");
+  });
+
+  test("legend remark input persists after reload", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    await page.locator("#scheduleLegendToggle").click();
+    await page.locator("[data-legend-remark='A']").fill("Ghi chú test");
+    await page.reload();
+    await page.locator("#scheduleLegendToggle").click();
+
+    await expect(page.locator("[data-legend-remark='A']")).toHaveValue("Ghi chú test");
   });
 
   test("shift code dropdown uses compact dark styling", async ({ page }) => {

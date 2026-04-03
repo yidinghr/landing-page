@@ -2,6 +2,7 @@
   const i18n = window.YiDingI18n || null;
   const employeesDataApi = window.YiDingEmployeesData || null;
   const STORAGE_KEY = "yiding_schedule_module_v3";
+  const LEGEND_REMARKS_KEY = "yiding_schedule_legend_remarks_v1";
   const EMPLOYEES_KEY = employeesDataApi && employeesDataApi.STORAGE_KEY
     ? employeesDataApi.STORAGE_KEY
     : "yiding_employees_module_state_v3_airtable_import";
@@ -158,6 +159,7 @@
     codeDropdownIndex: -1
   };
   const state = loadState();
+  let legendRemarks = loadLegendRemarks();
 
   buildShiftCodeDatalist();
   populatePeriodOptions();
@@ -332,6 +334,19 @@
     } catch (error) {
       return createInitialState();
     }
+  }
+
+  function loadLegendRemarks() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(LEGEND_REMARKS_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveLegendRemarks() {
+    localStorage.setItem(LEGEND_REMARKS_KEY, JSON.stringify(legendRemarks));
   }
 
   function saveState() {
@@ -532,6 +547,14 @@
     }).join("");
   }
 
+  function getLegendRemark(code) {
+    if (Object.prototype.hasOwnProperty.call(legendRemarks, code)) {
+      return String(legendRemarks[code] || "");
+    }
+    const definition = SHIFT_CODE_MAP[code];
+    return definition ? String(definition.remark || "") : "";
+  }
+
   function buildLegendTable() {
     if (!dom.legendTable || !dom.legendBody) {
       return;
@@ -558,7 +581,7 @@
         '<td title="' + escapeHtml(item.checkOut) + '">' + escapeHtml(item.checkOut) + "</td>",
         '<td title="' + escapeHtml(item.hoursPay) + '">' + escapeHtml(item.hoursPay) + "</td>",
         '<td title="' + escapeHtml(item.nightHours) + '">' + escapeHtml(item.nightHours) + "</td>",
-        '<td title="' + escapeHtml(item.remark) + '">' + escapeHtml(item.remark) + "</td>",
+        '<td class="schedule-legend-table__remark-cell"><input class="schedule-legend-table__remark-input" data-legend-remark="' + escapeHtml(item.code) + '" type="text" value="' + escapeHtml(getLegendRemark(item.code)) + '" placeholder="' + escapeHtml(i18n.t("schedule.legend.remark")) + '" aria-label="' + escapeHtml(i18n.t("schedule.legend.remark") + " " + item.code) + '"></td>',
         "</tr>"
       ].join("");
     }).join("");
@@ -780,6 +803,16 @@
         updateSheetOverflowState();
       }, 220);
     });
+    if (dom.legendBody) {
+      dom.legendBody.addEventListener("input", function (event) {
+        const input = event.target.closest("[data-legend-remark]");
+        if (!input) {
+          return;
+        }
+        legendRemarks[input.getAttribute("data-legend-remark")] = input.value;
+        saveLegendRemarks();
+      });
+    }
     dom.localeMount.addEventListener("click", function (event) {
       const toggle = event.target.closest("[data-locale-toggle]");
       const option = event.target.closest("[data-locale-value]");
