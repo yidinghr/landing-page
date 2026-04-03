@@ -1,362 +1,108 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>修改工作排班</title>
-
-<style>
-
-body{
-margin:0;
-background:#000;
-color:#f4d51f;
-font-family:Arial;
-padding:20px;
-}
-
-/* header */
-
-.topBar{
-display:flex;
-gap:20px;
-align-items:center;
-margin-bottom:20px;
-}
-
-/* table */
-
-table{
-border-collapse:collapse;
-}
-
-th,td{
-border:2px solid #f4d51f;
-min-width:40px;
-height:40px;
-text-align:center;
-color:#f4d51f;
-}
-
-th{
-background:#111;
-}
-
-td{
-background:#000;
-}
-
-td input{
-width:100%;
-height:100%;
-background:none;
-border:none;
-text-align:center;
-color:#fff;
-font-weight:bold;
-}
-
-/* employee column */
-
-.nameCol{
-min-width:120px;
-}
-
-/* add button */
-
-.addBtn{
-background:#000;
-border:2px solid #f4d51f;
-color:#f4d51f;
-cursor:pointer;
-padding:5px 10px;
-}
-
-/* layout */
-
-.container{
-display:flex;
-gap:40px;
-}
-
-/* statistics */
-
-.statTable td{
-min-width:40px;
-}
-
-</style>
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/i18n.css">
+<link rel="stylesheet" href="../../assets/css/edit-schedule.css">
 </head>
 
+<body class="edit-page">
+<div id="scheduleApp" class="schedule-app">
+<main class="schedule-workspace">
+<header class="schedule-header">
+<h1 id="scheduleHeaderTitle" class="schedule-header__title">班表</h1>
+<div class="schedule-header__tools">
+<button id="scheduleLegendToggle" type="button" class="schedule-header__tool" aria-expanded="false" aria-controls="scheduleLegendPanel" aria-label="班碼參照">&lt;&lt;</button>
+<div id="scheduleLocaleMount" class="schedule-locale-slot"></div>
+</div>
+</header>
 
-<body>
-
-<h2>修改工作排班</h2>
-
-<div class="topBar">
-
-<label>開始</label>
-<input type="date" id="start">
-
-<label>結束</label>
-<input type="date" id="end">
-
-<button onclick="generateTable()">生成</button>
-
-<button onclick="addEmployee()" class="addBtn">+ 新員工</button>
-
+<section class="schedule-period-bar" aria-label="排班月份">
+<div class="schedule-period-grid">
+<div class="schedule-period-pair">
+<span id="scheduleYearLabel" class="schedule-period-pair__label">年</span>
+<span class="schedule-period-pair__value">
+<select id="scheduleYear" aria-label="年份"></select>
+<span class="schedule-period-pair__arrow" aria-hidden="true">▾</span>
+</span>
 </div>
 
-<div class="container">
+<div class="schedule-period-pair">
+<span id="scheduleMonthLabel" class="schedule-period-pair__label">月</span>
+<span class="schedule-period-pair__value">
+<select id="scheduleMonth" aria-label="月份"></select>
+<span class="schedule-period-pair__arrow" aria-hidden="true">▾</span>
+</span>
+</div>
+</div>
+<div id="scheduleMonthMeta" class="schedule-assistive" aria-live="polite"></div>
+</section>
 
-<!-- MAIN TABLE -->
+<section class="schedule-sheet-frame">
+<div id="scheduleSheetScroll" class="schedule-sheet-scroll">
+<div id="scheduleSheetZoom" class="schedule-sheet-zoom">
+<div class="schedule-sheet-stage">
+<div class="schedule-sheet-main">
+<table id="scheduleTable" class="schedule-table">
+<thead id="scheduleTableHead"></thead>
+<tbody id="scheduleTableBody"></tbody>
+</table>
 
-<div>
+<section id="dailySummarySection" class="schedule-daily-block" hidden>
+<table id="dailySummaryTable" class="schedule-daily-table">
+<thead id="dailySummaryHead"></thead>
+<tbody id="dailySummaryBody"></tbody>
+</table>
+</section>
+</div>
 
-<table id="scheduleTable">
+<aside class="schedule-sheet-summary">
+<table id="scheduleSummaryTable" class="schedule-summary-table">
+<thead id="scheduleSummaryHead"></thead>
+<tbody id="scheduleSummaryBody"></tbody>
+</table>
+</aside>
+</div>
+</div>
+</div>
+
+<div id="scheduleSelectionMeta" class="schedule-assistive" aria-live="polite"></div>
+<input id="scheduleSelectionInput" class="schedule-assistive-input" type="text" list="scheduleShiftCodeList" inputmode="text" autocomplete="off" spellcheck="false">
+<div id="scheduleFeedback" class="schedule-feedback" role="status" aria-live="polite"></div>
+</section>
+</main>
+
+<aside id="scheduleLegendPanel" class="schedule-legend" aria-label="班碼參照面板">
+<div class="schedule-legend__inner">
+<div class="schedule-legend__top">
+<h2 class="schedule-legend__title">班碼參照</h2>
+</div>
+<div class="schedule-legend__content">
+<table id="scheduleLegendTable" class="schedule-legend-table">
 <thead>
-<tr id="dateRow">
-<th class="nameCol">姓名</th>
+<tr>
+<th>SHIFT CODE</th>
+<th>CHECK IN TIME</th>
+<th>CHECK OUT TIME</th>
+<th>HOURS PAY</th>
+<th>NIGHT SHIFT HOURS</th>
+<th>REMARK</th>
 </tr>
 </thead>
-
-<tbody id="bodyRows">
-
-</tbody>
-
+<tbody id="scheduleLegendBody"></tbody>
 </table>
-
+</div>
+</div>
+</aside>
 </div>
 
-
-<!-- RIGHT STAT TABLE -->
-
-<div>
-
-<h3>統計</h3>
-
-<table id="statTable" class="statTable">
-<thead>
-<tr id="statHeader"></tr>
-</thead>
-
-<tbody id="statBody"></tbody>
-
-</table>
-
-</div>
-
-</div>
-
-
-<!-- BOTTOM STAT -->
-
-<h3>每日統計</h3>
-
-<table id="bottomStat">
-<thead>
-<tr id="bottomHeader"></tr>
-</thead>
-
-<tbody id="bottomBody"></tbody>
-</table>
-
-
-<script>
-
-let dayCount=0
-let employees=[]
-
-/* generate table */
-
-function generateTable(){
-
-const start=new Date(document.getElementById("start").value)
-const end=new Date(document.getElementById("end").value)
-
-if(!start || !end)return
-
-const diff=(end-start)/(1000*60*60*24)+1
-
-dayCount=diff
-
-createHeader()
-renderEmployees()
-
-}
-
-
-/* create header */
-
-function createHeader(){
-
-const dateRow=document.getElementById("dateRow")
-dateRow.innerHTML='<th class="nameCol">姓名</th>'
-
-const start=new Date(document.getElementById("start").value)
-
-for(let i=0;i<dayCount;i++){
-
-let d=new Date(start)
-d.setDate(start.getDate()+i)
-
-let th=document.createElement("th")
-th.innerText=d.getDate()
-
-dateRow.appendChild(th)
-
-}
-
-}
-
-
-/* add employee */
-
-function addEmployee(){
-
-employees.push({
-name:"員工"+(employees.length+1),
-data:new Array(dayCount).fill("")
-})
-
-renderEmployees()
-
-}
-
-
-/* render table */
-
-function renderEmployees(){
-
-const body=document.getElementById("bodyRows")
-body.innerHTML=""
-
-employees.forEach((emp,empIndex)=>{
-
-let tr=document.createElement("tr")
-
-let nameCell=document.createElement("td")
-nameCell.innerText=emp.name
-tr.appendChild(nameCell)
-
-for(let i=0;i<dayCount;i++){
-
-let td=document.createElement("td")
-
-let input=document.createElement("input")
-
-input.value=emp.data[i]
-
-input.oninput=function(){
-
-emp.data[i]=this.value
-colorCell(td,this.value)
-updateStats()
-
-}
-
-colorCell(td,input.value)
-
-td.appendChild(input)
-
-tr.appendChild(td)
-
-}
-
-body.appendChild(tr)
-
-})
-
-updateStats()
-
-}
-
-
-/* color rules */
-
-function colorCell(cell,val){
-
-cell.style.background="#000"
-
-if(val=="休") cell.style.background="#444"
-if(val=="A") cell.style.background="green"
-if(val=="B") cell.style.background="blue"
-if(val=="C") cell.style.background="orange"
-
-}
-
-
-/* stats */
-
-function updateStats(){
-
-let map={}
-
-employees.forEach(emp=>{
-
-emp.data.forEach((v,i)=>{
-
-if(v==="")return
-
-if(!map[v]) map[v]=new Array(dayCount).fill(0)
-
-map[v][i]++
-
-})
-
-})
-
-renderStats(map)
-
-}
-
-
-/* render stats */
-
-function renderStats(map){
-
-const header=document.getElementById("statHeader")
-const body=document.getElementById("statBody")
-
-header.innerHTML=""
-body.innerHTML=""
-
-let hrow=document.createElement("tr")
-hrow.innerHTML="<th>符號</th>"
-header.appendChild(hrow)
-
-for(let i=0;i<dayCount;i++){
-
-let th=document.createElement("th")
-th.innerText=i+1
-hrow.appendChild(th)
-
-}
-
-Object.keys(map).forEach(k=>{
-
-let tr=document.createElement("tr")
-
-let td=document.createElement("td")
-td.innerText=k
-tr.appendChild(td)
-
-map[k].forEach(v=>{
-
-let t=document.createElement("td")
-t.innerText=v
-tr.appendChild(t)
-
-})
-
-body.appendChild(tr)
-
-})
-
-}
-
-</script>
-
+<datalist id="scheduleShiftCodeList"></datalist>
+
+<script src="../../assets/js/i18n.js"></script>
+<script src="../../assets/js/employees-data.js"></script>
+<script src="../../assets/js/edit-schedule.js"></script>
 </body>
 </html>

@@ -1,7 +1,9 @@
 (function () {
+  const i18n = window.YiDingI18n || null;
   const dataApi = window.YiDingEmployeesData;
   const formApi = window.YiDingEmployeesForm;
   const root = document.getElementById("employeesModuleRoot");
+  const pageTools = document.getElementById("employeesPageTools");
 
   if (!dataApi || !formApi || !root) {
     return;
@@ -38,7 +40,8 @@
     noticeText: "",
     previewImageSrc: "",
     pendingAttachments: [],
-    attachmentDeleteIndex: -1
+    attachmentDeleteIndex: -1,
+    localeMenuOpen: false
   };
 
   let state = loadState();
@@ -85,6 +88,23 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function translateLiteral(value) {
+    return i18n ? i18n.translateLiteral(value) : value;
+  }
+
+  function getInterfaceTitleText() {
+    if (!i18n) {
+      return state.interfaceMeta.title;
+    }
+
+    return i18n.isDefaultValue(state.interfaceMeta.title, [
+      dataApi.DEFAULT_INTERFACE_TITLE,
+      "弈鼎員工",
+      "Nhân viên YiDing",
+      "YiDing Employees"
+    ]) ? i18n.t("employees.pageTitle") : state.interfaceMeta.title;
   }
 
   function getTabFieldConfig(fieldId) {
@@ -624,6 +644,35 @@
     return "";
   }
 
+  function renderLanguageControl() {
+    if (!pageTools || !i18n) {
+      return;
+    }
+
+    const options = i18n.getLocaleOptions().map(function (option) {
+      const activeClass = option.value === i18n.getLocale() ? " is-active" : "";
+
+      return [
+        '<button type="button" class="yd-locale-option' + activeClass + '" data-locale-value="' + option.value + '">',
+        "<span>" + escapeHtml(option.label) + "</span>",
+        '<span class="yd-locale-option__check" aria-hidden="true">●</span>',
+        "</button>"
+      ].join("");
+    }).join("");
+
+    pageTools.innerHTML = [
+      '<div class="yd-locale-control">',
+      '<button type="button" class="yd-locale-button" data-locale-toggle="true" aria-label="' + escapeHtml(i18n.t("common.settings")) + '" aria-expanded="' + String(uiState.localeMenuOpen) + '">',
+      '<span class="yd-locale-button__icon" aria-hidden="true">⚙</span>',
+      "</button>",
+      '<div class="yd-locale-popover"' + (uiState.localeMenuOpen ? "" : " hidden") + ">",
+      '<p class="yd-locale-popover__title">' + escapeHtml(i18n.t("common.language")) + "</p>",
+      options,
+      "</div>",
+      "</div>"
+    ].join("");
+  }
+
   function renderSidebar() {
     const selectedDepartmentId = state.selectedDepartmentId;
     const subtitleText = state.interfaceMeta.subtitle || dataApi.DEFAULT_INTERFACE_SUBTITLE;
@@ -642,7 +691,7 @@
       '<div class="employees-sidebar__title-row">',
       uiState.editingTitle
         ? '<input id="employeesTitleInput" class="employees-sidebar__title-input" type="text" value="' + escapeHtml(uiState.titleDraft) + '">'
-        : '<h1 class="employees-sidebar__title">' + escapeHtml(state.interfaceMeta.title) + "</h1>",
+        : '<h1 class="employees-sidebar__title">' + escapeHtml(getInterfaceTitleText()) + "</h1>",
       '<div class="employees-sidebar__title-actions">',
       '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-title-edit" aria-label="編輯標題">' + getIconSvg("edit") + "</button>",
       "</div>",
@@ -658,7 +707,7 @@
       "</div>",
       "</div>",
       '<div class="employees-sidebar__body">',
-      '<h2 class="employees-sidebar__section-title">部門</h2>',
+      '<h2 class="employees-sidebar__section-title">' + escapeHtml(translateLiteral("部門")) + "</h2>",
       '<div class="employees-sidebar__list" id="employeesDepartmentList">',
       state.departments.map(function (department) {
         const isEditing = uiState.editingDepartmentId === department.id;
@@ -1167,6 +1216,10 @@
   }
 
   function renderAll() {
+    if (i18n) {
+      document.title = i18n.t("employees.pageTitle");
+    }
+    renderLanguageControl();
     renderSidebar();
     renderMainHeader();
     renderToolbar();
@@ -2511,6 +2564,36 @@
     root.addEventListener("dragend", handleDragEnd);
     root.addEventListener("dragover", handleDragOver);
     root.addEventListener("drop", handleDrop);
+    if (pageTools && i18n) {
+      pageTools.addEventListener("click", function (event) {
+        const toggle = event.target.closest("[data-locale-toggle]");
+        const option = event.target.closest("[data-locale-value]");
+
+        if (toggle) {
+          event.stopPropagation();
+          uiState.localeMenuOpen = !uiState.localeMenuOpen;
+          renderLanguageControl();
+          return;
+        }
+
+        if (!option) {
+          return;
+        }
+
+        event.stopPropagation();
+        uiState.localeMenuOpen = false;
+        i18n.setLocale(option.getAttribute("data-locale-value"));
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!uiState.localeMenuOpen || pageTools.contains(event.target)) {
+          return;
+        }
+
+        uiState.localeMenuOpen = false;
+        renderLanguageControl();
+      });
+    }
     root.addEventListener("error", function (event) {
       const target = event.target;
 
@@ -2602,4 +2685,9 @@
   syncDepartmentOptionsWithState();
   attachStaticListeners();
   renderAll();
+  if (i18n) {
+    i18n.subscribe(function () {
+      renderAll();
+    });
+  }
 })();

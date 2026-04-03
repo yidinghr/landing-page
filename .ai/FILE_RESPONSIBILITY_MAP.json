@@ -1,0 +1,229 @@
+{
+  "files": [
+    {
+      "path": "index.html",
+      "manages": [
+        "login page markup",
+        "login form DOM ids",
+        "runtime asset loading for login"
+      ],
+      "modules": [
+        "login"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "home/home.html",
+      "manages": [
+        "dashboard page markup",
+        "home greeting mount",
+        "dashboard menu mount",
+        "top action mount"
+      ],
+      "modules": [
+        "homeDashboard"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "home/employees.html",
+      "manages": [
+        "employees page entry markup",
+        "module root mount",
+        "employees runtime asset loading"
+      ],
+      "modules": [
+        "employees"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "home/edit/index.html",
+      "manages": [
+        "edit schedule page markup",
+        "toolbar controls",
+        "schedule/statistics table mounts"
+      ],
+      "modules": [
+        "editSchedule"
+      ],
+      "runtimeStatus": "active-partial"
+    },
+    {
+      "path": "assets/css/base.css",
+      "manages": [
+        "global black/yellow base variables",
+        "base element resets",
+        "shared default UI font for pages that import it"
+      ],
+      "modules": [
+        "login",
+        "editSchedule"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/css/login.css",
+      "manages": [
+        "login layout",
+        "login form styling",
+        "login responsive adjustments"
+      ],
+      "modules": [
+        "login"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/css/home.css",
+      "manages": [
+        "dashboard layout",
+        "top action icon styling",
+        "home greeting styling",
+        "dashboard menu grid styling"
+      ],
+      "modules": [
+        "homeDashboard"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/css/employees.css",
+      "manages": [
+        "employees three-panel layout",
+        "sidebar/card/detail styling",
+        "toolbar/popover/modal styling",
+        "employees form and attachment styling",
+        "module-specific scrollbars"
+      ],
+      "modules": [
+        "employees"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/css/edit-schedule.css",
+      "manages": [
+        "edit schedule layout",
+        "toolbar and table styling",
+        "responsive layout for schedule page"
+      ],
+      "modules": [
+        "editSchedule"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/js/login.js",
+      "manages": [
+        "temporary admin credential check",
+        "submit handling and redirect",
+        "login message state",
+        "clear-on-pageshow behavior"
+      ],
+      "modules": [
+        "login"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/js/home.js",
+      "manages": [
+        "dashboard greeting logic",
+        "dashboard button config",
+        "top action config",
+        "dashboard rendering and click binding"
+      ],
+      "modules": [
+        "homeDashboard"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/js/employees-data.js",
+      "manages": [
+        "employees seed data",
+        "employees selectable option lists",
+        "employees initial state factory",
+        "employees data helpers exposed on window"
+      ],
+      "modules": [
+        "employees"
+      ],
+      "runtimeStatus": "active",
+      "notes": "Currently contains imported Airtable-derived seed data in frontend source."
+    },
+    {
+      "path": "assets/js/employees-form.js",
+      "manages": [
+        "employee form schema",
+        "derived field calculations",
+        "date syncing and formatting",
+        "form field rendering",
+        "draft serialization helpers"
+      ],
+      "modules": [
+        "employees"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/js/employees-page.js",
+      "manages": [
+        "employees runtime shell rendering",
+        "sidebar behavior",
+        "toolbar, tabs and filters",
+        "card grid visibility and sorting",
+        "detail panel state machine",
+        "modal flows",
+        "attachment workflow",
+        "localStorage persistence"
+      ],
+      "modules": [
+        "employees"
+      ],
+      "runtimeStatus": "active"
+    },
+    {
+      "path": "assets/js/edit-schedule.js",
+      "manages": [
+        "schedule date-range generation",
+        "manual employee row creation",
+        "input-driven per-code statistics"
+      ],
+      "modules": [
+        "editSchedule"
+      ],
+      "runtimeStatus": "active-partial"
+    },
+    {
+      "path": "image/logo.png",
+      "manages": [
+        "primary runtime logo asset",
+        "default employees avatar/icon fallback"
+      ],
+      "modules": [
+        "login",
+        "homeDashboard",
+        "employees"
+      ],
+      "runtimeStatus": "active-asset"
+    },
+    {
+      "path": "image/logoweb.png",
+      "manages": [
+        "favicon/runtime web icon asset"
+      ],
+      "modules": [
+        "login",
+        "siteIcon"
+      ],
+      "runtimeStatus": "active-asset"
+    }
+  ],
+  "omittedNonRuntimeFiles": [
+    "README.md",
+    "PROJECT_RULES.md",
+    ".gitignore"
+  ]
+}

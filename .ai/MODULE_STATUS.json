@@ -1,0 +1,137 @@
+{
+  "modules": [
+    {
+      "moduleName": "login",
+      "relatedFiles": [
+        "index.html",
+        "assets/css/base.css",
+        "assets/css/login.css",
+        "assets/js/login.js"
+      ],
+      "implementedFeatures": [
+        "Branded login page with black/yellow styling",
+        "Enter-to-submit via form submit handling",
+        "Temporary hardcoded admin credential check",
+        "Success redirect to home/home.html",
+        "Clear account/password/message when page is shown again via browser back"
+      ],
+      "placeholderFeatures": [
+        "Real authentication backend",
+        "Real registration flow",
+        "Role system",
+        "Protected route enforcement"
+      ],
+      "knownBrokenBehaviors": [
+        "Temporary auth flag is not enforced by downstream pages"
+      ],
+      "nextRecommendedWork": [
+        "Add route/auth guard logic before expanding protected modules"
+      ]
+    },
+    {
+      "moduleName": "homeDashboard",
+      "relatedFiles": [
+        "home/home.html",
+        "assets/css/home.css",
+        "assets/js/home.js"
+      ],
+      "implementedFeatures": [
+        "Dynamic greeting based on browser local time",
+        "Menu buttons rendered from config",
+        "Top-right action icons rendered from config",
+        "Employees button navigates to home/employees.html",
+        "Schedule button navigates to home/edit/index.html"
+      ],
+      "placeholderFeatures": [
+        "打卡 button action",
+        "弈鼎资料 button action",
+        "help icon action",
+        "settings icon action"
+      ],
+      "knownBrokenBehaviors": [
+        "Most dashboard actions are intentionally no-op even though buttons/icons are visible"
+      ],
+      "nextRecommendedWork": [
+        "Decide whether to wire 打卡 and 弈鼎资料 next or keep them clearly disabled"
+      ]
+    },
+    {
+      "moduleName": "employees",
+      "relatedFiles": [
+        "home/employees.html",
+        "assets/css/employees.css",
+        "assets/js/employees-data.js",
+        "assets/js/employees-form.js",
+        "assets/js/employees-page.js"
+      ],
+      "implementedFeatures": [
+        "Three-panel layout: sidebar, card workspace, right detail panel",
+        "Sidebar inline editing for title, subtitle and department names",
+        "Fixed retired department row plus draggable normal departments",
+        "Independent scroll areas for sidebar, card list and detail panel on desktop",
+        "Card grid with search, filter, display settings and sort modes",
+        "Per-department tab grouping with multi-condition AND logic",
+        "Detail panel modes: hidden, view, edit, add",
+        "Employee add/edit/save/delete flows",
+        "Delete employee password gate",
+        "Attachment add/replace/reorder/delete flows with pending confirmation",
+        "Avatar preview modal and image replacement flow",
+        "Client-side persistence via localStorage",
+        "Imported Airtable-derived seed dataset embedded in frontend source"
+      ],
+      "placeholderFeatures": [
+        "Backend persistence",
+        "Live Airtable fetch through backend",
+        "Multi-user synchronization",
+        "Advanced tab builder beyond the current single-tab AND-condition model"
+      ],
+      "knownBrokenBehaviors": [
+        "Imported seed contains blank employee records that render as mostly empty cards",
+        "Visible department and some selectable values remain raw imported English or mixed-language strings",
+        "Auth is not checked before entering the module"
+      ],
+      "nextRecommendedWork": [
+        "Clean imported data and remove blank records from the seed source",
+        "Introduce a real backend data source instead of frontend-only seed persistence",
+        "Normalize visible department/relationship labels without losing source mapping"
+      ]
+    },
+    {
+      "moduleName": "editSchedule",
+      "relatedFiles": [
+        "home/edit/index.html",
+        "assets/css/base.css",
+        "assets/css/edit-schedule.css",
+        "assets/js/edit-schedule.js"
+      ],
+      "implementedFeatures": [
+        "Dashboard navigation from 班表",
+        "Workbook-derived year/month schedule workspace using Shift.xlsx",
+        "Dynamic day columns by selected year/month",
+        "Active employee dropdown sourced from employees localStorage first, then seed fallback",
+        "Auto-fill for 工號 / YDI ID, 部門, 越名字, 英名字, 职位",
+        "Dynamic row creation",
+        "Right slide legend panel based on Sheet2",
+        "Valid shift code enforcement from workbook code list",
+        "Multi-cell selection and batch apply",
+        "Delete / Backspace clear",
+        "Ctrl+Z undo for grid edits",
+        "Right-side per-employee summary with active codes, 加班, 应上时数, 实际时数, 夜班补贴(时数)",
+        "Bottom daily summary for active major shifts",
+        "Client-side persistence via localStorage under yiding_schedule_module_v1",
+        "Playwright coverage for route, month/day logic, roster sync, validation, batch fill, undo, panel, and workbook math"
+      ],
+      "placeholderFeatures": [
+        "Backend persistence",
+        "Official shortcut map beyond the empty centralized config"
+      ],
+      "knownBrokenBehaviors": [
+        "Workbook contains a 加班 count formula for literal 加, but ValidShiftCodes from Sheet2 does not include 加"
+      ],
+      "nextRecommendedWork": [
+        "Clarify the business rule for overtime marker 加",
+        "Decide whether schedule data should remain browser-local or move toward backend sync"
+      ]
+    }
+  ]
+}

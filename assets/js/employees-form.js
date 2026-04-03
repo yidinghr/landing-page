@@ -1,5 +1,6 @@
 (function () {
   const dataApi = window.YiDingEmployeesData;
+  const i18n = window.YiDingI18n || null;
   const currentYear = new Date().getFullYear();
 
   const EMPLOYEE_FORM_SECTIONS = [
@@ -92,6 +93,10 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function translateLiteral(value) {
+    return i18n ? i18n.translateLiteral(value) : value;
   }
 
   function getValueAtPath(target, path) {
@@ -753,7 +758,7 @@
 
       return [
         '<div class="employee-form__section" data-section="' + escapeHtml(section.id) + '">',
-        '<h3 class="employee-form__section-title">' + escapeHtml(section.title) + "</h3>",
+        '<h3 class="employee-form__section-title">' + escapeHtml(translateLiteral(section.title)) + "</h3>",
         '<div class="employee-form__section-grid">' + fieldMarkup + "</div>",
         "</div>"
       ].join("");
