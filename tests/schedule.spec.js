@@ -1,7 +1,7 @@
 const { test, expect } = require("@playwright/test");
 
 const EMPLOYEES_KEY = "yiding_employees_module_state_v3_airtable_import";
-const SCHEDULE_KEY = "yiding_schedule_module_v1";
+const SCHEDULE_KEY = "yiding_schedule_module_v3";
 
 function createEmployee(overrides) {
   return Object.assign({
@@ -17,6 +17,38 @@ function createEmployee(overrides) {
       status: "在職"
     }
   }, overrides || {});
+}
+
+function createScheduleRow(id, snapshot, shifts) {
+  return {
+    id: "schedule-row-" + id,
+    sourceType: "manual",
+    employeeId: "",
+    employeeSnapshot: Object.assign({
+      employeeId: "",
+      ydiId: "",
+      department: "",
+      vieName: "",
+      engName: "",
+      position: ""
+    }, snapshot || {}),
+    shifts: shifts || {}
+  };
+}
+
+function createScheduleState(rows, year = 2026, month = 7) {
+  const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+  return {
+    selectedYear: year,
+    selectedMonth: month,
+    legendOpen: false,
+    zoomLevel: 1,
+    months: {
+      [monthKey]: {
+        rows: rows || []
+      }
+    }
+  };
 }
 
 async function prepareSchedulePage(page, options = {}) {
@@ -47,8 +79,17 @@ async function prepareSchedulePage(page, options = {}) {
   await page.goto("/home/edit/index.html");
 }
 
+async function addRows(page, count) {
+  await page.fill("#scheduleAddRowsCount", String(count));
+  await page.locator("#scheduleAddRowsButton").click();
+}
+
 async function selectCell(page, rowIndex, day) {
   await page.locator(`[data-schedule-cell][data-row-index="${rowIndex}"][data-day="${day}"]`).click();
+}
+
+async function selectMetaCell(page, rowIndex, colIndex) {
+  await page.locator(`[data-grid-cell][data-row-index="${rowIndex}"][data-col-index="${colIndex}"]`).click();
 }
 
 async function typeShiftCode(page, code) {
@@ -77,13 +118,26 @@ async function dragSelect(page, start, end) {
   await page.mouse.up();
 }
 
-test.describe("Schedule module from Shift.xlsx", () => {
+test.describe("Schedule module", () => {
   test("dashboard 班表 button routes to the local schedule page", async ({ page }) => {
     await page.goto("/home/home.html");
     await page.locator("#dashboardMainButton-schedule").click();
 
     await expect(page).toHaveURL(/\/home\/edit\/index\.html$/);
     await expect(page.locator("#scheduleTable")).toBeVisible();
+  });
+
+  test("fresh month starts with no rows by default", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      employeesState: {
+        employees: [
+          createEmployee({ id: "emp-a", basic: { engName: "ACTIVE A", vieName: "VO A", ydiId: "YDI8001" } }),
+          createEmployee({ id: "emp-b", basic: { engName: "ACTIVE B", vieName: "VO B", ydiId: "YDI8002" } })
+        ]
+      }
+    });
+
+    await expect(page.locator(".schedule-table__body-row")).toHaveCount(0);
   });
 
   test("changing year and month updates the day columns correctly", async ({ page }) => {
@@ -97,56 +151,24 @@ test.describe("Schedule module from Shift.xlsx", () => {
     await expect(page.locator(".schedule-table__day-head")).toHaveCount(28);
   });
 
-  test("all active employees auto-populate and retired staff stay excluded", async ({ page }) => {
-    await prepareSchedulePage(page, {
-      employeesState: {
-        employees: [
-          createEmployee({ id: "emp-a", basic: { engName: "ACTIVE A", vieName: "VO A", ydiId: "YDI8001" } }),
-          createEmployee({ id: "emp-b", basic: { engName: "ACTIVE B", vieName: "VO B", ydiId: "YDI8002" } }),
-          createEmployee({
-            id: "emp-retired",
-            basic: { engName: "RETIRED", vieName: "VO C", ydiId: "YDI8003" },
-            work: { department: { preset: "Hr", other: "" }, position: "Supervisor", status: "離職" }
-          })
-        ]
-      }
-    });
+  test("add rows works from an empty month", async ({ page }) => {
+    await prepareSchedulePage(page);
 
-    await expect(page.locator(".schedule-table__body-row")).toHaveCount(2);
-    await expect(page.locator(".schedule-table__body-row").first().locator(".schedule-table__sticky--eng")).toContainText("ACTIVE A");
-    await expect(page.locator("#scheduleTable")).not.toContainText("RETIRED");
-  });
-
-  test("drag handle reorders employee rows", async ({ page }) => {
-    await prepareSchedulePage(page, {
-      employeesState: {
-        employees: [
-          createEmployee({ id: "emp-a", basic: { engName: "FIRST", vieName: "VO A", ydiId: "YDI8001" } }),
-          createEmployee({ id: "emp-b", basic: { engName: "SECOND", vieName: "VO B", ydiId: "YDI8002" } })
-        ]
-      }
-    });
-
-    await page.locator("[data-row-handle]").nth(0).dragTo(page.locator("[data-row-handle]").nth(1));
-
-    await expect(page.locator(".schedule-table__body-row").first().locator(".schedule-table__sticky--eng")).toContainText("SECOND");
-    await expect(page.locator(".schedule-table__body-row").nth(1).locator(".schedule-table__sticky--eng")).toContainText("FIRST");
+    await addRows(page, 3);
+    await expect(page.locator(".schedule-table__body-row")).toHaveCount(3);
+    await expect(page.locator("#scheduleFeedback")).toContainText("3");
   });
 
   test("drag handle stays hidden until hover and overlays the YDI column", async ({ page }) => {
     await prepareSchedulePage(page);
+    await addRows(page, 1);
 
     const handle = page.locator("[data-row-handle]").first();
     const ydiCell = page.locator("[data-grid-cell][data-row-index='0'][data-col-index='0']").first();
 
-    await expect
-      .poll(async () => handle.evaluate((node) => window.getComputedStyle(node).opacity))
-      .toBe("0");
-
+    await expect.poll(async () => handle.evaluate((node) => window.getComputedStyle(node).opacity)).toBe("0");
     await ydiCell.hover();
-    await expect
-      .poll(async () => handle.evaluate((node) => window.getComputedStyle(node).opacity))
-      .toBe("1");
+    await expect.poll(async () => handle.evaluate((node) => window.getComputedStyle(node).opacity)).toBe("1");
 
     const handleBox = await handle.boundingBox();
     const ydiBox = await ydiCell.boundingBox();
@@ -156,52 +178,85 @@ test.describe("Schedule module from Shift.xlsx", () => {
     expect(handleBox.x + handleBox.width).toBeLessThanOrEqual(ydiBox.x + ydiBox.width);
   });
 
-  test("valid shift code input fills the selected cell", async ({ page }) => {
-    await prepareSchedulePage(page);
+  test("drag handle reorders rows", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a", { ydiId: "YDI8001", department: "Operation", vieName: "VO A", engName: "FIRST", position: "Staff" }),
+        createScheduleRow("b", { ydiId: "YDI8002", department: "Finance", vieName: "VO B", engName: "SECOND", position: "Supervisor" })
+      ])
+    });
 
-    await selectCell(page, 0, 1);
-    await typeShiftCode(page, "A");
+    await page.locator("[data-row-handle]").nth(0).dragTo(page.locator("[data-row-handle]").nth(1));
 
-    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("A");
+    await expect(page.locator(".schedule-table__body-row").first().locator(".schedule-table__sticky--eng")).toContainText("SECOND");
+    await expect(page.locator(".schedule-table__body-row").nth(1).locator(".schedule-table__sticky--eng")).toContainText("FIRST");
   });
 
-  test("invalid shift code is rejected and not saved", async ({ page }) => {
+  test("typed shift code is visible in the code box before Enter", async ({ page }) => {
     await prepareSchedulePage(page);
+    await addRows(page, 1);
 
     await selectCell(page, 0, 1);
-    await typeShiftCode(page, "ZZ");
+    await page.keyboard.type("B1");
+
+    await expect(page.locator("#scheduleSelectionInput")).toHaveValue("B1");
+    await page.keyboard.press("Enter");
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("B1");
+  });
+
+  test("invalid shift code stays visible and shows an error", async ({ page }) => {
+    await prepareSchedulePage(page);
+    await addRows(page, 1);
+
+    await selectCell(page, 0, 1);
+    await page.keyboard.type("ZZ");
+
+    await expect(page.locator("#scheduleSelectionInput")).toHaveValue("ZZ");
+    await page.keyboard.press("Enter");
 
     await expect(page.locator("#scheduleFeedback")).toContainText("Shift.xlsx");
+    await expect(page.locator("#scheduleSelectionInput")).toHaveValue("ZZ");
     await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toContainText("·");
   });
 
-  test("multi-cell selection plus keyboard fill writes one code to multiple cells", async ({ page }) => {
+  test("Delete clears the selected shift cell", async ({ page }) => {
     await prepareSchedulePage(page, {
-      employeesState: {
-        employees: [
-          createEmployee({ id: "emp-a", basic: { engName: "FIRST", vieName: "VO A", ydiId: "YDI8001" } }),
-          createEmployee({ id: "emp-b", basic: { engName: "SECOND", vieName: "VO B", ydiId: "YDI8002" } })
-        ]
-      }
+      scheduleState: createScheduleState([
+        createScheduleRow("a", {}, { "1": "A" })
+      ])
     });
 
-    await dragSelect(page, { rowIndex: 0, day: 1 }, { rowIndex: 1, day: 2 });
-    await typeShiftCode(page, "B2");
+    await selectCell(page, 0, 1);
+    await page.keyboard.press("Delete");
 
-    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("B2");
-    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='2']")).toHaveText("B2");
-    await expect(page.locator("[data-schedule-cell][data-row-index='1'][data-day='1']")).toHaveText("B2");
-    await expect(page.locator("[data-schedule-cell][data-row-index='1'][data-day='2']")).toHaveText("B2");
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toContainText("·");
+  });
+
+  test("Delete clears selected employee info cells too", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a", {
+          ydiId: "YDI9001",
+          department: "Operation",
+          vieName: "VO A",
+          engName: "ALICE",
+          position: "Staff"
+        })
+      ])
+    });
+
+    await selectMetaCell(page, 0, 3);
+    await page.keyboard.press("Delete");
+
+    await expect(page.locator("[data-grid-cell][data-row-index='0'][data-col-index='3']")).toHaveText("");
   });
 
   test("copy and paste shift codes across the schedule grid", async ({ page }) => {
     await prepareSchedulePage(page, {
-      employeesState: {
-        employees: [
-          createEmployee({ id: "emp-a", basic: { engName: "FIRST", vieName: "VO A", ydiId: "YDI8001" } }),
-          createEmployee({ id: "emp-b", basic: { engName: "SECOND", vieName: "VO B", ydiId: "YDI8002" } })
-        ]
-      }
+      scheduleState: createScheduleState([
+        createScheduleRow("a"),
+        createScheduleRow("b")
+      ])
     });
 
     await selectCell(page, 0, 1);
@@ -221,12 +276,10 @@ test.describe("Schedule module from Shift.xlsx", () => {
 
   test("pasting invalid shift codes is rejected for the whole pasted block", async ({ page }) => {
     await prepareSchedulePage(page, {
-      employeesState: {
-        employees: [
-          createEmployee({ id: "emp-a", basic: { engName: "FIRST", vieName: "VO A", ydiId: "YDI8001" } }),
-          createEmployee({ id: "emp-b", basic: { engName: "SECOND", vieName: "VO B", ydiId: "YDI8002" } })
-        ]
-      }
+      scheduleState: createScheduleState([
+        createScheduleRow("a"),
+        createScheduleRow("b")
+      ])
     });
 
     await selectCell(page, 0, 1);
@@ -238,38 +291,13 @@ test.describe("Schedule module from Shift.xlsx", () => {
     await expect(page.locator("[data-schedule-cell][data-row-index='1'][data-day='2']")).toContainText("·");
   });
 
-  test("Ctrl+Z undoes the latest grid edit", async ({ page }) => {
-    await prepareSchedulePage(page);
-
-    await selectCell(page, 0, 1);
-    await typeShiftCode(page, "C");
-    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("C");
-
-    await page.keyboard.press("Control+Z");
-    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toContainText("·");
-  });
-
-  test("Delete clears the selected range", async ({ page }) => {
-    await prepareSchedulePage(page);
-
-    await selectCell(page, 0, 1);
-    await typeShiftCode(page, "A");
-    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("A");
-
-    await selectCell(page, 0, 1);
-    await page.keyboard.press("Delete");
-
-    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toContainText("·");
-  });
-
   test("bulk add rows and paste employee info into manual rows", async ({ page }) => {
     await prepareSchedulePage(page);
 
-    await page.fill("#scheduleAddRowsCount", "3");
-    await page.locator("#scheduleAddRowsButton").click();
-    await expect(page.locator(".schedule-table__body-row")).toHaveCount(4);
+    await addRows(page, 3);
+    await expect(page.locator(".schedule-table__body-row")).toHaveCount(3);
 
-    await page.locator("[data-grid-cell][data-row-index='1'][data-col-index='0']").click();
+    await selectMetaCell(page, 1, 0);
     await writeClipboard(page, "YDI9901\tCustom Dept\tVO NEW\tCUSTOM\tSupervisor");
     await page.keyboard.press("Control+V");
 
@@ -280,13 +308,32 @@ test.describe("Schedule module from Shift.xlsx", () => {
     await expect(page.locator("[data-grid-cell][data-row-index='1'][data-col-index='4']")).toHaveText("Supervisor");
   });
 
+  test("Ctrl+Z undoes the latest grid edit", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a")
+      ])
+    });
+
+    await selectCell(page, 0, 1);
+    await typeShiftCode(page, "C");
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("C");
+
+    await page.keyboard.press("Control+Z");
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toContainText("·");
+  });
+
   test("daily summary stays hidden before any valid code exists", async ({ page }) => {
     await prepareSchedulePage(page);
     await expect(page.locator("#dailySummarySection")).toBeHidden();
   });
 
   test("daily summary appears after at least one valid code is assigned", async ({ page }) => {
-    await prepareSchedulePage(page);
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a")
+      ])
+    });
 
     await selectCell(page, 0, 1);
     await typeShiftCode(page, "A");
@@ -309,15 +356,15 @@ test.describe("Schedule module from Shift.xlsx", () => {
 
   test("summary logic follows workbook hours and daily counts", async ({ page }) => {
     await prepareSchedulePage(page, {
-      employeesState: {
-        employees: [
-          createEmployee({
-            id: "emp-summary",
-            basic: { engName: "NINA", vieName: "NINA TRAN", ydiId: "YDI8333" },
-            work: { department: { preset: "Operation", other: "" }, position: "Staff", status: "在職" }
-          })
-        ]
-      }
+      scheduleState: createScheduleState([
+        createScheduleRow("summary", {
+          ydiId: "YDI8333",
+          department: "Operation",
+          vieName: "NINA TRAN",
+          engName: "NINA",
+          position: "Staff"
+        })
+      ])
     });
 
     await selectCell(page, 0, 1);
@@ -338,15 +385,15 @@ test.describe("Schedule module from Shift.xlsx", () => {
 
   test("column resize drag and double-click auto-fit update the grid width", async ({ page }) => {
     await prepareSchedulePage(page, {
-      employeesState: {
-        employees: [
-          createEmployee({
-            id: "emp-wide",
-            basic: { engName: "THIS IS A VERY LONG ENGLISH NAME", vieName: "VO LONG", ydiId: "YDI8999" },
-            work: { department: { preset: "Operation", other: "" }, position: "Senior Supervisor", status: "在職" }
-          })
-        ]
-      }
+      scheduleState: createScheduleState([
+        createScheduleRow("wide", {
+          ydiId: "YDI8999",
+          department: "Operation",
+          vieName: "VO LONG",
+          engName: "THIS IS A VERY LONG ENGLISH NAME",
+          position: "Senior Supervisor"
+        })
+      ])
     });
 
     const engHandle = page.locator(".schedule-table__meta-head .schedule-column-resizer[data-resize-key='eng']").first();
@@ -373,8 +420,41 @@ test.describe("Schedule module from Shift.xlsx", () => {
     expect(Number.parseInt(afterAutoFit, 10)).toBeGreaterThanOrEqual(Number.parseInt(afterDrag, 10));
   });
 
-  test("daily summary day columns line up with the main schedule grid", async ({ page }) => {
-    await prepareSchedulePage(page);
+  test("main header and right summary header stay frozen while scrolling", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState(Array.from({ length: 30 }, (_, index) => createScheduleRow("row-" + index)))
+    });
+
+    const before = await page.evaluate(() => {
+      const mainHead = document.querySelector("[data-day-head='1']");
+      const summaryHead = document.querySelector(".schedule-summary-table__labels th");
+      return {
+        mainY: Math.round(mainHead.getBoundingClientRect().y),
+        summaryY: Math.round(summaryHead.getBoundingClientRect().y)
+      };
+    });
+
+    await page.evaluate(() => window.scrollTo(0, 1200));
+
+    const after = await page.evaluate(() => {
+      const mainHead = document.querySelector("[data-day-head='1']");
+      const summaryHead = document.querySelector(".schedule-summary-table__labels th");
+      return {
+        mainY: Math.round(mainHead.getBoundingClientRect().y),
+        summaryY: Math.round(summaryHead.getBoundingClientRect().y)
+      };
+    });
+
+    expect(after.mainY).toBe(before.mainY);
+    expect(after.summaryY).toBe(before.summaryY);
+  });
+
+  test("summary rows and daily day columns line up with the main grid", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a")
+      ])
+    });
 
     await selectCell(page, 0, 1);
     await typeShiftCode(page, "A");
@@ -384,20 +464,26 @@ test.describe("Schedule module from Shift.xlsx", () => {
       const dailyHead = document.querySelector("[data-daily-day-head='1']");
       const summaryRow = document.querySelector("[data-summary-row-index='0']");
       const scheduleRow = document.querySelector(".schedule-table__body-row");
-      if (!dayHead || !dailyHead || !summaryRow || !scheduleRow) {
+      const summaryHead = document.querySelector(".schedule-summary-table__labels th");
+      const mainHead = document.querySelector(".schedule-table thead tr:nth-child(2) th");
+      if (!dayHead || !dailyHead || !summaryRow || !scheduleRow || !summaryHead || !mainHead) {
         return null;
       }
       const dayRect = dayHead.getBoundingClientRect();
       const dailyRect = dailyHead.getBoundingClientRect();
       const scheduleRect = scheduleRow.getBoundingClientRect();
       const summaryRect = summaryRow.getBoundingClientRect();
+      const mainHeadRect = mainHead.getBoundingClientRect();
+      const summaryHeadRect = summaryHead.getBoundingClientRect();
       return {
         dayX: Math.round(dayRect.x),
         dailyX: Math.round(dailyRect.x),
         scheduleY: Math.round(scheduleRect.y),
         summaryY: Math.round(summaryRect.y),
         scheduleH: Math.round(scheduleRect.height),
-        summaryH: Math.round(summaryRect.height)
+        summaryH: Math.round(summaryRect.height),
+        headY: Math.round(mainHeadRect.y),
+        summaryHeadY: Math.round(summaryHeadRect.y)
       };
     });
 
@@ -405,6 +491,7 @@ test.describe("Schedule module from Shift.xlsx", () => {
     expect(Math.abs(positions.dayX - positions.dailyX)).toBeLessThanOrEqual(1);
     expect(Math.abs(positions.scheduleY - positions.summaryY)).toBeLessThanOrEqual(1);
     expect(Math.abs(positions.scheduleH - positions.summaryH)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.headY - positions.summaryHeadY)).toBeLessThanOrEqual(1);
   });
 
   test("Ctrl plus and reset update sheet zoom without touching the header", async ({ page }) => {
@@ -418,17 +505,8 @@ test.describe("Schedule module from Shift.xlsx", () => {
   });
 
   test("schedule page can scroll vertically with mouse wheel over the sheet", async ({ page }) => {
-    const employees = Array.from({ length: 26 }, (_, index) => createEmployee({
-      id: "emp-" + index,
-      basic: {
-        engName: "EMP " + index,
-        vieName: "VO " + index,
-        ydiId: "YDI" + String(9000 + index)
-      }
-    }));
-
     await prepareSchedulePage(page, {
-      employeesState: { employees }
+      scheduleState: createScheduleState(Array.from({ length: 40 }, (_, index) => createScheduleRow("row-" + index)))
     });
 
     await page.locator("#scheduleSheetScroll").hover();

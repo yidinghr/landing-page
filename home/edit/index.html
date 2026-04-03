@@ -23,6 +23,7 @@
 
 <section class="schedule-period-bar" aria-label="排班月份">
 <div class="schedule-period-bar__inner">
+<div class="schedule-period-bar__spacer" aria-hidden="true"></div>
 <div class="schedule-period-grid">
 <div class="schedule-period-pair">
 <span id="scheduleYearLabel" class="schedule-period-pair__label">年</span>
@@ -40,8 +41,11 @@
 </span>
 </div>
 </div>
-<div id="scheduleMonthMeta" class="schedule-period-meta" aria-live="polite"></div>
 <div class="schedule-period-actions">
+<label class="schedule-code-entry">
+<span id="scheduleCodeLabel" class="schedule-code-entry__label">Code</span>
+<input id="scheduleSelectionInput" class="schedule-code-entry__input" type="text" list="scheduleShiftCodeList" inputmode="text" autocomplete="off" spellcheck="false" maxlength="8">
+</label>
 <label class="schedule-add-rows">
 <span id="scheduleAddRowsLabel" class="schedule-add-rows__label">新增行</span>
 <input id="scheduleAddRowsCount" class="schedule-add-rows__input" type="number" min="1" max="100" step="1" value="1" inputmode="numeric" aria-label="新增行數">
@@ -80,7 +84,6 @@
 </div>
 
 <div id="scheduleSelectionMeta" class="schedule-assistive" aria-live="polite"></div>
-<input id="scheduleSelectionInput" class="schedule-assistive-input" type="text" list="scheduleShiftCodeList" inputmode="text" autocomplete="off" spellcheck="false">
 <div id="scheduleFeedback" class="schedule-feedback" role="status" aria-live="polite"></div>
 </section>
 </main>

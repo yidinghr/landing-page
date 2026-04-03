@@ -1,7 +1,7 @@
 (function () {
   const i18n = window.YiDingI18n || null;
   const employeesDataApi = window.YiDingEmployeesData || null;
-  const STORAGE_KEY = "yiding_schedule_module_v1";
+  const STORAGE_KEY = "yiding_schedule_module_v3";
   const EMPLOYEES_KEY = employeesDataApi && employeesDataApi.STORAGE_KEY
     ? employeesDataApi.STORAGE_KEY
     : "yiding_employees_module_state_v3_airtable_import";
@@ -82,15 +82,17 @@
   const MAJOR_SHIFT_CODES = VALID_SHIFT_CODES.slice(0, 24);
   const dom = {
     app: document.getElementById("scheduleApp"),
+    header: document.querySelector(".schedule-header"),
+    periodBar: document.querySelector(".schedule-period-bar"),
     headerTitle: document.getElementById("scheduleHeaderTitle"),
     yearLabel: document.getElementById("scheduleYearLabel"),
     monthLabel: document.getElementById("scheduleMonthLabel"),
+    codeLabel: document.getElementById("scheduleCodeLabel"),
     addRowsLabel: document.getElementById("scheduleAddRowsLabel"),
     addRowsCount: document.getElementById("scheduleAddRowsCount"),
     addRowsButton: document.getElementById("scheduleAddRowsButton"),
     yearSelect: document.getElementById("scheduleYear"),
     monthSelect: document.getElementById("scheduleMonth"),
-    monthMeta: document.getElementById("scheduleMonthMeta"),
     sheetScroll: document.getElementById("scheduleSheetScroll"),
     sheetZoom: document.getElementById("scheduleSheetZoom"),
     selectionMeta: document.getElementById("scheduleSelectionMeta"),
@@ -105,6 +107,7 @@
     table: document.getElementById("scheduleTable"),
     tableHead: document.getElementById("scheduleTableHead"),
     tableBody: document.getElementById("scheduleTableBody"),
+    summaryTable: document.getElementById("scheduleSummaryTable"),
     summaryHead: document.getElementById("scheduleSummaryHead"),
     summaryBody: document.getElementById("scheduleSummaryBody"),
     dailySection: document.getElementById("dailySummarySection"),
@@ -127,9 +130,15 @@
     dragRowId: "",
     dragOverId: "",
     columnResize: null,
-    copiedText: ""
+    copiedText: "",
+    frozenMainTop: 0,
+    frozenMainOffset: 0,
+    frozenSummaryTop: 0,
+    frozenSummaryOffset: 0
   };
   const state = loadState();
+  const nativeScrollTo = window.scrollTo.bind(window);
+  const nativeScrollBy = window.scrollBy.bind(window);
 
   buildShiftCodeDatalist();
   populatePeriodOptions();
@@ -329,58 +338,9 @@
     const key = getCurrentMonthKey();
     const monthState = state.months[key] && typeof state.months[key] === "object" ? state.months[key] : { rows: [] };
     monthState.rows = Array.isArray(monthState.rows) ? monthState.rows.map(normalizeRow) : [];
-    syncMonthRows(monthState);
     state.months[key] = monthState;
     saveState();
     return monthState;
-  }
-
-  function syncMonthRows(monthState) {
-    const activeEmployees = getActiveEmployees();
-    const activeMap = new Map();
-    const nextRows = [];
-    const seen = new Set();
-
-    activeEmployees.forEach(function (employee) {
-      const snapshot = createEmployeeSnapshot(employee);
-      activeMap.set(snapshot.employeeId, snapshot);
-    });
-
-    monthState.rows.forEach(function (row) {
-      if (row.sourceType === "manual" || !row.employeeId) {
-        nextRows.push({
-          id: row.id,
-          sourceType: "manual",
-          employeeId: "",
-          employeeSnapshot: Object.assign(createManualRow().employeeSnapshot, row.employeeSnapshot || {}),
-          shifts: normalizeShifts(row.shifts)
-        });
-        return;
-      }
-      const snapshot = activeMap.get(row.employeeId);
-      if (!snapshot || seen.has(row.employeeId)) {
-        return;
-      }
-      seen.add(row.employeeId);
-      nextRows.push({
-        id: row.id || "schedule-row-" + row.employeeId,
-        sourceType: "employee",
-        employeeId: row.employeeId,
-        employeeSnapshot: snapshot,
-        shifts: normalizeShifts(row.shifts)
-      });
-    });
-
-    activeEmployees.forEach(function (employee) {
-      const snapshot = createEmployeeSnapshot(employee);
-      if (seen.has(snapshot.employeeId)) {
-        return;
-      }
-      seen.add(snapshot.employeeId);
-      nextRows.push(createRowFromEmployee(employee));
-    });
-
-    monthState.rows = nextRows;
   }
 
   function getDaysInMonth(year, month) {
@@ -463,6 +423,13 @@
     dom.headerTitle.textContent = i18n.t("home.menu.schedule");
     dom.yearLabel.textContent = i18n.getLocale() === "zh-Hant" ? "年" : i18n.t("schedule.year");
     dom.monthLabel.textContent = i18n.getLocale() === "zh-Hant" ? "月" : i18n.t("schedule.month");
+    if (dom.codeLabel) {
+      dom.codeLabel.textContent = i18n.getLocale() === "zh-Hant" ? "班碼" : (i18n.getLocale() === "vi" ? "Mã ca" : "Code");
+    }
+    if (dom.selectionInput) {
+      dom.selectionInput.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "輸入班碼" : (i18n.getLocale() === "vi" ? "Nhập mã ca" : "Enter shift code"));
+      dom.selectionInput.setAttribute("placeholder", i18n.getLocale() === "zh-Hant" ? "輸入班碼" : (i18n.getLocale() === "vi" ? "Nhập mã ca" : "Enter code"));
+    }
     if (dom.addRowsLabel) {
       dom.addRowsLabel.textContent = i18n.getLocale() === "zh-Hant" ? "新增行" : (i18n.getLocale() === "vi" ? "Thêm hàng" : "Add Rows");
     }
@@ -572,42 +539,32 @@
     dom.yearSelect.value = String(state.selectedYear);
     dom.monthSelect.value = String(state.selectedMonth);
     renderZoom();
-    renderMonthMeta(monthState);
     renderTableHead();
     renderTableBody(monthState);
     renderSummary(monthState);
     renderDailySummary(monthState);
+    updateFrozenOffsets();
     renderSelectionState();
     renderSelectionMeta();
     syncStickyColumns();
-  }
-
-  function renderMonthMeta(monthState) {
-    const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
-    const validCount = monthState.rows.reduce(function (total, row) {
-      return total + Object.keys(row.shifts).filter(function (day) {
-        return Boolean(SHIFT_CODE_MAP[normalizeCellValue(row.shifts[day])]);
-      }).length;
-    }, 0);
-    dom.monthMeta.textContent = i18n.t("schedule.monthMeta", {
-      year: state.selectedYear,
-      month: String(state.selectedMonth).padStart(2, "0"),
-      days: days,
-      count: validCount
-    });
   }
 
   function renderTableHead() {
     const labels = META_HEADERS[i18n.getLocale()] || META_HEADERS["zh-Hant"];
     const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
     let dayRow = "<tr>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--id schedule-table__sticky schedule-table__sticky--id" rowspan="2">' + escapeHtml(labels[0]) + renderColumnResizer("id") + "</th>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--department schedule-table__sticky schedule-table__sticky--department" rowspan="2">' + escapeHtml(labels[1]) + renderColumnResizer("dept") + "</th>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--vie schedule-table__sticky schedule-table__sticky--vie" rowspan="2">' + escapeHtml(labels[2]) + renderColumnResizer("vie") + "</th>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--eng schedule-table__sticky schedule-table__sticky--eng" rowspan="2">' + escapeHtml(labels[3]) + renderColumnResizer("eng") + "</th>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--position schedule-table__sticky schedule-table__sticky--position" rowspan="2">' + escapeHtml(labels[4]) + renderColumnResizer("position") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--id schedule-table__sticky schedule-table__sticky--id">' + escapeHtml(labels[0]) + renderColumnResizer("id") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--department schedule-table__sticky schedule-table__sticky--department">' + escapeHtml(labels[1]) + renderColumnResizer("dept") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--vie schedule-table__sticky schedule-table__sticky--vie">' + escapeHtml(labels[2]) + renderColumnResizer("vie") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--eng schedule-table__sticky schedule-table__sticky--eng">' + escapeHtml(labels[3]) + renderColumnResizer("eng") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--position schedule-table__sticky schedule-table__sticky--position">' + escapeHtml(labels[4]) + renderColumnResizer("position") + "</th>";
 
     let weekdayRow = "<tr>";
+    weekdayRow += '<th class="schedule-table__meta-subhead schedule-table__meta--id schedule-table__sticky schedule-table__sticky--id"></th>';
+    weekdayRow += '<th class="schedule-table__meta-subhead schedule-table__meta--department schedule-table__sticky schedule-table__sticky--department"></th>';
+    weekdayRow += '<th class="schedule-table__meta-subhead schedule-table__meta--vie schedule-table__sticky schedule-table__sticky--vie"></th>';
+    weekdayRow += '<th class="schedule-table__meta-subhead schedule-table__meta--eng schedule-table__sticky schedule-table__sticky--eng"></th>';
+    weekdayRow += '<th class="schedule-table__meta-subhead schedule-table__meta--position schedule-table__sticky schedule-table__sticky--position"></th>';
     for (let day = 1; day <= days; day += 1) {
       dayRow += '<th class="schedule-table__day-head" data-day-head="' + day + '">' + day + renderColumnResizer("day") + "</th>";
       weekdayRow += '<th class="schedule-table__weekday-head">' + escapeHtml(getWeekdayLabel(state.selectedYear, state.selectedMonth, day)) + "</th>";
@@ -617,7 +574,7 @@
 
   function renderTableBody(monthState) {
     const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
-    dom.tableBody.innerHTML = monthState.rows.map(function (row, rowIndex) {
+    const bodyRows = monthState.rows.map(function (row, rowIndex) {
       const snapshot = row.employeeSnapshot;
       let html = '<tr class="schedule-table__body-row" data-row-id="' + escapeHtml(row.id) + '" data-row-index="' + rowIndex + '">';
       html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--id"><div class="schedule-meta-wrap schedule-meta-wrap--id"><button type="button" class="schedule-row-handle" data-row-handle="' + escapeHtml(row.id) + '" draggable="true" aria-label="Reorder">•••</button><button type="button" class="schedule-meta-cell" data-grid-cell="true" data-row-index="' + rowIndex + '" data-col-index="0">' + escapeHtml(snapshot.ydiId) + '</button></div></td>';
@@ -631,6 +588,8 @@
       }
       return html + '</tr>';
     }).join("");
+
+    dom.tableBody.innerHTML = bodyRows;
   }
 
   function renderSummary(monthState) {
@@ -643,7 +602,7 @@
       "</tr>"
     ].join("");
 
-    dom.summaryBody.innerHTML = monthState.rows.map(function (row, rowIndex) {
+    const summaryRows = monthState.rows.map(function (row, rowIndex) {
       const summary = getRowSummary(row);
       return [
         '<tr data-summary-row-index="' + rowIndex + '">',
@@ -653,6 +612,8 @@
         "</tr>"
       ].join("");
     }).join("");
+
+    dom.summaryBody.innerHTML = summaryRows;
   }
 
   function renderDailySummary(monthState) {
@@ -727,6 +688,14 @@
   }
 
   function bindEvents() {
+    window.scrollTo = function () {
+      nativeScrollTo.apply(window, arguments);
+      syncFrozenHeaders();
+    };
+    window.scrollBy = function () {
+      nativeScrollBy.apply(window, arguments);
+      syncFrozenHeaders();
+    };
     dom.yearSelect.addEventListener("change", function () {
       handlePeriodChange(sanitizeYear(dom.yearSelect.value), sanitizeMonth(dom.monthSelect.value));
     });
@@ -771,6 +740,9 @@
         renderLocaleControl();
       }
     });
+    dom.selectionInput.addEventListener("input", function () {
+      dom.selectionInput.value = normalizeCellValue(dom.selectionInput.value);
+    });
     dom.selectionInput.addEventListener("keydown", function (event) {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -808,6 +780,8 @@
     document.addEventListener("copy", handleCopy);
     document.addEventListener("paste", handlePaste);
     window.addEventListener("keydown", handleGlobalKeydown);
+    window.addEventListener("scroll", syncFrozenHeaders, { passive: true });
+    window.addEventListener("resize", updateFrozenOffsets, { passive: true });
   }
 
   function handlePeriodChange(year, month) {
@@ -882,7 +856,29 @@
       copySelectionToClipboard();
       return;
     }
+    if (document.activeElement === dom.selectionInput && !event.ctrlKey && !event.metaKey) {
+      if (key === "Escape") {
+        event.preventDefault();
+        clearSelection(true);
+        return;
+      }
+      if (key === "Delete") {
+        event.preventDefault();
+        clearSelectedCells();
+        return;
+      }
+      if (key === "Backspace" && !dom.selectionInput.value) {
+        event.preventDefault();
+        clearSelectedCells();
+      }
+      return;
+    }
     if (!uiState.selection) {
+      return;
+    }
+    if (!event.ctrlKey && !event.metaKey && !event.altKey && key === "Backspace" && document.activeElement !== dom.selectionInput && dom.selectionInput.value) {
+      event.preventDefault();
+      dom.selectionInput.value = dom.selectionInput.value.slice(0, -1);
       return;
     }
     if (key === "Delete" || key === "Backspace") {
@@ -1009,6 +1005,9 @@
     dom.selectionMeta.textContent = uiState.selection
       ? i18n.t("schedule.selection.summary", getSelectionStats())
       : i18n.t("schedule.selection.none");
+    if (dom.selectionInput) {
+      dom.selectionInput.classList.toggle("is-active", Boolean(uiState.selection));
+    }
   }
 
   function isCellSelected(rowIndex, day) {
@@ -1049,6 +1048,10 @@
   }
 
   function clearSelectedCells() {
+    if (!uiState.selection) {
+      showFeedback(i18n.t("schedule.feedback.selectClear"), "error");
+      return;
+    }
     applyPasteMatrix([[""]], true);
   }
 
@@ -1308,6 +1311,61 @@
 
   function renderZoom() {
     dom.sheetZoom.style.zoom = String(state.zoomLevel);
+  }
+
+  function updateFrozenOffsets() {
+    setHeaderTransform(dom.tableHead, 0);
+    setHeaderTransform(dom.summaryHead, 0);
+    const firstHeadRow = dom.tableHead.querySelector("tr");
+    const firstDayHead = dom.tableHead.querySelector("[data-day-head]");
+    const firstSummaryLabel = dom.summaryHead.querySelector(".schedule-summary-table__labels th");
+    const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
+    dom.app.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
+    if (firstDayHead) {
+      if (!uiState.frozenMainTop || window.scrollY === 0) {
+        uiState.frozenMainTop = Math.round(firstDayHead.getBoundingClientRect().top);
+      }
+      uiState.frozenMainOffset = Math.round(firstDayHead.getBoundingClientRect().top - dom.table.getBoundingClientRect().top);
+    }
+    if (firstSummaryLabel && dom.summaryTable) {
+      if (!uiState.frozenSummaryTop || window.scrollY === 0) {
+        uiState.frozenSummaryTop = Math.round(firstSummaryLabel.getBoundingClientRect().top);
+      }
+      uiState.frozenSummaryOffset = Math.round(firstSummaryLabel.getBoundingClientRect().top - dom.summaryTable.getBoundingClientRect().top);
+    }
+    syncFrozenHeaders();
+  }
+
+  function syncFrozenHeaders() {
+    if (!dom.table || !dom.tableHead) {
+      return;
+    }
+    const mainTranslate = getHeaderTranslate(dom.table, dom.tableHead, uiState.frozenMainTop, uiState.frozenMainOffset);
+    setHeaderTransform(dom.tableHead, mainTranslate);
+    if (dom.summaryTable && dom.summaryHead) {
+      const summaryTranslate = getHeaderTranslate(dom.summaryTable, dom.summaryHead, uiState.frozenSummaryTop, uiState.frozenSummaryOffset);
+      setHeaderTransform(dom.summaryHead, summaryTranslate);
+    }
+  }
+
+  function getHeaderTranslate(table, head, frozenTop, anchorOffset) {
+    if (!table || !head) {
+      return 0;
+    }
+    const tableRect = table.getBoundingClientRect();
+    const naturalTop = tableRect.top + anchorOffset;
+    const maxTranslate = Math.max(0, table.offsetHeight - head.offsetHeight);
+    return Math.max(0, Math.min(maxTranslate, Math.round(frozenTop - naturalTop)));
+  }
+
+  function setHeaderTransform(head, offset) {
+    if (!head) {
+      return;
+    }
+    const value = offset ? "translateY(" + String(offset) + "px)" : "";
+    Array.prototype.forEach.call(head.querySelectorAll("tr"), function (row) {
+      row.style.transform = value;
+    });
   }
 
   function focusSelectionInput() {
