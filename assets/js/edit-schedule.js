@@ -1455,7 +1455,7 @@
     if (!dom.summaryTable || !target) {
       return;
     }
-    const summaryWidth = Math.round(dom.summaryTable.getBoundingClientRect().width || dom.summaryTable.offsetWidth || 0);
+    const summaryWidth = Math.round(dom.summaryTable.offsetWidth || dom.summaryTable.clientWidth || dom.summaryTable.getBoundingClientRect().width || 0);
     if (summaryWidth > 0) {
       target.style.setProperty("--summary-table-total", String(summaryWidth) + "px");
     }

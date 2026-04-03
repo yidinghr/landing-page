@@ -764,6 +764,36 @@ test.describe("Schedule module", () => {
     expect(Math.abs(positions.topDayX - positions.dailyDayX)).toBeLessThanOrEqual(1);
   });
 
+  test("daily summary block stays flush with the top sheet after zooming", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a", {}, { "1": "A", "2": "B", "3": "C", "4": "A3" }),
+        createScheduleRow("b", {}, { "1": "A7", "2": "B2", "3": "C1", "4": "B5" })
+      ], 2025, 3)
+    });
+
+    await page.keyboard.press("Control+=");
+    await page.keyboard.press("Control+=");
+    await page.waitForTimeout(120);
+
+    const positions = await page.evaluate(() => {
+      const summaryLast = document.querySelector("#scheduleSummaryTable tbody tr:first-child td:last-child");
+      const dailyLastSpacer = document.querySelector("#dailySummarySpacerTable tbody tr:first-child td:last-child");
+      if (!summaryLast || !dailyLastSpacer) {
+        return null;
+      }
+      return {
+        summaryRight: Math.round(summaryLast.getBoundingClientRect().right),
+        dailyRight: Math.round(dailyLastSpacer.getBoundingClientRect().right),
+        zoom: document.getElementById("scheduleSheetZoom")?.style.zoom || ""
+      };
+    });
+
+    expect(positions).not.toBeNull();
+    expect(positions.zoom).toBe("1.1");
+    expect(Math.abs(positions.summaryRight - positions.dailyRight)).toBeLessThanOrEqual(1);
+  });
+
   test("Ctrl plus and reset update sheet zoom without touching the header", async ({ page }) => {
     await prepareSchedulePage(page);
 
