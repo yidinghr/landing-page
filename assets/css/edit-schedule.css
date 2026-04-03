@@ -624,6 +624,12 @@
   will-change: transform;
 }
 
+.schedule-table thead tr,
+.schedule-summary-table thead tr {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 .schedule-table thead .schedule-table__sticky {
   z-index: 22;
 }

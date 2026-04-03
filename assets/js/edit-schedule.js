@@ -141,7 +141,8 @@
     dragRowId: "",
     dragOverId: "",
     columnResize: null,
-    copiedText: ""
+    copiedText: "",
+    frozenSyncFrame: 0
   };
   const state = loadState();
 
@@ -795,10 +796,11 @@
     dom.tableBody.addEventListener("dragover", handleDragOver);
     dom.tableBody.addEventListener("drop", handleDrop);
     dom.tableBody.addEventListener("dragend", clearDragState);
+    dom.sheetScroll.addEventListener("scroll", requestFrozenHeaderSync, { passive: true });
     document.addEventListener("copy", handleCopy);
     document.addEventListener("paste", handlePaste);
     window.addEventListener("keydown", handleGlobalKeydown);
-    window.addEventListener("scroll", syncFrozenHeaders, { passive: true });
+    window.addEventListener("scroll", requestFrozenHeaderSync, { passive: true });
     window.addEventListener("resize", updateStickyMetrics, { passive: true });
     window.addEventListener("resize", updateSheetOverflowState, { passive: true });
   }
@@ -1353,7 +1355,17 @@
     dom.app.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
     dom.app.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
     dom.app.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
-    syncFrozenHeaders();
+    requestFrozenHeaderSync();
+  }
+
+  function requestFrozenHeaderSync() {
+    if (uiState.frozenSyncFrame) {
+      return;
+    }
+    uiState.frozenSyncFrame = window.requestAnimationFrame(function () {
+      uiState.frozenSyncFrame = 0;
+      syncFrozenHeaders();
+    });
   }
 
   function syncFrozenHeaders() {
@@ -1381,7 +1393,7 @@
   }
 
   function setHeaderTransform(head, offset) {
-    const value = offset ? "translateY(" + String(offset) + "px)" : "";
+    const value = offset ? "translate3d(0," + String(offset) + "px,0)" : "";
     Array.prototype.forEach.call(head.querySelectorAll("tr"), function (row) {
       row.style.transform = value;
     });
