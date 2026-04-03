@@ -13,6 +13,7 @@
 <div id="scheduleApp" class="schedule-app">
 <main class="schedule-workspace">
 <header class="schedule-header">
+<div class="schedule-header__spacer" aria-hidden="true"></div>
 <h1 id="scheduleHeaderTitle" class="schedule-header__title">班表</h1>
 <div class="schedule-header__tools">
 <button id="scheduleLegendToggle" type="button" class="schedule-header__tool" aria-expanded="false" aria-controls="scheduleLegendPanel" aria-label="班碼參照">&lt;&lt;</button>
@@ -21,6 +22,7 @@
 </header>
 
 <section class="schedule-period-bar" aria-label="排班月份">
+<div class="schedule-period-bar__inner">
 <div class="schedule-period-grid">
 <div class="schedule-period-pair">
 <span id="scheduleYearLabel" class="schedule-period-pair__label">年</span>
@@ -38,7 +40,15 @@
 </span>
 </div>
 </div>
-<div id="scheduleMonthMeta" class="schedule-assistive" aria-live="polite"></div>
+<div id="scheduleMonthMeta" class="schedule-period-meta" aria-live="polite"></div>
+<div class="schedule-period-actions">
+<label class="schedule-add-rows">
+<span id="scheduleAddRowsLabel" class="schedule-add-rows__label">新增行</span>
+<input id="scheduleAddRowsCount" class="schedule-add-rows__input" type="number" min="1" max="100" step="1" value="1" inputmode="numeric" aria-label="新增行數">
+</label>
+<button id="scheduleAddRowsButton" type="button" class="schedule-add-rows__button" aria-label="新增員工列">+</button>
+</div>
+</div>
 </section>
 
 <section class="schedule-sheet-frame">

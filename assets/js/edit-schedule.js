@@ -10,6 +10,21 @@
   const ZOOM_MIN = 0.65;
   const ZOOM_MAX = 1.35;
   const ZOOM_STEP = 0.05;
+  const META_COLUMNS = [
+    { key: "ydiId", widthKey: "id" },
+    { key: "department", widthKey: "dept" },
+    { key: "vieName", widthKey: "vie" },
+    { key: "engName", widthKey: "eng" },
+    { key: "position", widthKey: "position" }
+  ];
+  const DEFAULT_COLUMN_WIDTHS = Object.freeze({
+    id: 96,
+    dept: 96,
+    vie: 146,
+    eng: 132,
+    position: 104,
+    day: 42
+  });
   const WEEKDAY_LABELS = {
     "zh-Hant": ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
     vi: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
@@ -70,6 +85,9 @@
     headerTitle: document.getElementById("scheduleHeaderTitle"),
     yearLabel: document.getElementById("scheduleYearLabel"),
     monthLabel: document.getElementById("scheduleMonthLabel"),
+    addRowsLabel: document.getElementById("scheduleAddRowsLabel"),
+    addRowsCount: document.getElementById("scheduleAddRowsCount"),
+    addRowsButton: document.getElementById("scheduleAddRowsButton"),
     yearSelect: document.getElementById("scheduleYear"),
     monthSelect: document.getElementById("scheduleMonth"),
     monthMeta: document.getElementById("scheduleMonthMeta"),
@@ -107,7 +125,9 @@
     feedbackTimer: 0,
     localeMenuOpen: false,
     dragRowId: "",
-    dragOverId: ""
+    dragOverId: "",
+    columnResize: null,
+    copiedText: ""
   };
   const state = loadState();
 
@@ -136,6 +156,7 @@
       selectedMonth: WORKBOOK_DEFAULT_MONTH,
       legendOpen: false,
       zoomLevel: 1,
+      columnWidths: Object.assign({}, DEFAULT_COLUMN_WIDTHS),
       months: {}
     };
   }
@@ -161,8 +182,26 @@
     const snapshot = createEmployeeSnapshot(employee);
     return {
       id: "schedule-row-" + snapshot.employeeId,
+      sourceType: "employee",
       employeeId: snapshot.employeeId,
       employeeSnapshot: snapshot,
+      shifts: {}
+    };
+  }
+
+  function createManualRow() {
+    return {
+      id: "schedule-row-manual-" + Date.now() + "-" + Math.random().toString(16).slice(2, 8),
+      sourceType: "manual",
+      employeeId: "",
+      employeeSnapshot: {
+        employeeId: "",
+        ydiId: "",
+        department: "",
+        vieName: "",
+        engName: "",
+        position: ""
+      },
       shifts: {}
     };
   }
@@ -192,6 +231,7 @@
     const snapshot = row && row.employeeSnapshot ? row.employeeSnapshot : {};
     return {
       id: String(row && row.id ? row.id : "schedule-row-" + (row && row.employeeId ? row.employeeId : Date.now())),
+      sourceType: row && row.sourceType === "manual" ? "manual" : "employee",
       employeeId: String(row && row.employeeId ? row.employeeId : ""),
       employeeSnapshot: {
         employeeId: String(snapshot.employeeId || row && row.employeeId || ""),
@@ -223,6 +263,20 @@
     return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(zoom * 100) / 100));
   }
 
+  function sanitizeColumnWidths(value) {
+    const nextWidths = Object.assign({}, DEFAULT_COLUMN_WIDTHS);
+    if (!value || typeof value !== "object") {
+      return nextWidths;
+    }
+    Object.keys(nextWidths).forEach(function (key) {
+      const width = Number(value[key]);
+      if (Number.isFinite(width)) {
+        nextWidths[key] = Math.max(key === "day" ? 36 : 64, Math.round(width));
+      }
+    });
+    return nextWidths;
+  }
+
   function loadState() {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -234,6 +288,7 @@
         selectedMonth: sanitizeMonth(parsed.selectedMonth),
         legendOpen: Boolean(parsed.legendOpen),
         zoomLevel: sanitizeZoom(parsed.zoomLevel),
+        columnWidths: sanitizeColumnWidths(parsed.columnWidths),
         months: parsed.months && typeof parsed.months === "object" ? parsed.months : {}
       };
     } catch (error) {
@@ -292,6 +347,16 @@
     });
 
     monthState.rows.forEach(function (row) {
+      if (row.sourceType === "manual" || !row.employeeId) {
+        nextRows.push({
+          id: row.id,
+          sourceType: "manual",
+          employeeId: "",
+          employeeSnapshot: Object.assign(createManualRow().employeeSnapshot, row.employeeSnapshot || {}),
+          shifts: normalizeShifts(row.shifts)
+        });
+        return;
+      }
       const snapshot = activeMap.get(row.employeeId);
       if (!snapshot || seen.has(row.employeeId)) {
         return;
@@ -299,6 +364,7 @@
       seen.add(row.employeeId);
       nextRows.push({
         id: row.id || "schedule-row-" + row.employeeId,
+        sourceType: "employee",
         employeeId: row.employeeId,
         employeeSnapshot: snapshot,
         shifts: normalizeShifts(row.shifts)
@@ -331,12 +397,81 @@
     return field.labels[locale] || field.labels["zh-Hant"];
   }
 
+  function renderColumnResizer(key) {
+    return '<button type="button" class="schedule-column-resizer" data-resize-key="' + key + '" aria-label="Resize column"></button>';
+  }
+
+  function applyColumnWidths() {
+    Object.keys(DEFAULT_COLUMN_WIDTHS).forEach(function (key) {
+      dom.app.style.setProperty("--col-" + key, String(state.columnWidths[key]) + "px");
+    });
+  }
+
+  function syncStickyColumns() {
+    dom.app.style.setProperty("--schedule-sticky-shift", String(dom.sheetScroll.scrollLeft || 0) + "px");
+  }
+
+  function getVisibleColumnCount() {
+    return META_COLUMNS.length + getDaysInMonth(state.selectedYear, state.selectedMonth);
+  }
+
+  function getColumnInfo(colIndex) {
+    if (colIndex < META_COLUMNS.length) {
+      return {
+        type: "meta",
+        meta: META_COLUMNS[colIndex]
+      };
+    }
+
+    return {
+      type: "schedule",
+      day: colIndex - META_COLUMNS.length + 1
+    };
+  }
+
+  function getGridValue(row, colIndex) {
+    const column = getColumnInfo(colIndex);
+    if (column.type === "meta") {
+      return String(row.employeeSnapshot[column.meta.key] || "");
+    }
+    return normalizeCellValue(row.shifts[String(column.day)]);
+  }
+
+  function setGridValue(row, colIndex, rawValue) {
+    const column = getColumnInfo(colIndex);
+    if (column.type === "meta") {
+      row.sourceType = "manual";
+      row.employeeId = "";
+      row.employeeSnapshot[column.meta.key] = String(rawValue || "");
+      return { previous: null, next: String(rawValue || ""), metaKey: column.meta.key };
+    }
+
+    const dayKey = String(column.day);
+    const nextValue = normalizeCellValue(rawValue);
+    const previous = normalizeCellValue(row.shifts[dayKey]);
+    if (nextValue) {
+      row.shifts[dayKey] = nextValue;
+    } else {
+      delete row.shifts[dayKey];
+    }
+    return { previous: previous, next: nextValue, day: dayKey };
+  }
+
   function renderStaticText() {
     document.title = i18n.t("schedule.pageTitle");
     dom.app.classList.toggle("schedule-app--legend-open", Boolean(state.legendOpen));
     dom.headerTitle.textContent = i18n.t("home.menu.schedule");
     dom.yearLabel.textContent = i18n.getLocale() === "zh-Hant" ? "年" : i18n.t("schedule.year");
     dom.monthLabel.textContent = i18n.getLocale() === "zh-Hant" ? "月" : i18n.t("schedule.month");
+    if (dom.addRowsLabel) {
+      dom.addRowsLabel.textContent = i18n.getLocale() === "zh-Hant" ? "新增行" : (i18n.getLocale() === "vi" ? "Thêm hàng" : "Add Rows");
+    }
+    if (dom.addRowsCount) {
+      dom.addRowsCount.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "新增行數" : (i18n.getLocale() === "vi" ? "Số hàng thêm" : "Rows to Add"));
+    }
+    if (dom.addRowsButton) {
+      dom.addRowsButton.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "新增員工列" : (i18n.getLocale() === "vi" ? "Thêm hàng nhân viên" : "Add Employee Rows"));
+    }
     dom.yearSelect.setAttribute("aria-label", i18n.t("schedule.year"));
     dom.monthSelect.setAttribute("aria-label", i18n.t("schedule.month"));
     dom.legendToggle.setAttribute("aria-label", i18n.t("schedule.legend"));
@@ -433,6 +568,7 @@
 
   function renderAll() {
     const monthState = ensureCurrentMonthState();
+    applyColumnWidths();
     dom.yearSelect.value = String(state.selectedYear);
     dom.monthSelect.value = String(state.selectedMonth);
     renderZoom();
@@ -443,6 +579,7 @@
     renderDailySummary(monthState);
     renderSelectionState();
     renderSelectionMeta();
+    syncStickyColumns();
   }
 
   function renderMonthMeta(monthState) {
@@ -463,16 +600,16 @@
   function renderTableHead() {
     const labels = META_HEADERS[i18n.getLocale()] || META_HEADERS["zh-Hant"];
     const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
-    let dayRow = '<tr><th class="schedule-table__handle-head schedule-table__sticky schedule-table__sticky--handle" rowspan="2"></th>';
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--id schedule-table__sticky schedule-table__sticky--id" rowspan="2">' + escapeHtml(labels[0]) + "</th>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--department schedule-table__sticky schedule-table__sticky--department" rowspan="2">' + escapeHtml(labels[1]) + "</th>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--vie schedule-table__sticky schedule-table__sticky--vie" rowspan="2">' + escapeHtml(labels[2]) + "</th>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--eng schedule-table__sticky schedule-table__sticky--eng" rowspan="2">' + escapeHtml(labels[3]) + "</th>";
-    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--position schedule-table__sticky schedule-table__sticky--position" rowspan="2">' + escapeHtml(labels[4]) + "</th>";
+    let dayRow = "<tr>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--id schedule-table__sticky schedule-table__sticky--id" rowspan="2">' + escapeHtml(labels[0]) + renderColumnResizer("id") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--department schedule-table__sticky schedule-table__sticky--department" rowspan="2">' + escapeHtml(labels[1]) + renderColumnResizer("dept") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--vie schedule-table__sticky schedule-table__sticky--vie" rowspan="2">' + escapeHtml(labels[2]) + renderColumnResizer("vie") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--eng schedule-table__sticky schedule-table__sticky--eng" rowspan="2">' + escapeHtml(labels[3]) + renderColumnResizer("eng") + "</th>";
+    dayRow += '<th class="schedule-table__meta-head schedule-table__meta--position schedule-table__sticky schedule-table__sticky--position" rowspan="2">' + escapeHtml(labels[4]) + renderColumnResizer("position") + "</th>";
 
     let weekdayRow = "<tr>";
     for (let day = 1; day <= days; day += 1) {
-      dayRow += '<th class="schedule-table__day-head">' + day + "</th>";
+      dayRow += '<th class="schedule-table__day-head" data-day-head="' + day + '">' + day + renderColumnResizer("day") + "</th>";
       weekdayRow += '<th class="schedule-table__weekday-head">' + escapeHtml(getWeekdayLabel(state.selectedYear, state.selectedMonth, day)) + "</th>";
     }
     dom.tableHead.innerHTML = dayRow + "</tr>" + weekdayRow + "</tr>";
@@ -483,17 +620,16 @@
     dom.tableBody.innerHTML = monthState.rows.map(function (row, rowIndex) {
       const snapshot = row.employeeSnapshot;
       let html = '<tr class="schedule-table__body-row" data-row-id="' + escapeHtml(row.id) + '" data-row-index="' + rowIndex + '">';
-      html += '<td class="schedule-table__handle schedule-table__sticky schedule-table__sticky--handle"><button type="button" class="schedule-row-handle" data-row-handle="' + escapeHtml(row.id) + '" draggable="true" aria-label="Reorder">•••</button></td>';
-      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--id">' + escapeHtml(snapshot.ydiId) + "</td>";
-      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--department">' + escapeHtml(snapshot.department) + "</td>";
-      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--vie">' + escapeHtml(snapshot.vieName) + "</td>";
-      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--eng">' + escapeHtml(snapshot.engName) + "</td>";
-      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--position">' + escapeHtml(snapshot.position) + "</td>";
+      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--id"><div class="schedule-meta-wrap schedule-meta-wrap--id"><button type="button" class="schedule-row-handle" data-row-handle="' + escapeHtml(row.id) + '" draggable="true" aria-label="Reorder">•••</button><button type="button" class="schedule-meta-cell" data-grid-cell="true" data-row-index="' + rowIndex + '" data-col-index="0">' + escapeHtml(snapshot.ydiId) + '</button></div></td>';
+      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--department"><div class="schedule-meta-wrap"><button type="button" class="schedule-meta-cell" data-grid-cell="true" data-row-index="' + rowIndex + '" data-col-index="1">' + escapeHtml(snapshot.department) + '</button></div></td>';
+      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--vie"><div class="schedule-meta-wrap"><button type="button" class="schedule-meta-cell" data-grid-cell="true" data-row-index="' + rowIndex + '" data-col-index="2">' + escapeHtml(snapshot.vieName) + '</button></div></td>';
+      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--eng"><div class="schedule-meta-wrap"><button type="button" class="schedule-meta-cell" data-grid-cell="true" data-row-index="' + rowIndex + '" data-col-index="3">' + escapeHtml(snapshot.engName) + '</button></div></td>';
+      html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--position"><div class="schedule-meta-wrap"><button type="button" class="schedule-meta-cell" data-grid-cell="true" data-row-index="' + rowIndex + '" data-col-index="4">' + escapeHtml(snapshot.position) + '</button></div></td>';
       for (let day = 1; day <= days; day += 1) {
         const code = normalizeCellValue(row.shifts[String(day)]);
-        html += '<td class="schedule-table__cell"><button type="button" class="schedule-cell" data-schedule-cell="true" data-row-index="' + rowIndex + '" data-day="' + day + '" data-code-group="' + escapeHtml(getCodeGroup(code)) + '">' + renderCellValue(code) + "</button></td>";
+        html += '<td class="schedule-table__cell"><button type="button" class="schedule-cell" data-grid-cell="true" data-schedule-cell="true" data-row-index="' + rowIndex + '" data-col-index="' + (META_COLUMNS.length + day - 1) + '" data-day="' + day + '" data-code-group="' + escapeHtml(getCodeGroup(code)) + '">' + renderCellValue(code) + '</button></td>';
       }
-      return html + "</tr>";
+      return html + '</tr>';
     }).join("");
   }
 
@@ -537,14 +673,24 @@
     }
 
     dom.dailySection.hidden = false;
-    let head = "<tr><th>" + escapeHtml(i18n.t("schedule.dailyCode")) + "</th>";
+    let head = "<tr>";
+    head += '<th class="schedule-daily-table__spacer--id"></th>';
+    head += '<th class="schedule-daily-table__spacer--department"></th>';
+    head += '<th class="schedule-daily-table__spacer--vie"></th>';
+    head += '<th class="schedule-daily-table__spacer--eng"></th>';
+    head += '<th class="schedule-daily-table__spacer--position">' + escapeHtml(i18n.t("schedule.dailyCode")) + "</th>";
     for (let day = 1; day <= days; day += 1) {
       head += '<th data-daily-day-head="' + day + '">' + day + "</th>";
     }
     dom.dailyHead.innerHTML = head + "</tr>";
 
     dom.dailyBody.innerHTML = activeCodes.map(function (code) {
-      let row = '<tr data-daily-code-row="' + escapeHtml(code) + '"><td>' + escapeHtml(code) + "</td>";
+      let row = '<tr data-daily-code-row="' + escapeHtml(code) + '">';
+      row += '<td class="schedule-daily-table__spacer--id"></td>';
+      row += '<td class="schedule-daily-table__spacer--department"></td>';
+      row += '<td class="schedule-daily-table__spacer--vie"></td>';
+      row += '<td class="schedule-daily-table__spacer--eng"></td>';
+      row += '<td class="schedule-daily-table__spacer--position">' + escapeHtml(code) + "</td>";
       for (let day = 1; day <= days; day += 1) {
         row += '<td data-daily-code="' + escapeHtml(code) + '" data-daily-day="' + day + '">' + getDailyCount(monthState.rows, code, day) + "</td>";
       }
@@ -587,6 +733,17 @@
     dom.monthSelect.addEventListener("change", function () {
       handlePeriodChange(sanitizeYear(dom.yearSelect.value), sanitizeMonth(dom.monthSelect.value));
     });
+    if (dom.addRowsButton) {
+      dom.addRowsButton.addEventListener("click", handleAddRows);
+    }
+    if (dom.addRowsCount) {
+      dom.addRowsCount.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          handleAddRows();
+        }
+      });
+    }
     dom.legendToggle.addEventListener("click", function () {
       state.legendOpen = !state.legendOpen;
       saveState();
@@ -631,15 +788,25 @@
       event.preventDefault();
       adjustZoom(event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP);
     }, { passive: false });
+    dom.sheetScroll.addEventListener("scroll", syncStickyColumns, { passive: true });
     dom.tableBody.addEventListener("mousedown", handleCellPointerStart);
     dom.tableBody.addEventListener("mouseover", handleCellPointerMove);
+    dom.tableHead.addEventListener("mousedown", handleResizePointerStart);
+    dom.tableHead.addEventListener("dblclick", handleResizeAutoFit);
+    document.addEventListener("mousemove", handleResizePointerMove);
     document.addEventListener("mouseup", function () {
       uiState.isSelecting = false;
+      if (uiState.columnResize) {
+        saveState();
+      }
+      uiState.columnResize = null;
     });
     dom.tableBody.addEventListener("dragstart", handleDragStart);
     dom.tableBody.addEventListener("dragover", handleDragOver);
     dom.tableBody.addEventListener("drop", handleDrop);
     dom.tableBody.addEventListener("dragend", clearDragState);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("paste", handlePaste);
     window.addEventListener("keydown", handleGlobalKeydown);
   }
 
@@ -658,7 +825,10 @@
   }
 
   function handleCellPointerStart(event) {
-    const cell = event.target.closest("[data-schedule-cell]");
+    if (event.target.closest("[data-row-handle]")) {
+      return;
+    }
+    const cell = event.target.closest("[data-grid-cell]");
     if (!cell || event.button !== 0) {
       return;
     }
@@ -676,7 +846,7 @@
     if (!uiState.isSelecting || !uiState.anchor) {
       return;
     }
-    const cell = event.target.closest("[data-schedule-cell]");
+    const cell = event.target.closest("[data-grid-cell]");
     if (!cell) {
       return;
     }
@@ -705,6 +875,11 @@
       state.zoomLevel = 1;
       saveState();
       renderZoom();
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && key.toLowerCase() === "c") {
+      event.preventDefault();
+      copySelectionToClipboard();
       return;
     }
     if (!uiState.selection) {
@@ -803,8 +978,8 @@
     uiState.selection = {
       startRow: Math.min(start.rowIndex, end.rowIndex),
       endRow: Math.max(start.rowIndex, end.rowIndex),
-      startDay: Math.min(start.day, end.day),
-      endDay: Math.max(start.day, end.day)
+      startCol: Math.min(start.colIndex, end.colIndex),
+      endCol: Math.max(start.colIndex, end.colIndex)
     };
     renderSelectionState();
     renderSelectionMeta();
@@ -824,9 +999,9 @@
   }
 
   function renderSelectionState() {
-    Array.prototype.forEach.call(dom.tableBody.querySelectorAll("[data-schedule-cell]"), function (cell) {
+    Array.prototype.forEach.call(dom.tableBody.querySelectorAll("[data-grid-cell]"), function (cell) {
       const point = getCellPoint(cell);
-      cell.classList.toggle("is-selected", isCellSelected(point.rowIndex, point.day));
+      cell.classList.toggle("is-selected", isCellSelected(point.rowIndex, point.colIndex));
     });
   }
 
@@ -840,14 +1015,14 @@
     return Boolean(uiState.selection) &&
       rowIndex >= uiState.selection.startRow &&
       rowIndex <= uiState.selection.endRow &&
-      day >= uiState.selection.startDay &&
-      day <= uiState.selection.endDay;
+      day >= uiState.selection.startCol &&
+      day <= uiState.selection.endCol;
   }
 
   function getSelectionStats() {
     const rows = uiState.selection.endRow - uiState.selection.startRow + 1;
-    const days = uiState.selection.endDay - uiState.selection.startDay + 1;
-    return { rows: rows, days: days, cells: rows * days };
+    const cols = uiState.selection.endCol - uiState.selection.startCol + 1;
+    return { rows: rows, days: cols, cells: rows * cols };
   }
 
   function getSelectedPoints() {
@@ -856,11 +1031,17 @@
       return cells;
     }
     for (let rowIndex = uiState.selection.startRow; rowIndex <= uiState.selection.endRow; rowIndex += 1) {
-      for (let day = uiState.selection.startDay; day <= uiState.selection.endDay; day += 1) {
-        cells.push({ rowIndex: rowIndex, day: day });
+      for (let colIndex = uiState.selection.startCol; colIndex <= uiState.selection.endCol; colIndex += 1) {
+        cells.push({ rowIndex: rowIndex, colIndex: colIndex });
       }
     }
     return cells;
+  }
+
+  function getSelectedSchedulePoints() {
+    return getSelectedPoints().filter(function (point) {
+      return getColumnInfo(point.colIndex).type === "schedule";
+    });
   }
 
   function applySelectionInput() {
@@ -868,7 +1049,7 @@
   }
 
   function clearSelectedCells() {
-    applyCodeToSelection("", true);
+    applyPasteMatrix([[""]], true);
   }
 
   function applyCodeToSelection(code, clearing) {
@@ -884,19 +1065,23 @@
       showFeedback(i18n.t("schedule.feedback.invalidCode", { code: code }), "error");
       return;
     }
+    if (!getSelectedSchedulePoints().length) {
+      showFeedback(i18n.getLocale() === "zh-Hant" ? "目前選取的是員工資訊欄，請改用貼上或選取排班欄。" : (i18n.getLocale() === "vi" ? "Đang chọn cột thông tin nhân viên, hãy dùng dán hoặc chọn ô ca làm." : "The current selection is employee info. Paste there or select schedule cells."), "error");
+      return;
+    }
     const monthState = ensureCurrentMonthState();
     const changes = [];
-    getSelectedPoints().forEach(function (point) {
+    getSelectedSchedulePoints().forEach(function (point) {
       const row = monthState.rows[point.rowIndex];
       if (!row) {
         return;
       }
-      const dayKey = String(point.day);
+      const dayKey = String(getColumnInfo(point.colIndex).day);
       const previous = normalizeCellValue(row.shifts[dayKey]);
       if (previous === code) {
         return;
       }
-      changes.push({ rowId: row.id, day: dayKey, previous: previous });
+      changes.push({ rowId: row.id, kind: "schedule", day: dayKey, previous: previous });
       if (code) {
         row.shifts[dayKey] = code;
       } else {
@@ -918,6 +1103,171 @@
     showFeedback(i18n.t(clearing ? "schedule.feedback.cleared" : "schedule.feedback.applied", { code: code }), "success");
   }
 
+  function buildSelectionMatrix() {
+    const monthState = ensureCurrentMonthState();
+    const rows = [];
+    if (!uiState.selection) {
+      return rows;
+    }
+    for (let rowIndex = uiState.selection.startRow; rowIndex <= uiState.selection.endRow; rowIndex += 1) {
+      const row = monthState.rows[rowIndex];
+      const line = [];
+      for (let colIndex = uiState.selection.startCol; colIndex <= uiState.selection.endCol; colIndex += 1) {
+        line.push(row ? getGridValue(row, colIndex) : "");
+      }
+      rows.push(line);
+    }
+    return rows;
+  }
+
+  function copySelectionToClipboard() {
+    if (!uiState.selection) {
+      return;
+    }
+    const text = buildSelectionMatrix().map(function (line) {
+      return line.join("\t");
+    }).join("\n");
+    if (!text) {
+      return;
+    }
+    uiState.copiedText = text;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showFeedback(i18n.getLocale() === "zh-Hant" ? "已複製選取內容。" : (i18n.getLocale() === "vi" ? "Đã sao chép vùng chọn." : "Selection copied."), "success");
+      }).catch(function () {
+        showFeedback(i18n.getLocale() === "zh-Hant" ? "已複製選取內容。" : (i18n.getLocale() === "vi" ? "Đã sao chép vùng chọn." : "Selection copied."), "success");
+      });
+      return;
+    }
+    showFeedback(i18n.getLocale() === "zh-Hant" ? "已複製選取內容。" : (i18n.getLocale() === "vi" ? "Đã sao chép vùng chọn." : "Selection copied."), "success");
+  }
+
+  function handleCopy(event) {
+    if (!uiState.selection) {
+      return;
+    }
+    const target = event.target;
+    if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+      return;
+    }
+    const text = buildSelectionMatrix().map(function (line) {
+      return line.join("\t");
+    }).join("\n");
+    if (!text) {
+      return;
+    }
+    uiState.copiedText = text;
+    event.preventDefault();
+    event.clipboardData.setData("text/plain", text);
+  }
+
+  function handlePaste(event) {
+    if (!uiState.selection) {
+      return;
+    }
+    const target = event.target;
+    if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+      return;
+    }
+    const text = event.clipboardData ? event.clipboardData.getData("text/plain") : "";
+    const fallbackText = !text && uiState.copiedText ? uiState.copiedText : "";
+    const nextText = text || fallbackText;
+    if (!nextText) {
+      return;
+    }
+    event.preventDefault();
+    applyPasteMatrix(parseClipboardMatrix(nextText));
+  }
+
+  function parseClipboardMatrix(text) {
+    return String(text || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .split("\n")
+      .filter(function (line, index, list) {
+        return line.length || index < list.length - 1;
+      })
+      .map(function (line) {
+        return line.split("\t");
+      });
+  }
+
+  function ensureRowsForPaste(requiredRowCount) {
+    const monthState = ensureCurrentMonthState();
+    while (monthState.rows.length < requiredRowCount) {
+      monthState.rows.push(createManualRow());
+    }
+    return monthState;
+  }
+
+  function applyPasteMatrix(matrix, clearingOnly) {
+    if (!uiState.selection || !matrix.length || !matrix[0].length) {
+      return;
+    }
+    const fillSelection = matrix.length === 1 && matrix[0].length === 1;
+    const requiredRowCount = fillSelection
+      ? uiState.selection.endRow + 1
+      : Math.max(uiState.selection.endRow + 1, uiState.selection.startRow + matrix.length);
+    const monthState = ensureRowsForPaste(requiredRowCount);
+    const changes = [];
+    const invalidCodes = [];
+
+    const rowLimit = fillSelection ? uiState.selection.endRow : Math.min(monthState.rows.length - 1, uiState.selection.startRow + matrix.length - 1);
+    const colLimit = fillSelection ? uiState.selection.endCol : Math.min(getVisibleColumnCount() - 1, uiState.selection.startCol + matrix[0].length - 1);
+
+    for (let rowIndex = uiState.selection.startRow; rowIndex <= rowLimit; rowIndex += 1) {
+      for (let colIndex = uiState.selection.startCol; colIndex <= colLimit; colIndex += 1) {
+        const row = monthState.rows[rowIndex];
+        const incoming = fillSelection ? matrix[0][0] : (matrix[rowIndex - uiState.selection.startRow][colIndex - uiState.selection.startCol] || "");
+        const column = getColumnInfo(colIndex);
+        const nextValue = column.type === "schedule" ? normalizeCellValue(incoming) : String(incoming || "").trim();
+
+        if (column.type === "schedule" && nextValue && !SHIFT_CODE_MAP[nextValue]) {
+          invalidCodes.push(nextValue);
+          continue;
+        }
+
+        const previous = getGridValue(row, colIndex);
+        if (previous === nextValue) {
+          continue;
+        }
+
+        const change = { rowId: row.id, colIndex: colIndex, kind: column.type, previous: previous, next: nextValue };
+        if (column.type === "schedule") {
+          change.day = String(column.day);
+        } else {
+          change.metaKey = column.meta.key;
+        }
+        changes.push(change);
+      }
+    }
+
+    if (invalidCodes.length) {
+      showFeedback((i18n.getLocale() === "zh-Hant"
+        ? "貼上的班碼含有未定義值: "
+        : (i18n.getLocale() === "vi" ? "Có mã ca không hợp lệ trong nội dung dán: " : "Pasted data contains invalid shift codes: "))
+        + invalidCodes.filter(uniqueOnly).join(", "), "error");
+      return;
+    }
+
+    if (!changes.length) {
+      showFeedback(i18n.t("schedule.feedback.noChanges"), "error");
+      return;
+    }
+
+    changes.forEach(function (change) {
+      const row = monthState.rows.find(function (item) { return item.id === change.rowId; });
+      setGridValue(row, change.colIndex, change.next);
+    });
+
+    uiState.history.push({ monthKey: getCurrentMonthKey(), changes: changes });
+    saveState();
+    renderAll();
+    showFeedback(clearingOnly
+      ? i18n.t("schedule.feedback.cleared")
+      : (i18n.getLocale() === "zh-Hant" ? "已貼上選取內容。" : (i18n.getLocale() === "vi" ? "Đã dán vào vùng chọn." : "Pasted into selection.")), "success");
+  }
+
   function undoLatest() {
     const entry = uiState.history.pop();
     if (!entry) {
@@ -933,6 +1283,10 @@
     entry.changes.forEach(function (change) {
       const row = monthState.rows.find(function (item) { return item.id === change.rowId; });
       if (!row) {
+        return;
+      }
+      if (change.kind === "meta") {
+        row.employeeSnapshot[change.metaKey] = String(change.previous || "");
         return;
       }
       if (change.previous) {
@@ -967,7 +1321,7 @@
   function getCellPoint(cell) {
     return {
       rowIndex: Number(cell.getAttribute("data-row-index") || 0),
-      day: Number(cell.getAttribute("data-day") || 1)
+      colIndex: Number(cell.getAttribute("data-col-index") || 0)
     };
   }
 
@@ -995,6 +1349,105 @@
       return "leave";
     }
     return "other";
+  }
+
+  function handleAddRows() {
+    const count = Math.max(1, Math.min(100, Number(dom.addRowsCount && dom.addRowsCount.value || 1) || 1));
+    const monthState = ensureCurrentMonthState();
+    for (let index = 0; index < count; index += 1) {
+      monthState.rows.push(createManualRow());
+    }
+    saveState();
+    renderAll();
+    showFeedback((i18n.getLocale() === "zh-Hant"
+      ? "已新增 "
+      : (i18n.getLocale() === "vi" ? "Đã thêm " : "Added "))
+      + count
+      + (i18n.getLocale() === "zh-Hant" ? " 行。" : (i18n.getLocale() === "vi" ? " hàng." : " rows.")), "success");
+  }
+
+  function handleResizePointerStart(event) {
+    const handle = event.target.closest("[data-resize-key]");
+    if (!handle || event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    const key = handle.getAttribute("data-resize-key");
+    uiState.columnResize = {
+      key: key,
+      startX: event.clientX,
+      startWidth: state.columnWidths[key]
+    };
+  }
+
+  function handleResizePointerMove(event) {
+    if (!uiState.columnResize) {
+      return;
+    }
+    const nextWidth = uiState.columnResize.startWidth + (event.clientX - uiState.columnResize.startX);
+    state.columnWidths[uiState.columnResize.key] = Math.max(uiState.columnResize.key === "day" ? 36 : 64, Math.round(nextWidth));
+    applyColumnWidths();
+  }
+
+  function handleResizeAutoFit(event) {
+    const handle = event.target.closest("[data-resize-key]");
+    if (!handle) {
+      return;
+    }
+    event.preventDefault();
+    const key = handle.getAttribute("data-resize-key");
+    state.columnWidths[key] = measureAutoFitWidth(key);
+    saveState();
+    renderAll();
+  }
+
+  function measureAutoFitWidth(key) {
+    const values = [];
+    if (key === "day") {
+      const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
+      for (let day = 1; day <= days; day += 1) {
+        values.push(String(day));
+        values.push(getWeekdayLabel(state.selectedYear, state.selectedMonth, day));
+      }
+      ensureCurrentMonthState().rows.forEach(function (row) {
+        Object.keys(row.shifts).forEach(function (dayKey) {
+          values.push(normalizeCellValue(row.shifts[dayKey]));
+        });
+      });
+      return Math.max(36, Math.min(96, measureMaxWidth(values, 30)));
+    }
+
+    const meta = META_COLUMNS.find(function (item) { return item.widthKey === key; });
+    if (!meta) {
+      return DEFAULT_COLUMN_WIDTHS[key] || 80;
+    }
+    values.push((META_HEADERS[i18n.getLocale()] || META_HEADERS["zh-Hant"])[META_COLUMNS.indexOf(meta)]);
+    ensureCurrentMonthState().rows.forEach(function (row) {
+      values.push(String(row.employeeSnapshot[meta.key] || ""));
+    });
+    return Math.max(64, Math.min(280, measureMaxWidth(values, 34)));
+  }
+
+  function measureMaxWidth(values, padding) {
+    const probe = document.createElement("span");
+    probe.style.position = "fixed";
+    probe.style.visibility = "hidden";
+    probe.style.whiteSpace = "nowrap";
+    probe.style.fontSize = "11px";
+    probe.style.fontWeight = "800";
+    probe.style.fontFamily = "inherit";
+    document.body.appendChild(probe);
+    let maxWidth = 0;
+    values.forEach(function (value) {
+      probe.textContent = value || "";
+      maxWidth = Math.max(maxWidth, Math.ceil(probe.getBoundingClientRect().width));
+    });
+    probe.remove();
+    return maxWidth + padding;
+  }
+
+  function uniqueOnly(value, index, list) {
+    return list.indexOf(value) === index;
   }
 
   function showFeedback(message, tone) {
