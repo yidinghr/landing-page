@@ -1,158 +1,60 @@
 <!doctype html>
-<html lang="vi">
+<html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>YiDing International</title>
-  <meta name="description" content="YiDing International - HR & Recruitment, workforce coordination, attendance & internal operations."/>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>弈鼎國際</title>
+  <link rel="icon" type="image/png" href="image/logoweb.png" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/i18n.css" />
+  <link rel="stylesheet" href="assets/css/login.css" />
 </head>
 
-<body class="bg-slate-950 text-slate-100">
-  <!-- Navbar -->
-  <header class="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur">
-    <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2 font-bold tracking-wide">
-        <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">YI</span>
-        <span>YiDing International</span>
-      </a>
+<body class="login-page">
+  <div id="loginPageTools" class="yd-page-tools" aria-label="Page tools"></div>
+  <main class="login-stage">
+    <section class="login-panel" aria-labelledby="login-title">
+      <img src="image/logo.png" alt="弈鼎標誌" class="login-logo" />
 
-      <nav class="hidden md:flex items-center gap-6 text-sm text-slate-200">
-        <a class="hover:text-white" href="#about">Giới thiệu</a>
-        <a class="hover:text-white" href="#services">Dịch vụ</a>
-        <a class="hover:text-white" href="#contact">Liên hệ</a>
-      </nav>
+      <h1 id="login-title" class="login-title">弈鼎</h1>
 
-      <div class="flex items-center gap-2">
-        <!-- ĐỔI LINK NÀY SANG hr.yidinginternational.com SAU -->
-        <a href="https://hr.yidinginternational.com" class="px-3 py-2 text-sm rounded-lg border border-white/15 hover:border-white/30">
-          Đăng nhập
-        </a>
-        <a href="https://hr.yidinginternational.com" class="px-3 py-2 text-sm rounded-lg bg-white text-slate-950 font-semibold hover:bg-slate-200">
-          Đăng ký
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- Hero -->
-  <section class="relative overflow-hidden">
-    <div class="absolute inset-0 opacity-30"
-      style="background: radial-gradient(circle at 20% 20%, rgba(56,189,248,.35), transparent 40%),
-                          radial-gradient(circle at 80% 30%, rgba(168,85,247,.35), transparent 45%),
-                          radial-gradient(circle at 50% 80%, rgba(34,197,94,.20), transparent 45%);">
-    </div>
-
-    <div class="mx-auto max-w-6xl px-4 py-20 relative">
-      <div class="max-w-3xl">
-        <p class="text-sm text-slate-300 mb-3">HR • Recruitment • Workforce Operations</p>
-        <h1 class="text-4xl md:text-6xl font-extrabold leading-tight">
-          YiDing International
-          <span class="block text-slate-200 mt-2">Nhân sự & Tuyển dụng — vận hành gọn, dữ liệu rõ</span>
-        </h1>
-        <p class="mt-6 text-lg text-slate-300">
-          Tập trung vào tuyển dụng, phối hợp nhân sự, chấm công và vận hành nội bộ. Thiết kế quy trình đơn giản để chạy nhanh và chuẩn.
-        </p>
-
-        <div class="mt-8 flex flex-wrap gap-3">
-          <a href="#contact" class="px-5 py-3 rounded-xl bg-white text-slate-950 font-semibold hover:bg-slate-200">
-            Liên hệ ngay
-          </a>
-          <a href="#services" class="px-5 py-3 rounded-xl border border-white/15 hover:border-white/30 text-slate-100">
-            Xem dịch vụ
-          </a>
+      <form class="auth-card" id="loginForm" action="#" method="post" autocomplete="off">
+        <div class="auth-row">
+          <label class="auth-label" for="account">帳號</label>
+          <input
+            id="account"
+            name="account"
+            type="text"
+            class="auth-input"
+            value=""
+            autocomplete="off"
+            spellcheck="false"
+          />
         </div>
 
-        <div class="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div class="text-sm text-slate-300">Tuyển dụng</div>
-            <div class="text-xl font-bold mt-1">Nhanh & đúng</div>
-          </div>
-          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div class="text-sm text-slate-300">Vận hành</div>
-            <div class="text-xl font-bold mt-1">Rõ trách nhiệm</div>
-          </div>
-          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div class="text-sm text-slate-300">Dữ liệu</div>
-            <div class="text-xl font-bold mt-1">Theo dõi chuẩn</div>
-          </div>
+        <div class="auth-row">
+          <label class="auth-label" for="password">密碼</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            class="auth-input"
+            value=""
+            autocomplete="off"
+          />
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- About -->
-  <section id="about" class="mx-auto max-w-6xl px-4 py-16">
-    <div class="grid md:grid-cols-2 gap-8 items-start">
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h2 class="text-2xl font-bold">Giới thiệu</h2>
-        <p class="mt-4 text-slate-300 leading-relaxed">
-          YiDing là bộ phận Nhân sự & Tuyển dụng, phụ trách thu hút nhân tài, quản lý nhân viên và phối hợp vận hành nguồn lực.
-        </p>
-        <div class="mt-6 text-sm text-slate-300 space-y-2">
-          <div><span class="text-slate-400">Pháp lý:</span> Công Ty TNHH Nhất Đỉnh Quốc Tế</div>
-          <div><span class="text-slate-400">MST:</span> 0402310065</div>
-          <div><span class="text-slate-400">Địa chỉ:</span> 45 Hưng Hóa 2, Hải Châu, Đà Nẵng</div>
+        <div class="auth-row auth-row--split">
+          <div class="auth-spacer" aria-hidden="true"></div>
+          <button type="submit" class="auth-button auth-button--divider">登入</button>
+          <button type="button" class="auth-button" id="registerButton">註冊</button>
         </div>
-      </div>
+      </form>
 
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h3 class="text-xl font-bold">Chúng tôi làm gì?</h3>
-        <ul class="mt-4 space-y-3 text-slate-300">
-          <li>• Tuyển dụng & sàng lọc ứng viên</li>
-          <li>• Phối hợp bộ phận, phân ca, xếp lịch</li>
-          <li>• Hỗ trợ hệ thống chấm công & vận hành HR nội bộ</li>
-          <li>• Chuẩn hóa quy trình và báo cáo</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- Services -->
-  <section id="services" class="mx-auto max-w-6xl px-4 py-16">
-    <h2 class="text-2xl font-bold">Dịch vụ / Năng lực</h2>
-    <p class="mt-3 text-slate-300">Các mảng cốt lõi để vận hành nhân sự ổn định.</p>
-
-    <div class="mt-8 grid md:grid-cols-3 gap-4">
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <div class="font-bold">Recruitment</div>
-        <p class="mt-2 text-slate-300 text-sm">Tuyển dụng theo nhu cầu, tối ưu quy trình & thời gian.</p>
-      </div>
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <div class="font-bold">Employee Management</div>
-        <p class="mt-2 text-slate-300 text-sm">Hồ sơ nhân viên, phân quyền, theo dõi dữ liệu cơ bản.</p>
-      </div>
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <div class="font-bold">Workforce Operations</div>
-        <p class="mt-2 text-slate-300 text-sm">Phân ca, xếp lịch, phối hợp bộ phận, báo cáo.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Contact -->
-  <section id="contact" class="mx-auto max-w-6xl px-4 py-16">
-    <div class="rounded-2xl border border-white/10 bg-white/5 p-8">
-      <h2 class="text-2xl font-bold">Liên hệ</h2>
-      <p class="mt-3 text-slate-300">Gọi hoặc email để nhận hỗ trợ.</p>
-
-      <div class="mt-6 grid sm:grid-cols-2 gap-4 text-slate-200">
-        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-4">
-          <div class="text-sm text-slate-400">Hotline HR</div>
-          <div class="text-lg font-semibold">+84 886 399 787</div>
-        </div>
-        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-4">
-          <div class="text-sm text-slate-400">Email</div>
-          <div class="text-lg font-semibold">yidinghr999@gmail.com</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="border-t border-white/10">
-    <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-slate-400 flex flex-col sm:flex-row gap-2 justify-between">
-      <div>© 2026 YiDing International. All rights reserved.</div>
-      <div class="text-slate-500">Powered by Vercel</div>
-    </div>
-  </footer>
+      <p id="loginMessage" class="auth-message" aria-live="polite"></p>
+    </section>
+  </main>
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/login.js"></script>
 </body>
 </html>

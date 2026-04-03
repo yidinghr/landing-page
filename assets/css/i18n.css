@@ -1,0 +1,123 @@
+.yd-page-tools {
+  position: fixed;
+  top: 20px;
+  right: 22px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.yd-locale-control {
+  position: relative;
+}
+
+.yd-locale-button {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(244, 213, 31, 0.48);
+  border-radius: 14px;
+  background: rgba(4, 4, 4, 0.94);
+  color: var(--color-text, #f4d51f);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.yd-locale-button:hover,
+.yd-locale-button:focus-visible {
+  background: rgba(18, 18, 18, 0.98);
+  border-color: rgba(244, 213, 31, 0.82);
+  transform: translateY(-1px);
+}
+
+.yd-locale-button__icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.yd-locale-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 80;
+  min-width: 170px;
+  border: 1px solid rgba(244, 213, 31, 0.34);
+  border-radius: 16px;
+  background: rgba(6, 6, 6, 0.98);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.28);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.yd-locale-popover[hidden] {
+  display: none !important;
+}
+
+.yd-locale-popover__title {
+  margin: 0 0 2px;
+  color: rgba(255, 243, 160, 0.86);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.yd-locale-option {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text, #f4d51f);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px;
+  text-align: left;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.yd-locale-option:hover,
+.yd-locale-option:focus-visible {
+  background: rgba(244, 213, 31, 0.08);
+  border-color: rgba(244, 213, 31, 0.22);
+  transform: translateY(-1px);
+}
+
+.yd-locale-option.is-active {
+  border-color: rgba(244, 213, 31, 0.44);
+  background: rgba(244, 213, 31, 0.08);
+}
+
+.yd-locale-option__check {
+  color: rgba(255, 243, 160, 0.9);
+  font-size: 12px;
+  opacity: 0;
+}
+
+.yd-locale-option.is-active .yd-locale-option__check {
+  opacity: 1;
+}
+
+@media (max-width: 720px) {
+  .yd-page-tools {
+    top: 14px;
+    right: 14px;
+  }
+
+  .yd-locale-button {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .yd-locale-popover {
+    min-width: 150px;
+  }
+}

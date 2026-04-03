@@ -1,0 +1,130 @@
+{
+  "projectOverview": {
+    "name": "YiDing_Web",
+    "appType": "multi-page static internal web app",
+    "runtimeModel": "plain HTML pages loading page-specific CSS and IIFE-style JavaScript globals",
+    "dataModel": "client-side state; employee seed data is embedded in frontend JavaScript",
+    "backendPresenceInWorkspace": "none found",
+    "buildTooling": "none found"
+  },
+  "techStack": {
+    "languages": [
+      "HTML",
+      "CSS",
+      "JavaScript"
+    ],
+    "runtimeLibraries": [
+      "none in local source",
+      "Google Fonts: Noto Serif TC",
+      "Source Han Sans VF via CDN"
+    ],
+    "stateStorage": [
+      "localStorage for employees module state",
+      "sessionStorage for temporary login flag"
+    ],
+    "moduleStyle": "IIFE globals attached to window",
+    "stylingApproach": "plain CSS files split by page/module"
+  },
+  "realEntryPoints": [
+    {
+      "path": "index.html",
+      "pageName": "login",
+      "loads": [
+        "assets/css/base.css",
+        "assets/css/login.css",
+        "assets/js/login.js"
+      ],
+      "active": true
+    },
+    {
+      "path": "home/home.html",
+      "pageName": "dashboard",
+      "loads": [
+        "assets/css/home.css",
+        "assets/js/home.js"
+      ],
+      "active": true
+    },
+    {
+      "path": "home/employees.html",
+      "pageName": "employees module",
+      "loads": [
+        "assets/css/employees.css",
+        "assets/js/employees-data.js",
+        "assets/js/employees-form.js",
+        "assets/js/employees-page.js"
+      ],
+      "active": true
+    },
+    {
+      "path": "home/edit/index.html",
+      "pageName": "edit schedule",
+      "loads": [
+        "assets/css/base.css",
+        "assets/css/edit-schedule.css",
+        "assets/js/edit-schedule.js"
+      ],
+      "active": true
+    }
+  ],
+  "activeModules": [
+    {
+      "name": "login",
+      "entryPoint": "index.html",
+      "status": "active"
+    },
+    {
+      "name": "homeDashboard",
+      "entryPoint": "home/home.html",
+      "status": "active"
+    },
+    {
+      "name": "employees",
+      "entryPoint": "home/employees.html",
+      "status": "active"
+    },
+    {
+      "name": "editSchedule",
+      "entryPoint": "home/edit/index.html",
+      "status": "active-partial"
+    }
+  ],
+  "currentArchitecture": {
+    "routing": "static file navigation via window.location.href",
+    "pageIsolation": "each page owns its own CSS/JS set; there is no router or bundler",
+    "sharedAssets": [
+      "image/logo.png",
+      "image/logoweb.png"
+    ],
+    "employeesSubArchitecture": {
+      "dataLayer": "assets/js/employees-data.js exports window.YiDingEmployeesData",
+      "formLayer": "assets/js/employees-form.js exports window.YiDingEmployeesForm",
+      "pageController": "assets/js/employees-page.js renders shell, manages UI state, handles DOM events and localStorage persistence"
+    }
+  },
+  "currentStateSummary": {
+    "login": "frontend-only temporary admin login; success redirects to home/home.html",
+    "dashboard": "renders dynamic time-based greeting and menu; only the 弈鼎員工 button navigates to another page",
+    "employees": "three-panel management UI with inline editing, tabs, filters, card grid, detail panel, modal flows, attachment workflow and localStorage-backed state",
+    "employeesData": {
+      "storageKey": "yiding_employees_module_state_v3_airtable_import",
+      "seedEmployeeCount": 102,
+      "seedDepartments": [
+        "Operation",
+        "Cage",
+        "Booking & Service",
+        "Finance",
+        "Marketing",
+        "Hr"
+      ],
+      "roomTypesInSeedData": [
+        "員工宿舍"
+      ]
+    },
+    "editSchedule": "standalone schedule editor with generated date columns, manual employee rows and one summary table",
+    "unknowns": [
+      "No server-side API or auth enforcement code is present in the workspace",
+      "No build/deploy configuration is present in the runtime source files"
+    ]
+  }
+}

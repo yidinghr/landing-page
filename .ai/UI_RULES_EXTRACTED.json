@@ -1,0 +1,171 @@
+{
+  "theme": {
+    "sharedVisualDirection": {
+      "background": "#000000",
+      "primaryText": "#f4d51f",
+      "primaryBorder": "#f4d51f or rgba(244, 213, 31, ...)",
+      "dangerAccent": "#ff8a80"
+    },
+    "fontsByRuntimeModule": {
+      "login": [
+        "Microsoft YaHei",
+        "Microsoft YaHei UI",
+        "sans-serif"
+      ],
+      "homeTitle": [
+        "Noto Serif TC",
+        "Microsoft JhengHei",
+        "PingFang TC",
+        "serif"
+      ],
+      "homeGreetingAndTopIcons": [
+        "Source Han Sans VF",
+        "Noto Sans TC",
+        "Microsoft JhengHei",
+        "sans-serif"
+      ],
+      "employeesModule": [
+        "Source Han Sans VF",
+        "Noto Sans TC",
+        "Microsoft JhengHei",
+        "sans-serif"
+      ]
+    }
+  },
+  "panelBehaviors": {
+    "homeDashboard": {
+      "layout": "centered vertical shell with fixed top-right action icons and menu grid below a large logo and greeting",
+      "greetingBehavior": "text updates once per minute based on browser local hour"
+    },
+    "employeesModule": {
+      "layout": "left sidebar + main workspace + optional right detail panel",
+      "desktopGrid": {
+        "appColumns": [
+          "272px sidebar",
+          "main workspace"
+        ],
+        "detailClosed": "main workspace only",
+        "detailOpen": "main workspace plus 380px detail panel"
+      },
+      "detailModes": [
+        "hidden",
+        "view",
+        "edit",
+        "add"
+      ],
+      "retiredDepartmentBehavior": {
+        "sidebarPosition": "always appended after normal departments",
+        "dragging": false,
+        "departmentMenu": false,
+        "toolbar": "search + filter only",
+        "sorting": "forces retiredSoonest sort behavior",
+        "addButton": "hidden"
+      }
+    }
+  },
+  "scrollBehaviors": {
+    "homeDashboard": {
+      "body": "page-level scrolling allowed"
+    },
+    "employeesModule": {
+      "body": "overflow hidden",
+      "sidebar": "employees-sidebar__body scrolls independently",
+      "cardList": "employees-cards-panel scrolls independently",
+      "detailPanel": "employees-detail__content scrolls independently",
+      "headerVisibility": "main header and toolbar remain visible because only the card list region scrolls",
+      "mobileBreakpointBehavior": "below 920px internal overflows are disabled and layout stacks vertically"
+    },
+    "editSchedule": {
+      "tables": "each table sits inside its own overflow:auto wrapper"
+    }
+  },
+  "dropdownBehaviors": {
+    "employeesFormSelects": {
+      "theme": "dark background, yellow text, yellow border",
+      "implementation": "native select wrapped by .employee-form__select-wrap",
+      "arrowBehavior": "custom ▾ indicator appears only on hover/focus within the wrapper",
+      "dateTriples": "year/month/day use three separate controls with unit text rendered outside the select box",
+      "statusRule": "離職 option is disabled while detailMode is add",
+      "phoneCountryControl": "text input with datalist rather than select"
+    },
+    "employeesToolbarAndPopovers": {
+      "theme": "dark/yellow selects and inputs in toolbar composer and popovers",
+      "popoverTypes": [
+        "filter",
+        "display",
+        "more-tabs"
+      ]
+    }
+  },
+  "popupInlineEditPatterns": {
+    "tooltips": {
+      "implementation": "CSS ::after using data-tooltip on buttons",
+      "usage": [
+        "dashboard top actions",
+        "employees interface icon",
+        "employees toolbar icons",
+        "employees avatar preview button"
+      ]
+    },
+    "inlineEditTargets": [
+      "employees sidebar title",
+      "employees sidebar subtitle",
+      "employees main-note text",
+      "employees department names"
+    ],
+    "inlineEditConfirmRules": [
+      "Enter confirms",
+      "focusout confirms when text is non-empty for title/subtitle/main-note",
+      "focusout silently cancels add/edit department when empty"
+    ],
+    "inlineEditCancelRules": [
+      "Escape cancels current inline edit",
+      "empty subtitle on blur cancels edit",
+      "empty main-note on confirm removes custom note and falls back to default note"
+    ],
+    "modalTypes": [
+      "confirm-delete",
+      "password-delete",
+      "password-delete-attachment",
+      "confirm-close",
+      "notice",
+      "preview-avatar"
+    ],
+    "attachmentPattern": "selected files enter a pending state and require explicit confirm or cancel before being committed to the draft"
+  },
+  "stickyActions": {
+    "homeTopActions": "fixed to the top-right of the viewport",
+    "employeesMainHeaderAndToolbar": "not CSS-sticky, but visually persistent because card list scrolls inside a lower panel",
+    "employeesDetailTopActions": "remain outside the detail scroll region because the inner detail layout separates action rows from scrollable content"
+  },
+  "interactionConstraints": {
+    "dashboard": {
+      "navigatingActions": [
+        "employees only"
+      ],
+      "placeholderActions": [
+        "schedule",
+        "attendance",
+        "yidingInfo",
+        "help",
+        "settings"
+      ]
+    },
+    "employees": {
+      "departmentRules": [
+        "normal departments are draggable and reorderable",
+        "retired department is fixed and non-draggable",
+        "department delete is blocked if employees still belong to that department"
+      ],
+      "panelCloseRule": "dirty add/edit state opens a confirm-close modal before collapsing the detail panel",
+      "deletePasswords": {
+        "employee": "091100",
+        "attachment": "09110"
+      },
+      "storageRule": "module state persists to localStorage under yiding_employees_module_state_v3_airtable_import"
+    },
+    "login": {
+      "storageRule": "temporary login writes yd_temp_auth to sessionStorage and clears it on pageshow"
+    }
+  }
+}

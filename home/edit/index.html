@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>修改工作排班</title>
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/i18n.css">
+<link rel="stylesheet" href="../../assets/css/edit-schedule.css">
+</head>
+
+<body class="edit-page">
+<div id="scheduleApp" class="schedule-app">
+<main class="schedule-workspace">
+<header class="schedule-header">
+<h1 id="scheduleHeaderTitle" class="schedule-header__title">班表</h1>
+<div class="schedule-header__tools">
+<button id="scheduleLegendToggle" type="button" class="schedule-header__tool" aria-expanded="false" aria-controls="scheduleLegendPanel" aria-label="班碼參照">&lt;&lt;</button>
+<div id="scheduleLocaleMount" class="schedule-locale-slot"></div>
+</div>
+</header>
+
+<section class="schedule-period-bar" aria-label="排班月份">
+<div class="schedule-period-grid">
+<div class="schedule-period-pair">
+<span id="scheduleYearLabel" class="schedule-period-pair__label">年</span>
+<span class="schedule-period-pair__value">
+<select id="scheduleYear" aria-label="年份"></select>
+<span class="schedule-period-pair__arrow" aria-hidden="true">▾</span>
+</span>
+</div>
+
+<div class="schedule-period-pair">
+<span id="scheduleMonthLabel" class="schedule-period-pair__label">月</span>
+<span class="schedule-period-pair__value">
+<select id="scheduleMonth" aria-label="月份"></select>
+<span class="schedule-period-pair__arrow" aria-hidden="true">▾</span>
+</span>
+</div>
+</div>
+<div id="scheduleMonthMeta" class="schedule-assistive" aria-live="polite"></div>
+</section>
+
+<section class="schedule-sheet-frame">
+<div id="scheduleSheetScroll" class="schedule-sheet-scroll">
+<div id="scheduleSheetZoom" class="schedule-sheet-zoom">
+<div class="schedule-sheet-stage">
+<div class="schedule-sheet-main">
+<table id="scheduleTable" class="schedule-table">
+<thead id="scheduleTableHead"></thead>
+<tbody id="scheduleTableBody"></tbody>
+</table>
+
+<section id="dailySummarySection" class="schedule-daily-block" hidden>
+<table id="dailySummaryTable" class="schedule-daily-table">
+<thead id="dailySummaryHead"></thead>
+<tbody id="dailySummaryBody"></tbody>
+</table>
+</section>
+</div>
+
+<aside class="schedule-sheet-summary">
+<table id="scheduleSummaryTable" class="schedule-summary-table">
+<thead id="scheduleSummaryHead"></thead>
+<tbody id="scheduleSummaryBody"></tbody>
+</table>
+</aside>
+</div>
+</div>
+</div>
+
+<div id="scheduleSelectionMeta" class="schedule-assistive" aria-live="polite"></div>
+<input id="scheduleSelectionInput" class="schedule-assistive-input" type="text" list="scheduleShiftCodeList" inputmode="text" autocomplete="off" spellcheck="false">
+<div id="scheduleFeedback" class="schedule-feedback" role="status" aria-live="polite"></div>
+</section>
+</main>
+
+<aside id="scheduleLegendPanel" class="schedule-legend" aria-label="班碼參照面板">
+<div class="schedule-legend__inner">
+<div class="schedule-legend__top">
+<h2 class="schedule-legend__title">班碼參照</h2>
+</div>
+<div class="schedule-legend__content">
+<table id="scheduleLegendTable" class="schedule-legend-table">
+<thead>
+<tr>
+<th>SHIFT CODE</th>
+<th>CHECK IN TIME</th>
+<th>CHECK OUT TIME</th>
+<th>HOURS PAY</th>
+<th>NIGHT SHIFT HOURS</th>
+<th>REMARK</th>
+</tr>
+</thead>
+<tbody id="scheduleLegendBody"></tbody>
+</table>
+</div>
+</div>
+</aside>
+</div>
+
+<datalist id="scheduleShiftCodeList"></datalist>
+
+<script src="../../assets/js/i18n.js"></script>
+<script src="../../assets/js/employees-data.js"></script>
+<script src="../../assets/js/edit-schedule.js"></script>
+</body>
+</html>

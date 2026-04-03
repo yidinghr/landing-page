@@ -1,0 +1,138 @@
+{
+  "issues": [
+    {
+      "issueId": "AUTH-001",
+      "module": "login/access",
+      "description": "Protected pages do not verify the temporary login flag. home/home.html, home/employees.html and home/edit/index.html can be opened directly without going through the login form.",
+      "severity": "high",
+      "affectedFiles": [
+        "assets/js/login.js",
+        "home/home.html",
+        "home/employees.html",
+        "home/edit/index.html"
+      ],
+      "reproducibleSteps": [
+        "Open home/home.html directly in the browser",
+        "Observe that the dashboard loads without checking sessionStorage",
+        "Repeat with home/employees.html or home/edit/index.html"
+      ]
+    },
+    {
+      "issueId": "AUTH-002",
+      "module": "login",
+      "description": "The admin account and password are hardcoded in frontend source code.",
+      "severity": "high",
+      "affectedFiles": [
+        "assets/js/login.js"
+      ],
+      "reproducibleSteps": [
+        "Open assets/js/login.js",
+        "Observe TEMP_ADMIN_ACCOUNT and TEMP_ADMIN_PASSWORD constants"
+      ]
+    },
+    {
+      "issueId": "DASH-001",
+      "module": "homeDashboard",
+      "description": "Dashboard buttons and top-right icons are visible, but only the employees button has a real action. schedule, attendance, yidingInfo, help and settings are no-op placeholders.",
+      "severity": "medium",
+      "affectedFiles": [
+        "assets/js/home.js"
+      ],
+      "reproducibleSteps": [
+        "Open home/home.html",
+        "Click 班表, 打卡, 弈鼎资料, ?, or ⚙",
+        "Observe that nothing happens"
+      ]
+    },
+    {
+      "issueId": "DASH-002",
+      "module": "homeDashboard/editSchedule",
+      "description": "The edit schedule page exists as a separate runtime entry, but the current dashboard does not route to it.",
+      "severity": "medium",
+      "affectedFiles": [
+        "home/home.html",
+        "assets/js/home.js",
+        "home/edit/index.html"
+      ],
+      "reproducibleSteps": [
+        "Open home/home.html",
+        "Click 班表",
+        "Observe no navigation",
+        "Open home/edit/index.html directly and observe that the page exists"
+      ]
+    },
+    {
+      "issueId": "EMP-001",
+      "module": "employees/data",
+      "description": "The imported Airtable seed currently contains 25 records with no YDI ID, English name or Vietnamese name, so the UI renders a noticeable number of nearly empty employee cards.",
+      "severity": "medium",
+      "affectedFiles": [
+        "assets/js/employees-data.js"
+      ],
+      "reproducibleSteps": [
+        "Open home/employees.html",
+        "Scroll through the employee cards",
+        "Observe cards where the main fields are empty or show 未設定"
+      ]
+    },
+    {
+      "issueId": "EMP-002",
+      "module": "employees/data/ui",
+      "description": "Visible department names and some relationship/option values are raw imported strings instead of a fully normalized Traditional Chinese display set. Examples include Operation, Cage, Hr, MOM, DADDY and Bạn.",
+      "severity": "medium",
+      "affectedFiles": [
+        "assets/js/employees-data.js",
+        "assets/js/employees-page.js",
+        "assets/js/employees-form.js"
+      ],
+      "reproducibleSteps": [
+        "Open home/employees.html",
+        "Inspect department names in the sidebar or option lists in the form",
+        "Observe mixed English and non-Traditional Chinese values"
+      ]
+    },
+    {
+      "issueId": "EMP-003",
+      "module": "employees",
+      "description": "All employee edits are stored only in localStorage. There is no API call, backend persistence or shared source of truth in the runtime code.",
+      "severity": "high",
+      "affectedFiles": [
+        "assets/js/employees-page.js",
+        "assets/js/employees-data.js"
+      ],
+      "reproducibleSteps": [
+        "Edit or add an employee in one browser profile",
+        "Reload and observe persistence in that browser",
+        "Open the same page in another browser/profile and observe that changes are not shared"
+      ]
+    },
+    {
+      "issueId": "EMP-004",
+      "module": "employees/data",
+      "description": "employees-data.js is a very large generated frontend data dump that couples runtime UI code to an exported Airtable snapshot and increases frontend bundle size.",
+      "severity": "medium",
+      "affectedFiles": [
+        "assets/js/employees-data.js"
+      ],
+      "reproducibleSteps": [
+        "Open assets/js/employees-data.js",
+        "Observe that the file embeds the full imported employee dataset and option lists directly in frontend code"
+      ]
+    },
+    {
+      "issueId": "SCHED-001",
+      "module": "editSchedule",
+      "description": "The HTML contains a bottom daily statistics table, but edit-schedule.js never queries or renders that bottom table section.",
+      "severity": "medium",
+      "affectedFiles": [
+        "home/edit/index.html",
+        "assets/js/edit-schedule.js"
+      ],
+      "reproducibleSteps": [
+        "Open home/edit/index.html",
+        "Generate a schedule",
+        "Observe that the 每日統計 section remains empty"
+      ]
+    }
+  ]
+}
