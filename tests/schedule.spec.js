@@ -150,10 +150,10 @@ test.describe("Schedule module", () => {
 
     await page.selectOption("#scheduleYear", "2028");
     await page.selectOption("#scheduleMonth", "2");
-    await expect(page.locator(".schedule-table__day-head")).toHaveCount(29);
+    await expect(page.locator("#scheduleFrozenTableHead .schedule-table__day-head")).toHaveCount(29);
 
     await page.selectOption("#scheduleYear", "2027");
-    await expect(page.locator(".schedule-table__day-head")).toHaveCount(28);
+    await expect(page.locator("#scheduleFrozenTableHead .schedule-table__day-head")).toHaveCount(28);
   });
 
   test("add rows works from an empty month", async ({ page }) => {
@@ -692,6 +692,45 @@ test.describe("Schedule module", () => {
 
     expect(positions).not.toBeNull();
     expect(positions.dailyTop).toBeLessThanOrEqual(positions.periodBottom + 4);
+    expect(Math.abs(positions.mainY - positions.periodBottom)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.mainWeekY - (positions.periodBottom + 22))).toBeLessThanOrEqual(2);
+  });
+
+  test("main header stays attached to the period bar after zooming and scrolling", async ({ page }) => {
+    const codes = ["A", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "B", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "C", "C1", "C2", "C3", "C4", "C5", "C6", "C7"];
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState(codes.map((code, index) => createScheduleRow("zoom-" + index, {
+        ydiId: "YDI" + index,
+        department: "Operation",
+        vieName: "VO " + index,
+        engName: "EMP " + index,
+        position: "Staff"
+      }, { "1": code, "2": code })), 2025, 3)
+    });
+
+    await page.keyboard.press("Control+=");
+    await page.keyboard.press("Control+=");
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(150);
+
+    const positions = await page.evaluate(() => {
+      const periodBar = document.querySelector(".schedule-period-bar");
+      const mainHead = document.querySelector("[data-day-head='1']");
+      const mainWeek = document.querySelector(".schedule-table thead tr:nth-child(2) th");
+      if (!periodBar || !mainHead || !mainWeek) {
+        return null;
+      }
+      const periodRect = periodBar.getBoundingClientRect();
+      return {
+        zoom: document.getElementById("scheduleSheetZoom")?.style.zoom || "",
+        periodBottom: Math.round(periodRect.bottom),
+        mainY: Math.round(mainHead.getBoundingClientRect().y),
+        mainWeekY: Math.round(mainWeek.getBoundingClientRect().y)
+      };
+    });
+
+    expect(positions).not.toBeNull();
+    expect(positions.zoom).toBe("1.1");
     expect(Math.abs(positions.mainY - positions.periodBottom)).toBeLessThanOrEqual(2);
     expect(Math.abs(positions.mainWeekY - (positions.periodBottom + 22))).toBeLessThanOrEqual(2);
   });

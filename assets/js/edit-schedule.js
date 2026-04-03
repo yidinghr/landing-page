@@ -94,6 +94,9 @@
     workspace: document.querySelector(".schedule-workspace"),
     header: document.querySelector(".schedule-header"),
     periodBar: document.querySelector(".schedule-period-bar"),
+    frozenLayer: document.getElementById("scheduleFrozenLayer"),
+    frozenScroll: document.getElementById("scheduleFrozenScroll"),
+    frozenZoom: document.getElementById("scheduleFrozenZoom"),
     headerTitle: document.getElementById("scheduleHeaderTitle"),
     yearLabel: document.getElementById("scheduleYearLabel"),
     monthLabel: document.getElementById("scheduleMonthLabel"),
@@ -119,9 +122,11 @@
     shiftCodeList: document.getElementById("scheduleShiftCodeList"),
     table: document.getElementById("scheduleTable"),
     tableHead: document.getElementById("scheduleTableHead"),
+    frozenTableHead: document.getElementById("scheduleFrozenTableHead"),
     tableBody: document.getElementById("scheduleTableBody"),
     summaryTable: document.getElementById("scheduleSummaryTable"),
     summaryHead: document.getElementById("scheduleSummaryHead"),
+    frozenSummaryHead: document.getElementById("scheduleFrozenSummaryHead"),
     summaryBody: document.getElementById("scheduleSummaryBody"),
     dailyTable: document.getElementById("dailySummaryTable"),
     dailySection: document.getElementById("dailySummarySection"),
@@ -596,7 +601,11 @@
       dayRow += '<th class="schedule-table__day-head" data-day-head="' + day + '">' + day + renderColumnResizer("day") + "</th>";
       weekdayRow += '<th class="schedule-table__weekday-head">' + escapeHtml(getWeekdayLabel(state.selectedYear, state.selectedMonth, day)) + "</th>";
     }
-    dom.tableHead.innerHTML = dayRow + "</tr>" + weekdayRow + "</tr>";
+    const headMarkup = dayRow + "</tr>" + weekdayRow + "</tr>";
+    dom.tableHead.innerHTML = headMarkup;
+    if (dom.frozenTableHead) {
+      dom.frozenTableHead.innerHTML = headMarkup;
+    }
   }
 
   function renderTableBody(monthState) {
@@ -620,7 +629,7 @@
   }
 
   function renderSummary(monthState) {
-    dom.summaryHead.innerHTML = [
+    const headMarkup = [
       '<tr class="schedule-summary-table__spacer"><th colspan="' + SUMMARY_FIELDS.length + '"></th></tr>',
       '<tr class="schedule-summary-table__labels">',
       SUMMARY_FIELDS.map(function (field) {
@@ -628,6 +637,11 @@
       }).join(""),
       "</tr>"
     ].join("");
+
+    dom.summaryHead.innerHTML = headMarkup;
+    if (dom.frozenSummaryHead) {
+      dom.frozenSummaryHead.innerHTML = headMarkup;
+    }
 
     const summaryRows = monthState.rows.map(function (row, rowIndex) {
       const summary = getRowSummary(row);
@@ -845,6 +859,10 @@
     dom.tableBody.addEventListener("mouseover", handleCellPointerMove);
     dom.tableHead.addEventListener("mousedown", handleResizePointerStart);
     dom.tableHead.addEventListener("dblclick", handleResizeAutoFit);
+    if (dom.frozenTableHead) {
+      dom.frozenTableHead.addEventListener("mousedown", handleResizePointerStart);
+      dom.frozenTableHead.addEventListener("dblclick", handleResizeAutoFit);
+    }
     document.addEventListener("mousemove", handleResizePointerMove);
     document.addEventListener("mouseup", function () {
       uiState.isSelecting = false;
@@ -862,7 +880,6 @@
     document.addEventListener("copy", handleCopy);
     document.addEventListener("paste", handlePaste);
     window.addEventListener("keydown", handleGlobalKeydown);
-    window.addEventListener("scroll", requestFrozenHeaderSync, { passive: true });
     window.addEventListener("resize", updateStickyMetrics, { passive: true });
     window.addEventListener("resize", updateSheetOverflowState, { passive: true });
   }
@@ -1406,6 +1423,9 @@
 
   function renderZoom() {
     dom.sheetZoom.style.zoom = String(state.zoomLevel);
+    if (dom.frozenZoom) {
+      dom.frozenZoom.style.zoom = String(state.zoomLevel);
+    }
   }
 
   function updateSheetOverflowState() {
@@ -1447,31 +1467,15 @@
     }
     uiState.frozenSyncFrame = window.requestAnimationFrame(function () {
       uiState.frozenSyncFrame = 0;
-      syncFrozenHeaders();
+      syncFrozenLayer();
     });
   }
 
-  function syncFrozenHeaders() {
-    const stickyTop = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().bottom) : 0;
-    syncSingleFrozenHead(dom.table, dom.tableHead, stickyTop, dom.dailySection && !dom.dailySection.hidden ? dom.dailySection : dom.table);
-    syncSingleFrozenHead(dom.summaryTable, dom.summaryHead, stickyTop);
-  }
-
-  function syncSingleFrozenHead(table, head, stickyTop, bottomAnchor) {
-    if (!table || !head) {
+  function syncFrozenLayer() {
+    if (!dom.sheetScroll || !dom.frozenScroll) {
       return;
     }
-    setHeaderTransform(head, 0);
-    const tableRect = table.getBoundingClientRect();
-    const limitRect = bottomAnchor && bottomAnchor.getBoundingClientRect ? bottomAnchor.getBoundingClientRect() : tableRect;
-    const availableHeight = Math.max(0, Math.round(limitRect.bottom - tableRect.top));
-    const maxTranslate = Math.max(0, availableHeight - head.offsetHeight);
-    const translate = Math.max(0, Math.min(maxTranslate, stickyTop - Math.round(tableRect.top)));
-    setHeaderTransform(head, translate);
-  }
-
-  function setHeaderTransform(head, offset) {
-    head.style.transform = offset ? "translate3d(0," + String(offset) + "px,0)" : "";
+    dom.frozenScroll.scrollLeft = dom.sheetScroll.scrollLeft;
   }
 
   function getFilteredShiftCodes() {

@@ -391,6 +391,69 @@
   padding: 0 0 14px;
 }
 
+.schedule-frozen-layer {
+  position: sticky;
+  top: var(--schedule-sheet-sticky-top);
+  z-index: 23;
+  height: 0;
+  overflow: visible;
+}
+
+.schedule-frozen-scroll {
+  width: 100%;
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.schedule-frozen-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.schedule-frozen-zoom {
+  width: max-content;
+  min-width: 100%;
+  transform-origin: top left;
+}
+
+.schedule-frozen-stage {
+  width: max-content;
+  min-width: 100%;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 0;
+  align-items: start;
+}
+
+.schedule-frozen-main,
+.schedule-frozen-summary {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-frozen-summary {
+  margin-left: -1px;
+}
+
+.schedule-frozen-layer .schedule-table thead,
+.schedule-frozen-layer .schedule-summary-table thead {
+  position: relative;
+  z-index: 24;
+  transform: none !important;
+}
+
+.schedule-frozen-layer .schedule-table thead .schedule-table__sticky,
+.schedule-frozen-layer .schedule-summary-table thead th {
+  z-index: 25;
+}
+
+.schedule-sheet-scroll > .schedule-sheet-zoom > .schedule-sheet-stage > .schedule-sheet-main > .schedule-table > thead,
+.schedule-sheet-scroll > .schedule-sheet-zoom > .schedule-sheet-stage > .schedule-sheet-summary > .schedule-summary-table > thead {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .schedule-sheet-scroll {
   --sticky-offset-left: calc(var(--col-id, 96px) + var(--col-dept, 96px) + var(--col-vie, 146px) + var(--col-eng, 132px) + var(--col-position, 104px));
   width: 100%;
