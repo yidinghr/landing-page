@@ -701,13 +701,8 @@
   position: relative;
   z-index: 12;
   will-change: transform;
-}
-
-.schedule-table thead tr,
-.schedule-summary-table thead tr,
-.schedule-daily-table thead tr {
-  backface-visibility: hidden;
   transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .schedule-table thead .schedule-table__sticky {

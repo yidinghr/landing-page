@@ -1426,24 +1426,14 @@
       return;
     }
     setHeaderTransform(head, 0);
-    const firstRow = head.querySelector("tr");
-    if (!firstRow) {
-      return;
-    }
     const tableRect = table.getBoundingClientRect();
-    const rowRect = firstRow.getBoundingClientRect();
-    const anchorOffset = Math.round(rowRect.top - tableRect.top);
-    const naturalTop = Math.round(tableRect.top + anchorOffset);
     const maxTranslate = Math.max(0, table.offsetHeight - head.offsetHeight);
-    const translate = Math.max(0, Math.min(maxTranslate, stickyTop - naturalTop));
+    const translate = Math.max(0, Math.min(maxTranslate, stickyTop - Math.round(tableRect.top)));
     setHeaderTransform(head, translate);
   }
 
   function setHeaderTransform(head, offset) {
-    const value = offset ? "translate3d(0," + String(offset) + "px,0)" : "";
-    Array.prototype.forEach.call(head.querySelectorAll("tr"), function (row) {
-      row.style.transform = value;
-    });
+    head.style.transform = offset ? "translate3d(0," + String(offset) + "px,0)" : "";
   }
 
   function getFilteredShiftCodes() {
