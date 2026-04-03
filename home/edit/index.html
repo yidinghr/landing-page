@@ -44,7 +44,10 @@
 <div class="schedule-period-actions">
 <label class="schedule-code-entry">
 <span id="scheduleCodeLabel" class="schedule-code-entry__label">Code</span>
-<input id="scheduleSelectionInput" class="schedule-code-entry__input" type="text" list="scheduleShiftCodeList" inputmode="text" autocomplete="off" spellcheck="false" maxlength="8">
+<span class="schedule-code-entry__field">
+<input id="scheduleSelectionInput" class="schedule-code-entry__input" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="8">
+<div id="scheduleCodeDropdown" class="schedule-code-dropdown" hidden></div>
+</span>
 </label>
 <button id="scheduleAddRowsButton" type="button" class="schedule-add-rows__button" aria-label="新增員工列">+</button>
 <label class="schedule-add-rows">

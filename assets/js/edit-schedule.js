@@ -107,6 +107,7 @@
     sheetZoom: document.getElementById("scheduleSheetZoom"),
     selectionMeta: document.getElementById("scheduleSelectionMeta"),
     selectionInput: document.getElementById("scheduleSelectionInput"),
+    codeDropdown: document.getElementById("scheduleCodeDropdown"),
     feedback: document.getElementById("scheduleFeedback"),
     localeMount: document.getElementById("scheduleLocaleMount"),
     legendToggle: document.getElementById("scheduleLegendToggle"),
@@ -121,6 +122,7 @@
     summaryTable: document.getElementById("scheduleSummaryTable"),
     summaryHead: document.getElementById("scheduleSummaryHead"),
     summaryBody: document.getElementById("scheduleSummaryBody"),
+    dailyTable: document.getElementById("dailySummaryTable"),
     dailySection: document.getElementById("dailySummarySection"),
     dailyHead: document.getElementById("dailySummaryHead"),
     dailyBody: document.getElementById("dailySummaryBody"),
@@ -142,7 +144,9 @@
     dragOverId: "",
     columnResize: null,
     copiedText: "",
-    frozenSyncFrame: 0
+    frozenSyncFrame: 0,
+    codeDropdownOpen: false,
+    codeDropdownIndex: -1
   };
   const state = loadState();
 
@@ -464,6 +468,7 @@
     if (dom.legendTitle) {
       dom.legendTitle.textContent = i18n.t("schedule.legend");
     }
+    renderCodeDropdown();
   }
 
   function renderLocaleControl() {
@@ -651,11 +656,11 @@
 
     dom.dailySection.hidden = false;
     let head = "<tr>";
-    head += '<th class="schedule-daily-table__spacer--id"></th>';
-    head += '<th class="schedule-daily-table__spacer--department"></th>';
-    head += '<th class="schedule-daily-table__spacer--vie"></th>';
-    head += '<th class="schedule-daily-table__spacer--eng"></th>';
-    head += '<th class="schedule-daily-table__spacer--position">' + escapeHtml(i18n.t("schedule.dailyCode")) + "</th>";
+    head += '<th class="schedule-daily-table__spacer--id schedule-daily-table__sticky schedule-daily-table__sticky--id"></th>';
+    head += '<th class="schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></th>';
+    head += '<th class="schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></th>';
+    head += '<th class="schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></th>';
+    head += '<th class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position">' + escapeHtml(i18n.t("schedule.dailyCode")) + "</th>";
     for (let day = 1; day <= days; day += 1) {
       head += '<th data-daily-day-head="' + day + '">' + day + "</th>";
     }
@@ -663,11 +668,11 @@
 
     dom.dailyBody.innerHTML = activeCodes.map(function (code) {
       let row = '<tr data-daily-code-row="' + escapeHtml(code) + '">';
-      row += '<td class="schedule-daily-table__spacer--id"></td>';
-      row += '<td class="schedule-daily-table__spacer--department"></td>';
-      row += '<td class="schedule-daily-table__spacer--vie"></td>';
-      row += '<td class="schedule-daily-table__spacer--eng"></td>';
-      row += '<td class="schedule-daily-table__spacer--position">' + escapeHtml(code) + "</td>";
+      row += '<td class="schedule-daily-table__spacer--id schedule-daily-table__sticky schedule-daily-table__sticky--id"></td>';
+      row += '<td class="schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></td>';
+      row += '<td class="schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></td>';
+      row += '<td class="schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></td>';
+      row += '<td class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position">' + escapeHtml(code) + "</td>";
       for (let day = 1; day <= days; day += 1) {
         row += '<td data-daily-code="' + escapeHtml(code) + '" data-daily-day="' + day + '">' + getDailyCount(monthState.rows, code, day) + "</td>";
       }
@@ -758,16 +763,49 @@
         uiState.localeMenuOpen = false;
         renderLocaleControl();
       }
+      if (uiState.codeDropdownOpen && dom.codeDropdown && !dom.codeDropdown.contains(event.target) && event.target !== dom.selectionInput) {
+        hideCodeDropdown();
+      }
     });
     dom.selectionInput.addEventListener("input", function () {
       dom.selectionInput.value = normalizeCellValue(dom.selectionInput.value);
+      uiState.codeDropdownOpen = true;
+      uiState.codeDropdownIndex = -1;
+      renderCodeDropdown();
     });
     dom.selectionInput.addEventListener("keydown", function (event) {
+      if (handleCodeDropdownKeydown(event)) {
+        return;
+      }
       if (event.key === "Enter") {
         event.preventDefault();
+        hideCodeDropdown();
         applySelectionInput();
       }
     });
+    dom.selectionInput.addEventListener("click", function () {
+      uiState.codeDropdownOpen = true;
+      uiState.codeDropdownIndex = -1;
+      renderCodeDropdown();
+    });
+    dom.selectionInput.addEventListener("blur", function () {
+      window.setTimeout(hideCodeDropdown, 120);
+    });
+    if (dom.codeDropdown) {
+      dom.codeDropdown.addEventListener("mousedown", function (event) {
+        event.preventDefault();
+      });
+      dom.codeDropdown.addEventListener("click", function (event) {
+        const option = event.target.closest("[data-shift-suggestion]");
+        if (!option) {
+          return;
+        }
+        dom.selectionInput.value = option.getAttribute("data-shift-suggestion") || "";
+        uiState.codeDropdownIndex = -1;
+        hideCodeDropdown();
+        focusSelectionInput();
+      });
+    }
     dom.sheetScroll.addEventListener("wheel", function (event) {
       if (!event.ctrlKey) {
         if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
@@ -902,6 +940,9 @@
     if (!event.ctrlKey && !event.metaKey && !event.altKey && key === "Backspace" && document.activeElement !== dom.selectionInput && dom.selectionInput.value) {
       event.preventDefault();
       dom.selectionInput.value = dom.selectionInput.value.slice(0, -1);
+      uiState.codeDropdownOpen = true;
+      uiState.codeDropdownIndex = -1;
+      renderCodeDropdown();
       return;
     }
     if (key === "Delete" || key === "Backspace") {
@@ -917,10 +958,14 @@
     if (!event.ctrlKey && !event.metaKey && !event.altKey && key.length === 1 && document.activeElement !== dom.selectionInput) {
       event.preventDefault();
       dom.selectionInput.value = normalizeCellValue(dom.selectionInput.value + key);
+      uiState.codeDropdownOpen = true;
+      uiState.codeDropdownIndex = -1;
+      renderCodeDropdown();
       return;
     }
     if (key === "Enter" && document.activeElement !== dom.selectionInput) {
       event.preventDefault();
+      hideCodeDropdown();
       applySelectionInput();
     }
   }
@@ -1012,6 +1057,7 @@
     uiState.anchor = null;
     if (clearInput) {
       dom.selectionInput.value = "";
+      hideCodeDropdown();
     }
     renderSelectionState();
     renderSelectionMeta();
@@ -1372,6 +1418,7 @@
     const stickyTop = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().bottom) : 0;
     syncSingleFrozenHead(dom.table, dom.tableHead, stickyTop);
     syncSingleFrozenHead(dom.summaryTable, dom.summaryHead, stickyTop);
+    syncSingleFrozenHead(dom.dailyTable, dom.dailyHead, stickyTop);
   }
 
   function syncSingleFrozenHead(table, head, stickyTop) {
@@ -1397,6 +1444,86 @@
     Array.prototype.forEach.call(head.querySelectorAll("tr"), function (row) {
       row.style.transform = value;
     });
+  }
+
+  function getFilteredShiftCodes() {
+    const query = normalizeCellValue(dom.selectionInput && dom.selectionInput.value);
+    return VALID_SHIFT_CODES.filter(function (code) {
+      return !query || code.indexOf(query) === 0 || code.indexOf(query) >= 0;
+    }).slice(0, 12);
+  }
+
+  function renderCodeDropdown() {
+    if (!dom.codeDropdown) {
+      return;
+    }
+    const items = getFilteredShiftCodes();
+    const shouldShow = uiState.codeDropdownOpen && items.length > 0;
+    dom.codeDropdown.hidden = !shouldShow;
+    if (!shouldShow) {
+      dom.codeDropdown.innerHTML = "";
+      return;
+    }
+    if (uiState.codeDropdownIndex >= items.length) {
+      uiState.codeDropdownIndex = items.length - 1;
+    }
+    dom.codeDropdown.innerHTML = items.map(function (code, index) {
+      const activeClass = index === uiState.codeDropdownIndex ? " is-active" : "";
+      return '<button type="button" class="schedule-code-dropdown__option' + activeClass + '" data-shift-suggestion="' + escapeHtml(code) + '">' + escapeHtml(code) + "</button>";
+    }).join("");
+  }
+
+  function hideCodeDropdown() {
+    uiState.codeDropdownOpen = false;
+    uiState.codeDropdownIndex = -1;
+    renderCodeDropdown();
+  }
+
+  function handleCodeDropdownKeydown(event) {
+    const items = getFilteredShiftCodes();
+    if (!items.length) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        hideCodeDropdown();
+        return true;
+      }
+      return false;
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      uiState.codeDropdownOpen = true;
+      uiState.codeDropdownIndex = Math.min(items.length - 1, uiState.codeDropdownIndex + 1);
+      if (uiState.codeDropdownIndex < 0) {
+        uiState.codeDropdownIndex = 0;
+      }
+      renderCodeDropdown();
+      return true;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      uiState.codeDropdownOpen = true;
+      uiState.codeDropdownIndex = Math.max(0, uiState.codeDropdownIndex - 1);
+      renderCodeDropdown();
+      return true;
+    }
+    if (event.key === "Tab" && uiState.codeDropdownOpen && uiState.codeDropdownIndex >= 0) {
+      dom.selectionInput.value = items[uiState.codeDropdownIndex];
+      hideCodeDropdown();
+      return false;
+    }
+    if (event.key === "Enter" && uiState.codeDropdownOpen && uiState.codeDropdownIndex >= 0) {
+      event.preventDefault();
+      dom.selectionInput.value = items[uiState.codeDropdownIndex];
+      hideCodeDropdown();
+      applySelectionInput();
+      return true;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      hideCodeDropdown();
+      return true;
+    }
+    return false;
   }
 
   function focusSelectionInput() {

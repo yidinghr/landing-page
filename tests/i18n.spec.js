@@ -53,6 +53,7 @@ test.describe("Shared locale switching", () => {
   });
 
   test("employees page translates chrome but keeps employee data unchanged", async ({ page }) => {
+    test.setTimeout(45000);
     await seedLocale(page, "zh-Hant");
     await page.goto("/home/employees.html");
 

@@ -357,6 +357,45 @@ test.describe("Schedule module", () => {
     await expect(page.locator("[data-daily-code='A'][data-daily-day='1']")).toHaveText("1");
   });
 
+  test("daily summary code column stays fixed while horizontally scrolling", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a", {}, { "1": "A", "2": "B1", "3": "C" }),
+        createScheduleRow("b", {}, { "1": "A", "2": "A7", "3": "B" })
+      ], 2026, 7)
+    });
+
+    await page.locator("#dailySummarySection").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(120);
+
+    const before = await page.evaluate(() => {
+      const dailyHead = document.querySelector("[data-daily-day-head='1']");
+      const dailyCode = document.querySelector(".schedule-daily-table tbody .schedule-daily-table__sticky--position");
+      if (!dailyHead || !dailyCode) {
+        return null;
+      }
+      return {
+        headY: Math.round(dailyHead.getBoundingClientRect().y),
+        codeX: Math.round(dailyCode.getBoundingClientRect().x)
+      };
+    });
+
+    await page.locator("#scheduleSheetScroll").evaluate((node) => {
+      node.scrollLeft = 1200;
+      node.dispatchEvent(new Event("scroll"));
+    });
+
+    const after = await page.evaluate(() => {
+      const dailyCode = document.querySelector(".schedule-daily-table tbody .schedule-daily-table__sticky--position");
+      return dailyCode ? Math.round(dailyCode.getBoundingClientRect().x) : null;
+    });
+
+    expect(before).not.toBeNull();
+    expect(before.headY).toBeGreaterThan(0);
+    expect(after).not.toBeNull();
+    expect(Math.abs(after - before.codeX)).toBeLessThanOrEqual(1);
+  });
+
   test("right legend panel opens and closes from the header button", async ({ page }) => {
     await prepareSchedulePage(page);
 
@@ -376,6 +415,38 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleLegendBody td").last()).toHaveCSS("white-space", "nowrap");
     await expect(page.locator("#scheduleLegendZoomOut")).toHaveCount(0);
     await expect(page.locator("#scheduleLegendZoomIn")).toHaveCount(0);
+  });
+
+  test("shift code dropdown uses compact dark styling", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    await page.locator("#scheduleSelectionInput").click();
+    await expect(page.locator("#scheduleCodeDropdown")).toBeVisible();
+
+    const dropdownStyles = await page.evaluate(() => {
+      const dropdown = document.querySelector("#scheduleCodeDropdown");
+      const option = dropdown ? dropdown.querySelector(".schedule-code-dropdown__option") : null;
+      const title = document.querySelector(".schedule-header__title");
+      if (!dropdown || !option || !title) {
+        return null;
+      }
+      const dropdownRect = dropdown.getBoundingClientRect();
+      const dropdownStyle = getComputedStyle(dropdown);
+      const optionStyle = getComputedStyle(option);
+      const titleStyle = getComputedStyle(title);
+      return {
+        width: Math.round(dropdownRect.width),
+        background: dropdownStyle.backgroundColor,
+        color: optionStyle.color,
+        titleSize: Math.round(parseFloat(titleStyle.fontSize))
+      };
+    });
+
+    expect(dropdownStyles).not.toBeNull();
+    expect(dropdownStyles.width).toBeLessThanOrEqual(90);
+    expect(dropdownStyles.background).not.toBe("rgb(255, 255, 255)");
+    expect(dropdownStyles.color).toBe("rgb(244, 213, 31)");
+    expect(dropdownStyles.titleSize).toBeGreaterThanOrEqual(60);
   });
 
   test("summary logic follows workbook hours and daily counts", async ({ page }) => {
