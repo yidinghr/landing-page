@@ -51,6 +51,7 @@
 <input id="scheduleAddRowsCount" class="schedule-add-rows__input" type="number" min="1" max="100" step="1" value="1" inputmode="numeric" aria-label="新增行數">
 </label>
 <button id="scheduleAddRowsButton" type="button" class="schedule-add-rows__button" aria-label="新增員工列">+</button>
+<button id="scheduleDeleteRowsButton" type="button" class="schedule-add-rows__button schedule-add-rows__button--delete" aria-label="刪除員工列">-</button>
 </div>
 </div>
 </section>
@@ -92,8 +93,13 @@
 <div class="schedule-legend__inner">
 <div class="schedule-legend__top">
 <h2 class="schedule-legend__title">班碼參照</h2>
+<div class="schedule-legend__tools">
+<button id="scheduleLegendZoomOut" type="button" class="schedule-legend__zoom-button" aria-label="縮小">-</button>
+<span id="scheduleLegendZoomValue" class="schedule-legend__zoom-value">100%</span>
+<button id="scheduleLegendZoomIn" type="button" class="schedule-legend__zoom-button" aria-label="放大">+</button>
 </div>
-<div class="schedule-legend__content">
+</div>
+<div id="scheduleLegendContent" class="schedule-legend__content">
 <table id="scheduleLegendTable" class="schedule-legend-table">
 <thead>
 <tr>

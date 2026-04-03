@@ -10,6 +10,17 @@
   const ZOOM_MIN = 0.65;
   const ZOOM_MAX = 1.35;
   const ZOOM_STEP = 0.05;
+  const LEGEND_ZOOM_MIN = 0.8;
+  const LEGEND_ZOOM_MAX = 1.2;
+  const LEGEND_ZOOM_STEP = 0.05;
+  const LEGACY_DEFAULT_COLUMN_WIDTHS = Object.freeze({
+    id: 96,
+    dept: 96,
+    vie: 146,
+    eng: 132,
+    position: 104,
+    day: 42
+  });
   const META_COLUMNS = [
     { key: "ydiId", widthKey: "id" },
     { key: "department", widthKey: "dept" },
@@ -18,12 +29,13 @@
     { key: "position", widthKey: "position" }
   ];
   const DEFAULT_COLUMN_WIDTHS = Object.freeze({
-    id: 96,
-    dept: 96,
-    vie: 146,
-    eng: 132,
-    position: 104,
-    day: 42
+    id: 86,
+    dept: 88,
+    vie: 128,
+    eng: 118,
+    position: 92,
+    day: 38,
+    summary: 58
   });
   const WEEKDAY_LABELS = {
     "zh-Hant": ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
@@ -91,6 +103,7 @@
     addRowsLabel: document.getElementById("scheduleAddRowsLabel"),
     addRowsCount: document.getElementById("scheduleAddRowsCount"),
     addRowsButton: document.getElementById("scheduleAddRowsButton"),
+    deleteRowsButton: document.getElementById("scheduleDeleteRowsButton"),
     yearSelect: document.getElementById("scheduleYear"),
     monthSelect: document.getElementById("scheduleMonth"),
     sheetScroll: document.getElementById("scheduleSheetScroll"),
@@ -101,8 +114,12 @@
     localeMount: document.getElementById("scheduleLocaleMount"),
     legendToggle: document.getElementById("scheduleLegendToggle"),
     legendPanel: document.getElementById("scheduleLegendPanel"),
+    legendContent: document.getElementById("scheduleLegendContent"),
     legendBody: document.getElementById("scheduleLegendBody"),
     legendTable: document.getElementById("scheduleLegendTable"),
+    legendZoomOut: document.getElementById("scheduleLegendZoomOut"),
+    legendZoomIn: document.getElementById("scheduleLegendZoomIn"),
+    legendZoomValue: document.getElementById("scheduleLegendZoomValue"),
     shiftCodeList: document.getElementById("scheduleShiftCodeList"),
     table: document.getElementById("scheduleTable"),
     tableHead: document.getElementById("scheduleTableHead"),
@@ -165,6 +182,7 @@
       selectedMonth: WORKBOOK_DEFAULT_MONTH,
       legendOpen: false,
       zoomLevel: 1,
+      legendZoom: 1,
       columnWidths: Object.assign({}, DEFAULT_COLUMN_WIDTHS),
       months: {}
     };
@@ -272,14 +290,32 @@
     return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(zoom * 100) / 100));
   }
 
+  function sanitizeLegendZoom(value) {
+    const zoom = Number(value);
+    if (!Number.isFinite(zoom)) {
+      return 1;
+    }
+    return Math.min(LEGEND_ZOOM_MAX, Math.max(LEGEND_ZOOM_MIN, Math.round(zoom * 100) / 100));
+  }
+
   function sanitizeColumnWidths(value) {
     const nextWidths = Object.assign({}, DEFAULT_COLUMN_WIDTHS);
     if (!value || typeof value !== "object") {
       return nextWidths;
     }
+    const matchesLegacyDefaults = Object.keys(LEGACY_DEFAULT_COLUMN_WIDTHS).every(function (key) {
+      return Number(value[key]) === LEGACY_DEFAULT_COLUMN_WIDTHS[key];
+    });
+    if (matchesLegacyDefaults) {
+      return nextWidths;
+    }
     Object.keys(nextWidths).forEach(function (key) {
       const width = Number(value[key]);
       if (Number.isFinite(width)) {
+        if (key === "summary") {
+          nextWidths[key] = Math.max(54, Math.round(width));
+          return;
+        }
         nextWidths[key] = Math.max(key === "day" ? 36 : 64, Math.round(width));
       }
     });
@@ -297,6 +333,7 @@
         selectedMonth: sanitizeMonth(parsed.selectedMonth),
         legendOpen: Boolean(parsed.legendOpen),
         zoomLevel: sanitizeZoom(parsed.zoomLevel),
+        legendZoom: sanitizeLegendZoom(parsed.legendZoom),
         columnWidths: sanitizeColumnWidths(parsed.columnWidths),
         months: parsed.months && typeof parsed.months === "object" ? parsed.months : {}
       };
@@ -365,6 +402,7 @@
     Object.keys(DEFAULT_COLUMN_WIDTHS).forEach(function (key) {
       dom.app.style.setProperty("--col-" + key, String(state.columnWidths[key]) + "px");
     });
+    dom.app.style.setProperty("--summary-col", String(state.columnWidths.summary) + "px");
   }
 
   function syncStickyColumns() {
@@ -439,6 +477,9 @@
     if (dom.addRowsButton) {
       dom.addRowsButton.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "新增員工列" : (i18n.getLocale() === "vi" ? "Thêm hàng nhân viên" : "Add Employee Rows"));
     }
+    if (dom.deleteRowsButton) {
+      dom.deleteRowsButton.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "刪除員工列" : (i18n.getLocale() === "vi" ? "Xóa bớt hàng nhân viên" : "Delete Employee Rows"));
+    }
     dom.yearSelect.setAttribute("aria-label", i18n.t("schedule.year"));
     dom.monthSelect.setAttribute("aria-label", i18n.t("schedule.month"));
     dom.legendToggle.setAttribute("aria-label", i18n.t("schedule.legend"));
@@ -447,6 +488,22 @@
     dom.legendPanel.setAttribute("aria-label", i18n.t("schedule.legendPanelAria"));
     if (dom.legendTitle) {
       dom.legendTitle.textContent = i18n.t("schedule.legend");
+    }
+    renderLegendZoom();
+  }
+
+  function renderLegendZoom() {
+    if (dom.legendTable) {
+      dom.legendTable.style.zoom = String(state.legendZoom);
+    }
+    if (dom.legendZoomValue) {
+      dom.legendZoomValue.textContent = String(Math.round(state.legendZoom * 100)) + "%";
+    }
+    if (dom.legendZoomOut) {
+      dom.legendZoomOut.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "縮小班碼面板" : (i18n.getLocale() === "vi" ? "Thu nhỏ panel mã ca" : "Zoom out legend panel"));
+    }
+    if (dom.legendZoomIn) {
+      dom.legendZoomIn.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "放大班碼面板" : (i18n.getLocale() === "vi" ? "Phóng to panel mã ca" : "Zoom in legend panel"));
     }
   }
 
@@ -522,12 +579,12 @@
     dom.legendBody.innerHTML = SHIFT_CODE_DEFINITIONS.map(function (item) {
       return [
         "<tr>",
-        '<td data-code-group="' + getCodeGroup(item.code) + '">' + escapeHtml(item.code) + "</td>",
-        "<td>" + escapeHtml(item.checkIn) + "</td>",
-        "<td>" + escapeHtml(item.checkOut) + "</td>",
-        "<td>" + escapeHtml(item.hoursPay) + "</td>",
-        "<td>" + escapeHtml(item.nightHours) + "</td>",
-        "<td>" + escapeHtml(item.remark) + "</td>",
+        '<td data-code-group="' + getCodeGroup(item.code) + '" title="' + escapeHtml(item.code) + '">' + escapeHtml(item.code) + "</td>",
+        '<td title="' + escapeHtml(item.checkIn) + '">' + escapeHtml(item.checkIn) + "</td>",
+        '<td title="' + escapeHtml(item.checkOut) + '">' + escapeHtml(item.checkOut) + "</td>",
+        '<td title="' + escapeHtml(item.hoursPay) + '">' + escapeHtml(item.hoursPay) + "</td>",
+        '<td title="' + escapeHtml(item.nightHours) + '">' + escapeHtml(item.nightHours) + "</td>",
+        '<td title="' + escapeHtml(item.remark) + '">' + escapeHtml(item.remark) + "</td>",
         "</tr>"
       ].join("");
     }).join("");
@@ -544,6 +601,7 @@
     renderSummary(monthState);
     renderDailySummary(monthState);
     updateFrozenOffsets();
+    updateSheetOverflowState();
     renderSelectionState();
     renderSelectionMeta();
     syncStickyColumns();
@@ -705,6 +763,9 @@
     if (dom.addRowsButton) {
       dom.addRowsButton.addEventListener("click", handleAddRows);
     }
+    if (dom.deleteRowsButton) {
+      dom.deleteRowsButton.addEventListener("click", handleDeleteRows);
+    }
     if (dom.addRowsCount) {
       dom.addRowsCount.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
@@ -717,7 +778,18 @@
       state.legendOpen = !state.legendOpen;
       saveState();
       renderStaticText();
+      updateSheetOverflowState();
     });
+    if (dom.legendZoomOut) {
+      dom.legendZoomOut.addEventListener("click", function () {
+        adjustLegendZoom(-LEGEND_ZOOM_STEP);
+      });
+    }
+    if (dom.legendZoomIn) {
+      dom.legendZoomIn.addEventListener("click", function () {
+        adjustLegendZoom(LEGEND_ZOOM_STEP);
+      });
+    }
     dom.localeMount.addEventListener("click", function (event) {
       const toggle = event.target.closest("[data-locale-toggle]");
       const option = event.target.closest("[data-locale-value]");
@@ -782,6 +854,7 @@
     window.addEventListener("keydown", handleGlobalKeydown);
     window.addEventListener("scroll", syncFrozenHeaders, { passive: true });
     window.addEventListener("resize", updateFrozenOffsets, { passive: true });
+    window.addEventListener("resize", updateSheetOverflowState, { passive: true });
   }
 
   function handlePeriodChange(year, month) {
@@ -1307,10 +1380,28 @@
     state.zoomLevel = sanitizeZoom(state.zoomLevel + delta);
     saveState();
     renderZoom();
+    updateSheetOverflowState();
   }
 
   function renderZoom() {
     dom.sheetZoom.style.zoom = String(state.zoomLevel);
+  }
+
+  function adjustLegendZoom(delta) {
+    state.legendZoom = sanitizeLegendZoom(state.legendZoom + delta);
+    saveState();
+    renderLegendZoom();
+    if (dom.legendTable) {
+      dom.legendTable.style.zoom = String(state.legendZoom);
+    }
+  }
+
+  function updateSheetOverflowState() {
+    if (!dom.sheetScroll) {
+      return;
+    }
+    const hasHorizontalOverflow = dom.sheetScroll.scrollWidth > dom.sheetScroll.clientWidth + 1;
+    dom.sheetScroll.classList.toggle("schedule-sheet-scroll--fit", !hasHorizontalOverflow);
   }
 
   function updateFrozenOffsets() {
@@ -1421,6 +1512,25 @@
       ? "已新增 "
       : (i18n.getLocale() === "vi" ? "Đã thêm " : "Added "))
       + count
+      + (i18n.getLocale() === "zh-Hant" ? " 行。" : (i18n.getLocale() === "vi" ? " hàng." : " rows.")), "success");
+  }
+
+  function handleDeleteRows() {
+    const count = Math.max(1, Math.min(100, Number(dom.addRowsCount && dom.addRowsCount.value || 1) || 1));
+    const monthState = ensureCurrentMonthState();
+    if (!monthState.rows.length) {
+      showFeedback(i18n.getLocale() === "zh-Hant" ? "目前沒有可刪除的列。" : (i18n.getLocale() === "vi" ? "Hiện không có hàng nào để xóa." : "There are no rows to delete."), "error");
+      return;
+    }
+    const deletedCount = Math.min(count, monthState.rows.length);
+    monthState.rows.splice(Math.max(0, monthState.rows.length - deletedCount), deletedCount);
+    saveState();
+    clearSelection(true);
+    renderAll();
+    showFeedback((i18n.getLocale() === "zh-Hant"
+      ? "已刪除 "
+      : (i18n.getLocale() === "vi" ? "Đã xóa " : "Deleted "))
+      + deletedCount
       + (i18n.getLocale() === "zh-Hant" ? " 行。" : (i18n.getLocale() === "vi" ? " hàng." : " rows.")), "success");
   }
 

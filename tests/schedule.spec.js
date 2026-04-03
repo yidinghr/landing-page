@@ -84,6 +84,11 @@ async function addRows(page, count) {
   await page.locator("#scheduleAddRowsButton").click();
 }
 
+async function deleteRows(page, count) {
+  await page.fill("#scheduleAddRowsCount", String(count));
+  await page.locator("#scheduleDeleteRowsButton").click();
+}
+
 async function selectCell(page, rowIndex, day) {
   await page.locator(`[data-schedule-cell][data-row-index="${rowIndex}"][data-day="${day}"]`).click();
 }
@@ -157,6 +162,16 @@ test.describe("Schedule module", () => {
     await addRows(page, 3);
     await expect(page.locator(".schedule-table__body-row")).toHaveCount(3);
     await expect(page.locator("#scheduleFeedback")).toContainText("3");
+  });
+
+  test("delete rows removes the requested number from the end", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    await addRows(page, 4);
+    await deleteRows(page, 2);
+
+    await expect(page.locator(".schedule-table__body-row")).toHaveCount(2);
+    await expect(page.locator("#scheduleFeedback")).toContainText("2");
   });
 
   test("drag handle stays hidden until hover and overlays the YDI column", async ({ page }) => {
@@ -354,6 +369,17 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "false");
   });
 
+  test("legend panel keeps rows single-line and has its own zoom controls", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("#scheduleLegendZoomValue")).toHaveText("100%");
+    await expect(page.locator("#scheduleLegendBody td").last()).toHaveCSS("white-space", "nowrap");
+
+    await page.locator("#scheduleLegendZoomIn").click();
+    await expect(page.locator("#scheduleLegendZoomValue")).toHaveText("105%");
+  });
+
   test("summary logic follows workbook hours and daily counts", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState([
@@ -418,6 +444,34 @@ test.describe("Schedule module", () => {
       getComputedStyle(node).getPropertyValue("--col-eng").trim()
     );
     expect(Number.parseInt(afterAutoFit, 10)).toBeGreaterThanOrEqual(Number.parseInt(afterDrag, 10));
+  });
+
+  test("resizing a day column keeps the daily summary day column in sync", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a", {}, { "1": "A" })
+      ])
+    });
+
+    const dayHandle = page.locator(".schedule-table__day-head .schedule-column-resizer[data-resize-key='day']").first();
+    const box = await dayHandle.boundingBox();
+    expect(box).not.toBeNull();
+
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 18, box.y + box.height / 2, { steps: 6 });
+    await page.mouse.up();
+
+    const widths = await page.evaluate(() => {
+      const mainDay = document.querySelector("[data-day-head='1']");
+      const dailyDay = document.querySelector("[data-daily-day-head='1']");
+      return {
+        mainWidth: Math.round(mainDay.getBoundingClientRect().width),
+        dailyWidth: Math.round(dailyDay.getBoundingClientRect().width)
+      };
+    });
+
+    expect(Math.abs(widths.mainWidth - widths.dailyWidth)).toBeLessThanOrEqual(1);
   });
 
   test("main header and right summary header stay frozen while scrolling", async ({ page }) => {
@@ -502,6 +556,18 @@ test.describe("Schedule module", () => {
 
     await page.keyboard.press("Control+0");
     await expect.poll(async () => page.locator("#scheduleSheetZoom").evaluate((node) => node.style.zoom)).toBe("1");
+  });
+
+  test("horizontal scrollbar hides when the zoomed sheet fits the viewport", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([], 2026, 2)
+    });
+
+    for (let index = 0; index < 7; index += 1) {
+      await page.keyboard.press("Control+-");
+    }
+
+    await expect(page.locator("#scheduleSheetScroll")).toHaveClass(/schedule-sheet-scroll--fit/);
   });
 
   test("schedule page can scroll vertically with mouse wheel over the sheet", async ({ page }) => {
