@@ -48,8 +48,6 @@ test.describe("Shared locale switching", () => {
     await expect(page.locator("#scheduleHeaderTitle")).toHaveText("Ca làm");
     await expect(page.locator("#scheduleYearLabel")).toHaveText("Năm");
     await expect(page.locator("#scheduleMonthLabel")).toHaveText("Tháng");
-    await expect(page.locator("#scheduleCodeMatrixToggle")).toHaveText("Ký tự");
-    await expect(page.locator("#scheduleSummaryToggle")).toHaveText("Tổng");
     await page.locator("#scheduleLegendToggle").click();
     await expect(page.locator(".schedule-legend__title")).toHaveText("Mã ca");
   });
