@@ -441,7 +441,7 @@
     }
     if (dom.selectionInput) {
       dom.selectionInput.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "輸入班碼" : (i18n.getLocale() === "vi" ? "Nhập mã ca" : "Enter shift code"));
-      dom.selectionInput.setAttribute("placeholder", i18n.getLocale() === "zh-Hant" ? "輸入班碼" : (i18n.getLocale() === "vi" ? "Nhập mã ca" : "Enter code"));
+      dom.selectionInput.setAttribute("placeholder", i18n.getLocale() === "zh-Hant" ? "班碼" : (i18n.getLocale() === "vi" ? "Mã ca" : "Code"));
     }
     if (dom.addRowsLabel) {
       dom.addRowsLabel.textContent = i18n.getLocale() === "zh-Hant" ? "新增行" : (i18n.getLocale() === "vi" ? "Thêm hàng" : "Add Rows");
