@@ -10,9 +10,6 @@
   const ZOOM_MIN = 0.65;
   const ZOOM_MAX = 1.35;
   const ZOOM_STEP = 0.05;
-  const LEGEND_ZOOM_MIN = 0.8;
-  const LEGEND_ZOOM_MAX = 1.2;
-  const LEGEND_ZOOM_STEP = 0.05;
   const LEGACY_DEFAULT_COLUMN_WIDTHS = Object.freeze({
     id: 96,
     dept: 96,
@@ -117,9 +114,6 @@
     legendContent: document.getElementById("scheduleLegendContent"),
     legendBody: document.getElementById("scheduleLegendBody"),
     legendTable: document.getElementById("scheduleLegendTable"),
-    legendZoomOut: document.getElementById("scheduleLegendZoomOut"),
-    legendZoomIn: document.getElementById("scheduleLegendZoomIn"),
-    legendZoomValue: document.getElementById("scheduleLegendZoomValue"),
     shiftCodeList: document.getElementById("scheduleShiftCodeList"),
     table: document.getElementById("scheduleTable"),
     tableHead: document.getElementById("scheduleTableHead"),
@@ -147,15 +141,9 @@
     dragRowId: "",
     dragOverId: "",
     columnResize: null,
-    copiedText: "",
-    frozenMainTop: 0,
-    frozenMainOffset: 0,
-    frozenSummaryTop: 0,
-    frozenSummaryOffset: 0
+    copiedText: ""
   };
   const state = loadState();
-  const nativeScrollTo = window.scrollTo.bind(window);
-  const nativeScrollBy = window.scrollBy.bind(window);
 
   buildShiftCodeDatalist();
   populatePeriodOptions();
@@ -182,7 +170,6 @@
       selectedMonth: WORKBOOK_DEFAULT_MONTH,
       legendOpen: false,
       zoomLevel: 1,
-      legendZoom: 1,
       columnWidths: Object.assign({}, DEFAULT_COLUMN_WIDTHS),
       months: {}
     };
@@ -290,14 +277,6 @@
     return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(zoom * 100) / 100));
   }
 
-  function sanitizeLegendZoom(value) {
-    const zoom = Number(value);
-    if (!Number.isFinite(zoom)) {
-      return 1;
-    }
-    return Math.min(LEGEND_ZOOM_MAX, Math.max(LEGEND_ZOOM_MIN, Math.round(zoom * 100) / 100));
-  }
-
   function sanitizeColumnWidths(value) {
     const nextWidths = Object.assign({}, DEFAULT_COLUMN_WIDTHS);
     if (!value || typeof value !== "object") {
@@ -333,7 +312,6 @@
         selectedMonth: sanitizeMonth(parsed.selectedMonth),
         legendOpen: Boolean(parsed.legendOpen),
         zoomLevel: sanitizeZoom(parsed.zoomLevel),
-        legendZoom: sanitizeLegendZoom(parsed.legendZoom),
         columnWidths: sanitizeColumnWidths(parsed.columnWidths),
         months: parsed.months && typeof parsed.months === "object" ? parsed.months : {}
       };
@@ -403,10 +381,6 @@
       dom.app.style.setProperty("--col-" + key, String(state.columnWidths[key]) + "px");
     });
     dom.app.style.setProperty("--summary-col", String(state.columnWidths.summary) + "px");
-  }
-
-  function syncStickyColumns() {
-    dom.app.style.setProperty("--schedule-sticky-shift", String(dom.sheetScroll.scrollLeft || 0) + "px");
   }
 
   function getVisibleColumnCount() {
@@ -488,22 +462,6 @@
     dom.legendPanel.setAttribute("aria-label", i18n.t("schedule.legendPanelAria"));
     if (dom.legendTitle) {
       dom.legendTitle.textContent = i18n.t("schedule.legend");
-    }
-    renderLegendZoom();
-  }
-
-  function renderLegendZoom() {
-    if (dom.legendTable) {
-      dom.legendTable.style.zoom = String(state.legendZoom);
-    }
-    if (dom.legendZoomValue) {
-      dom.legendZoomValue.textContent = String(Math.round(state.legendZoom * 100)) + "%";
-    }
-    if (dom.legendZoomOut) {
-      dom.legendZoomOut.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "縮小班碼面板" : (i18n.getLocale() === "vi" ? "Thu nhỏ panel mã ca" : "Zoom out legend panel"));
-    }
-    if (dom.legendZoomIn) {
-      dom.legendZoomIn.setAttribute("aria-label", i18n.getLocale() === "zh-Hant" ? "放大班碼面板" : (i18n.getLocale() === "vi" ? "Phóng to panel mã ca" : "Zoom in legend panel"));
     }
   }
 
@@ -600,11 +558,10 @@
     renderTableBody(monthState);
     renderSummary(monthState);
     renderDailySummary(monthState);
-    updateFrozenOffsets();
+    updateStickyMetrics();
     updateSheetOverflowState();
     renderSelectionState();
     renderSelectionMeta();
-    syncStickyColumns();
   }
 
   function renderTableHead() {
@@ -746,14 +703,6 @@
   }
 
   function bindEvents() {
-    window.scrollTo = function () {
-      nativeScrollTo.apply(window, arguments);
-      syncFrozenHeaders();
-    };
-    window.scrollBy = function () {
-      nativeScrollBy.apply(window, arguments);
-      syncFrozenHeaders();
-    };
     dom.yearSelect.addEventListener("change", function () {
       handlePeriodChange(sanitizeYear(dom.yearSelect.value), sanitizeMonth(dom.monthSelect.value));
     });
@@ -778,18 +727,15 @@
       state.legendOpen = !state.legendOpen;
       saveState();
       renderStaticText();
-      updateSheetOverflowState();
+      window.requestAnimationFrame(function () {
+        updateStickyMetrics();
+        updateSheetOverflowState();
+      });
+      window.setTimeout(function () {
+        updateStickyMetrics();
+        updateSheetOverflowState();
+      }, 220);
     });
-    if (dom.legendZoomOut) {
-      dom.legendZoomOut.addEventListener("click", function () {
-        adjustLegendZoom(-LEGEND_ZOOM_STEP);
-      });
-    }
-    if (dom.legendZoomIn) {
-      dom.legendZoomIn.addEventListener("click", function () {
-        adjustLegendZoom(LEGEND_ZOOM_STEP);
-      });
-    }
     dom.localeMount.addEventListener("click", function (event) {
       const toggle = event.target.closest("[data-locale-toggle]");
       const option = event.target.closest("[data-locale-value]");
@@ -832,7 +778,6 @@
       event.preventDefault();
       adjustZoom(event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP);
     }, { passive: false });
-    dom.sheetScroll.addEventListener("scroll", syncStickyColumns, { passive: true });
     dom.tableBody.addEventListener("mousedown", handleCellPointerStart);
     dom.tableBody.addEventListener("mouseover", handleCellPointerMove);
     dom.tableHead.addEventListener("mousedown", handleResizePointerStart);
@@ -842,6 +787,7 @@
       uiState.isSelecting = false;
       if (uiState.columnResize) {
         saveState();
+        updateSheetOverflowState();
       }
       uiState.columnResize = null;
     });
@@ -853,7 +799,7 @@
     document.addEventListener("paste", handlePaste);
     window.addEventListener("keydown", handleGlobalKeydown);
     window.addEventListener("scroll", syncFrozenHeaders, { passive: true });
-    window.addEventListener("resize", updateFrozenOffsets, { passive: true });
+    window.addEventListener("resize", updateStickyMetrics, { passive: true });
     window.addEventListener("resize", updateSheetOverflowState, { passive: true });
   }
 
@@ -922,6 +868,8 @@
       state.zoomLevel = 1;
       saveState();
       renderZoom();
+      updateStickyMetrics();
+      updateSheetOverflowState();
       return;
     }
     if ((event.ctrlKey || event.metaKey) && key.toLowerCase() === "c") {
@@ -1380,20 +1328,12 @@
     state.zoomLevel = sanitizeZoom(state.zoomLevel + delta);
     saveState();
     renderZoom();
+    updateStickyMetrics();
     updateSheetOverflowState();
   }
 
   function renderZoom() {
     dom.sheetZoom.style.zoom = String(state.zoomLevel);
-  }
-
-  function adjustLegendZoom(delta) {
-    state.legendZoom = sanitizeLegendZoom(state.legendZoom + delta);
-    saveState();
-    renderLegendZoom();
-    if (dom.legendTable) {
-      dom.legendTable.style.zoom = String(state.legendZoom);
-    }
   }
 
   function updateSheetOverflowState() {
@@ -1404,55 +1344,43 @@
     dom.sheetScroll.classList.toggle("schedule-sheet-scroll--fit", !hasHorizontalOverflow);
   }
 
-  function updateFrozenOffsets() {
-    setHeaderTransform(dom.tableHead, 0);
-    setHeaderTransform(dom.summaryHead, 0);
+  function updateStickyMetrics() {
+    const headerHeight = dom.header ? Math.round(dom.header.getBoundingClientRect().height) : 56;
+    const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
     const firstHeadRow = dom.tableHead.querySelector("tr");
-    const firstDayHead = dom.tableHead.querySelector("[data-day-head]");
-    const firstSummaryLabel = dom.summaryHead.querySelector(".schedule-summary-table__labels th");
     const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
+    dom.app.style.setProperty("--schedule-header-height", String(headerHeight) + "px");
+    dom.app.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
+    dom.app.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
     dom.app.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
-    if (firstDayHead) {
-      if (!uiState.frozenMainTop || window.scrollY === 0) {
-        uiState.frozenMainTop = Math.round(firstDayHead.getBoundingClientRect().top);
-      }
-      uiState.frozenMainOffset = Math.round(firstDayHead.getBoundingClientRect().top - dom.table.getBoundingClientRect().top);
-    }
-    if (firstSummaryLabel && dom.summaryTable) {
-      if (!uiState.frozenSummaryTop || window.scrollY === 0) {
-        uiState.frozenSummaryTop = Math.round(firstSummaryLabel.getBoundingClientRect().top);
-      }
-      uiState.frozenSummaryOffset = Math.round(firstSummaryLabel.getBoundingClientRect().top - dom.summaryTable.getBoundingClientRect().top);
-    }
     syncFrozenHeaders();
   }
 
   function syncFrozenHeaders() {
-    if (!dom.table || !dom.tableHead) {
-      return;
-    }
-    const mainTranslate = getHeaderTranslate(dom.table, dom.tableHead, uiState.frozenMainTop, uiState.frozenMainOffset);
-    setHeaderTransform(dom.tableHead, mainTranslate);
-    if (dom.summaryTable && dom.summaryHead) {
-      const summaryTranslate = getHeaderTranslate(dom.summaryTable, dom.summaryHead, uiState.frozenSummaryTop, uiState.frozenSummaryOffset);
-      setHeaderTransform(dom.summaryHead, summaryTranslate);
-    }
+    const stickyTop = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().bottom) : 0;
+    syncSingleFrozenHead(dom.table, dom.tableHead, stickyTop);
+    syncSingleFrozenHead(dom.summaryTable, dom.summaryHead, stickyTop);
   }
 
-  function getHeaderTranslate(table, head, frozenTop, anchorOffset) {
+  function syncSingleFrozenHead(table, head, stickyTop) {
     if (!table || !head) {
-      return 0;
+      return;
+    }
+    setHeaderTransform(head, 0);
+    const firstRow = head.querySelector("tr");
+    if (!firstRow) {
+      return;
     }
     const tableRect = table.getBoundingClientRect();
-    const naturalTop = tableRect.top + anchorOffset;
+    const rowRect = firstRow.getBoundingClientRect();
+    const anchorOffset = Math.round(rowRect.top - tableRect.top);
+    const naturalTop = Math.round(tableRect.top + anchorOffset);
     const maxTranslate = Math.max(0, table.offsetHeight - head.offsetHeight);
-    return Math.max(0, Math.min(maxTranslate, Math.round(frozenTop - naturalTop)));
+    const translate = Math.max(0, Math.min(maxTranslate, stickyTop - naturalTop));
+    setHeaderTransform(head, translate);
   }
 
   function setHeaderTransform(head, offset) {
-    if (!head) {
-      return;
-    }
     const value = offset ? "translateY(" + String(offset) + "px)" : "";
     Array.prototype.forEach.call(head.querySelectorAll("tr"), function (row) {
       row.style.transform = value;
@@ -1555,6 +1483,8 @@
     const nextWidth = uiState.columnResize.startWidth + (event.clientX - uiState.columnResize.startX);
     state.columnWidths[uiState.columnResize.key] = Math.max(uiState.columnResize.key === "day" ? 36 : 64, Math.round(nextWidth));
     applyColumnWidths();
+    updateStickyMetrics();
+    updateSheetOverflowState();
   }
 
   function handleResizeAutoFit(event) {

@@ -369,15 +369,13 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "false");
   });
 
-  test("legend panel keeps rows single-line and has its own zoom controls", async ({ page }) => {
+  test("legend panel keeps rows single-line without zoom controls", async ({ page }) => {
     await prepareSchedulePage(page);
 
     await page.locator("#scheduleLegendToggle").click();
-    await expect(page.locator("#scheduleLegendZoomValue")).toHaveText("100%");
     await expect(page.locator("#scheduleLegendBody td").last()).toHaveCSS("white-space", "nowrap");
-
-    await page.locator("#scheduleLegendZoomIn").click();
-    await expect(page.locator("#scheduleLegendZoomValue")).toHaveText("105%");
+    await expect(page.locator("#scheduleLegendZoomOut")).toHaveCount(0);
+    await expect(page.locator("#scheduleLegendZoomIn")).toHaveCount(0);
   });
 
   test("summary logic follows workbook hours and daily counts", async ({ page }) => {
@@ -474,33 +472,74 @@ test.describe("Schedule module", () => {
     expect(Math.abs(widths.mainWidth - widths.dailyWidth)).toBeLessThanOrEqual(1);
   });
 
-  test("main header and right summary header stay frozen while scrolling", async ({ page }) => {
+  test("main header and right summary header freeze directly under the control bar while scrolling", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState(Array.from({ length: 30 }, (_, index) => createScheduleRow("row-" + index)))
     });
 
-    const before = await page.evaluate(() => {
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await page.waitForTimeout(100);
+
+    const positions = await page.evaluate(() => {
+      const periodBar = document.querySelector(".schedule-period-bar");
       const mainHead = document.querySelector("[data-day-head='1']");
+      const mainWeek = document.querySelector(".schedule-table thead tr:nth-child(2) th");
+      const summarySpacer = document.querySelector(".schedule-summary-table__spacer th");
       const summaryHead = document.querySelector(".schedule-summary-table__labels th");
+      if (!periodBar || !mainHead || !mainWeek || !summarySpacer || !summaryHead) {
+        return null;
+      }
+      const periodRect = periodBar.getBoundingClientRect();
+      const mainRect = mainHead.getBoundingClientRect();
+      const mainWeekRect = mainWeek.getBoundingClientRect();
+      const summarySpacerRect = summarySpacer.getBoundingClientRect();
+      const summaryRect = summaryHead.getBoundingClientRect();
       return {
-        mainY: Math.round(mainHead.getBoundingClientRect().y),
-        summaryY: Math.round(summaryHead.getBoundingClientRect().y)
+        periodBottom: Math.round(periodRect.bottom),
+        mainY: Math.round(mainRect.y),
+        mainWeekY: Math.round(mainWeekRect.y),
+        summarySpacerY: Math.round(summarySpacerRect.y),
+        summaryY: Math.round(summaryRect.y)
       };
     });
 
-    await page.evaluate(() => window.scrollTo(0, 1200));
+    expect(positions).not.toBeNull();
+    expect(Math.abs(positions.mainY - positions.periodBottom)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.summarySpacerY - positions.periodBottom)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.summaryY - positions.mainWeekY)).toBeLessThanOrEqual(2);
+  });
+
+  test("employee info columns stay fixed while horizontally scrolling", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState(Array.from({ length: 8 }, (_, index) =>
+        createScheduleRow("row-" + index, {
+          ydiId: "YDI8" + index,
+          department: "Operation",
+          vieName: "VO " + index,
+          engName: "EMP " + index,
+          position: "Staff"
+        }, { "1": "A", "2": "B" })
+      ), 2026, 7)
+    });
+
+    const before = await page.evaluate(() => {
+      const stickyCell = document.querySelector(".schedule-table__body-row [data-col-index='0']");
+      return stickyCell ? Math.round(stickyCell.getBoundingClientRect().x) : null;
+    });
+
+    await page.locator("#scheduleSheetScroll").evaluate((node) => {
+      node.scrollLeft = 1400;
+      node.dispatchEvent(new Event("scroll"));
+    });
 
     const after = await page.evaluate(() => {
-      const mainHead = document.querySelector("[data-day-head='1']");
-      const summaryHead = document.querySelector(".schedule-summary-table__labels th");
-      return {
-        mainY: Math.round(mainHead.getBoundingClientRect().y),
-        summaryY: Math.round(summaryHead.getBoundingClientRect().y)
-      };
+      const stickyCell = document.querySelector(".schedule-table__body-row [data-col-index='0']");
+      return stickyCell ? Math.round(stickyCell.getBoundingClientRect().x) : null;
     });
 
-    expect(after.mainY).toBe(before.mainY);
-    expect(after.summaryY).toBe(before.summaryY);
+    expect(before).not.toBeNull();
+    expect(after).not.toBeNull();
+    expect(Math.abs(after - before)).toBeLessThanOrEqual(1);
   });
 
   test("summary rows and daily day columns line up with the main grid", async ({ page }) => {

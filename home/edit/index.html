@@ -23,7 +23,6 @@
 
 <section class="schedule-period-bar" aria-label="排班月份">
 <div class="schedule-period-bar__inner">
-<div class="schedule-period-bar__spacer" aria-hidden="true"></div>
 <div class="schedule-period-grid">
 <div class="schedule-period-pair">
 <span id="scheduleYearLabel" class="schedule-period-pair__label">年</span>
@@ -40,17 +39,18 @@
 <span class="schedule-period-pair__arrow" aria-hidden="true">▾</span>
 </span>
 </div>
-</div>
-<div class="schedule-period-actions">
+
 <label class="schedule-code-entry">
 <span id="scheduleCodeLabel" class="schedule-code-entry__label">Code</span>
 <input id="scheduleSelectionInput" class="schedule-code-entry__input" type="text" list="scheduleShiftCodeList" inputmode="text" autocomplete="off" spellcheck="false" maxlength="8">
 </label>
+</div>
+<div class="schedule-period-actions">
+<button id="scheduleAddRowsButton" type="button" class="schedule-add-rows__button" aria-label="新增員工列">+</button>
 <label class="schedule-add-rows">
-<span id="scheduleAddRowsLabel" class="schedule-add-rows__label">新增行</span>
+<span id="scheduleAddRowsLabel" class="schedule-assistive">新增行</span>
 <input id="scheduleAddRowsCount" class="schedule-add-rows__input" type="number" min="1" max="100" step="1" value="1" inputmode="numeric" aria-label="新增行數">
 </label>
-<button id="scheduleAddRowsButton" type="button" class="schedule-add-rows__button" aria-label="新增員工列">+</button>
 <button id="scheduleDeleteRowsButton" type="button" class="schedule-add-rows__button schedule-add-rows__button--delete" aria-label="刪除員工列">-</button>
 </div>
 </div>
@@ -93,11 +93,6 @@
 <div class="schedule-legend__inner">
 <div class="schedule-legend__top">
 <h2 class="schedule-legend__title">班碼參照</h2>
-<div class="schedule-legend__tools">
-<button id="scheduleLegendZoomOut" type="button" class="schedule-legend__zoom-button" aria-label="縮小">-</button>
-<span id="scheduleLegendZoomValue" class="schedule-legend__zoom-value">100%</span>
-<button id="scheduleLegendZoomIn" type="button" class="schedule-legend__zoom-button" aria-label="放大">+</button>
-</div>
 </div>
 <div id="scheduleLegendContent" class="schedule-legend__content">
 <table id="scheduleLegendTable" class="schedule-legend-table">
