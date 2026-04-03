@@ -1470,27 +1470,35 @@
   }
 
   function updateStickyMetrics() {
-    const target = dom.workspace || dom.app;
     const headerHeight = dom.header ? Math.round(dom.header.getBoundingClientRect().height) : 56;
     const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
     const firstHeadRow = dom.tableHead.querySelector("tr");
     const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
-    target.style.setProperty("--schedule-header-height", String(headerHeight) + "px");
-    target.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
-    target.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
-    target.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
+    [dom.workspace, dom.app].forEach(function (target) {
+      if (!target) {
+        return;
+      }
+      target.style.setProperty("--schedule-header-height", String(headerHeight) + "px");
+      target.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
+      target.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
+      target.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
+    });
     syncSummarySpacerWidth();
     requestFrozenHeaderSync();
   }
 
   function syncSummarySpacerWidth() {
-    const target = dom.workspace || dom.app;
-    if (!dom.summaryTable || !target) {
+    if (!dom.summaryTable) {
       return;
     }
     const summaryWidth = Math.round(dom.summaryTable.offsetWidth || dom.summaryTable.clientWidth || dom.summaryTable.getBoundingClientRect().width || 0);
     if (summaryWidth > 0) {
-      target.style.setProperty("--summary-table-total", String(summaryWidth) + "px");
+      [dom.workspace, dom.app].forEach(function (target) {
+        if (!target) {
+          return;
+        }
+        target.style.setProperty("--summary-table-total", String(summaryWidth) + "px");
+      });
     }
   }
 

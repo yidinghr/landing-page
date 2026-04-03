@@ -436,7 +436,40 @@ test.describe("Schedule module", () => {
     const after = await actionBar.boundingBox();
     expect(after).not.toBeNull();
     expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
     expect(Math.abs(after.width - before.width)).toBeLessThanOrEqual(1);
+  });
+
+  test("legend panel opens below the fixed top chrome as an overlay", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    const periodBar = await page.locator(".schedule-period-bar").boundingBox();
+    expect(periodBar).not.toBeNull();
+
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "true");
+
+    const legend = await page.locator("#scheduleLegendPanel").boundingBox();
+    expect(legend).not.toBeNull();
+    expect(Math.abs(legend.y - (periodBar.y + periodBar.height + 6))).toBeLessThanOrEqual(2);
+  });
+
+  test("fixed top chrome stays vertically locked while the legend is open and the page scrolls", async ({ page }) => {
+    await prepareSchedulePage(page);
+    await addRows(page, 40);
+
+    const actionBar = page.locator(".schedule-period-actions");
+    const before = await actionBar.boundingBox();
+    expect(before).not.toBeNull();
+
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "true");
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+
+    const after = await actionBar.boundingBox();
+    expect(after).not.toBeNull();
+    expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
   });
 
   test("legend panel keeps rows single-line without zoom controls", async ({ page }) => {

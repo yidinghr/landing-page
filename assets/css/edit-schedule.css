@@ -864,6 +864,15 @@
   white-space: nowrap;
 }
 
+.schedule-legend-table thead th {
+  height: 22px;
+}
+
+.schedule-legend-table td {
+  height: 21px;
+  line-height: 19px;
+}
+
 .schedule-daily-table th,
 .schedule-daily-table td {
   min-width: var(--col-day, 42px);
@@ -965,53 +974,55 @@
 
 .schedule-legend {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  top: calc(var(--schedule-sheet-sticky-top) + 6px);
+  right: 8px;
+  bottom: 8px;
   width: 0;
   min-width: 0;
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  border-left: 0 solid transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: rgba(4, 4, 4, 0.98);
+  box-shadow: -18px 0 36px rgba(0, 0, 0, 0.42);
   z-index: 30;
-  transition: width 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
+  transition: width 0.18s ease, opacity 0.18s ease, border-color 0.18s ease, top 0.18s ease;
 }
 
 .schedule-app--legend-open .schedule-legend {
   width: var(--legend-panel-width);
   opacity: 1;
   pointer-events: auto;
-  border-left: 1px solid rgba(244, 213, 31, 0.18);
+  border-color: rgba(244, 213, 31, 0.18);
 }
 
 .schedule-legend__inner {
-  width: var(--legend-panel-width);
-  max-width: var(--legend-panel-width);
-  height: 100vh;
+  width: 100%;
+  max-width: none;
+  height: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 6px;
-  padding: 10px 14px 14px;
-  background: rgba(4, 4, 4, 0.98);
+  gap: 4px;
+  padding: 8px 12px 10px;
 }
 
 .schedule-legend__top {
   position: sticky;
   top: 0;
   z-index: 2;
-  min-height: 32px;
+  min-height: 24px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  padding-bottom: 6px;
+  padding-bottom: 0;
   background: rgba(4, 4, 4, 0.98);
 }
 
 .schedule-legend__title {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -1024,7 +1035,7 @@
 
 .schedule-legend-table th,
 .schedule-legend-table td {
-  padding: 4px 8px;
+  padding: 2px 6px;
   text-align: left;
   font-size: 10px;
   line-height: 1.2;
@@ -1095,12 +1106,12 @@
 
 .schedule-legend-table__remark-input {
   width: 100%;
-  min-height: calc(var(--schedule-row-height) - 2px);
+  min-height: 19px;
   border: 0;
   background: transparent;
   color: rgba(255, 243, 160, 0.94);
   font-size: 10px;
-  line-height: calc(var(--schedule-row-height) - 2px);
+  line-height: 19px;
   padding: 0 8px;
   outline: none;
 }
@@ -1171,17 +1182,21 @@
 
   .schedule-legend,
   .schedule-app--legend-open .schedule-legend {
+    top: var(--schedule-sheet-sticky-top);
+    right: 0;
+    bottom: 0;
     width: 100%;
     opacity: 1;
     pointer-events: auto;
     border-left: 0;
+    border-radius: 0;
     border-top: 1px solid rgba(244, 213, 31, 0.18);
   }
 
   .schedule-legend__inner {
     width: 100%;
     max-width: none;
-    height: auto;
+    height: 100%;
   }
 
   .schedule-sheet-stage {
