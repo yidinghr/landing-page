@@ -158,8 +158,6 @@
   align-items: center;
   gap: 8px;
   justify-self: end;
-  margin-right: var(--legend-panel-offset);
-  transition: margin-right 0.18s ease;
 }
 
 .schedule-code-entry {
@@ -390,8 +388,7 @@
   min-width: 0;
   min-height: 0;
   overflow: visible;
-  padding: 0 var(--legend-panel-offset) 14px 0;
-  transition: padding-right 0.18s ease;
+  padding: 0 0 14px;
 }
 
 .schedule-frozen-layer {

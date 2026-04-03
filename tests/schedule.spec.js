@@ -423,6 +423,22 @@ test.describe("Schedule module", () => {
     expect(Math.abs(after.width - before.width)).toBeLessThanOrEqual(1);
   });
 
+  test("opening the legend panel does not shift the period action controls", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    const actionBar = page.locator(".schedule-period-actions");
+    const before = await actionBar.boundingBox();
+    expect(before).not.toBeNull();
+
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "true");
+
+    const after = await actionBar.boundingBox();
+    expect(after).not.toBeNull();
+    expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.width - before.width)).toBeLessThanOrEqual(1);
+  });
+
   test("legend panel keeps rows single-line without zoom controls", async ({ page }) => {
     await prepareSchedulePage(page);
 
