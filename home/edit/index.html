@@ -42,6 +42,10 @@
 </div>
 </div>
 <div class="schedule-period-actions">
+<div class="schedule-side-toggles" aria-label="排班側欄切換">
+<button id="scheduleCodeMatrixToggle" type="button" class="schedule-side-toggle" aria-pressed="false">碼表</button>
+<button id="scheduleSummaryToggle" type="button" class="schedule-side-toggle" aria-pressed="true">統計</button>
+</div>
 <label class="schedule-code-entry">
 <span id="scheduleCodeLabel" class="schedule-code-entry__label">Code</span>
 <span class="schedule-code-entry__field">
@@ -70,6 +74,12 @@
 </table>
 </div>
 
+<aside id="scheduleFrozenCodeMatrixAside" class="schedule-sheet-code-matrix schedule-frozen-code-matrix" hidden>
+<table class="schedule-code-matrix-table schedule-frozen-code-matrix-table">
+<thead id="scheduleFrozenCodeMatrixHead"></thead>
+</table>
+</aside>
+
 <aside class="schedule-sheet-summary schedule-frozen-summary">
 <table class="schedule-summary-table schedule-frozen-summary-table">
 <thead id="scheduleFrozenSummaryHead"></thead>
@@ -90,7 +100,14 @@
 </table>
 </div>
 
-<aside class="schedule-sheet-summary">
+<aside id="scheduleCodeMatrixAside" class="schedule-sheet-code-matrix" hidden>
+<table id="scheduleCodeMatrixTable" class="schedule-code-matrix-table">
+<thead id="scheduleCodeMatrixHead"></thead>
+<tbody id="scheduleCodeMatrixBody"></tbody>
+</table>
+</aside>
+
+<aside id="scheduleSummaryAside" class="schedule-sheet-summary">
 <table id="scheduleSummaryTable" class="schedule-summary-table">
 <thead id="scheduleSummaryHead"></thead>
 <tbody id="scheduleSummaryBody"></tbody>

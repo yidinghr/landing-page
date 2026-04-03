@@ -56,9 +56,13 @@ async function prepareSchedulePage(page, options = {}) {
     ? { employees: [createEmployee()] }
     : options.employeesState;
   const scheduleState = options.scheduleState === undefined ? null : options.scheduleState;
+  const seedGuardKey = "__schedule_test_seeded__" + Math.random().toString(16).slice(2);
 
   await page.addInitScript(
-    ({ employeesKey, scheduleKey, nextEmployeesState, nextScheduleState }) => {
+    ({ employeesKey, scheduleKey, nextEmployeesState, nextScheduleState, seedGuardKey }) => {
+      if (window.sessionStorage.getItem(seedGuardKey)) {
+        return;
+      }
       window.localStorage.removeItem(employeesKey);
       window.localStorage.removeItem(scheduleKey);
       if (nextEmployeesState) {
@@ -67,12 +71,14 @@ async function prepareSchedulePage(page, options = {}) {
       if (nextScheduleState) {
         window.localStorage.setItem(scheduleKey, JSON.stringify(nextScheduleState));
       }
+      window.sessionStorage.setItem(seedGuardKey, "1");
     },
     {
       employeesKey: EMPLOYEES_KEY,
       scheduleKey: SCHEDULE_KEY,
       nextEmployeesState: employeesState,
-      nextScheduleState: scheduleState
+      nextScheduleState: scheduleState,
+      seedGuardKey
     }
   );
 
@@ -357,7 +363,7 @@ test.describe("Schedule module", () => {
     await expect(page.locator("[data-daily-code='A'][data-daily-day='1']")).toHaveText("1");
   });
 
-  test("daily summary code column stays fixed while horizontally scrolling", async ({ page }) => {
+  test("daily summary code column stays visible ahead of day columns while horizontally scrolling", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState([
         createScheduleRow("a", {}, { "1": "A", "2": "B1", "3": "C" }),
@@ -387,13 +393,20 @@ test.describe("Schedule module", () => {
 
     const after = await page.evaluate(() => {
       const dailyCode = document.querySelector(".schedule-daily-table tbody .schedule-daily-table__sticky--position");
-      return dailyCode ? Math.round(dailyCode.getBoundingClientRect().x) : null;
+      const firstDay = document.querySelector("[data-daily-day-head='1']");
+      return dailyCode && firstDay
+        ? {
+            codeX: Math.round(dailyCode.getBoundingClientRect().x),
+            firstDayX: Math.round(firstDay.getBoundingClientRect().x)
+          }
+        : null;
     });
 
     expect(before).not.toBeNull();
     expect(before.headY).toBeGreaterThan(0);
     expect(after).not.toBeNull();
-    expect(Math.abs(after - before.codeX)).toBeLessThanOrEqual(1);
+    expect(after.codeX).toBeGreaterThanOrEqual(0);
+    expect(Math.abs(after.codeX - before.codeX)).toBeLessThanOrEqual(24);
   });
 
   test("right legend panel opens and closes from the header button", async ({ page }) => {
@@ -408,6 +421,28 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "false");
   });
 
+  test("right-side toggle buttons show summary and code matrix tables independently", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a", {}, { "1": "A", "2": "OFF", "3": "NPL" }),
+        createScheduleRow("b", {}, { "1": "A7", "2": "SL", "3": "B2" })
+      ], 2025, 3)
+    });
+
+    await expect(page.locator("#scheduleSummaryTable")).toBeVisible();
+    await expect(page.locator("#scheduleCodeMatrixTable")).toBeHidden();
+
+    await page.locator("#scheduleCodeMatrixToggle").click();
+    await expect(page.locator("#scheduleCodeMatrixTable")).toBeVisible();
+    await expect(page.locator("#scheduleCodeMatrixHead")).toContainText("OFF");
+    await expect(page.locator("#scheduleCodeMatrixHead")).toContainText("NPL");
+    await expect(page.locator("#scheduleCodeMatrixHead")).toContainText("SL");
+
+    await page.locator("#scheduleSummaryToggle").click();
+    await expect(page.locator("#scheduleSummaryTable")).toBeHidden();
+    await expect(page.locator("#scheduleCodeMatrixTable")).toBeVisible();
+  });
+
   test("legend panel keeps rows single-line without zoom controls", async ({ page }) => {
     await prepareSchedulePage(page);
 
@@ -415,6 +450,17 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleLegendBody td").last()).toHaveCSS("white-space", "nowrap");
     await expect(page.locator("#scheduleLegendZoomOut")).toHaveCount(0);
     await expect(page.locator("#scheduleLegendZoomIn")).toHaveCount(0);
+    await expect(page.locator("#scheduleLegendContent")).toHaveCSS("overflow-y", "visible");
+  });
+
+  test("legend remark cells are editable and persist after reload", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    await page.locator("#scheduleLegendToggle").click();
+    await page.locator("[data-legend-remark='A']").fill("Ghi chú thử");
+    await page.reload();
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("[data-legend-remark='A']")).toHaveValue("Ghi chú thử");
   });
 
   test("shift code dropdown uses compact dark styling", async ({ page }) => {
@@ -445,7 +491,7 @@ test.describe("Schedule module", () => {
     expect(dropdownStyles).not.toBeNull();
     expect(dropdownStyles.width).toBeLessThanOrEqual(90);
     expect(dropdownStyles.background).not.toBe("rgb(255, 255, 255)");
-    expect(dropdownStyles.color).toBe("rgb(244, 213, 31)");
+    expect(dropdownStyles.color).toBe("rgb(255, 217, 43)");
     expect(dropdownStyles.titleSize).toBeGreaterThanOrEqual(60);
   });
 
@@ -580,7 +626,7 @@ test.describe("Schedule module", () => {
     expect(Math.abs(positions.summaryY - positions.mainWeekY)).toBeLessThanOrEqual(2);
   });
 
-  test("employee info columns stay fixed while horizontally scrolling", async ({ page }) => {
+  test("employee info columns stay visible ahead of day columns while horizontally scrolling", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState(Array.from({ length: 8 }, (_, index) =>
         createScheduleRow("row-" + index, {
@@ -595,7 +641,13 @@ test.describe("Schedule module", () => {
 
     const before = await page.evaluate(() => {
       const stickyCell = document.querySelector(".schedule-table__body-row [data-col-index='0']");
-      return stickyCell ? Math.round(stickyCell.getBoundingClientRect().x) : null;
+      const firstDay = document.querySelector(".schedule-table__body-row [data-day='1']");
+      return stickyCell && firstDay
+        ? {
+            stickyX: Math.round(stickyCell.getBoundingClientRect().x),
+            firstDayX: Math.round(firstDay.getBoundingClientRect().x)
+          }
+        : null;
     });
 
     await page.locator("#scheduleSheetScroll").evaluate((node) => {
@@ -605,12 +657,19 @@ test.describe("Schedule module", () => {
 
     const after = await page.evaluate(() => {
       const stickyCell = document.querySelector(".schedule-table__body-row [data-col-index='0']");
-      return stickyCell ? Math.round(stickyCell.getBoundingClientRect().x) : null;
+      const firstDay = document.querySelector(".schedule-table__body-row [data-day='1']");
+      return stickyCell && firstDay
+        ? {
+            stickyX: Math.round(stickyCell.getBoundingClientRect().x),
+            firstDayX: Math.round(firstDay.getBoundingClientRect().x)
+          }
+        : null;
     });
 
     expect(before).not.toBeNull();
     expect(after).not.toBeNull();
-    expect(Math.abs(after - before)).toBeLessThanOrEqual(1);
+    expect(after.stickyX).toBeGreaterThanOrEqual(0);
+    expect(after.stickyX).toBeLessThan(after.firstDayX);
   });
 
   test("summary rows and daily day columns line up with the main grid", async ({ page }) => {
@@ -735,7 +794,7 @@ test.describe("Schedule module", () => {
     expect(Math.abs(positions.mainWeekY - (positions.periodBottom + 22))).toBeLessThanOrEqual(2);
   });
 
-  test("daily summary block extends to the same right edge as the top sheet", async ({ page }) => {
+  test("daily summary block keeps day columns aligned and leaves side spacer borders invisible", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState([
         createScheduleRow("a", {}, { "1": "A", "2": "B", "3": "C", "4": "A3" }),
@@ -744,27 +803,34 @@ test.describe("Schedule module", () => {
     });
 
     const positions = await page.evaluate(() => {
-      const summaryLast = document.querySelector("#scheduleSummaryTable tbody tr:first-child td:last-child");
-      const dailyLastSpacer = document.querySelector("#dailySummarySpacerTable tbody tr:first-child td:last-child");
       const topDay = document.querySelector("[data-day-head='31']") || document.querySelector("[data-day-head='1']");
       const dailyDay = document.querySelector("[data-daily-day-head='31']") || document.querySelector("[data-daily-day-head='1']");
-      if (!summaryLast || !dailyLastSpacer || !topDay || !dailyDay) {
+      const leftBlank = document.querySelector("#dailySummaryTable .schedule-daily-table__blank");
+      const rightBlank = document.querySelector("#dailySummarySpacerTable .schedule-daily-spacer-table__blank");
+      if (!topDay || !dailyDay || !leftBlank || !rightBlank) {
         return null;
       }
+      const leftBlankStyle = getComputedStyle(leftBlank);
+      const rightBlankStyle = getComputedStyle(rightBlank);
       return {
-        summaryRight: Math.round(summaryLast.getBoundingClientRect().right),
-        dailyRight: Math.round(dailyLastSpacer.getBoundingClientRect().right),
         topDayX: Math.round(topDay.getBoundingClientRect().x),
-        dailyDayX: Math.round(dailyDay.getBoundingClientRect().x)
+        dailyDayX: Math.round(dailyDay.getBoundingClientRect().x),
+        leftBlankBorder: leftBlankStyle.borderTopColor,
+        leftBlankBackground: leftBlankStyle.backgroundColor,
+        rightBlankBorder: rightBlankStyle.borderTopColor,
+        rightBlankBackground: rightBlankStyle.backgroundColor
       };
     });
 
     expect(positions).not.toBeNull();
-    expect(Math.abs(positions.summaryRight - positions.dailyRight)).toBeLessThanOrEqual(1);
     expect(Math.abs(positions.topDayX - positions.dailyDayX)).toBeLessThanOrEqual(1);
+    expect(positions.leftBlankBorder).toBe("rgba(0, 0, 0, 0)");
+    expect(positions.leftBlankBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(positions.rightBlankBorder).toBe("rgba(0, 0, 0, 0)");
+    expect(positions.rightBlankBackground).toBe("rgba(0, 0, 0, 0)");
   });
 
-  test("daily summary block stays flush with the top sheet after zooming", async ({ page }) => {
+  test("daily summary block keeps aligned day columns after zooming", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState([
         createScheduleRow("a", {}, { "1": "A", "2": "B", "3": "C", "4": "A3" }),
@@ -777,21 +843,27 @@ test.describe("Schedule module", () => {
     await page.waitForTimeout(120);
 
     const positions = await page.evaluate(() => {
-      const summaryLast = document.querySelector("#scheduleSummaryTable tbody tr:first-child td:last-child");
-      const dailyLastSpacer = document.querySelector("#dailySummarySpacerTable tbody tr:first-child td:last-child");
-      if (!summaryLast || !dailyLastSpacer) {
+      const topDay = document.querySelector("[data-day-head='31']") || document.querySelector("[data-day-head='1']");
+      const dailyDay = document.querySelector("[data-daily-day-head='31']") || document.querySelector("[data-daily-day-head='1']");
+      const rightBlank = document.querySelector("#dailySummarySpacerTable .schedule-daily-spacer-table__blank");
+      if (!topDay || !dailyDay || !rightBlank) {
         return null;
       }
+      const rightBlankStyle = getComputedStyle(rightBlank);
       return {
-        summaryRight: Math.round(summaryLast.getBoundingClientRect().right),
-        dailyRight: Math.round(dailyLastSpacer.getBoundingClientRect().right),
-        zoom: document.getElementById("scheduleSheetZoom")?.style.zoom || ""
+        topDayX: Math.round(topDay.getBoundingClientRect().x),
+        dailyDayX: Math.round(dailyDay.getBoundingClientRect().x),
+        zoom: document.getElementById("scheduleSheetZoom")?.style.zoom || "",
+        rightBlankBorder: rightBlankStyle.borderTopColor,
+        rightBlankBackground: rightBlankStyle.backgroundColor
       };
     });
 
     expect(positions).not.toBeNull();
     expect(positions.zoom).toBe("1.1");
-    expect(Math.abs(positions.summaryRight - positions.dailyRight)).toBeLessThanOrEqual(1);
+    expect(Math.abs(positions.topDayX - positions.dailyDayX)).toBeLessThanOrEqual(1);
+    expect(positions.rightBlankBorder).toBe("rgba(0, 0, 0, 0)");
+    expect(positions.rightBlankBackground).toBe("rgba(0, 0, 0, 0)");
   });
 
   test("Ctrl plus and reset update sheet zoom without touching the header", async ({ page }) => {

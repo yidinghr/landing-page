@@ -101,6 +101,8 @@
     yearLabel: document.getElementById("scheduleYearLabel"),
     monthLabel: document.getElementById("scheduleMonthLabel"),
     codeLabel: document.getElementById("scheduleCodeLabel"),
+    codeMatrixToggle: document.getElementById("scheduleCodeMatrixToggle"),
+    summaryToggle: document.getElementById("scheduleSummaryToggle"),
     addRowsLabel: document.getElementById("scheduleAddRowsLabel"),
     addRowsCount: document.getElementById("scheduleAddRowsCount"),
     addRowsButton: document.getElementById("scheduleAddRowsButton"),
@@ -124,6 +126,14 @@
     tableHead: document.getElementById("scheduleTableHead"),
     frozenTableHead: document.getElementById("scheduleFrozenTableHead"),
     tableBody: document.getElementById("scheduleTableBody"),
+    codeMatrixAside: document.getElementById("scheduleCodeMatrixAside"),
+    codeMatrixTable: document.getElementById("scheduleCodeMatrixTable"),
+    codeMatrixHead: document.getElementById("scheduleCodeMatrixHead"),
+    frozenCodeMatrixAside: document.getElementById("scheduleFrozenCodeMatrixAside"),
+    frozenCodeMatrixHead: document.getElementById("scheduleFrozenCodeMatrixHead"),
+    codeMatrixBody: document.getElementById("scheduleCodeMatrixBody"),
+    summaryAside: document.getElementById("scheduleSummaryAside"),
+    frozenSummaryAside: document.querySelector(".schedule-frozen-summary"),
     summaryTable: document.getElementById("scheduleSummaryTable"),
     summaryHead: document.getElementById("scheduleSummaryHead"),
     frozenSummaryHead: document.getElementById("scheduleFrozenSummaryHead"),
@@ -182,12 +192,15 @@
     return {
       selectedYear: WORKBOOK_DEFAULT_YEAR,
       selectedMonth: WORKBOOK_DEFAULT_MONTH,
-      legendOpen: false,
-      zoomLevel: 1,
-      columnWidths: Object.assign({}, DEFAULT_COLUMN_WIDTHS),
-      months: {}
-    };
-  }
+    legendOpen: false,
+    summaryOpen: true,
+    codeMatrixOpen: false,
+    zoomLevel: 1,
+    columnWidths: Object.assign({}, DEFAULT_COLUMN_WIDTHS),
+    legendRemarks: {},
+    months: {}
+  };
+}
 
   function createEmployeeSnapshot(employee) {
     const basic = employee && employee.basic ? employee.basic : {};
@@ -325,8 +338,11 @@
         selectedYear: sanitizeYear(parsed.selectedYear),
         selectedMonth: sanitizeMonth(parsed.selectedMonth),
         legendOpen: Boolean(parsed.legendOpen),
+        summaryOpen: parsed.summaryOpen !== undefined ? Boolean(parsed.summaryOpen) : true,
+        codeMatrixOpen: Boolean(parsed.codeMatrixOpen),
         zoomLevel: sanitizeZoom(parsed.zoomLevel),
         columnWidths: sanitizeColumnWidths(parsed.columnWidths),
+        legendRemarks: parsed.legendRemarks && typeof parsed.legendRemarks === "object" ? parsed.legendRemarks : {},
         months: parsed.months && typeof parsed.months === "object" ? parsed.months : {}
       };
     } catch (error) {
@@ -384,6 +400,27 @@
   function getFixedFieldLabel(field) {
     const locale = i18n.getLocale();
     return field.labels[locale] || field.labels["zh-Hant"];
+  }
+
+  function getLegendRemark(code) {
+    const customRemark = state.legendRemarks && state.legendRemarks[code] !== undefined ? String(state.legendRemarks[code] || "") : "";
+    if (customRemark) {
+      return customRemark;
+    }
+    const definition = SHIFT_CODE_MAP[code];
+    return definition ? String(definition.remark || "") : "";
+  }
+
+  function getActiveCodeList(rows) {
+    return SHIFT_CODE_DEFINITIONS
+      .map(function (item) { return item.code; })
+      .filter(function (code) {
+        return rows.some(function (row) {
+          return Object.keys(row.shifts).some(function (day) {
+            return normalizeCellValue(row.shifts[day]) === code;
+          });
+        });
+      });
   }
 
   function renderColumnResizer(key) {
@@ -447,9 +484,31 @@
   function renderStaticText() {
     document.title = i18n.t("schedule.pageTitle");
     dom.app.classList.toggle("schedule-app--legend-open", Boolean(state.legendOpen));
+    if (dom.summaryAside) {
+      dom.summaryAside.hidden = !state.summaryOpen;
+    }
+    if (dom.frozenSummaryHead && dom.frozenSummaryAside) {
+      dom.frozenSummaryAside.hidden = !state.summaryOpen;
+    }
+    if (dom.codeMatrixAside) {
+      dom.codeMatrixAside.hidden = !state.codeMatrixOpen;
+    }
+    if (dom.frozenCodeMatrixAside) {
+      dom.frozenCodeMatrixAside.hidden = !state.codeMatrixOpen;
+    }
     dom.headerTitle.textContent = i18n.t("home.menu.schedule");
     dom.yearLabel.textContent = i18n.getLocale() === "zh-Hant" ? "年" : i18n.t("schedule.year");
     dom.monthLabel.textContent = i18n.getLocale() === "zh-Hant" ? "月" : i18n.t("schedule.month");
+    if (dom.codeMatrixToggle) {
+      dom.codeMatrixToggle.textContent = i18n.t("schedule.codeMatrix");
+      dom.codeMatrixToggle.setAttribute("aria-pressed", String(Boolean(state.codeMatrixOpen)));
+      dom.codeMatrixToggle.setAttribute("aria-label", i18n.t("schedule.codeMatrix"));
+    }
+    if (dom.summaryToggle) {
+      dom.summaryToggle.textContent = i18n.t("schedule.summaryToggle");
+      dom.summaryToggle.setAttribute("aria-pressed", String(Boolean(state.summaryOpen)));
+      dom.summaryToggle.setAttribute("aria-label", i18n.t("schedule.summaryToggle"));
+    }
     if (dom.codeLabel) {
       dom.codeLabel.textContent = i18n.getLocale() === "zh-Hant" ? "班碼" : (i18n.getLocale() === "vi" ? "Mã ca" : "Code");
     }
@@ -551,14 +610,15 @@
       }
     });
     dom.legendBody.innerHTML = SHIFT_CODE_DEFINITIONS.map(function (item) {
+      const remark = getLegendRemark(item.code);
       return [
         "<tr>",
-        '<td data-code-group="' + getCodeGroup(item.code) + '" title="' + escapeHtml(item.code) + '">' + escapeHtml(item.code) + "</td>",
+        '<td data-code="' + escapeHtml(item.code) + '" data-code-group="' + getCodeGroup(item.code) + '" title="' + escapeHtml(item.code) + '">' + escapeHtml(item.code) + "</td>",
         '<td title="' + escapeHtml(item.checkIn) + '">' + escapeHtml(item.checkIn) + "</td>",
         '<td title="' + escapeHtml(item.checkOut) + '">' + escapeHtml(item.checkOut) + "</td>",
         '<td title="' + escapeHtml(item.hoursPay) + '">' + escapeHtml(item.hoursPay) + "</td>",
         '<td title="' + escapeHtml(item.nightHours) + '">' + escapeHtml(item.nightHours) + "</td>",
-        '<td title="' + escapeHtml(item.remark) + '">' + escapeHtml(item.remark) + "</td>",
+        '<td class="schedule-legend-table__remark-cell"><input type="text" class="schedule-legend-table__remark-input" data-legend-remark="' + escapeHtml(item.code) + '" value="' + escapeHtml(remark) + '" placeholder="' + escapeHtml(i18n.t("schedule.legend.remark")) + '" aria-label="' + escapeHtml(i18n.t("schedule.legend.remark") + " " + item.code) + '"></td>',
         "</tr>"
       ].join("");
     }).join("");
@@ -572,6 +632,7 @@
     renderZoom();
     renderTableHead();
     renderTableBody(monthState);
+    renderCodeMatrix(monthState);
     renderSummary(monthState);
     renderDailySummary(monthState);
     syncSummarySpacerWidth();
@@ -620,12 +681,58 @@
       html += '<td class="schedule-table__meta schedule-table__sticky schedule-table__sticky--position"><div class="schedule-meta-wrap"><button type="button" class="schedule-meta-cell" data-grid-cell="true" data-row-index="' + rowIndex + '" data-col-index="4">' + escapeHtml(snapshot.position) + '</button></div></td>';
       for (let day = 1; day <= days; day += 1) {
         const code = normalizeCellValue(row.shifts[String(day)]);
-        html += '<td class="schedule-table__cell"><button type="button" class="schedule-cell" data-grid-cell="true" data-schedule-cell="true" data-row-index="' + rowIndex + '" data-col-index="' + (META_COLUMNS.length + day - 1) + '" data-day="' + day + '" data-code-group="' + escapeHtml(getCodeGroup(code)) + '">' + renderCellValue(code) + '</button></td>';
+        const dataCodeAttr = code ? ' data-code="' + escapeHtml(code) + '"' : "";
+        html += '<td class="schedule-table__cell"><button type="button" class="schedule-cell" data-grid-cell="true" data-schedule-cell="true" data-row-index="' + rowIndex + '" data-col-index="' + (META_COLUMNS.length + day - 1) + '" data-day="' + day + '"' + dataCodeAttr + ' data-code-group="' + escapeHtml(getCodeGroup(code)) + '">' + renderCellValue(code) + '</button></td>';
       }
       return html + '</tr>';
     }).join("");
 
     dom.tableBody.innerHTML = bodyRows;
+  }
+
+  function renderCodeMatrix(monthState) {
+    if (!dom.codeMatrixHead || !dom.codeMatrixBody) {
+      return;
+    }
+    const activeCodes = getActiveCodeList(monthState.rows);
+    const shouldShow = Boolean(state.codeMatrixOpen && activeCodes.length);
+    if (dom.codeMatrixAside) {
+      dom.codeMatrixAside.hidden = !shouldShow;
+    }
+    if (dom.frozenCodeMatrixAside) {
+      dom.frozenCodeMatrixAside.hidden = !shouldShow;
+    }
+    if (!activeCodes.length) {
+      dom.codeMatrixHead.innerHTML = "";
+      dom.codeMatrixBody.innerHTML = "";
+      if (dom.frozenCodeMatrixHead) {
+        dom.frozenCodeMatrixHead.innerHTML = "";
+      }
+      return;
+    }
+
+    const headMarkup = [
+      '<tr class="schedule-code-matrix-table__spacer"><th colspan="' + activeCodes.length + '"></th></tr>',
+      '<tr class="schedule-code-matrix-table__labels">',
+      activeCodes.map(function (code) {
+        return '<th data-code="' + escapeHtml(code) + '" data-code-group="' + escapeHtml(getCodeGroup(code)) + '">' + escapeHtml(code) + "</th>";
+      }).join(""),
+      "</tr>"
+    ].join("");
+    dom.codeMatrixHead.innerHTML = headMarkup;
+    if (dom.frozenCodeMatrixHead) {
+      dom.frozenCodeMatrixHead.innerHTML = headMarkup;
+    }
+
+    dom.codeMatrixBody.innerHTML = monthState.rows.map(function (row, rowIndex) {
+      return [
+        '<tr data-code-matrix-row-index="' + rowIndex + '">',
+        activeCodes.map(function (code) {
+          return '<td data-code-matrix-row-index="' + rowIndex + '" data-code-matrix-code="' + escapeHtml(code) + '">' + countCodeInRow(row, code) + "</td>";
+        }).join(""),
+        "</tr>"
+      ].join("");
+    }).join("");
   }
 
   function renderSummary(monthState) {
@@ -682,10 +789,10 @@
 
     dom.dailySection.hidden = false;
     let head = "<tr>";
-    head += '<th class="schedule-daily-table__spacer--id schedule-daily-table__sticky schedule-daily-table__sticky--id"></th>';
-    head += '<th class="schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></th>';
-    head += '<th class="schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></th>';
-    head += '<th class="schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></th>';
+    head += '<th class="schedule-daily-table__spacer--id schedule-daily-table__blank schedule-daily-table__sticky schedule-daily-table__sticky--id"></th>';
+    head += '<th class="schedule-daily-table__spacer--department schedule-daily-table__blank schedule-daily-table__sticky schedule-daily-table__sticky--department"></th>';
+    head += '<th class="schedule-daily-table__spacer--vie schedule-daily-table__blank schedule-daily-table__sticky schedule-daily-table__sticky--vie"></th>';
+    head += '<th class="schedule-daily-table__spacer--eng schedule-daily-table__blank schedule-daily-table__sticky schedule-daily-table__sticky--eng"></th>';
     head += '<th class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position">' + escapeHtml(i18n.t("schedule.dailyCode")) + "</th>";
     for (let day = 1; day <= days; day += 1) {
       head += '<th data-daily-day-head="' + day + '">' + day + "</th>";
@@ -693,17 +800,17 @@
     dom.dailyHead.innerHTML = head + "</tr>";
     if (dom.dailySpacerHead) {
       dom.dailySpacerHead.innerHTML = "<tr>" + SUMMARY_FIELDS.map(function () {
-        return "<th></th>";
+        return '<th class="schedule-daily-spacer-table__blank"></th>';
       }).join("") + "</tr>";
     }
 
     dom.dailyBody.innerHTML = activeCodes.map(function (code) {
       let row = '<tr data-daily-code-row="' + escapeHtml(code) + '">';
-      row += '<td class="schedule-daily-table__spacer--id schedule-daily-table__sticky schedule-daily-table__sticky--id"></td>';
-      row += '<td class="schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></td>';
-      row += '<td class="schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></td>';
-      row += '<td class="schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></td>';
-      row += '<td class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position">' + escapeHtml(code) + "</td>";
+      row += '<td class="schedule-daily-table__spacer--id schedule-daily-table__blank schedule-daily-table__sticky schedule-daily-table__sticky--id"></td>';
+      row += '<td class="schedule-daily-table__spacer--department schedule-daily-table__blank schedule-daily-table__sticky schedule-daily-table__sticky--department"></td>';
+      row += '<td class="schedule-daily-table__spacer--vie schedule-daily-table__blank schedule-daily-table__sticky schedule-daily-table__sticky--vie"></td>';
+      row += '<td class="schedule-daily-table__spacer--eng schedule-daily-table__blank schedule-daily-table__sticky schedule-daily-table__sticky--eng"></td>';
+      row += '<td class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position" data-code="' + escapeHtml(code) + '">' + escapeHtml(code) + "</td>";
       for (let day = 1; day <= days; day += 1) {
         row += '<td data-daily-code="' + escapeHtml(code) + '" data-daily-day="' + day + '">' + getDailyCount(monthState.rows, code, day) + "</td>";
       }
@@ -712,7 +819,7 @@
     if (dom.dailySpacerBody) {
       dom.dailySpacerBody.innerHTML = activeCodes.map(function () {
         return "<tr>" + SUMMARY_FIELDS.map(function () {
-          return "<td></td>";
+          return '<td class="schedule-daily-spacer-table__blank"></td>';
         }).join("") + "</tr>";
       }).join("");
     }
@@ -722,6 +829,12 @@
     const dayKey = String(day);
     return rows.reduce(function (total, row) {
       return total + (normalizeCellValue(row.shifts[dayKey]) === code ? 1 : 0);
+    }, 0);
+  }
+
+  function countCodeInRow(row, code) {
+    return Object.keys(row.shifts).reduce(function (total, day) {
+      return total + (normalizeCellValue(row.shifts[day]) === code ? 1 : 0);
     }, 0);
   }
 
@@ -780,6 +893,22 @@
         updateSheetOverflowState();
       }, 220);
     });
+    if (dom.codeMatrixToggle) {
+      dom.codeMatrixToggle.addEventListener("click", function () {
+        state.codeMatrixOpen = !state.codeMatrixOpen;
+        saveState();
+        renderStaticText();
+        renderAll();
+      });
+    }
+    if (dom.summaryToggle) {
+      dom.summaryToggle.addEventListener("click", function () {
+        state.summaryOpen = !state.summaryOpen;
+        saveState();
+        renderStaticText();
+        renderAll();
+      });
+    }
     dom.localeMount.addEventListener("click", function (event) {
       const toggle = event.target.closest("[data-locale-toggle]");
       const option = event.target.closest("[data-locale-value]");
@@ -795,6 +924,10 @@
       event.stopPropagation();
       uiState.localeMenuOpen = false;
       i18n.setLocale(option.getAttribute("data-locale-value"));
+      renderStaticText();
+      buildLegendTable();
+      renderAll();
+      renderLocaleControl();
     });
     document.addEventListener("click", function (event) {
       if (uiState.localeMenuOpen && dom.localeMount && !dom.localeMount.contains(event.target)) {
@@ -842,6 +975,17 @@
         uiState.codeDropdownIndex = -1;
         hideCodeDropdown();
         focusSelectionInput();
+      });
+    }
+    if (dom.legendBody) {
+      dom.legendBody.addEventListener("input", function (event) {
+        const input = event.target.closest("[data-legend-remark]");
+        if (!input) {
+          return;
+        }
+        const code = input.getAttribute("data-legend-remark");
+        state.legendRemarks[code] = input.value;
+        saveState();
       });
     }
     dom.sheetScroll.addEventListener("wheel", function (event) {
