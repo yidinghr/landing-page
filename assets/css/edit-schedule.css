@@ -18,8 +18,8 @@
 }
 
 .schedule-workspace {
-  --schedule-header-height: 56px;
-  --schedule-period-height: 58px;
+  --schedule-header-height: 68px;
+  --schedule-period-height: 60px;
   --schedule-sheet-sticky-top: calc(var(--schedule-header-height) + var(--schedule-period-height));
   --schedule-table-head-row: 22px;
   --schedule-row-height: 30px;
@@ -47,13 +47,13 @@
   position: sticky;
   top: 0;
   z-index: 28;
-  min-height: 56px;
+  min-height: var(--schedule-header-height);
   border-bottom: 1px solid rgba(244, 213, 31, 0.2);
   display: grid;
   grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr);
   align-items: center;
   gap: 12px;
-  padding: 0 14px 0 16px;
+  padding: 0 18px;
   background: rgba(6, 6, 6, 0.98);
 }
 
@@ -64,9 +64,9 @@
 .schedule-header__title {
   margin: 0;
   color: var(--color-text);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   justify-self: center;
   text-align: center;
 }
@@ -124,66 +124,65 @@
 
 .schedule-period-bar {
   position: sticky;
-  top: 56px;
+  top: var(--schedule-header-height);
   z-index: 24;
-  min-height: 52px;
+  min-height: var(--schedule-period-height);
   border-bottom: 1px solid rgba(244, 213, 31, 0.14);
-  padding: 6px 14px;
+  padding: 8px 18px;
   background: rgba(3, 3, 3, 0.98);
 }
 
 .schedule-period-bar__inner {
-  position: relative;
-  min-height: 38px;
-  display: flex;
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
-  align-items: center;
-  padding-right: 180px;
+  gap: 18px;
+}
+
+.schedule-period-bar__spacer {
+  min-width: 0;
 }
 
 .schedule-period-grid {
   display: flex;
   align-items: stretch;
-  gap: 10px;
-  justify-content: center;
+  gap: 14px;
+  justify-self: center;
 }
 
 .schedule-period-actions {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  justify-self: end;
 }
 
 .schedule-code-entry {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 32px;
-  padding: 0 10px;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 12px;
   border: 1px solid rgba(244, 213, 31, 0.26);
   background: rgba(8, 8, 8, 0.98);
 }
 
 .schedule-code-entry__label {
   color: rgba(255, 243, 160, 0.9);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .schedule-code-entry__input {
-  width: 116px;
-  min-height: 28px;
+  width: 168px;
+  min-height: 32px;
   border: 0;
   border-left: 1px solid rgba(244, 213, 31, 0.18);
   background: transparent;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   text-align: center;
   text-transform: uppercase;
@@ -203,7 +202,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0;
-  min-height: 32px;
+  min-height: 36px;
   padding: 0;
   border: 1px solid rgba(244, 213, 31, 0.26);
   background: rgba(8, 8, 8, 0.98);
@@ -218,11 +217,11 @@
 
 .schedule-add-rows__input {
   width: 56px;
-  min-height: 28px;
+  min-height: 32px;
   border: 0;
   background: transparent;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   text-align: center;
   outline: none;
@@ -237,7 +236,7 @@
 
 .schedule-add-rows__button {
   min-width: 36px;
-  min-height: 32px;
+  min-height: 36px;
   padding: 0;
   border: 1px solid rgba(244, 213, 31, 0.26);
   background: rgba(8, 8, 8, 0.98);
@@ -262,34 +261,34 @@
 
 .schedule-period-pair__label,
 .schedule-period-pair__value {
-  min-height: 32px;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
 }
 
 .schedule-period-pair__label {
-  min-width: 34px;
+  min-width: 38px;
   justify-content: center;
-  padding: 0 10px;
+  padding: 0 12px;
   border-right: 1px solid rgba(244, 213, 31, 0.2);
   color: var(--color-text);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
 }
 
 .schedule-period-pair__value {
   position: relative;
-  min-width: 90px;
+  min-width: 106px;
 }
 
 .schedule-period-pair__value select {
   width: 100%;
-  min-height: 32px;
-  padding: 0 24px 0 10px;
+  min-height: 36px;
+  padding: 0 26px 0 12px;
   border: 0;
   background: transparent;
   color: var(--color-text);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   appearance: none;
   outline: none;
@@ -934,7 +933,6 @@
     grid-template-columns: 1fr;
     justify-items: center;
     gap: 8px;
-    padding-right: 0;
   }
 
   .schedule-period-grid {
@@ -944,12 +942,13 @@
   }
 
   .schedule-period-actions {
-    position: static;
-    transform: none;
+    justify-self: center;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .schedule-code-entry__input {
-    width: 74px;
+    width: 110px;
   }
 
   .schedule-sheet-scroll {

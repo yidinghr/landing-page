@@ -23,6 +23,7 @@
 
 <section class="schedule-period-bar" aria-label="排班月份">
 <div class="schedule-period-bar__inner">
+<div class="schedule-period-bar__spacer" aria-hidden="true"></div>
 <div class="schedule-period-grid">
 <div class="schedule-period-pair">
 <span id="scheduleYearLabel" class="schedule-period-pair__label">年</span>
@@ -39,13 +40,12 @@
 <span class="schedule-period-pair__arrow" aria-hidden="true">▾</span>
 </span>
 </div>
-
+</div>
+<div class="schedule-period-actions">
 <label class="schedule-code-entry">
 <span id="scheduleCodeLabel" class="schedule-code-entry__label">Code</span>
 <input id="scheduleSelectionInput" class="schedule-code-entry__input" type="text" list="scheduleShiftCodeList" inputmode="text" autocomplete="off" spellcheck="false" maxlength="8">
 </label>
-</div>
-<div class="schedule-period-actions">
 <button id="scheduleAddRowsButton" type="button" class="schedule-add-rows__button" aria-label="新增員工列">+</button>
 <label class="schedule-add-rows">
 <span id="scheduleAddRowsLabel" class="schedule-assistive">新增行</span>
