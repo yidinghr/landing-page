@@ -622,6 +622,10 @@
     });
     dom.sheetScroll.addEventListener("wheel", function (event) {
       if (!event.ctrlKey) {
+        if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+          event.preventDefault();
+          window.scrollBy(0, event.deltaY);
+        }
         return;
       }
       event.preventDefault();

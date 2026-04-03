@@ -253,4 +253,23 @@ test.describe("Schedule module from Shift.xlsx", () => {
     await page.keyboard.press("Control+0");
     await expect.poll(async () => page.locator("#scheduleSheetZoom").evaluate((node) => node.style.zoom)).toBe("1");
   });
+
+  test("schedule page can scroll vertically with mouse wheel over the sheet", async ({ page }) => {
+    const employees = Array.from({ length: 26 }, (_, index) => createEmployee({
+      id: "emp-" + index,
+      basic: {
+        engName: "EMP " + index,
+        vieName: "VO " + index,
+        ydiId: "YDI" + String(9000 + index)
+      }
+    }));
+
+    await prepareSchedulePage(page, {
+      employeesState: { employees }
+    });
+
+    await page.locator("#scheduleSheetScroll").hover();
+    await page.mouse.wheel(0, 1200);
+    await expect.poll(async () => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  });
 });
