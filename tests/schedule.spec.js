@@ -472,6 +472,24 @@ test.describe("Schedule module", () => {
     expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
   });
 
+  test("opening the legend panel locks background page scrolling", async ({ page }) => {
+    await prepareSchedulePage(page);
+    await addRows(page, 40);
+
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await page.waitForTimeout(120);
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "true");
+
+    const before = await page.evaluate(() => Math.round(window.scrollY));
+    await page.mouse.move(220, 420);
+    await page.mouse.wheel(0, 1600);
+    await page.waitForTimeout(120);
+    const after = await page.evaluate(() => Math.round(window.scrollY));
+
+    expect(after).toBe(before);
+  });
+
   test("legend panel keeps rows single-line without zoom controls", async ({ page }) => {
     await prepareSchedulePage(page);
 

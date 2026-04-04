@@ -156,7 +156,8 @@
     copiedText: "",
     frozenSyncFrame: 0,
     codeDropdownOpen: false,
-    codeDropdownIndex: -1
+    codeDropdownIndex: -1,
+    lockedScrollY: null
   };
   const state = loadState();
   let legendRemarks = loadLegendRemarks();
@@ -462,6 +463,7 @@
   function renderStaticText() {
     document.title = i18n.t("schedule.pageTitle");
     dom.app.classList.toggle("schedule-app--legend-open", Boolean(state.legendOpen));
+    applyLegendScrollLock();
     dom.headerTitle.textContent = i18n.t("home.menu.schedule");
     dom.yearLabel.textContent = i18n.getLocale() === "zh-Hant" ? "年" : i18n.t("schedule.year");
     dom.monthLabel.textContent = i18n.getLocale() === "zh-Hant" ? "月" : i18n.t("schedule.month");
@@ -879,6 +881,10 @@
     }
     dom.sheetScroll.addEventListener("wheel", function (event) {
       if (!event.ctrlKey) {
+        if (state.legendOpen) {
+          event.preventDefault();
+          return;
+        }
         if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
           event.preventDefault();
           window.scrollBy(0, event.deltaY);
@@ -1467,6 +1473,31 @@
     }
     const hasHorizontalOverflow = dom.sheetScroll.scrollWidth > dom.sheetScroll.clientWidth + 1;
     dom.sheetScroll.classList.toggle("schedule-sheet-scroll--fit", !hasHorizontalOverflow);
+  }
+
+  function applyLegendScrollLock() {
+    const body = document.body;
+    if (!body) {
+      return;
+    }
+
+    if (state.legendOpen) {
+      if (uiState.lockedScrollY === null) {
+        uiState.lockedScrollY = Math.round(window.scrollY || window.pageYOffset || 0);
+      }
+      body.classList.add("edit-page--legend-lock");
+      body.style.top = "-" + String(uiState.lockedScrollY) + "px";
+      return;
+    }
+
+    const shouldRestore = body.classList.contains("edit-page--legend-lock");
+    const restoreY = uiState.lockedScrollY === null ? 0 : uiState.lockedScrollY;
+    body.classList.remove("edit-page--legend-lock");
+    body.style.removeProperty("top");
+    uiState.lockedScrollY = null;
+    if (shouldRestore) {
+      window.scrollTo(0, restoreY);
+    }
   }
 
   function updateStickyMetrics() {

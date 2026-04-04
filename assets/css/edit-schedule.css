@@ -4,6 +4,13 @@
   overflow-y: auto;
 }
 
+.edit-page--legend-lock {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
 .schedule-app {
   --legend-panel-width: clamp(620px, 46vw, 760px);
   --legend-panel-offset: 0px;
