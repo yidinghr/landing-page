@@ -156,6 +156,29 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleFrozenTableHead .schedule-table__day-head")).toHaveCount(28);
   });
 
+  test("switching between months keeps each month's edited schedule data", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    await page.selectOption("#scheduleYear", "2026");
+    await page.selectOption("#scheduleMonth", "7");
+    await addRows(page, 1);
+    await selectCell(page, 0, 1);
+    await typeShiftCode(page, "A");
+
+    await page.selectOption("#scheduleMonth", "8");
+    await addRows(page, 1);
+    await selectCell(page, 0, 1);
+    await typeShiftCode(page, "B");
+
+    await page.selectOption("#scheduleMonth", "7");
+    await expect(page.locator(".schedule-table__body-row")).toHaveCount(1);
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toContainText("A");
+
+    await page.selectOption("#scheduleMonth", "8");
+    await expect(page.locator(".schedule-table__body-row")).toHaveCount(1);
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toContainText("B");
+  });
+
   test("add rows works from an empty month", async ({ page }) => {
     await prepareSchedulePage(page);
 

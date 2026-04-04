@@ -879,8 +879,10 @@
 }
 
 .schedule-legend-table td {
-  height: 21px;
-  line-height: 19px;
+  height: auto;
+  min-height: 21px;
+  line-height: 1.28;
+  vertical-align: top;
 }
 
 .schedule-daily-table th,
@@ -1042,13 +1044,13 @@
 
 .schedule-legend-table th,
 .schedule-legend-table td {
-  padding: 0 8px;
+  padding: 4px 8px;
   text-align: left;
   font-size: 11px;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
 }
 
 .schedule-legend-table {
@@ -1093,6 +1095,17 @@
   letter-spacing: 0.03em;
 }
 
+.schedule-legend-table__cell--in,
+.schedule-legend-table__cell--out {
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
+}
+
+.schedule-legend-table__remark-cell {
+  vertical-align: top;
+}
+
 .schedule-legend-table td[data-code-group="A"] {
   background: rgba(36, 92, 44, 0.2);
 }
@@ -1119,14 +1132,15 @@
 
 .schedule-legend-table__remark-input {
   width: 100%;
-  min-height: 25px;
+  min-height: 29px;
   border: 0;
   background: transparent;
   color: rgba(255, 243, 160, 0.94);
   font-size: 11px;
-  line-height: 25px;
-  padding: 0 8px;
+  line-height: 1.28;
+  padding: 4px 8px;
   outline: none;
+  white-space: normal;
 }
 
 .schedule-legend-table__remark-input::placeholder {

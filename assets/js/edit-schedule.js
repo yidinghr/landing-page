@@ -580,11 +580,11 @@
     dom.legendBody.innerHTML = SHIFT_CODE_DEFINITIONS.map(function (item) {
       return [
         "<tr>",
-        '<td data-code-group="' + getCodeGroup(item.code) + '" title="' + escapeHtml(item.code) + '">' + escapeHtml(item.code) + "</td>",
-        '<td title="' + escapeHtml(item.checkIn) + '">' + escapeHtml(item.checkIn) + "</td>",
-        '<td title="' + escapeHtml(item.checkOut) + '">' + escapeHtml(item.checkOut) + "</td>",
-        '<td title="' + escapeHtml(item.hoursPay) + '">' + escapeHtml(item.hoursPay) + "</td>",
-        '<td title="' + escapeHtml(item.nightHours) + '">' + escapeHtml(item.nightHours) + "</td>",
+        '<td class="schedule-legend-table__cell schedule-legend-table__cell--code" data-code-group="' + getCodeGroup(item.code) + '" title="' + escapeHtml(item.code) + '">' + escapeHtml(item.code) + "</td>",
+        '<td class="schedule-legend-table__cell schedule-legend-table__cell--in" title="' + escapeHtml(item.checkIn) + '">' + escapeHtml(item.checkIn) + "</td>",
+        '<td class="schedule-legend-table__cell schedule-legend-table__cell--out" title="' + escapeHtml(item.checkOut) + '">' + escapeHtml(item.checkOut) + "</td>",
+        '<td class="schedule-legend-table__cell schedule-legend-table__cell--pay" title="' + escapeHtml(item.hoursPay) + '">' + escapeHtml(item.hoursPay) + "</td>",
+        '<td class="schedule-legend-table__cell schedule-legend-table__cell--night" title="' + escapeHtml(item.nightHours) + '">' + escapeHtml(item.nightHours) + "</td>",
         '<td class="schedule-legend-table__remark-cell"><input class="schedule-legend-table__remark-input" data-legend-remark="' + escapeHtml(item.code) + '" type="text" value="' + escapeHtml(getLegendRemark(item.code)) + '" placeholder="" aria-label="' + escapeHtml(i18n.t("schedule.legend.remark") + " " + item.code) + '"></td>',
         "</tr>"
       ].join("");
