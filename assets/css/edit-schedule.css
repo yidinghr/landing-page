@@ -393,10 +393,11 @@
 
 .schedule-sheet-frame {
   position: relative;
+  align-self: start;
   min-width: 0;
   min-height: 0;
   overflow: visible;
-  padding: 0 0 14px;
+  padding: 0 0 6px;
 }
 
 .schedule-frozen-layer {
@@ -469,7 +470,7 @@
   min-height: 0;
   overflow-x: auto;
   overflow-y: visible;
-  padding: 0 0 14px;
+  padding: 0 0 6px;
   scroll-padding-left: var(--sticky-offset-left);
   scrollbar-width: thin;
   scrollbar-color: rgba(244, 213, 31, 0.6) transparent;
