@@ -490,6 +490,46 @@ test.describe("Schedule module", () => {
     expect(after).toBe(before);
   });
 
+  test("wheel over the fixed top chrome does not scroll the page behind it", async ({ page }) => {
+    await prepareSchedulePage(page);
+    await addRows(page, 40);
+
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await page.waitForTimeout(120);
+
+    const header = page.locator(".schedule-header");
+    const before = await page.evaluate(() => Math.round(window.scrollY));
+    const box = await header.boundingBox();
+    expect(box).not.toBeNull();
+
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 1200);
+    await page.waitForTimeout(120);
+
+    const after = await page.evaluate(() => Math.round(window.scrollY));
+    expect(after).toBe(before);
+  });
+
+  test("wheel over the frozen schedule header does not scroll the page behind it", async ({ page }) => {
+    await prepareSchedulePage(page);
+    await addRows(page, 40);
+
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await page.waitForTimeout(120);
+
+    const frozenHeaderCell = page.locator("#scheduleFrozenLayer [data-day-head='1']").first();
+    const before = await page.evaluate(() => Math.round(window.scrollY));
+    const box = await frozenHeaderCell.boundingBox();
+    expect(box).not.toBeNull();
+
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 1200);
+    await page.waitForTimeout(120);
+
+    const after = await page.evaluate(() => Math.round(window.scrollY));
+    expect(after).toBe(before);
+  });
+
   test("legend panel keeps rows single-line without zoom controls", async ({ page }) => {
     await prepareSchedulePage(page);
 

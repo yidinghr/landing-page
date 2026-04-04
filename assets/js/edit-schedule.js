@@ -894,6 +894,12 @@
       event.preventDefault();
       adjustZoom(event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP);
     }, { passive: false });
+    [dom.header, dom.periodBar, dom.frozenLayer, dom.legendPanel].forEach(function (surface) {
+      if (!surface) {
+        return;
+      }
+      surface.addEventListener("wheel", handleLockedSurfaceWheel, { passive: false });
+    });
     dom.tableBody.addEventListener("mousedown", handleCellPointerStart);
     dom.tableBody.addEventListener("mouseover", handleCellPointerMove);
     dom.tableHead.addEventListener("mousedown", handleResizePointerStart);
@@ -1473,6 +1479,13 @@
     }
     const hasHorizontalOverflow = dom.sheetScroll.scrollWidth > dom.sheetScroll.clientWidth + 1;
     dom.sheetScroll.classList.toggle("schedule-sheet-scroll--fit", !hasHorizontalOverflow);
+  }
+
+  function handleLockedSurfaceWheel(event) {
+    if (event.ctrlKey) {
+      return;
+    }
+    event.preventDefault();
   }
 
   function applyLegendScrollLock() {

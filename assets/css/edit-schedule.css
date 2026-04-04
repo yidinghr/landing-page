@@ -2,6 +2,7 @@
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: none;
 }
 
 .edit-page--legend-lock {
@@ -63,6 +64,7 @@
   gap: 12px;
   padding: 0 18px;
   background: rgba(6, 6, 6, 0.98);
+  overscroll-behavior: none;
 }
 
 .schedule-header__spacer {
@@ -139,6 +141,7 @@
   border-bottom: 1px solid rgba(244, 213, 31, 0.14);
   padding: 5px 18px;
   background: rgba(3, 3, 3, 0.98);
+  overscroll-behavior: none;
 }
 
 .schedule-period-bar__inner {
@@ -404,6 +407,7 @@
   z-index: 23;
   height: 0;
   overflow: visible;
+  overscroll-behavior: none;
 }
 
 .schedule-frozen-scroll {
@@ -995,6 +999,7 @@
   box-shadow: -18px 0 36px rgba(0, 0, 0, 0.42);
   z-index: 30;
   transition: width 0.18s ease, opacity 0.18s ease, border-color 0.18s ease, top 0.18s ease;
+  overscroll-behavior: none;
 }
 
 .schedule-app--legend-open .schedule-legend {
