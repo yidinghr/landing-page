@@ -537,7 +537,60 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleLegendBody td").last()).toHaveCSS("white-space", "nowrap");
     await expect(page.locator("#scheduleLegendZoomOut")).toHaveCount(0);
     await expect(page.locator("#scheduleLegendZoomIn")).toHaveCount(0);
-    await expect(page.locator("#scheduleLegendContent")).toHaveCSS("overflow-y", "hidden");
+    await expect(page.locator("#scheduleLegendContent")).toHaveCSS("overflow-y", "auto");
+
+    const metrics = await page.evaluate(() => {
+      const panel = document.querySelector("#scheduleLegendPanel");
+      const content = document.querySelector("#scheduleLegendContent");
+      if (!panel || !content) {
+        return null;
+      }
+      return {
+        panelWidth: Math.round(panel.getBoundingClientRect().width),
+        scrollable: content.scrollHeight > content.clientHeight
+      };
+    });
+
+    expect(metrics).not.toBeNull();
+    expect(metrics.panelWidth).toBeLessThanOrEqual(740);
+    expect(metrics.scrollable).toBeTruthy();
+  });
+
+  test("wheel over the legend panel scrolls only the panel content", async ({ page }) => {
+    await prepareSchedulePage(page);
+    await addRows(page, 40);
+    await page.evaluate(() => window.scrollTo(0, 1000));
+    await page.waitForTimeout(120);
+
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "true");
+
+    const content = page.locator("#scheduleLegendContent");
+    const box = await content.boundingBox();
+    expect(box).not.toBeNull();
+
+    const before = await page.evaluate(() => {
+      const panelContent = document.querySelector("#scheduleLegendContent");
+      return {
+        windowY: Math.round(window.scrollY),
+        panelTop: Math.round(panelContent.scrollTop)
+      };
+    });
+
+    await page.mouse.move(box.x + Math.min(box.width * 0.5, 80), box.y + Math.min(box.height * 0.5, 200));
+    await page.mouse.wheel(0, 1200);
+    await page.waitForTimeout(150);
+
+    const after = await page.evaluate(() => {
+      const panelContent = document.querySelector("#scheduleLegendContent");
+      return {
+        windowY: Math.round(window.scrollY),
+        panelTop: Math.round(panelContent.scrollTop)
+      };
+    });
+
+    expect(after.windowY).toBe(before.windowY);
+    expect(after.panelTop).toBeGreaterThan(before.panelTop);
   });
 
   test("legend remark input persists after reload", async ({ page }) => {

@@ -894,7 +894,7 @@
       event.preventDefault();
       adjustZoom(event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP);
     }, { passive: false });
-    [dom.header, dom.periodBar, dom.frozenLayer, dom.legendPanel].forEach(function (surface) {
+    [dom.header, dom.periodBar, dom.frozenLayer].forEach(function (surface) {
       if (!surface) {
         return;
       }

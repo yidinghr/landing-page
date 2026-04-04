@@ -13,7 +13,7 @@
 }
 
 .schedule-app {
-  --legend-panel-width: clamp(620px, 46vw, 760px);
+  --legend-panel-width: clamp(560px, 39vw, 736px);
   --legend-panel-offset: 0px;
   position: relative;
   min-height: 100vh;
@@ -994,9 +994,9 @@
   opacity: 0;
   pointer-events: none;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(4, 4, 4, 0.98);
-  box-shadow: -18px 0 36px rgba(0, 0, 0, 0.42);
+  box-shadow: -18px 0 36px rgba(0, 0, 0, 0.46);
   z-index: 30;
   transition: width 0.18s ease, opacity 0.18s ease, border-color 0.18s ease, top 0.18s ease;
   overscroll-behavior: none;
@@ -1015,26 +1015,26 @@
   height: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 4px;
-  padding: 8px 12px 10px;
+  gap: 8px;
+  padding: 10px 12px 12px;
 }
 
 .schedule-legend__top {
   position: sticky;
   top: 0;
   z-index: 2;
-  min-height: 24px;
+  min-height: 26px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  padding-bottom: 0;
+  padding-bottom: 2px;
   background: rgba(4, 4, 4, 0.98);
 }
 
 .schedule-legend__title {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -1042,12 +1042,15 @@
 
 .schedule-legend__content {
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-right: 2px;
 }
 
 .schedule-legend-table th,
 .schedule-legend-table td {
-  padding: 2px 6px;
+  padding: 2px 5px;
   text-align: left;
   font-size: 10px;
   line-height: 1.2;
@@ -1064,14 +1067,14 @@
 
 .schedule-legend-table th:nth-child(1),
 .schedule-legend-table td:nth-child(1) {
-  width: 10%;
+  width: 9%;
 }
 
 .schedule-legend-table th:nth-child(2),
 .schedule-legend-table td:nth-child(2),
 .schedule-legend-table th:nth-child(3),
 .schedule-legend-table td:nth-child(3) {
-  width: 16%;
+  width: 15%;
 }
 
 .schedule-legend-table th:nth-child(4),
@@ -1083,7 +1086,7 @@
 
 .schedule-legend-table th:nth-child(6),
 .schedule-legend-table td:nth-child(6) {
-  width: 38%;
+  width: 41%;
 }
 
 .schedule-legend-table thead th {
