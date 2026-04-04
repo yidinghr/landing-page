@@ -95,6 +95,7 @@
     workspace: document.querySelector(".schedule-workspace"),
     header: document.querySelector(".schedule-header"),
     periodBar: document.querySelector(".schedule-period-bar"),
+    periodGrid: document.querySelector(".schedule-period-grid"),
     frozenLayer: document.getElementById("scheduleFrozenLayer"),
     frozenScroll: document.getElementById("scheduleFrozenScroll"),
     frozenZoom: document.getElementById("scheduleFrozenZoom"),
@@ -1514,22 +1515,33 @@
   }
 
   function updateStickyMetrics() {
-    const headerHeight = dom.header ? Math.round(dom.header.getBoundingClientRect().height) : 56;
-    const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
-    const firstHeadRow = dom.tableHead.querySelector("tr");
-    const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
-    [dom.workspace, dom.app].forEach(function (target) {
-      if (!target) {
-        return;
-      }
-      target.style.setProperty("--schedule-header-height", String(headerHeight) + "px");
-      target.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
-      target.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
-      target.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
-    });
-    syncSummarySpacerWidth();
-    requestFrozenHeaderSync();
-  }
+      const headerHeight = dom.header ? Math.round(dom.header.getBoundingClientRect().height) : 56;
+      const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
+      const firstHeadRow = dom.tableHead.querySelector("tr");
+      const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
+      const tableRect = dom.table ? dom.table.getBoundingClientRect() : null;
+      const periodGridRect = dom.periodGrid ? dom.periodGrid.getBoundingClientRect() : null;
+      const minimumTop = headerHeight + periodHeight + 4;
+      const legendTop = tableRect
+        ? Math.max(minimumTop, Math.round(tableRect.top))
+        : minimumTop;
+      const legendLeft = periodGridRect
+        ? Math.max(16, Math.round(periodGridRect.right + 16))
+        : Math.max(16, Math.round(window.innerWidth * 0.58));
+      [dom.workspace, dom.app].forEach(function (target) {
+        if (!target) {
+          return;
+        }
+        target.style.setProperty("--schedule-header-height", String(headerHeight) + "px");
+        target.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
+        target.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
+        target.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
+        target.style.setProperty("--legend-panel-top", String(legendTop) + "px");
+        target.style.setProperty("--legend-panel-left", String(legendLeft) + "px");
+      });
+      syncSummarySpacerWidth();
+      requestFrozenHeaderSync();
+    }
 
   function syncSummarySpacerWidth() {
     if (!dom.summaryTable) {

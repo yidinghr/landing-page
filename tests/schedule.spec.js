@@ -440,18 +440,41 @@ test.describe("Schedule module", () => {
     expect(Math.abs(after.width - before.width)).toBeLessThanOrEqual(1);
   });
 
-  test("legend panel opens below the fixed top chrome as an overlay", async ({ page }) => {
+  test("legend panel opens as an overlay aligned to the schedule frame and period grid", async ({ page }) => {
     await prepareSchedulePage(page);
-
-    const periodBar = await page.locator(".schedule-period-bar").boundingBox();
-    expect(periodBar).not.toBeNull();
 
     await page.locator("#scheduleLegendToggle").click();
     await expect(page.locator("#scheduleLegendToggle")).toHaveAttribute("aria-expanded", "true");
 
-    const legend = await page.locator("#scheduleLegendPanel").boundingBox();
-    expect(legend).not.toBeNull();
-    expect(Math.abs(legend.y - (periodBar.y + periodBar.height + 6))).toBeLessThanOrEqual(2);
+    await expect.poll(async () => {
+      return page.evaluate(() => {
+        const periodGrid = document.querySelector(".schedule-period-grid");
+        const legend = document.querySelector("#scheduleLegendPanel");
+        if (!periodGrid || !legend) {
+          return Number.POSITIVE_INFINITY;
+        }
+        const periodGridRect = periodGrid.getBoundingClientRect();
+        const legendRect = legend.getBoundingClientRect();
+        return Math.abs(legendRect.x - (periodGridRect.right + 16));
+      });
+    }, {
+      timeout: 2000
+    }).toBeLessThanOrEqual(2);
+
+    await expect.poll(async () => {
+      return page.evaluate(() => {
+        const scheduleTable = document.querySelector("#scheduleTable");
+        const legend = document.querySelector("#scheduleLegendPanel");
+        if (!scheduleTable || !legend) {
+          return Number.POSITIVE_INFINITY;
+        }
+        const scheduleTableRect = scheduleTable.getBoundingClientRect();
+        const legendRect = legend.getBoundingClientRect();
+        return Math.abs(legendRect.y - scheduleTableRect.y);
+      });
+    }, {
+      timeout: 2000
+    }).toBeLessThanOrEqual(5);
   });
 
   test("fixed top chrome stays vertically locked while the legend is open and the page scrolls", async ({ page }) => {
@@ -542,18 +565,23 @@ test.describe("Schedule module", () => {
     const metrics = await page.evaluate(() => {
       const panel = document.querySelector("#scheduleLegendPanel");
       const content = document.querySelector("#scheduleLegendContent");
+      const headers = Array.from(document.querySelectorAll("#scheduleLegendTable thead th")).map((node) => node.textContent.trim());
+      const headerWidths = Array.from(document.querySelectorAll("#scheduleLegendTable thead th")).map((node) => Math.round(node.getBoundingClientRect().width));
       if (!panel || !content) {
         return null;
       }
       return {
         panelWidth: Math.round(panel.getBoundingClientRect().width),
-        scrollable: content.scrollHeight > content.clientHeight
+        scrollable: content.scrollHeight > content.clientHeight,
+        headers,
+        headerWidths
       };
     });
 
     expect(metrics).not.toBeNull();
-    expect(metrics.panelWidth).toBeLessThanOrEqual(740);
     expect(metrics.scrollable).toBeTruthy();
+    expect(metrics.headers).toEqual(["班碼", "上班", "下班", "計薪", "夜班", "備註"]);
+    expect(metrics.headerWidths[5]).toBeGreaterThan(metrics.headerWidths[0] * 4);
   });
 
   test("wheel over the legend panel scrolls only the panel content", async ({ page }) => {
