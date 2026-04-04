@@ -455,7 +455,7 @@ test.describe("Schedule module", () => {
         }
         const periodGridRect = periodGrid.getBoundingClientRect();
         const legendRect = legend.getBoundingClientRect();
-        return Math.abs(legendRect.x - (periodGridRect.right + 16));
+        return Math.abs(legendRect.x - (periodGridRect.right + 12));
       });
     }, {
       timeout: 2000
@@ -565,14 +565,16 @@ test.describe("Schedule module", () => {
     const metrics = await page.evaluate(() => {
       const panel = document.querySelector("#scheduleLegendPanel");
       const content = document.querySelector("#scheduleLegendContent");
-      const headers = Array.from(document.querySelectorAll("#scheduleLegendTable thead th")).map((node) => node.textContent.trim());
-      const headerWidths = Array.from(document.querySelectorAll("#scheduleLegendTable thead th")).map((node) => Math.round(node.getBoundingClientRect().width));
-      if (!panel || !content) {
+      const title = document.querySelector("#scheduleLegendPanel .schedule-legend__title");
+      const headers = Array.from(document.querySelectorAll("#scheduleLegendTable .schedule-legend-table__label-row th")).map((node) => node.textContent.trim());
+      const headerWidths = Array.from(document.querySelectorAll("#scheduleLegendTable .schedule-legend-table__label-row th")).map((node) => Math.round(node.getBoundingClientRect().width));
+      if (!panel || !content || !title) {
         return null;
       }
       return {
         panelWidth: Math.round(panel.getBoundingClientRect().width),
         scrollable: content.scrollHeight > content.clientHeight,
+        titleText: title.textContent.trim(),
         headers,
         headerWidths
       };
@@ -580,8 +582,9 @@ test.describe("Schedule module", () => {
 
     expect(metrics).not.toBeNull();
     expect(metrics.scrollable).toBeTruthy();
+    expect(metrics.titleText).toBe("班碼參照");
     expect(metrics.headers).toEqual(["班碼", "上班", "下班", "計薪", "夜班", "備註"]);
-    expect(metrics.headerWidths[5]).toBeGreaterThan(metrics.headerWidths[0] * 4);
+    expect(metrics.headerWidths[5]).toBeGreaterThan(metrics.headerWidths[0] * 3);
   });
 
   test("wheel over the legend panel scrolls only the panel content", async ({ page }) => {

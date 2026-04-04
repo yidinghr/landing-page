@@ -121,6 +121,7 @@
     legendContent: document.getElementById("scheduleLegendContent"),
     legendBody: document.getElementById("scheduleLegendBody"),
     legendTable: document.getElementById("scheduleLegendTable"),
+    sheetFrame: document.querySelector(".schedule-sheet-frame"),
     shiftCodeList: document.getElementById("scheduleShiftCodeList"),
     table: document.getElementById("scheduleTable"),
     tableHead: document.getElementById("scheduleTableHead"),
@@ -570,7 +571,7 @@
       i18n.t("schedule.legend.nightHours"),
       i18n.t("schedule.legend.remark")
     ];
-    const headCells = dom.legendTable.querySelectorAll("thead th");
+    const headCells = dom.legendTable.querySelectorAll(".schedule-legend-table__label-row th");
     headLabels.forEach(function (label, index) {
       if (headCells[index]) {
         headCells[index].textContent = label;
@@ -584,7 +585,7 @@
         '<td title="' + escapeHtml(item.checkOut) + '">' + escapeHtml(item.checkOut) + "</td>",
         '<td title="' + escapeHtml(item.hoursPay) + '">' + escapeHtml(item.hoursPay) + "</td>",
         '<td title="' + escapeHtml(item.nightHours) + '">' + escapeHtml(item.nightHours) + "</td>",
-        '<td class="schedule-legend-table__remark-cell"><input class="schedule-legend-table__remark-input" data-legend-remark="' + escapeHtml(item.code) + '" type="text" value="' + escapeHtml(getLegendRemark(item.code)) + '" placeholder="' + escapeHtml(i18n.t("schedule.legend.remark")) + '" aria-label="' + escapeHtml(i18n.t("schedule.legend.remark") + " " + item.code) + '"></td>',
+        '<td class="schedule-legend-table__remark-cell"><input class="schedule-legend-table__remark-input" data-legend-remark="' + escapeHtml(item.code) + '" type="text" value="' + escapeHtml(getLegendRemark(item.code)) + '" placeholder="" aria-label="' + escapeHtml(i18n.t("schedule.legend.remark") + " " + item.code) + '"></td>',
         "</tr>"
       ].join("");
     }).join("");
@@ -1520,13 +1521,22 @@
       const firstHeadRow = dom.tableHead.querySelector("tr");
       const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
       const tableRect = dom.table ? dom.table.getBoundingClientRect() : null;
+      const frameRect = dom.sheetFrame ? dom.sheetFrame.getBoundingClientRect() : null;
       const periodGridRect = dom.periodGrid ? dom.periodGrid.getBoundingClientRect() : null;
-      const minimumTop = headerHeight + periodHeight + 4;
-      const legendTop = tableRect
+      const minimumTop = headerHeight + periodHeight;
+      const legendTop = frameRect
+        ? Math.max(minimumTop, Math.round(frameRect.top))
+        : tableRect
         ? Math.max(minimumTop, Math.round(tableRect.top))
         : minimumTop;
+      const legendRight = frameRect
+        ? Math.max(0, Math.round(window.innerWidth - frameRect.right))
+        : 8;
+      const legendBottom = frameRect
+        ? Math.max(0, Math.round(window.innerHeight - frameRect.bottom))
+        : 8;
       const legendLeft = periodGridRect
-        ? Math.max(16, Math.round(periodGridRect.right + 16))
+        ? Math.max(16, Math.round(periodGridRect.right + 12))
         : Math.max(16, Math.round(window.innerWidth * 0.58));
       [dom.workspace, dom.app].forEach(function (target) {
         if (!target) {
@@ -1538,6 +1548,8 @@
         target.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
         target.style.setProperty("--legend-panel-top", String(legendTop) + "px");
         target.style.setProperty("--legend-panel-left", String(legendLeft) + "px");
+        target.style.setProperty("--legend-panel-right", String(legendRight) + "px");
+        target.style.setProperty("--legend-panel-bottom", String(legendBottom) + "px");
       });
       syncSummarySpacerWidth();
       requestFrozenHeaderSync();

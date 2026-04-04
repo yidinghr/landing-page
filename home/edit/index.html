@@ -121,14 +121,21 @@
 </main>
 
 <aside id="scheduleLegendPanel" class="schedule-legend" aria-label="班碼參照面板">
-<div class="schedule-legend__inner">
-<div class="schedule-legend__top">
+<div class="schedule-legend__head">
 <h2 class="schedule-legend__title">班碼參照</h2>
 </div>
 <div id="scheduleLegendContent" class="schedule-legend__content">
 <table id="scheduleLegendTable" class="schedule-legend-table">
+<colgroup>
+<col class="schedule-legend-col schedule-legend-col--code">
+<col class="schedule-legend-col schedule-legend-col--in">
+<col class="schedule-legend-col schedule-legend-col--out">
+<col class="schedule-legend-col schedule-legend-col--pay">
+<col class="schedule-legend-col schedule-legend-col--night">
+<col class="schedule-legend-col schedule-legend-col--remark">
+</colgroup>
 <thead>
-<tr>
+<tr class="schedule-legend-table__label-row">
 <th>SHIFT CODE</th>
 <th>CHECK IN TIME</th>
 <th>CHECK OUT TIME</th>
@@ -139,7 +146,6 @@
 </thead>
 <tbody id="scheduleLegendBody"></tbody>
 </table>
-</div>
 </div>
 </aside>
 </div>
