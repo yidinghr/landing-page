@@ -3,9 +3,9 @@
   overflow-x: hidden;
   overflow-y: auto;
   background:
-    radial-gradient(circle at 18% 16%, rgba(244, 213, 31, 0.1), transparent 24%),
-    radial-gradient(circle at 82% 84%, rgba(244, 213, 31, 0.08), transparent 28%),
-    linear-gradient(180deg, #010101 0%, #050505 46%, #020202 100%);
+    radial-gradient(circle at 18% 16%, rgba(235, 201, 117, 0.08), transparent 24%),
+    radial-gradient(circle at 82% 84%, rgba(235, 201, 117, 0.06), transparent 28%),
+    linear-gradient(180deg, #050307 0%, #0a070d 52%, #040307 100%);
 }
 
 .login-page-ambient,
@@ -20,28 +20,28 @@
   height: 460px;
   border-radius: 50%;
   filter: blur(78px);
-  opacity: 0.3;
+  opacity: 0.22;
 }
 
 .login-page-ambient--left {
   top: -150px;
   left: -120px;
-  background: radial-gradient(circle, rgba(244, 213, 31, 0.18), rgba(244, 213, 31, 0.02) 62%, transparent 76%);
+  background: radial-gradient(circle, rgba(233, 197, 110, 0.18), rgba(233, 197, 110, 0.02) 62%, transparent 76%);
 }
 
 .login-page-ambient--right {
   right: -140px;
   bottom: -160px;
-  background: radial-gradient(circle, rgba(244, 213, 31, 0.16), rgba(244, 213, 31, 0.01) 62%, transparent 76%);
+  background: radial-gradient(circle, rgba(233, 197, 110, 0.14), rgba(233, 197, 110, 0.01) 62%, transparent 76%);
 }
 
 .login-page-grid {
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
   background-size: 34px 34px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 88%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 88%);
 }
 
 .login-stage {
@@ -51,24 +51,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 18px;
 }
 
 .login-layout {
   width: min(1380px, 100%);
-  min-height: min(800px, calc(100vh - 40px));
+  min-height: min(820px, calc(100vh - 36px));
   display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(470px, 0.98fr);
-  gap: 20px;
-  padding: 20px;
-  border: 1px solid rgba(244, 213, 31, 0.14);
-  border-radius: 38px;
+  grid-template-columns: minmax(0, 1.04fr) minmax(470px, 0.96fr);
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(233, 197, 110, 0.12);
+  border-radius: 36px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
-    rgba(6, 6, 6, 0.95);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.01)),
+    rgba(8, 7, 10, 0.94);
   box-shadow:
-    0 34px 96px rgba(0, 0, 0, 0.54),
-    0 0 0 1px rgba(244, 213, 31, 0.04);
+    0 30px 92px rgba(0, 0, 0, 0.52),
+    0 0 0 1px rgba(233, 197, 110, 0.03);
   backdrop-filter: blur(16px);
 }
 
@@ -85,52 +85,45 @@
   display: flex;
   flex-direction: column;
   border-radius: 30px;
-  padding: 28px 28px 26px;
+  padding: 26px 28px 26px;
   background:
-    radial-gradient(circle at 78% 18%, rgba(255, 145, 31, 0.56), transparent 22%),
-    radial-gradient(circle at 72% 34%, rgba(255, 125, 12, 0.34), transparent 18%),
-    radial-gradient(circle at 38% 24%, rgba(91, 148, 173, 0.34), transparent 30%),
-    radial-gradient(circle at 34% 58%, rgba(72, 114, 138, 0.24), transparent 30%),
-    linear-gradient(135deg, #0c1218 0%, #0f161b 34%, #141414 62%, #0b0b0b 100%);
+    radial-gradient(circle at 76% 22%, rgba(203, 124, 54, 0.2), transparent 20%),
+    radial-gradient(circle at 34% 24%, rgba(72, 93, 143, 0.16), transparent 28%),
+    linear-gradient(135deg, #0e0a12 0%, #120d16 38%, #1a1111 70%, #0b0910 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -60px 120px rgba(0, 0, 0, 0.34);
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -40px 90px rgba(0, 0, 0, 0.28);
 }
 
-.login-visual-card::before {
-  content: "";
+.login-visual-card__nebula,
+.login-visual-card__stars {
   position: absolute;
-  inset: 0;
+  inset: -12%;
+  pointer-events: none;
+}
+
+.login-visual-card__nebula {
   background:
-    radial-gradient(circle at 72% 26%, rgba(255, 188, 84, 0.24), transparent 22%),
-    radial-gradient(circle at 30% 36%, rgba(155, 210, 229, 0.16), transparent 26%),
-    linear-gradient(180deg, transparent 0%, transparent 58%, rgba(0, 0, 0, 0.5) 100%);
-  pointer-events: none;
+    radial-gradient(circle at 18% 20%, rgba(118, 129, 204, 0.22), transparent 18%),
+    radial-gradient(circle at 70% 22%, rgba(222, 143, 68, 0.24), transparent 22%),
+    radial-gradient(circle at 28% 70%, rgba(87, 108, 180, 0.16), transparent 20%),
+    radial-gradient(circle at 74% 78%, rgba(224, 167, 92, 0.14), transparent 22%),
+    radial-gradient(circle at 52% 48%, rgba(255, 214, 140, 0.1), transparent 22%);
+  filter: blur(16px) saturate(1.04);
+  opacity: 0.88;
+  animation: ydNebulaDrift 26s linear infinite alternate;
 }
 
-.login-visual-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
+.login-visual-card__stars {
   background-image:
-    radial-gradient(circle, rgba(255, 196, 70, 0.9) 0 1px, transparent 1.8px),
-    radial-gradient(circle, rgba(255, 159, 42, 0.72) 0 1px, transparent 1.9px);
-  background-size: 76px 76px, 112px 112px;
-  background-position: 10% 18%, 82% 36%;
+    radial-gradient(circle, rgba(255, 224, 160, 0.9) 0 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(255, 246, 210, 0.72) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(220, 210, 255, 0.44) 0 1px, transparent 1.8px);
+  background-size: 82px 82px, 126px 126px, 164px 164px;
+  background-position: 8% 12%, 76% 18%, 40% 68%;
+  opacity: 0.44;
   mix-blend-mode: screen;
-  opacity: 0.42;
-  pointer-events: none;
-}
-
-.login-visual-card__glow {
-  position: absolute;
-  inset: auto auto -70px -60px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  filter: blur(48px);
-  background: radial-gradient(circle, rgba(255, 132, 0, 0.28), rgba(255, 132, 0, 0.02) 68%, transparent 74%);
-  opacity: 0.7;
+  animation: ydStarsDrift 34s linear infinite alternate;
 }
 
 .login-visual-brand {
@@ -141,9 +134,9 @@
   gap: 12px;
   min-height: 52px;
   padding: 0 16px 0 10px;
-  border: 1px solid rgba(244, 213, 31, 0.18);
+  border: 1px solid rgba(233, 197, 110, 0.16);
   border-radius: 999px;
-  background: rgba(8, 8, 8, 0.42);
+  background: rgba(10, 10, 12, 0.34);
   backdrop-filter: blur(12px);
 }
 
@@ -152,17 +145,17 @@
   height: 40px;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 30% 30%, rgba(255, 241, 170, 0.28), transparent 38%),
-    linear-gradient(135deg, rgba(244, 213, 31, 0.22), rgba(244, 213, 31, 0.08));
+    radial-gradient(circle at 30% 30%, rgba(255, 243, 205, 0.18), transparent 38%),
+    linear-gradient(135deg, rgba(233, 197, 110, 0.18), rgba(233, 197, 110, 0.06));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 24px rgba(244, 213, 31, 0.16);
+  box-shadow: 0 0 20px rgba(233, 197, 110, 0.12);
 }
 
 .login-visual-brand__mark {
   width: 22px;
-  filter: drop-shadow(0 0 8px rgba(244, 213, 31, 0.16));
+  filter: drop-shadow(0 0 6px rgba(233, 197, 110, 0.12));
 }
 
 .login-visual-brand__copy {
@@ -179,7 +172,7 @@
 }
 
 .login-visual-brand__label {
-  color: rgba(255, 243, 176, 0.66);
+  color: rgba(245, 223, 178, 0.68);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -189,17 +182,17 @@
 .login-visual-center {
   position: relative;
   z-index: 1;
-  min-height: 330px;
+  flex: 1;
+  min-height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10px;
 }
 
 .login-visual-emblem {
   position: relative;
-  z-index: 2;
-  width: min(190px, 34%);
+  z-index: 3;
+  width: min(210px, 36%);
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -217,36 +210,37 @@
 }
 
 .login-visual-emblem::before {
-  width: 94%;
-  height: 94%;
-  background: radial-gradient(circle, rgba(255, 231, 144, 0.16), rgba(255, 198, 46, 0.06) 36%, rgba(255, 181, 20, 0.02) 58%, transparent 72%);
+  width: 96%;
+  height: 96%;
+  background: radial-gradient(circle, rgba(255, 231, 170, 0.14), rgba(235, 201, 117, 0.05) 36%, rgba(235, 201, 117, 0.01) 60%, transparent 74%);
   filter: blur(8px);
 }
 
 .login-visual-emblem::after {
   width: 128%;
   height: 128%;
-  background: radial-gradient(circle, rgba(255, 194, 49, 0.18), rgba(255, 194, 49, 0.04) 52%, transparent 70%);
-  filter: blur(16px);
+  background: radial-gradient(circle, rgba(235, 201, 117, 0.14), rgba(235, 201, 117, 0.02) 52%, transparent 72%);
+  filter: blur(18px);
 }
 
 .login-logo {
   position: relative;
   z-index: 2;
-  width: min(150px, 84%);
+  width: min(158px, 84%);
   filter:
-    drop-shadow(0 0 18px rgba(255, 220, 79, 0.28))
-    drop-shadow(0 16px 34px rgba(0, 0, 0, 0.38));
+    drop-shadow(0 0 16px rgba(240, 208, 122, 0.24))
+    drop-shadow(0 14px 30px rgba(0, 0, 0, 0.34));
 }
 
 .login-dragon-orbit {
   position: absolute;
   inset: 50% auto auto 50%;
-  width: min(420px, 72%);
+  width: min(520px, 74%);
   aspect-ratio: 1;
-  transform: translate(-50%, -54%);
-  z-index: 1;
+  transform: translate(-50%, -50%);
+  z-index: 2;
   pointer-events: none;
+  animation: ydOrbitFloat 8s ease-in-out infinite;
 }
 
 .login-dragon-orbit__ring,
@@ -257,104 +251,135 @@
 }
 
 .login-dragon-orbit__ring {
-  border: 1px solid rgba(244, 213, 31, 0.1);
-  box-shadow: inset 0 0 30px rgba(244, 213, 31, 0.03);
+  border: 1px solid rgba(235, 201, 117, 0.08);
+  box-shadow: inset 0 0 28px rgba(235, 201, 117, 0.03);
+}
+
+.login-dragon-orbit__ring--middle {
+  inset: 9%;
+  border-color: rgba(235, 201, 117, 0.1);
 }
 
 .login-dragon-orbit__ring--inner {
-  inset: 12%;
-  border-color: rgba(244, 213, 31, 0.14);
+  inset: 19%;
+  border-color: rgba(235, 201, 117, 0.12);
 }
 
-.login-dragon-orbit__trail::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: conic-gradient(
-    from 188deg,
-    transparent 0deg 188deg,
-    rgba(255, 223, 88, 0.02) 196deg,
-    rgba(255, 205, 38, 0.5) 214deg,
-    rgba(255, 244, 198, 1) 232deg,
-    rgba(255, 214, 78, 0.94) 248deg,
-    rgba(255, 190, 36, 0.72) 268deg,
-    rgba(255, 170, 18, 0.22) 290deg,
-    transparent 308deg 360deg
-  );
-  mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 10px));
-  filter: drop-shadow(0 0 28px rgba(255, 195, 34, 0.42));
+.login-dragon-orbit__trail {
+  transform-origin: center center;
 }
 
+.login-dragon-orbit__trail::before,
 .login-dragon-orbit__trail::after {
   content: "";
   position: absolute;
-  inset: -1px;
+  inset: 0;
   border-radius: inherit;
+}
+
+.login-dragon-orbit__trail::before {
+  inset: -3px;
   background: conic-gradient(
-    from 204deg,
-    transparent 0deg 216deg,
-    rgba(255, 255, 255, 0.04) 226deg,
-    rgba(255, 231, 144, 0.26) 240deg,
-    rgba(255, 183, 24, 0.08) 264deg,
-    transparent 286deg 360deg
+    from 176deg,
+    transparent 0deg 174deg,
+    rgba(255, 246, 214, 0.04) 186deg,
+    rgba(245, 223, 178, 0.32) 200deg,
+    rgba(255, 244, 214, 1) 220deg,
+    rgba(240, 208, 122, 0.98) 236deg,
+    rgba(232, 188, 96, 0.92) 254deg,
+    rgba(220, 162, 72, 0.32) 278deg,
+    transparent 304deg 360deg
   );
-  mask: radial-gradient(farthest-side, transparent calc(100% - 20px), #000 calc(100% - 17px));
+  filter: drop-shadow(0 0 26px rgba(240, 208, 122, 0.28));
+}
+
+.login-dragon-orbit__trail::after {
+  inset: -1px;
+  background: repeating-conic-gradient(
+    from 176deg,
+    rgba(255, 247, 219, 0) 0deg 7deg,
+    rgba(255, 243, 205, 0.14) 7deg 9deg,
+    rgba(234, 196, 110, 0) 9deg 13deg
+  );
+  opacity: 0.34;
 }
 
 .login-dragon-orbit__trail--outer {
-  animation: ydSpinClockwise 10s linear infinite;
+  animation: ydSpinClockwise 12s linear infinite, ydTrailShiftA 7s ease-in-out infinite;
+}
+
+.login-dragon-orbit__trail--outer::before,
+.login-dragon-orbit__trail--outer::after {
+  mask: radial-gradient(farthest-side, transparent calc(100% - 17px), #000 calc(100% - 11px));
+}
+
+.login-dragon-orbit__trail--middle {
+  inset: 8%;
+  opacity: 0.92;
+  animation: ydSpinCounter 9s linear infinite, ydTrailShiftB 6.2s ease-in-out infinite;
+}
+
+.login-dragon-orbit__trail--middle::before,
+.login-dragon-orbit__trail--middle::after {
+  mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 10px));
 }
 
 .login-dragon-orbit__trail--inner {
-  inset: 12%;
-  opacity: 0.95;
-  animation: ydSpinCounter 8s linear infinite;
+  inset: 18%;
+  opacity: 0.72;
+  animation: ydSpinClockwise 7.2s linear infinite, ydTrailShiftC 5.8s ease-in-out infinite;
+}
+
+.login-dragon-orbit__trail--inner::before,
+.login-dragon-orbit__trail--inner::after {
+  mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 8px));
 }
 
 .login-dragon-orbit__head {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 58px;
-  height: 58px;
-  margin: -29px 0 0 -29px;
+  width: 62px;
+  height: 62px;
+  margin: -31px 0 0 -31px;
   pointer-events: none;
 }
 
-.login-dragon-orbit__head::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  clip-path: polygon(50% 0%, 72% 12%, 88% 28%, 100% 50%, 86% 62%, 100% 82%, 74% 74%, 54% 100%, 36% 76%, 0% 82%, 14% 60%, 0% 50%, 12% 28%, 30% 12%);
-  background:
-    radial-gradient(circle at 36% 34%, rgba(255, 255, 255, 0.98), rgba(255, 238, 166, 0.94) 24%, rgba(255, 210, 50, 0.96) 50%, rgba(255, 168, 8, 0.3) 72%, transparent 78%);
-  filter:
-    drop-shadow(0 0 18px rgba(255, 205, 38, 0.58))
-    drop-shadow(0 0 44px rgba(255, 179, 12, 0.32));
-}
-
+.login-dragon-orbit__head::before,
 .login-dragon-orbit__head::after {
   content: "";
   position: absolute;
-  top: 20px;
-  left: 22px;
-  width: 54px;
-  height: 14px;
+}
+
+.login-dragon-orbit__head::before {
+  inset: 0;
+  clip-path: polygon(54% 0%, 72% 8%, 88% 22%, 100% 42%, 92% 58%, 100% 80%, 72% 74%, 58% 100%, 36% 76%, 0% 82%, 14% 56%, 0% 44%, 12% 24%, 30% 10%);
+  background:
+    radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.98), rgba(255, 243, 205, 0.92) 24%, rgba(240, 208, 122, 0.96) 48%, rgba(228, 180, 84, 0.9) 66%, rgba(212, 148, 58, 0.3) 76%, transparent 82%);
+  filter:
+    drop-shadow(0 0 16px rgba(240, 208, 122, 0.46))
+    drop-shadow(0 0 44px rgba(228, 180, 84, 0.22));
+}
+
+.login-dragon-orbit__head::after {
+  top: 16px;
+  left: 18px;
+  width: 66px;
+  height: 16px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255, 244, 198, 0.88), rgba(255, 214, 78, 0.54) 36%, rgba(255, 170, 18, 0.12) 72%, transparent 100%);
-  transform: rotate(14deg);
-  filter: blur(1.4px);
-  opacity: 0.9;
+  background: linear-gradient(90deg, rgba(255, 243, 205, 0.72), rgba(240, 208, 122, 0.34) 36%, rgba(228, 180, 84, 0.08) 72%, transparent 100%);
+  transform: rotate(12deg);
+  filter: blur(1.6px);
 }
 
 .login-dragon-orbit__head--outer {
-  animation: ydDragonHeadOuter 10s linear infinite;
+  animation: ydDragonHeadOuter 12s linear infinite, ydHeadDriftA 6s ease-in-out infinite;
 }
 
 .login-dragon-orbit__head--inner {
-  transform: scale(0.8);
-  animation: ydDragonHeadInner 8s linear infinite;
+  transform: scale(0.74);
+  opacity: 0.84;
+  animation: ydDragonHeadInner 9s linear infinite, ydHeadDriftB 5.4s ease-in-out infinite;
 }
 
 .login-dragon-orbit__spark {
@@ -362,35 +387,43 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 1), rgba(255, 230, 116, 0.92) 34%, rgba(255, 215, 66, 0.1) 74%, transparent 100%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 1), rgba(245, 223, 178, 0.92) 34%, rgba(240, 208, 122, 0.12) 74%, transparent 100%);
   box-shadow:
-    0 0 20px rgba(255, 232, 125, 0.74),
-    0 0 40px rgba(255, 210, 50, 0.22);
+    0 0 16px rgba(255, 231, 170, 0.64),
+    0 0 34px rgba(240, 208, 122, 0.18);
 }
 
 .login-dragon-orbit__spark--1 {
-  top: 10%;
+  top: 9%;
   left: 72%;
   animation: ydSparkPulse 3s ease-in-out infinite;
 }
 
 .login-dragon-orbit__spark--2 {
-  right: 12%;
-  bottom: 24%;
+  right: 10%;
+  bottom: 22%;
   animation: ydSparkPulse 3.2s ease-in-out infinite 0.7s;
 }
 
 .login-dragon-orbit__spark--3 {
-  left: 16%;
-  bottom: 20%;
+  left: 15%;
+  bottom: 18%;
   animation: ydSparkPulse 3.4s ease-in-out infinite 1.1s;
+}
+
+.login-dragon-orbit__spark--4 {
+  top: 22%;
+  left: 16%;
+  animation: ydSparkPulse 2.8s ease-in-out infinite 0.4s;
 }
 
 .login-visual-copy {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   margin-top: auto;
-  max-width: 540px;
+  max-width: 520px;
+  text-align: center;
+  align-self: center;
 }
 
 .login-visual-copy__lines {
@@ -404,7 +437,7 @@
   display: block;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .login-visual-copy__lines span:nth-child(1) {
@@ -423,32 +456,33 @@
 
 .login-title {
   margin: 0;
-  color: #ffffff;
-  font-family: var(--font-title);
-  font-size: clamp(48px, 5vw, 76px);
+  color: #fff9ee;
+  font-family: "Noto Serif TC", "Noto Serif SC", "Microsoft JhengHei", "Microsoft YaHei UI", serif;
+  font-size: clamp(48px, 5vw, 74px);
   font-weight: 900;
-  line-height: 0.96;
-  letter-spacing: 0.03em;
+  line-height: 0.98;
+  letter-spacing: 0.04em;
   text-shadow:
-    0 0 18px rgba(255, 203, 51, 0.1),
-    0 16px 34px rgba(0, 0, 0, 0.28);
+    0 0 16px rgba(240, 208, 122, 0.08),
+    0 14px 30px rgba(0, 0, 0, 0.24);
 }
 
 .login-visual-copy__subheading {
   margin: 12px 0 0;
-  color: rgba(255, 243, 176, 0.84);
+  color: rgba(245, 223, 178, 0.84);
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .login-visual-copy__text {
   margin: 14px 0 0;
-  max-width: 460px;
-  color: rgba(255, 255, 255, 0.82);
+  max-width: 440px;
+  color: rgba(255, 244, 214, 0.8);
+  font-family: "Microsoft YaHei UI", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
   font-size: 15px;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
 .login-form-panel {
@@ -459,26 +493,39 @@
 .login-form-shell {
   width: 100%;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   border-radius: 30px;
-  background: linear-gradient(180deg, rgba(8, 8, 8, 0.98), rgba(4, 4, 4, 0.96));
-  border: 1px solid rgba(244, 213, 31, 0.12);
-  padding: 50px 52px 38px;
+  background: linear-gradient(180deg, rgba(10, 8, 12, 0.98), rgba(6, 5, 8, 0.96));
+  border: 1px solid rgba(233, 197, 110, 0.12);
+  padding: 44px 48px 36px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.02),
     0 24px 60px rgba(0, 0, 0, 0.24);
 }
 
+.login-mode-switch,
+.login-panel-head,
+.auth-card,
+.auth-message {
+  width: min(100%, 540px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .login-mode-switch {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0;
   min-height: 50px;
   padding: 4px;
   border-radius: 999px;
-  background: rgba(30, 30, 30, 0.98);
+  background: rgba(30, 28, 34, 0.96);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 12px 28px rgba(0, 0, 0, 0.2);
+    0 12px 28px rgba(0, 0, 0, 0.18);
 }
 
 .login-mode-switch__item {
@@ -487,28 +534,29 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 249, 238, 0.78);
   font-size: 16px;
   font-weight: 700;
   padding: 0 24px;
 }
 
 .login-mode-switch__item.is-active {
-  background: linear-gradient(135deg, #f8e27b 0%, #f4d51f 48%, #c08d12 100%);
-  color: #171717;
-  box-shadow: 0 10px 24px rgba(244, 213, 31, 0.22);
+  background: linear-gradient(135deg, #f6e8bf 0%, #e9c56e 54%, #d4a95b 100%);
+  color: #1a1712;
+  box-shadow: 0 8px 20px rgba(233, 197, 110, 0.18);
 }
 
 .login-panel-head {
-  margin-top: 26px;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  text-align: center;
 }
 
 .login-panel-kicker {
   margin: 0;
-  color: rgba(255, 243, 176, 0.72);
+  color: rgba(245, 223, 178, 0.72);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.24em;
@@ -517,15 +565,16 @@
 
 .login-panel-title {
   margin: 0;
-  color: #f8f3df;
-  font-family: var(--font-title);
-  font-size: clamp(40px, 4.6vw, 62px);
-  line-height: 1.04;
+  color: #fff8eb;
+  font-family: "Noto Serif TC", "Noto Serif SC", "Microsoft JhengHei", "Microsoft YaHei UI", serif;
+  font-size: clamp(38px, 4.2vw, 58px);
+  line-height: 1.06;
 }
 
 .login-panel-note {
   margin: 0;
-  color: rgba(255, 243, 176, 0.66);
+  color: rgba(245, 223, 178, 0.7);
+  font-family: "Microsoft YaHei UI", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
   font-size: 16px;
   line-height: 1.7;
 }
@@ -544,7 +593,8 @@
 }
 
 .auth-label {
-  color: rgba(255, 243, 176, 0.82);
+  color: rgba(245, 223, 178, 0.82);
+  font-family: "Microsoft YaHei UI", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -554,11 +604,11 @@
   width: 100%;
   min-height: 60px;
   padding: 0 22px;
-  border: 1px solid rgba(244, 213, 31, 0.18);
+  border: 1px solid rgba(233, 197, 110, 0.16);
   border-radius: 18px;
   outline: none;
-  background: rgba(30, 30, 30, 0.92);
-  color: #f4d51f;
+  background: rgba(32, 29, 35, 0.9);
+  color: #f2e3bc;
   font-size: 19px;
   font-weight: 600;
   transition:
@@ -569,16 +619,16 @@
 }
 
 .auth-input:hover {
-  border-color: rgba(244, 213, 31, 0.34);
-  background: rgba(34, 34, 34, 0.96);
+  border-color: rgba(233, 197, 110, 0.28);
+  background: rgba(36, 33, 40, 0.94);
 }
 
 .auth-input:focus {
-  border-color: rgba(255, 224, 88, 0.76);
+  border-color: rgba(245, 223, 178, 0.56);
   box-shadow:
-    0 0 0 4px rgba(244, 213, 31, 0.08),
-    0 0 24px rgba(244, 213, 31, 0.12);
-  background: rgba(24, 24, 24, 0.98);
+    0 0 0 4px rgba(233, 197, 110, 0.06),
+    0 0 20px rgba(233, 197, 110, 0.08);
+  background: rgba(28, 26, 32, 0.98);
   transform: translateY(-1px);
 }
 
@@ -587,23 +637,24 @@
   min-height: 62px;
   border: 0;
   border-radius: 20px;
-  background: linear-gradient(135deg, #f8e27b 0%, #f4d51f 45%, #c08d12 100%);
-  color: #111111;
+  background: linear-gradient(135deg, #f6e8bf 0%, #e9c56e 54%, #d4a95b 100%);
+  color: #1a1712;
+  font-family: "Noto Serif TC", "Noto Serif SC", "Microsoft JhengHei", "Microsoft YaHei UI", serif;
   font-size: 22px;
   font-weight: 900;
   letter-spacing: 0.04em;
   box-shadow:
-    0 18px 36px rgba(201, 151, 18, 0.28),
-    0 0 36px rgba(244, 213, 31, 0.12);
+    0 16px 30px rgba(212, 169, 91, 0.22),
+    0 0 28px rgba(233, 197, 110, 0.08);
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
 .auth-submit-button:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 24px 42px rgba(201, 151, 18, 0.32),
-    0 0 42px rgba(244, 213, 31, 0.16);
-  filter: saturate(1.04);
+    0 22px 36px rgba(212, 169, 91, 0.26),
+    0 0 36px rgba(233, 197, 110, 0.1);
+  filter: saturate(1.02);
 }
 
 .auth-submit-button:active {
@@ -612,19 +663,20 @@
 
 .auth-message {
   min-height: 28px;
-  margin: 16px 0 0;
+  margin-top: 16px;
   color: var(--color-text-strong);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  text-align: center;
 }
 
 .auth-message.is-error {
-  color: #ffb54d;
+  color: #ffcb7d;
 }
 
 .auth-message.is-success {
-  color: #fff3a0;
+  color: #fff0c4;
 }
 
 .login-register-hidden {
@@ -637,6 +689,24 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@keyframes ydNebulaDrift {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, 2%, 0) scale(1.06);
+  }
+}
+
+@keyframes ydStarsDrift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-2%, 1%, 0) scale(1.03);
+  }
 }
 
 @keyframes ydSpinClockwise {
@@ -657,21 +727,81 @@
   }
 }
 
+@keyframes ydOrbitFloat {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  50% {
+    transform: translate(-50.8%, -49.2%) rotate(1.4deg);
+  }
+}
+
+@keyframes ydTrailShiftA {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.02, 0.985) rotate(3deg);
+  }
+}
+
+@keyframes ydTrailShiftB {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(0.985, 1.02) rotate(-4deg);
+  }
+}
+
+@keyframes ydTrailShiftC {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.015, 0.99) rotate(5deg);
+  }
+}
+
 @keyframes ydDragonHeadOuter {
   from {
-    transform: rotate(0deg) translateY(-198px) rotate(0deg);
+    transform: rotate(0deg) translateY(-246px) rotate(0deg);
   }
   to {
-    transform: rotate(360deg) translateY(-198px) rotate(-360deg);
+    transform: rotate(360deg) translateY(-246px) rotate(-360deg);
   }
 }
 
 @keyframes ydDragonHeadInner {
   from {
-    transform: scale(0.8) rotate(360deg) translateY(-154px) rotate(-360deg);
+    transform: scale(0.74) rotate(360deg) translateY(-188px) rotate(-360deg);
   }
   to {
-    transform: scale(0.8) rotate(0deg) translateY(-154px) rotate(0deg);
+    transform: scale(0.74) rotate(0deg) translateY(-188px) rotate(0deg);
+  }
+}
+
+@keyframes ydHeadDriftA {
+  0%,
+  100% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(4deg);
+  }
+}
+
+@keyframes ydHeadDriftB {
+  0%,
+  100% {
+    opacity: 0.84;
+  }
+  50% {
+    opacity: 0.96;
   }
 }
 
@@ -694,15 +824,15 @@
   }
 
   .login-visual-center {
-    min-height: 290px;
+    min-height: 300px;
   }
 
   .login-dragon-orbit {
-    width: min(360px, 84%);
+    width: min(420px, 82%);
   }
 
   .login-form-shell {
-    padding-top: 40px;
+    padding-top: 38px;
   }
 }
 
@@ -712,19 +842,16 @@
   }
 
   .login-layout {
+    min-height: auto;
     padding: 16px;
   }
 
-  .login-visual-card {
-    padding-bottom: 22px;
-  }
-
   .login-visual-center {
-    min-height: 280px;
+    min-height: 300px;
   }
 
   .login-form-shell {
-    padding: 42px 40px 32px;
+    padding: 40px 40px 30px;
   }
 }
 
@@ -749,20 +876,19 @@
   }
 
   .login-visual-center {
-    min-height: 220px;
-    margin-top: 12px;
+    min-height: 240px;
   }
 
   .login-dragon-orbit {
-    width: min(280px, 90%);
+    width: min(300px, 88%);
   }
 
   .login-visual-emblem {
-    width: min(150px, 54%);
+    width: min(160px, 56%);
   }
 
   .login-logo {
-    width: min(118px, 84%);
+    width: min(124px, 84%);
   }
 
   .login-title {
