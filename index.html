@@ -11,42 +11,72 @@
 </head>
 
 <body class="login-page">
+  <div class="login-page-ambient login-page-ambient--left" aria-hidden="true"></div>
+  <div class="login-page-ambient login-page-ambient--right" aria-hidden="true"></div>
   <div class="login-page-grid" aria-hidden="true"></div>
-  <div class="login-page-glow login-page-glow--left" aria-hidden="true"></div>
-  <div class="login-page-glow login-page-glow--right" aria-hidden="true"></div>
 
   <div id="loginPageTools" class="yd-page-tools" aria-label="Page tools"></div>
 
   <main class="login-stage">
-    <section class="login-shell" aria-labelledby="login-title">
-      <div class="login-shell__border" aria-hidden="true"></div>
+    <section class="login-layout" aria-labelledby="login-title">
+      <aside class="login-visual-panel" aria-label="YiDing brand showcase">
+        <div class="login-visual-card">
+          <div class="login-visual-card__glow" aria-hidden="true"></div>
 
-      <header class="login-hero">
-        <div class="login-hero__logo-wrap">
-          <span class="login-hero__logo-halo" aria-hidden="true"></span>
-          <img src="image/logo.png" alt="弈鼎標誌" class="login-logo" />
-        </div>
+          <header class="login-visual-brand">
+            <span class="login-visual-brand__mark-wrap">
+              <img src="image/logo.png" alt="弈鼎標誌" class="login-visual-brand__mark" />
+            </span>
+            <div class="login-visual-brand__copy">
+              <span class="login-visual-brand__name">YiDing International</span>
+              <span class="login-visual-brand__label">Internal Workspace</span>
+            </div>
+          </header>
 
-        <div class="login-brand-copy">
-          <p class="login-eyebrow">YIDING INTERNAL WORKSPACE</p>
-          <h1 id="login-title" class="login-title">弈鼎</h1>
-          <img src="image/logoweb.png" alt="弈鼎國際 YiDing International" class="login-wordmark" />
-          <p class="login-panel-subtitle">黑金風格內部管理入口，保留現有系統邏輯，只重做登入頁面的版面與質感。</p>
-        </div>
+          <div class="login-visual-center">
+            <div class="login-dragon-orbit" aria-hidden="true">
+              <span class="login-dragon-orbit__ring login-dragon-orbit__ring--outer"></span>
+              <span class="login-dragon-orbit__ring login-dragon-orbit__ring--inner"></span>
+              <span class="login-dragon-orbit__trail login-dragon-orbit__trail--outer"></span>
+              <span class="login-dragon-orbit__trail login-dragon-orbit__trail--inner"></span>
+              <span class="login-dragon-orbit__head login-dragon-orbit__head--outer"></span>
+              <span class="login-dragon-orbit__head login-dragon-orbit__head--inner"></span>
+              <span class="login-dragon-orbit__spark login-dragon-orbit__spark--1"></span>
+              <span class="login-dragon-orbit__spark login-dragon-orbit__spark--2"></span>
+              <span class="login-dragon-orbit__spark login-dragon-orbit__spark--3"></span>
+            </div>
 
-        <div class="login-chip-row" aria-hidden="true">
-          <span class="login-chip">INTERNAL</span>
-          <span class="login-chip">SECURE</span>
-          <span class="login-chip">DASHBOARD</span>
+            <div class="login-visual-emblem">
+              <img src="image/logo.png" alt="弈鼎標誌" class="login-logo" />
+            </div>
+          </div>
+
+          <div class="login-visual-copy">
+            <div class="login-visual-copy__lines" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <h1 id="login-title" class="login-title">弈鼎</h1>
+            <img src="image/logoweb.png" alt="弈鼎國際 YiDing International" class="login-wordmark" />
+            <p class="login-visual-copy__text">
+              Internal access for employee records, schedule, attendance and company information.
+            </p>
+          </div>
         </div>
-      </header>
+      </aside>
 
       <section class="login-form-panel" aria-label="Login panel">
         <div class="login-form-shell">
+          <div class="login-mode-switch" aria-hidden="true">
+            <button type="button" class="login-mode-switch__item is-active">Log In</button>
+            <button type="button" class="login-mode-switch__item">YiDing</button>
+          </div>
+
           <div class="login-panel-head">
-            <p class="login-panel-kicker">控制台登入</p>
-            <h2 class="login-panel-title">登入系統</h2>
-            <p class="login-panel-note">請使用內部帳號與密碼登入首頁主控台。</p>
+            <p class="login-panel-kicker">YIDING INTERNAL ACCESS</p>
+            <h2 class="login-panel-title">Welcome Back</h2>
+            <p class="login-panel-note">請使用內部帳號與密碼登入系統。</p>
           </div>
 
           <form class="auth-card" id="loginForm" action="#" method="post" autocomplete="off">
