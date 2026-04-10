@@ -3,40 +3,42 @@
 }
 
 .login-stage {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px;
+  padding: 40px 24px;
 }
 
 .login-panel {
   width: 100%;
-  max-width: 640px;
+  max-width: 660px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translateY(-68px);
+  gap: 0;
+  transform: translateY(-28px);
 }
 
 .login-logo {
-  width: 264px;
-  margin: 0 0 18px;
+  width: 236px;
+  margin: 0 0 12px;
 }
 
 .login-title {
-  margin: 0 0 30px;
+  margin: 0 0 24px;
   color: var(--color-text);
   font-family: var(--font-title);
-  font-size: clamp(104px, 10vw, 126px);
+  font-size: clamp(90px, 9vw, 114px);
   font-weight: 900;
-  line-height: 0.96;
-  letter-spacing: 0.04em;
+  line-height: 0.94;
+  letter-spacing: 0.03em;
   text-align: center;
 }
 
 .auth-card {
-  width: min(520px, 100%);
+  width: min(690px, 100%);
   border: 3px solid var(--color-line);
   background: linear-gradient(180deg, rgba(244, 213, 31, 0.04), rgba(244, 213, 31, 0)), var(--color-panel);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
@@ -44,8 +46,8 @@
 
 .auth-row {
   display: grid;
-  grid-template-columns: 146px 1fr;
-  min-height: 56px;
+  grid-template-columns: 192px 1fr;
+  min-height: 76px;
 }
 
 .auth-row + .auth-row {
@@ -53,13 +55,13 @@
 }
 
 .auth-row--split {
-  grid-template-columns: 146px 1fr 1fr;
+  grid-template-columns: 192px 1fr 1fr;
 }
 
 .auth-label,
 .auth-spacer,
 .auth-button {
-  min-height: 56px;
+  min-height: 76px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,20 +75,20 @@
 
 .auth-label {
   color: var(--color-text);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 .auth-input {
   width: 100%;
-  min-height: 56px;
-  padding: 0 16px;
+  min-height: 76px;
+  padding: 0 18px;
   border: 0;
   outline: 0;
   background: var(--color-panel);
   color: var(--color-text);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 600;
 }
 
@@ -94,9 +96,9 @@
   border: 0;
   background: var(--color-panel);
   color: var(--color-text);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
@@ -106,7 +108,7 @@
 }
 
 .auth-message {
-  min-height: 24px;
+  min-height: 28px;
   margin: 16px 0 0;
   color: var(--color-text-strong);
   font-size: 16px;
@@ -123,50 +125,82 @@
   color: #fff3a0;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .login-panel {
-    transform: none;
+    max-width: 620px;
+    transform: translateY(-12px);
   }
 
   .login-logo {
-    width: 216px;
+    width: 214px;
   }
 
   .login-title {
-    font-size: clamp(82px, 13vw, 96px);
+    font-size: clamp(76px, 12vw, 92px);
+  }
+
+  .auth-card {
+    width: min(620px, 100%);
   }
 
   .auth-row,
   .auth-row--split {
-    grid-template-columns: 112px 1fr;
+    grid-template-columns: 150px 1fr;
+    min-height: 66px;
   }
 
   .auth-row--split .auth-spacer {
     display: none;
   }
 
+  .auth-label,
+  .auth-button,
+  .auth-input {
+    min-height: 66px;
+  }
+
+  .auth-label {
+    font-size: 22px;
+  }
+
+  .auth-input,
+  .auth-button {
+    font-size: 24px;
+  }
+
   .auth-row--split .auth-button--divider {
     border-right: 0;
     border-top: 2px solid var(--color-line);
   }
-
-  .auth-row--split .auth-button {
-    min-height: 56px;
-  }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .login-stage {
-    padding: 16px;
+    padding: 20px 16px;
+  }
+
+  .login-panel {
+    transform: none;
+  }
+
+  .login-logo {
+    width: 176px;
+    margin-bottom: 10px;
   }
 
   .login-title {
-    font-size: clamp(64px, 18vw, 76px);
+    margin-bottom: 18px;
+    font-size: clamp(58px, 16vw, 72px);
+  }
+
+  .auth-card {
+    width: 100%;
   }
 
   .auth-row,
   .auth-row--split {
     grid-template-columns: 1fr;
+    min-height: auto;
   }
 
   .auth-label,
@@ -176,6 +210,14 @@
   }
 
   .auth-label {
+    min-height: 52px;
+    font-size: 20px;
     border-bottom: 2px solid var(--color-line);
+  }
+
+  .auth-input,
+  .auth-button {
+    min-height: 58px;
+    font-size: 22px;
   }
 }
