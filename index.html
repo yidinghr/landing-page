@@ -13,45 +13,67 @@
 <body class="login-page">
   <div id="loginPageTools" class="yd-page-tools" aria-label="Page tools"></div>
   <main class="login-stage">
-    <section class="login-panel" aria-labelledby="login-title">
-      <img src="image/logo.png" alt="弈鼎標誌" class="login-logo" />
+    <section class="login-layout" aria-labelledby="login-title">
+      <aside class="login-brand-panel" aria-label="YiDing brand showcase">
+        <div class="login-brand-panel__inner">
+          <div class="login-brand-orbit" aria-hidden="true">
+            <span class="login-brand-orbit__ring login-brand-orbit__ring--outer"></span>
+            <span class="login-brand-orbit__ring login-brand-orbit__ring--inner"></span>
+            <span class="login-brand-orbit__spark login-brand-orbit__spark--1"></span>
+            <span class="login-brand-orbit__spark login-brand-orbit__spark--2"></span>
+            <span class="login-brand-orbit__spark login-brand-orbit__spark--3"></span>
+            <span class="login-brand-orbit__dragon-trail login-brand-orbit__dragon-trail--1"></span>
+            <span class="login-brand-orbit__dragon-trail login-brand-orbit__dragon-trail--2"></span>
+          </div>
 
-      <h1 id="login-title" class="login-title">弈鼎</h1>
+          <img src="image/logo.png" alt="弈鼎標誌" class="login-logo" />
 
-      <form class="auth-card" id="loginForm" action="#" method="post" autocomplete="off">
-        <div class="auth-row">
-          <label class="auth-label" for="account">帳號</label>
-          <input
-            id="account"
-            name="account"
-            type="text"
-            class="auth-input"
-            value=""
-            autocomplete="off"
-            spellcheck="false"
-          />
+          <div class="login-brand-copy">
+            <h1 id="login-title" class="login-title">弈鼎</h1>
+            <img src="image/logoweb.png" alt="弈鼎國際 YiDing International" class="login-wordmark" />
+          </div>
         </div>
+      </aside>
 
-        <div class="auth-row">
-          <label class="auth-label" for="password">密碼</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            class="auth-input"
-            value=""
-            autocomplete="off"
-          />
+      <section class="login-form-panel" aria-label="Login panel">
+        <div class="login-form-shell">
+          <p class="login-eyebrow">YIDING INTERNAL ACCESS</p>
+          <h2 class="login-panel-title">Welcome back</h2>
+          <p class="login-panel-subtitle">請使用內部帳號登入系統。</p>
+
+          <form class="auth-card" id="loginForm" action="#" method="post" autocomplete="off">
+            <div class="auth-field-group">
+              <label class="auth-label" for="account">帳號</label>
+              <input
+                id="account"
+                name="account"
+                type="text"
+                class="auth-input"
+                value=""
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+
+            <div class="auth-field-group">
+              <label class="auth-label" for="password">密碼</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                class="auth-input"
+                value=""
+                autocomplete="off"
+              />
+            </div>
+
+            <button type="submit" class="auth-submit-button">登入</button>
+          </form>
+
+          <p id="loginMessage" class="auth-message" aria-live="polite"></p>
+          <button type="button" class="login-register-hidden" id="registerButton" aria-hidden="true" tabindex="-1">註冊</button>
         </div>
-
-        <div class="auth-row auth-row--split">
-          <div class="auth-spacer" aria-hidden="true"></div>
-          <button type="submit" class="auth-button auth-button--divider">登入</button>
-          <button type="button" class="auth-button" id="registerButton">註冊</button>
-        </div>
-      </form>
-
-      <p id="loginMessage" class="auth-message" aria-live="polite"></p>
+      </section>
     </section>
   </main>
   <script src="assets/js/i18n.js"></script>
