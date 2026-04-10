@@ -15,14 +15,59 @@
 
 <body class="home-page">
 
+<div class="home-bg-orb home-bg-orb--left" aria-hidden="true"></div>
+<div class="home-bg-orb home-bg-orb--right" aria-hidden="true"></div>
+<div class="home-grid-overlay" aria-hidden="true"></div>
+
 <main class="home-shell">
-<div id="homeTopActions" class="home-top-actions" aria-label="頂部操作"></div>
+  <div id="homeTopActions" class="home-top-actions" aria-label="頂部操作"></div>
 
-<img src="../image/logo.png" alt="弈鼎標誌" class="home-logo">
+  <section class="home-hero-card">
+    <div class="home-hero-card__inner">
+      <div class="home-brand">
+        <div class="home-brand__logo-wrap">
+          <img src="../image/logo.png" alt="弈鼎標誌" class="home-logo">
+        </div>
 
-<h1 id="homeGreeting" class="home-title">燈哥，早安！</h1>
+        <div class="home-brand__copy">
+          <p class="home-kicker">YIDING INTERNAL WORKSPACE</p>
+          <h1 id="homeGreeting" class="home-title">燈哥，早安！</h1>
+          <p class="home-subtitle">
+            內部入口整合員工、班表、出勤與公司資訊，保留原有邏輯，只升級整體視覺與層次感。
+          </p>
+        </div>
+      </div>
 
-<section id="homeMenu" class="home-menu" aria-label="內部功能選單"></section>
+      <section class="home-overview" aria-label="Overview">
+        <article class="home-overview__card">
+          <span class="home-overview__label">Workspace</span>
+          <strong class="home-overview__value">Internal</strong>
+        </article>
+        <article class="home-overview__card">
+          <span class="home-overview__label">Mode</span>
+          <strong class="home-overview__value">Dashboard</strong>
+        </article>
+        <article class="home-overview__card">
+          <span class="home-overview__label">Language</span>
+          <strong class="home-overview__value">Multi-Locale</strong>
+        </article>
+      </section>
+    </div>
+  </section>
+
+  <section class="home-section">
+    <div class="home-section__head">
+      <div>
+        <p class="home-section__eyebrow">MAIN ACCESS</p>
+        <h2 class="home-section__title">功能入口</h2>
+      </div>
+      <p class="home-section__note">
+        點擊卡片可直接進入對應模組。
+      </p>
+    </div>
+
+    <section id="homeMenu" class="home-menu" aria-label="內部功能選單"></section>
+  </section>
 </main>
 
 <script src="../assets/js/i18n.js"></script>
