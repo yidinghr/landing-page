@@ -115,8 +115,10 @@
 
 .login-orbit__ring,
 .login-visual__dragon-orbit,
-.login-orbit__sun,
-.login-visual__mark,
+.login-system,
+.login-system__mark-wrap,
+.login-system__planet-orbit,
+.login-visual__dragon-rig,
 .login-visual__dragon {
   position: absolute;
   pointer-events: none;
@@ -161,34 +163,229 @@
   animation: orbit-ring-spin-reverse 36s linear infinite;
 }
 
-.login-orbit__sun {
-  top: 37%;
-  right: 17%;
-  width: 48px;
-  height: 48px;
+.login-system {
+  inset: 0;
+  z-index: 3;
+  transform-style: preserve-3d;
+}
+
+.login-system__halo {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: min(520px, 64%);
+  height: min(520px, 64%);
   border-radius: 50%;
+  transform: translate(-50%, -50%);
   background:
-    radial-gradient(circle at 32% 32%, rgba(255, 255, 255, 1), rgba(255, 234, 170, 0.94) 28%, rgba(255, 211, 98, 0.96) 62%, rgba(215, 134, 48, 0.2) 82%, transparent 100%);
+    radial-gradient(circle, rgba(255, 205, 106, 0.18) 0%, rgba(255, 176, 72, 0.08) 28%, rgba(255, 166, 64, 0.02) 54%, rgba(255, 166, 64, 0) 74%);
+  filter: blur(10px);
+}
+
+.login-system__orbit-track {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255, 214, 126, 0.14);
   box-shadow:
-    0 0 24px rgba(255, 234, 170, 0.46),
-    0 0 52px rgba(255, 179, 74, 0.22);
-  animation: sun-pulse 9s ease-in-out infinite;
+    0 0 20px rgba(255, 208, 102, 0.05),
+    inset 0 0 18px rgba(255, 208, 102, 0.03);
+}
+
+.login-system__orbit-track--1 {
+  width: min(236px, 28%);
+  height: min(168px, 20%);
+}
+
+.login-system__orbit-track--2 {
+  width: min(332px, 39%);
+  height: min(220px, 26%);
+}
+
+.login-system__orbit-track--3 {
+  width: min(456px, 54%);
+  height: min(296px, 35%);
+}
+
+.login-system__orbit-track--4 {
+  width: min(610px, 72%);
+  height: min(404px, 48%);
+  border-color: rgba(255, 214, 126, 0.1);
+}
+
+.login-system__planet-orbit {
+  left: 50%;
+  top: 42%;
+  width: 0;
+  height: 0;
+  z-index: var(--planet-layer, 2);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.login-system__planet {
+  position: relative;
+  display: block;
+  width: var(--planet-size, 18px);
+  height: var(--planet-size, 18px);
+  margin-left: calc(var(--planet-size, 18px) * -0.5);
+  margin-top: calc(var(--planet-size, 18px) * -0.5);
+  border-radius: 50%;
+  box-shadow:
+    0 0 18px rgba(255, 214, 126, 0.12),
+    0 0 42px rgba(255, 171, 67, 0.06);
+  transform:
+    rotate(var(--planet-rotation, 0deg))
+    scale(var(--planet-scale, 1));
+  transform-origin: center;
+}
+
+.login-system__planet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.2) 14%, transparent 26%),
+    radial-gradient(circle at 34% 32%, rgba(255, 226, 170, 0.84), rgba(255, 197, 84, 0.24) 32%, rgba(9, 7, 12, 0.76) 76%);
+}
+
+.login-system__planet--mercury {
+  --planet-size: 12px;
+}
+
+.login-system__planet--mars {
+  --planet-size: 16px;
+}
+
+.login-system__planet--mars::before {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 230, 178, 0.82), rgba(255, 191, 118, 0.18) 18%, transparent 28%),
+    radial-gradient(circle at 36% 34%, rgba(236, 135, 82, 0.94), rgba(166, 71, 32, 0.82) 52%, rgba(27, 14, 12, 0.86) 88%);
+}
+
+.login-system__planet--earth {
+  --planet-size: 20px;
+}
+
+.login-system__planet--earth::before {
+  background:
+    radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.18) 14%, transparent 24%),
+    radial-gradient(circle at 38% 34%, rgba(85, 158, 255, 0.92), rgba(41, 98, 208, 0.84) 44%, rgba(24, 73, 42, 0.86) 58%, rgba(13, 22, 38, 0.92) 88%);
+}
+
+.login-system__planet--saturn {
+  --planet-size: 26px;
+}
+
+.login-system__planet--saturn::before {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 244, 214, 0.88), rgba(255, 231, 186, 0.18) 16%, transparent 26%),
+    radial-gradient(circle at 40% 35%, rgba(214, 181, 132, 0.94), rgba(176, 122, 66, 0.82) 54%, rgba(40, 23, 18, 0.92) 90%);
+}
+
+.login-system__planet--saturn::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 178%;
+  height: 42%;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 218, 162, 0.56);
+  transform: translate(-50%, -50%) rotate(18deg);
+  box-shadow: 0 0 14px rgba(255, 206, 108, 0.1);
+}
+
+.login-system__planet--neptune {
+  --planet-size: 18px;
+}
+
+.login-system__planet--neptune::before {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.12) 15%, transparent 26%),
+    radial-gradient(circle at 38% 34%, rgba(116, 166, 255, 0.92), rgba(66, 112, 212, 0.82) 50%, rgba(17, 25, 48, 0.92) 88%);
+}
+
+.login-system__mark-wrap {
+  left: 50%;
+  top: 42%;
+  width: min(482px, 56%);
+  height: min(340px, 38vw);
+  z-index: 5;
+  transform: translate(-50%, -50%);
+  overflow: visible;
 }
 
 .login-visual__mark {
-  z-index: 3;
-  left: 50%;
-  top: 42%;
-  width: min(468px, 56%);
-  transform: translate(-50%, -50%);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  transform: translateY(-4px);
+  clip-path: inset(0 0 10% 0);
   filter:
-    drop-shadow(0 18px 42px rgba(0, 0, 0, 0.36))
-    drop-shadow(0 0 32px rgba(255, 212, 108, 0.18));
-  animation: emblem-float 13s ease-in-out infinite;
+    drop-shadow(0 0 14px rgba(255, 208, 110, 0.22))
+    drop-shadow(0 0 36px rgba(255, 177, 76, 0.16));
+}
+
+.login-system__spark {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.94), rgba(255, 239, 181, 0.56) 28%, rgba(255, 211, 106, 0.08) 54%, transparent 72%);
+  box-shadow:
+    0 0 22px rgba(255, 220, 140, 0.42),
+    0 0 48px rgba(255, 182, 82, 0.12);
+  animation: logo-sparkle 3.8s ease-in-out infinite;
+}
+
+.login-system__spark::before,
+.login-system__spark::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: rgba(255, 242, 208, 0.88);
+  transform: translate(-50%, -50%);
+}
+
+.login-system__spark::before {
+  width: 26px;
+  height: 1px;
+}
+
+.login-system__spark::after {
+  width: 1px;
+  height: 26px;
+}
+
+.login-system__spark--a {
+  left: 22%;
+  top: 24%;
+}
+
+.login-system__spark--b {
+  right: 24%;
+  top: 62%;
+  animation-delay: -1.4s;
+}
+
+.login-system__spark--c {
+  left: 48%;
+  top: 18%;
+  animation-delay: -2.4s;
 }
 
 .login-visual__dragon-orbit {
-  inset: 4% 8% 10% 0;
+  inset: 3% 8% 8% -1%;
   z-index: var(--dragon-layer, 2);
   transform-origin: 53% 49%;
   transform-style: preserve-3d;
@@ -218,24 +415,68 @@
     scale(var(--dragon-shadow-scale, 0.92));
 }
 
+.login-visual__dragon-rig {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
 .login-visual__dragon {
-  z-index: 2;
-  left: -8%;
+  left: -7%;
   top: 0;
-  width: min(780px, 98%);
+  z-index: 2;
+  width: min(796px, 100%);
   transform-origin: 42% 48%;
   will-change: transform, filter;
   transform:
     translate3d(0, var(--dragon-local-y, 0px), var(--dragon-local-z, 40px))
     rotateX(var(--dragon-local-rx, 0deg))
     rotateY(var(--dragon-local-ry, -10deg))
-    rotateZ(calc(var(--dragon-local-rz, 2deg) + var(--dragon-claw-lift, 0deg) * 0.18))
+    rotateZ(calc(var(--dragon-local-rz, 0deg) + var(--dragon-body-wave, 0deg)))
     skewX(var(--dragon-skew-x, 0deg))
     skewY(calc(var(--dragon-skew-y, 0deg) + var(--dragon-tail-flex, 0deg) * 0.12))
     scale(var(--dragon-local-scale, 0.95));
   filter:
     drop-shadow(0 var(--dragon-shadow-drop-y, 32px) var(--dragon-shadow-drop-blur, 58px) rgba(0, 0, 0, 0.34))
     drop-shadow(0 0 var(--dragon-shadow-spread, 28px) rgba(255, 193, 88, var(--dragon-glow-alpha, 0.18)));
+}
+
+.login-visual__dragon-eye,
+.login-visual__dragon-breath {
+  position: absolute;
+  pointer-events: none;
+}
+
+.login-visual__dragon-eye {
+  left: 237px;
+  top: 178px;
+  width: 16px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 120, 82, 0.9), rgba(255, 94, 54, 0.28) 58%, transparent 100%);
+  transform:
+    translate3d(0, 0, calc(var(--dragon-local-z, 40px) + 120px))
+    scaleY(var(--dragon-eye-open, 1));
+  box-shadow:
+    0 0 10px rgba(255, 114, 80, 0.52),
+    0 0 24px rgba(255, 92, 64, 0.24);
+  opacity: 0.9;
+}
+
+.login-visual__dragon-breath {
+  left: 294px;
+  top: 256px;
+  width: 70px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 20% 50%, rgba(255, 204, 112, 0.56), rgba(255, 157, 56, 0.16) 42%, rgba(255, 157, 56, 0) 78%);
+  filter: blur(8px);
+  transform:
+    translate3d(0, 0, calc(var(--dragon-local-z, 40px) + 80px))
+    scaleX(calc(0.58 + var(--dragon-breath-open, 0)))
+    scaleY(calc(0.42 + var(--dragon-breath-open, 0) * 0.4));
+  opacity: calc(0.18 + var(--dragon-breath-open, 0) * 0.36);
 }
 
 .login-panel {
@@ -250,29 +491,40 @@
   min-height: 642px;
   padding: 40px 44px 34px;
   border-radius: 32px;
-  border: 1px solid rgba(236, 194, 102, 0.12);
+  border: 1px solid rgba(236, 194, 102, 0.14);
   background:
-    linear-gradient(180deg, rgba(9, 7, 14, 0.1), rgba(8, 7, 11, 0.04)),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0));
+    linear-gradient(180deg, rgba(7, 7, 12, 0.12), rgba(7, 7, 11, 0.05)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 0 32px rgba(255, 207, 93, 0.015),
-    0 24px 52px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(6px) saturate(1.02);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 32px rgba(255, 207, 93, 0.012),
+    0 24px 52px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(0.8px) saturate(1.01);
 }
 
 .login-panel__header {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 26px;
+  margin-bottom: 28px;
 }
 
 .login-panel__brand-lockup {
   position: relative;
-  width: min(100%, 470px);
-  height: clamp(112px, 10vw, 136px);
+  width: min(100%, 494px);
+  height: clamp(120px, 10.6vw, 148px);
   overflow: hidden;
+}
+
+.login-panel__brand-lockup::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 212, 120, 0.22), transparent);
+  box-shadow: 0 0 18px rgba(255, 182, 78, 0.08);
 }
 
 .login-panel__brand-graphic {
@@ -283,12 +535,12 @@
   width: 100%;
   height: auto;
   object-fit: contain;
-  transform: translateY(-22%);
+  transform: translateY(-18%);
   filter:
-    brightness(1.04)
-    contrast(1.04)
-    drop-shadow(0 14px 28px rgba(0, 0, 0, 0.28))
-    drop-shadow(0 0 16px rgba(255, 210, 120, 0.1));
+    brightness(1.08)
+    contrast(1.08)
+    drop-shadow(0 0 20px rgba(255, 214, 126, 0.18))
+    drop-shadow(0 0 42px rgba(255, 169, 72, 0.08));
 }
 
 .login-form {
@@ -296,6 +548,75 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
+}
+
+.login-input {
+  width: 100%;
+  height: 80px;
+  padding: 0 24px 0 60px;
+  border-radius: 24px;
+  border: 1px solid rgba(236, 194, 102, 0.24);
+  background: rgba(6, 6, 12, 0.11);
+  color: #f5ead7;
+  font-size: 31px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-input:hover,
+.login-input:focus {
+  border-color: rgba(243, 217, 157, 0.46);
+  background: rgba(10, 9, 16, 0.14);
+  box-shadow:
+    0 0 0 4px rgba(236, 194, 102, 0.035),
+    0 0 20px rgba(236, 194, 102, 0.08);
+}
+
+.login-submit {
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+  height: 84px;
+  border: 0;
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 240, 188, 0.98) 0%, rgba(255, 212, 106, 0.98) 40%, rgba(235, 164, 52, 0.98) 100%);
+  color: #1f1309;
+  font-family: "Noto Serif TC", "Microsoft JhengHei", "PingFang TC", serif;
+  font-size: clamp(33px, 2.4vw, 42px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  box-shadow:
+    0 14px 32px rgba(238, 194, 86, 0.18),
+    0 0 30px rgba(255, 208, 103, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.login-submit:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 36px rgba(238, 194, 86, 0.22),
+    0 0 36px rgba(255, 208, 103, 0.22);
+  filter: saturate(1.06);
+}
+
+.login-submit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(112deg, transparent 24%, rgba(255, 255, 255, 0.26) 44%, transparent 62%);
+  transform: translateX(-120%);
+  animation: button-sheen 5.2s ease-in-out infinite;
+}
+
+.login-message {
+  min-height: 28px;
+  margin: 16px 0 0;
+  color: #fff0cd;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .login-field {
@@ -348,65 +669,8 @@
   border-radius: 12px 12px 0 0;
 }
 
-.login-input {
-  width: 100%;
-  height: 80px;
-  padding: 0 24px 0 60px;
-  border-radius: 24px;
-  border: 1px solid rgba(236, 194, 102, 0.22);
-  background: rgba(10, 8, 14, 0.08);
-  color: #f5ead7;
-  font-size: 31px;
-  font-weight: 500;
-  outline: none;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-}
-
 .login-input::placeholder {
   color: rgba(236, 194, 102, 0.76);
-}
-
-.login-input:hover,
-.login-input:focus {
-  border-color: rgba(243, 217, 157, 0.42);
-  background: rgba(14, 10, 18, 0.12);
-  box-shadow:
-    0 0 0 4px rgba(236, 194, 102, 0.04),
-    0 0 24px rgba(236, 194, 102, 0.1);
-}
-
-.login-submit {
-  margin-top: 8px;
-  height: 84px;
-  border: 0;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #f8de88 0%, #efc350 55%, #ca8f2e 100%);
-  color: #1f1309;
-  font-family: "Noto Serif TC", "Microsoft JhengHei", "PingFang TC", serif;
-  font-size: clamp(33px, 2.4vw, 42px);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  box-shadow:
-    0 14px 42px rgba(238, 194, 86, 0.26),
-    0 0 26px rgba(255, 208, 103, 0.16);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-}
-
-.login-submit:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 20px 48px rgba(238, 194, 86, 0.32),
-    0 0 34px rgba(255, 208, 103, 0.22);
-  filter: saturate(1.04);
-}
-
-.login-message {
-  min-height: 28px;
-  margin: 16px 0 0;
-  color: #fff0cd;
-  text-align: left;
-  font-size: 15px;
-  font-weight: 700;
 }
 
 .login-message.is-error {
@@ -452,6 +716,16 @@
     width: min(720px, 104%);
     left: -8%;
     top: 3%;
+  }
+
+  .login-system__mark-wrap {
+    width: min(420px, 54%);
+    height: 304px;
+  }
+
+  .login-system__orbit-track--4 {
+    width: min(540px, 68%);
+    height: min(356px, 44%);
   }
 
   .login-panel__inner {
@@ -500,8 +774,9 @@
     min-height: 320px;
   }
 
-  .login-visual__mark {
-    width: min(272px, 46%);
+  .login-system__mark-wrap {
+    width: min(280px, 48%);
+    height: 196px;
   }
 
   .login-visual__dragon-orbit {
@@ -512,6 +787,26 @@
     left: -10%;
     top: 2%;
     width: min(520px, 118%);
+  }
+
+  .login-system__orbit-track--1 {
+    width: min(150px, 28%);
+    height: min(108px, 20%);
+  }
+
+  .login-system__orbit-track--2 {
+    width: min(210px, 38%);
+    height: min(148px, 26%);
+  }
+
+  .login-system__orbit-track--3 {
+    width: min(284px, 52%);
+    height: min(198px, 35%);
+  }
+
+  .login-system__orbit-track--4 {
+    width: min(360px, 66%);
+    height: min(248px, 44%);
   }
 
   .login-panel {
@@ -610,6 +905,32 @@
 
   50% {
     transform: translate(-50%, -50%) translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes logo-sparkle {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: scale(0.76);
+  }
+
+  50% {
+    opacity: 0.94;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes button-sheen {
+  0%,
+  60%,
+  100% {
+    transform: translateX(-120%);
+  }
+
+  20%,
+  36% {
+    transform: translateX(120%);
   }
 }
 

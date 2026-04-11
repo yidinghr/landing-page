@@ -27,10 +27,10 @@
       // Random twinkling stars live here:
       // density/size/alpha tune how many stars appear and how bright they get.
       layers: [
-        { density: 0.00195, size: [0.32, 0.84], alpha: [0.16, 0.44], speed: [18, 34], direction: 1, driftY: 10, sparkleChance: 0.06 },
-        { density: 0.00142, size: [0.48, 1.34], alpha: [0.2, 0.72], speed: [30, 58], direction: -1, driftY: 16, sparkleChance: 0.14 }
+        { density: 0.0032, size: [0.32, 0.92], alpha: [0.18, 0.52], speed: [8, 16], direction: 1, driftY: 9, sparkleChance: 0.12 },
+        { density: 0.00245, size: [0.5, 1.44], alpha: [0.26, 0.86], speed: [12, 22], direction: -1, driftY: 14, sparkleChance: 0.22 }
       ],
-      twinkleSeconds: [0.32, 1.8],
+      twinkleSeconds: [0.22, 1.1],
       warmChance: 0.9,
       coolChance: 0.03,
       staticChance: 0.05
@@ -38,12 +38,12 @@
     halos: {
       // Drifting halos live here:
       // raise count/radius/alpha for more glow, lower driftSeconds for faster motion.
-      count: 5,
-      radius: [220, 520],
-      alpha: [0.07, 0.18],
-      driftSeconds: [16, 34],
-      driftDistanceX: [28, 92],
-      driftDistanceY: [12, 54]
+      count: 4,
+      radius: [180, 420],
+      alpha: [0.05, 0.12],
+      driftSeconds: [24, 42],
+      driftDistanceX: [18, 64],
+      driftDistanceY: [8, 34]
     },
     nebula: {
       // Nebula movement lives here:
@@ -52,30 +52,30 @@
       backgroundDust: 18,
       layers: [
         {
-          opacity: 0.44,
-          bandPuffs: 1550,
-          bandGrains: 3000,
+          opacity: 0.38,
+          bandPuffs: 1480,
+          bandGrains: 2840,
           darkCuts: 76,
           brightKnots: 24,
           bandWidth: [0.09, 0.18],
           glowBoost: 1.24,
-          driftSecondsX: [18, 28],
-          driftSecondsY: [26, 34],
-          driftDistanceX: [34, 98],
-          driftDistanceY: [10, 24]
+          driftSecondsX: [24, 38],
+          driftSecondsY: [30, 42],
+          driftDistanceX: [24, 74],
+          driftDistanceY: [8, 18]
         },
         {
-          opacity: 0.28,
-          bandPuffs: 940,
-          bandGrains: 1900,
+          opacity: 0.24,
+          bandPuffs: 860,
+          bandGrains: 1640,
           darkCuts: 34,
           brightKnots: 14,
           bandWidth: [0.06, 0.12],
           glowBoost: 1.28,
-          driftSecondsX: [14, 22],
-          driftSecondsY: [20, 30],
-          driftDistanceX: [48, 128],
-          driftDistanceY: [14, 30]
+          driftSecondsX: [20, 30],
+          driftSecondsY: [24, 34],
+          driftDistanceX: [34, 94],
+          driftDistanceY: [10, 24]
         }
       ]
     }
@@ -630,19 +630,20 @@
         const alpha = clamp(star.alpha * lerp(star.pulseMin, star.pulseMax, blend), 0, 1);
 
         if (star.sparkle) {
-          const glow = context.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3.8);
+          const glow = context.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 5.2);
           glow.addColorStop(0, rgba(star.color, alpha));
-          glow.addColorStop(0.28, rgba(star.color, alpha * 0.26));
+          glow.addColorStop(0.18, rgba(star.color, alpha * 0.44));
+          glow.addColorStop(0.34, rgba(star.color, alpha * 0.18));
           glow.addColorStop(1, rgba(star.color, 0));
 
           context.fillStyle = glow;
           context.beginPath();
-          context.arc(star.x, star.y, star.radius * 3.8, 0, Math.PI * 2);
+          context.arc(star.x, star.y, star.radius * 5.2, 0, Math.PI * 2);
           context.fill();
 
-          context.fillStyle = rgba(star.color, alpha * 0.9);
-          context.fillRect(star.x - star.radius * 2.4, star.y - 0.45, star.radius * 4.8, 0.9);
-          context.fillRect(star.x - 0.45, star.y - star.radius * 2.4, 0.9, star.radius * 4.8);
+          context.fillStyle = rgba(star.color, alpha);
+          context.fillRect(star.x - star.radius * 3.4, star.y - 0.55, star.radius * 6.8, 1.1);
+          context.fillRect(star.x - 0.55, star.y - star.radius * 3.4, 1.1, star.radius * 6.8);
         }
 
         context.fillStyle = rgba(star.color, alpha);
