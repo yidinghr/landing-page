@@ -16,55 +16,55 @@
     stars: {
       // Adjust these values to change star density, brightness, and twinkle strength.
       layers: [
-        { density: 0.00058, size: [0.35, 0.82], alpha: [0.16, 0.46], drift: 2.2 },
-        { density: 0.00035, size: [0.45, 1.2], alpha: [0.22, 0.76], drift: 4.8 },
-        { density: 0.00017, size: [0.7, 1.85], alpha: [0.3, 0.98], drift: 8.2 }
+        { density: 0.0058, size: [0.28, 0.72], alpha: [0.14, 0.4], drift: 4.4 },
+        { density: 0.0035, size: [0.34, 1.02], alpha: [0.18, 0.68], drift: 8.4 },
+        { density: 0.0017, size: [0.55, 1.65], alpha: [0.24, 0.92], drift: 13.5 }
       ],
-      twinkleSeconds: [1.8, 8.2],
-      staticChance: 0.14,
+      twinkleSeconds: [0.8, 4.2],
+      staticChance: 0.08,
       warmChance: 0.84,
       coolChance: 0.04,
-      sparkleChance: 0.11
+      sparkleChance: 0.13
     },
     halos: {
       // Adjust these values to control drifting halo count, size, speed, and brightness.
-      count: 6,
-      radius: [260, 560],
-      alpha: [0.1, 0.24],
-      driftSeconds: [54, 130],
-      driftDistance: [0.03, 0.085]
+      count: 7,
+      radius: [280, 620],
+      alpha: [0.12, 0.28],
+      driftSeconds: [26, 68],
+      driftDistance: [0.06, 0.14]
     },
     nebula: {
       // Adjust these values to control nebula density, movement speed, and color intensity.
       overscan: 1.34,
       layers: [
         {
-          opacity: 0.42,
-          fieldPuffs: 520,
-          bandPuffs: 1420,
-          bandGrains: 2200,
+          opacity: 0.58,
+          fieldPuffs: 720,
+          bandPuffs: 1920,
+          bandGrains: 3400,
           darkPuffs: 70,
-          brightKnots: 22,
-          bandWidth: [0.13, 0.24],
-          glowBoost: 1.06,
-          driftSecondsX: [76, 118],
-          driftSecondsY: [92, 138],
-          driftDistanceX: [0.03, 0.062],
-          driftDistanceY: [0.02, 0.04]
+          brightKnots: 34,
+          bandWidth: [0.16, 0.28],
+          glowBoost: 1.42,
+          driftSecondsX: [28, 54],
+          driftSecondsY: [34, 62],
+          driftDistanceX: [0.08, 0.16],
+          driftDistanceY: [0.04, 0.08]
         },
         {
-          opacity: 0.31,
-          fieldPuffs: 340,
-          bandPuffs: 940,
-          bandGrains: 1450,
+          opacity: 0.44,
+          fieldPuffs: 460,
+          bandPuffs: 1320,
+          bandGrains: 2200,
           darkPuffs: 44,
-          brightKnots: 13,
-          bandWidth: [0.09, 0.17],
-          glowBoost: 1.18,
-          driftSecondsX: [58, 94],
-          driftSecondsY: [72, 116],
-          driftDistanceX: [0.038, 0.074],
-          driftDistanceY: [0.024, 0.046]
+          brightKnots: 22,
+          bandWidth: [0.12, 0.22],
+          glowBoost: 1.34,
+          driftSecondsX: [20, 42],
+          driftSecondsY: [24, 48],
+          driftDistanceX: [0.1, 0.2],
+          driftDistanceY: [0.05, 0.1]
         }
       ]
     },
@@ -234,8 +234,8 @@
         drift: layer.drift,
         phaseX: rng() * Math.PI * 2,
         phaseY: rng() * Math.PI * 2,
-        speedX: randomBetween(0.18, 0.42, rng),
-        speedY: randomBetween(0.16, 0.34, rng),
+        speedX: randomBetween(0.34, 0.74, rng),
+        speedY: randomBetween(0.28, 0.62, rng),
         stars: stars
       };
     });
@@ -490,7 +490,7 @@
     context.globalCompositeOperation = "screen";
 
     haloLayers.forEach(function (halo) {
-      const pulse = 0.92 + Math.sin(time * 0.22 + halo.phaseX) * 0.08;
+      const pulse = 0.9 + Math.sin(time * 0.44 + halo.phaseX) * 0.14;
       const x = halo.x + Math.sin(time * halo.speedX + halo.phaseX) * halo.driftX;
       const y = halo.y + Math.cos(time * halo.speedY + halo.phaseY) * halo.driftY;
 
@@ -511,7 +511,7 @@
       const offsetY = Math.cos(time * layer.speedY + layer.phaseY) * layer.driftY;
       const drawX = (width - layer.texture.width) * 0.5 + offsetX;
       const drawY = (height - layer.texture.height) * 0.5 + offsetY;
-      const pulse = 0.94 + Math.sin(time * 0.18 + layer.phaseX) * 0.08;
+      const pulse = 0.9 + Math.sin(time * 0.38 + layer.phaseX) * 0.16;
 
       context.globalAlpha = layer.opacity * pulse;
       context.drawImage(layer.texture, drawX, drawY, layer.texture.width, layer.texture.height);
@@ -552,9 +552,13 @@
         }
 
         context.fillStyle = rgba(star.color, alpha);
-        context.beginPath();
-        context.arc(x, y, star.radius, 0, Math.PI * 2);
-        context.fill();
+        if (star.radius < 0.6) {
+          context.fillRect(x, y, 1, 1);
+        } else {
+          context.beginPath();
+          context.arc(x, y, star.radius, 0, Math.PI * 2);
+          context.fill();
+        }
       });
     });
 
