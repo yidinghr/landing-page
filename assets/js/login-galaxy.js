@@ -13,82 +13,85 @@
 
   const SETTINGS = {
     dprCap: 2,
+    colors: {
+      spaceTop: "#040306",
+      spaceBottom: "#020205",
+      brownShadow: [18, 10, 8],
+      warmDust: [112, 54, 24],
+      amber: [255, 174, 76],
+      amberSoft: [222, 116, 42],
+      gold: [255, 228, 164],
+      coolBlue: [78, 92, 138]
+    },
     stars: {
-      // Adjust these values to change star density, brightness, and twinkle strength.
+      // Random twinkling stars live here:
+      // density/size/alpha tune how many stars appear and how bright they get.
       layers: [
-        { density: 0.0058, size: [0.28, 0.72], alpha: [0.14, 0.4], drift: 4.4 },
-        { density: 0.0035, size: [0.34, 1.02], alpha: [0.18, 0.68], drift: 8.4 },
-        { density: 0.0017, size: [0.55, 1.65], alpha: [0.24, 0.92], drift: 13.5 }
+        { density: 0.00195, size: [0.32, 0.84], alpha: [0.16, 0.44], speed: [18, 34], direction: 1, driftY: 10, sparkleChance: 0.06 },
+        { density: 0.00142, size: [0.48, 1.34], alpha: [0.2, 0.72], speed: [30, 58], direction: -1, driftY: 16, sparkleChance: 0.14 }
       ],
-      twinkleSeconds: [0.8, 4.2],
-      staticChance: 0.08,
-      warmChance: 0.84,
-      coolChance: 0.04,
-      sparkleChance: 0.13
+      twinkleSeconds: [0.32, 1.8],
+      warmChance: 0.9,
+      coolChance: 0.03,
+      staticChance: 0.05
     },
     halos: {
-      // Adjust these values to control drifting halo count, size, speed, and brightness.
-      count: 7,
-      radius: [280, 620],
-      alpha: [0.12, 0.28],
-      driftSeconds: [26, 68],
-      driftDistance: [0.06, 0.14]
+      // Drifting halos live here:
+      // raise count/radius/alpha for more glow, lower driftSeconds for faster motion.
+      count: 5,
+      radius: [220, 520],
+      alpha: [0.07, 0.18],
+      driftSeconds: [16, 34],
+      driftDistanceX: [28, 92],
+      driftDistanceY: [12, 54]
     },
     nebula: {
-      // Adjust these values to control nebula density, movement speed, and color intensity.
-      overscan: 1.34,
+      // Nebula movement lives here:
+      // opacity/bandPuffs/bandGrains/glowBoost control band intensity and presence.
+      overscan: 1.22,
+      backgroundDust: 18,
       layers: [
         {
-          opacity: 0.58,
-          fieldPuffs: 720,
-          bandPuffs: 1920,
-          bandGrains: 3400,
-          darkPuffs: 70,
-          brightKnots: 34,
-          bandWidth: [0.16, 0.28],
-          glowBoost: 1.42,
-          driftSecondsX: [28, 54],
-          driftSecondsY: [34, 62],
-          driftDistanceX: [0.08, 0.16],
-          driftDistanceY: [0.04, 0.08]
+          opacity: 0.44,
+          bandPuffs: 1550,
+          bandGrains: 3000,
+          darkCuts: 76,
+          brightKnots: 24,
+          bandWidth: [0.09, 0.18],
+          glowBoost: 1.24,
+          driftSecondsX: [18, 28],
+          driftSecondsY: [26, 34],
+          driftDistanceX: [34, 98],
+          driftDistanceY: [10, 24]
         },
         {
-          opacity: 0.44,
-          fieldPuffs: 460,
-          bandPuffs: 1320,
-          bandGrains: 2200,
-          darkPuffs: 44,
-          brightKnots: 22,
-          bandWidth: [0.12, 0.22],
-          glowBoost: 1.34,
-          driftSecondsX: [20, 42],
-          driftSecondsY: [24, 48],
-          driftDistanceX: [0.1, 0.2],
-          driftDistanceY: [0.05, 0.1]
+          opacity: 0.28,
+          bandPuffs: 940,
+          bandGrains: 1900,
+          darkCuts: 34,
+          brightKnots: 14,
+          bandWidth: [0.06, 0.12],
+          glowBoost: 1.28,
+          driftSecondsX: [14, 22],
+          driftSecondsY: [20, 30],
+          driftDistanceX: [48, 128],
+          driftDistanceY: [14, 30]
         }
       ]
-    },
-    colors: {
-      backgroundTop: "#09070a",
-      backgroundBottom: "#050406",
-      amber: [255, 178, 82],
-      amberBright: [255, 208, 118],
-      gold: [255, 231, 170],
-      burntOrange: [198, 100, 34],
-      brownDust: [68, 38, 22],
-      coolBlue: [74, 98, 146],
-      coolViolet: [88, 72, 116]
     }
   };
 
   let dpr = 1;
   let width = 0;
   let height = 0;
-  let sceneSeed = (Math.random() * 0xffffffff) >>> 0;
   let starLayers = [];
   let haloLayers = [];
   let nebulaLayers = [];
+  let screenBandPath = [];
+  let textureBandPath = [];
+  let laneBlooms = [];
   let resizeFrame = 0;
+  let lastFrameTime = 0;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -128,13 +131,6 @@
 
   function rgba(color, alpha) {
     return "rgba(" + color[0] + ", " + color[1] + ", " + color[2] + ", " + alpha + ")";
-  }
-
-  function createBuffer(bufferWidth, bufferHeight) {
-    const buffer = document.createElement("canvas");
-    buffer.width = bufferWidth;
-    buffer.height = bufferHeight;
-    return buffer;
   }
 
   function cubicPoint(path, t) {
@@ -178,11 +174,18 @@
     return { x: vector.x / length, y: vector.y / length };
   }
 
+  function createBuffer(bufferWidth, bufferHeight) {
+    const buffer = document.createElement("canvas");
+    buffer.width = bufferWidth;
+    buffer.height = bufferHeight;
+    return buffer;
+  }
+
   function drawGlow(targetContext, x, y, radius, color, alpha, innerStop, midStop) {
     const gradient = targetContext.createRadialGradient(x, y, 0, x, y, radius);
     gradient.addColorStop(0, rgba(color, alpha));
     gradient.addColorStop(innerStop, rgba(color, alpha * 0.82));
-    gradient.addColorStop(midStop, rgba(color, alpha * 0.28));
+    gradient.addColorStop(midStop, rgba(color, alpha * 0.26));
     gradient.addColorStop(1, rgba(color, 0));
 
     targetContext.fillStyle = gradient;
@@ -191,39 +194,48 @@
     targetContext.fill();
   }
 
+  function buildBandPath(rng, targetWidth, targetHeight) {
+    return [
+      { x: -0.18 * targetWidth, y: randomBetween(0.74, 0.84, rng) * targetHeight },
+      { x: 0.16 * targetWidth, y: randomBetween(0.7, 0.84, rng) * targetHeight },
+      { x: 0.56 * targetWidth, y: randomBetween(0.28, 0.42, rng) * targetHeight },
+      { x: 1.14 * targetWidth, y: randomBetween(0.42, 0.56, rng) * targetHeight }
+    ];
+  }
+
   function buildStarLayers() {
-    const baseSeed = sceneSeed ^ 0x91e10da5;
+    const rng = createPrng(0x7f4a7c15 ^ width ^ (height << 4));
     const area = width * height;
 
-    return SETTINGS.stars.layers.map(function (layer, index) {
-      const rng = createPrng(baseSeed + index * 1297);
+    return SETTINGS.stars.layers.map(function (layer) {
       const count = Math.round(area * layer.density);
       const stars = [];
 
-      for (let i = 0; i < count; i += 1) {
+      for (let index = 0; index < count; index += 1) {
         const warm = rng() < SETTINGS.stars.warmChance;
         const cool = !warm && rng() < SETTINGS.stars.coolChance;
-        const sparkle = rng() < SETTINGS.stars.sparkleChance;
         const staticStar = rng() < SETTINGS.stars.staticChance;
-        const alpha = randomBetween(layer.alpha[0], layer.alpha[1], rng);
+        const sparkle = rng() < layer.sparkleChance;
         let color = SETTINGS.colors.gold;
 
         if (warm) {
-          color = rng() < 0.5 ? SETTINGS.colors.amber : SETTINGS.colors.amberBright;
+          color = rng() < 0.48 ? SETTINGS.colors.amber : SETTINGS.colors.gold;
         } else if (cool) {
-          color = rng() < 0.5 ? SETTINGS.colors.coolBlue : SETTINGS.colors.coolViolet;
+          color = SETTINGS.colors.coolBlue;
         }
 
         stars.push({
           x: rng() * width,
           y: rng() * height,
-          radius: randomBetween(layer.size[0], layer.size[1], rng) * (sparkle ? 1.3 : 1),
-          alpha: alpha,
+          radius: randomBetween(layer.size[0], layer.size[1], rng) * (sparkle ? 1.16 : 1),
+          alpha: randomBetween(layer.alpha[0], layer.alpha[1], rng),
           color: color,
           sparkle: sparkle,
-          pulseMin: staticStar ? 0.92 : randomBetween(0.48, 0.82, rng),
-          pulseMax: staticStar ? 1.04 : randomBetween(1.02, 1.78, rng),
-          speed: (Math.PI * 2) / randomBetween(SETTINGS.stars.twinkleSeconds[0], SETTINGS.stars.twinkleSeconds[1], rng),
+          velocityX: randomBetween(layer.speed[0], layer.speed[1], rng) * layer.direction,
+          driftY: randomBetween(layer.driftY * 0.32, layer.driftY, rng) * (rng() < 0.5 ? -1 : 1),
+          pulseMin: staticStar ? 0.88 : randomBetween(0.38, 0.72, rng),
+          pulseMax: staticStar ? 1.04 : randomBetween(1.04, 1.8, rng),
+          twinkleSpeed: (Math.PI * 2) / randomBetween(SETTINGS.stars.twinkleSeconds[0], SETTINGS.stars.twinkleSeconds[1], rng),
           phaseA: rng() * Math.PI * 2,
           phaseB: rng() * Math.PI * 2,
           phaseC: rng() * Math.PI * 2
@@ -231,30 +243,33 @@
       }
 
       return {
-        drift: layer.drift,
-        phaseX: rng() * Math.PI * 2,
-        phaseY: rng() * Math.PI * 2,
-        speedX: randomBetween(0.34, 0.74, rng),
-        speedY: randomBetween(0.28, 0.62, rng),
+        direction: layer.direction,
+        wrapMargin: 40,
         stars: stars
       };
     });
   }
 
-  function buildHaloLayers() {
-    const rng = createPrng(sceneSeed ^ 0x6d2b79f5);
+  function buildHaloLayers(path) {
+    const rng = createPrng(0x4bb3ac0e ^ width ^ (height << 2));
     const halos = [];
 
-    for (let i = 0; i < SETTINGS.halos.count; i += 1) {
+    for (let index = 0; index < SETTINGS.halos.count; index += 1) {
+      const t = randomBetween(0.08, 0.94, rng);
+      const point = cubicPoint(path, t);
+      const tangent = normalize(cubicTangent(path, t));
+      const normal = { x: -tangent.y, y: tangent.x };
+      const baseOffset = gaussian(rng) * Math.min(width, height) * 0.06;
+
       halos.push({
-        x: rng() * width,
-        y: rng() * height,
+        x: point.x + normal.x * baseOffset,
+        y: point.y + normal.y * baseOffset,
         radius: randomBetween(SETTINGS.halos.radius[0], SETTINGS.halos.radius[1], rng),
         alpha: randomBetween(SETTINGS.halos.alpha[0], SETTINGS.halos.alpha[1], rng),
-        color: rng() < 0.58 ? SETTINGS.colors.burntOrange : SETTINGS.colors.amber,
-        accent: rng() < 0.18 ? SETTINGS.colors.coolBlue : SETTINGS.colors.gold,
-        driftX: randomBetween(SETTINGS.halos.driftDistance[0], SETTINGS.halos.driftDistance[1], rng) * width,
-        driftY: randomBetween(SETTINGS.halos.driftDistance[0], SETTINGS.halos.driftDistance[1], rng) * height,
+        color: rng() < 0.62 ? SETTINGS.colors.amberSoft : SETTINGS.colors.amber,
+        accent: rng() < 0.2 ? SETTINGS.colors.coolBlue : SETTINGS.colors.gold,
+        driftX: randomBetween(SETTINGS.halos.driftDistanceX[0], SETTINGS.halos.driftDistanceX[1], rng) * (rng() < 0.5 ? -1 : 1),
+        driftY: randomBetween(SETTINGS.halos.driftDistanceY[0], SETTINGS.halos.driftDistanceY[1], rng) * (rng() < 0.5 ? -1 : 1),
         speedX: (Math.PI * 2) / randomBetween(SETTINGS.halos.driftSeconds[0], SETTINGS.halos.driftSeconds[1], rng),
         speedY: (Math.PI * 2) / randomBetween(SETTINGS.halos.driftSeconds[0], SETTINGS.halos.driftSeconds[1], rng),
         phaseX: rng() * Math.PI * 2,
@@ -265,12 +280,156 @@
     return halos;
   }
 
-  function buildNebulaLayers() {
-    const baseSeed = sceneSeed ^ 0x31415926;
+  function buildLaneBlooms(path) {
+    const rng = createPrng(0x3ea94f21 ^ width ^ (height << 3));
+    const blooms = [];
+
+    for (let index = 0; index < 7; index += 1) {
+      blooms.push({
+        t: randomBetween(0.08, 0.92, rng),
+        radius: randomBetween(width * 0.08, width * 0.16, rng),
+        alpha: randomBetween(0.018, 0.05, rng),
+        normalOffset: gaussian(rng) * height * 0.035,
+        tangentOffset: gaussian(rng) * width * 0.022,
+        phaseX: rng() * Math.PI * 2,
+        phaseY: rng() * Math.PI * 2,
+        color: rng() < 0.64 ? SETTINGS.colors.amberSoft : SETTINGS.colors.amber
+      });
+    }
+
+    return blooms;
+  }
+
+  function buildNebulaTexture(layer, seed, path) {
+    const rng = createPrng(seed);
+    const textureWidth = Math.max(1400, Math.round(width * SETTINGS.nebula.overscan));
+    const textureHeight = Math.max(900, Math.round(height * SETTINGS.nebula.overscan));
+    const buffer = createBuffer(textureWidth, textureHeight);
+    const bufferContext = buffer.getContext("2d");
+    const minDimension = Math.min(textureWidth, textureHeight);
+    const areaFactor = (textureWidth * textureHeight) / 1200000;
+
+    bufferContext.clearRect(0, 0, textureWidth, textureHeight);
+
+    for (let index = 0; index < SETTINGS.nebula.backgroundDust; index += 1) {
+      const x = rng() * textureWidth;
+      const y = rng() * textureHeight;
+      const radius = randomBetween(textureWidth * 0.04, textureWidth * 0.12, rng);
+      const gradient = bufferContext.createRadialGradient(x, y, 0, x, y, radius);
+
+      gradient.addColorStop(0, "rgba(18, 11, 10, 0.08)");
+      gradient.addColorStop(0.35, "rgba(10, 7, 8, 0.04)");
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+      bufferContext.fillStyle = gradient;
+      bufferContext.beginPath();
+      bufferContext.arc(x, y, radius, 0, Math.PI * 2);
+      bufferContext.fill();
+    }
+
+    bufferContext.globalCompositeOperation = "screen";
+
+    for (let index = 0; index < Math.round(layer.bandPuffs * areaFactor); index += 1) {
+      const t = Math.pow(rng(), randomBetween(0.7, 1.3, rng));
+      const point = cubicPoint(path, t);
+      const tangent = normalize(cubicTangent(path, t));
+      const normal = { x: -tangent.y, y: tangent.x };
+      const bandWidth = randomBetween(layer.bandWidth[0], layer.bandWidth[1], rng) * minDimension;
+      const normalOffset = gaussian(rng) * bandWidth;
+      const tangentOffset = gaussian(rng) * bandWidth * 0.14;
+      const x = point.x + normal.x * normalOffset + tangent.x * tangentOffset;
+      const y = point.y + normal.y * normalOffset + tangent.y * tangentOffset;
+      const intensity = 1 - clamp(Math.abs(normalOffset) / bandWidth, 0, 1);
+      const alpha = lerp(0.012, 0.08, Math.pow(intensity, 1.35)) * layer.glowBoost;
+      const radius = randomBetween(bandWidth * 0.14, bandWidth * 0.62, rng);
+      const roll = rng();
+      let color = SETTINGS.colors.warmDust;
+
+      if (roll > 0.44) {
+        color = SETTINGS.colors.amberSoft;
+      }
+
+      if (roll > 0.84) {
+        color = SETTINGS.colors.amber;
+      }
+
+      if (roll > 0.97) {
+        color = SETTINGS.colors.gold;
+      }
+
+      drawGlow(bufferContext, x, y, radius, color, alpha, 0.04, 0.32);
+    }
+
+    for (let index = 0; index < Math.round(layer.brightKnots * areaFactor); index += 1) {
+      const t = randomBetween(0.12, 0.92, rng);
+      const point = cubicPoint(path, t);
+      const burstRadius = randomBetween(minDimension * 0.02, minDimension * 0.05, rng);
+      const burstCount = Math.round(randomBetween(7, 14, rng));
+
+      for (let inner = 0; inner < burstCount; inner += 1) {
+        const angle = rng() * Math.PI * 2;
+        const distance = randomBetween(0, burstRadius * 0.78, rng);
+        drawGlow(
+          bufferContext,
+          point.x + Math.cos(angle) * distance,
+          point.y + Math.sin(angle) * distance,
+          randomBetween(burstRadius * 0.24, burstRadius * 1.1, rng),
+          rng() < 0.58 ? SETTINGS.colors.amber : SETTINGS.colors.gold,
+          randomBetween(0.02, 0.08, rng) * layer.glowBoost,
+          0.02,
+          0.24
+        );
+      }
+    }
+
+    for (let index = 0; index < Math.round(layer.bandGrains * areaFactor); index += 1) {
+      const t = rng();
+      const point = cubicPoint(path, t);
+      const tangent = normalize(cubicTangent(path, t));
+      const normal = { x: -tangent.y, y: tangent.x };
+      const bandWidth = randomBetween(layer.bandWidth[0], layer.bandWidth[1], rng) * minDimension * 0.64;
+      const normalOffset = gaussian(rng) * bandWidth;
+      const tangentOffset = gaussian(rng) * bandWidth * 0.2;
+      const intensity = 1 - clamp(Math.abs(normalOffset) / bandWidth, 0, 1);
+      const x = point.x + normal.x * normalOffset + tangent.x * tangentOffset;
+      const y = point.y + normal.y * normalOffset + tangent.y * tangentOffset;
+
+      bufferContext.fillStyle = rgba(
+        rng() < 0.74 ? SETTINGS.colors.amber : SETTINGS.colors.gold,
+        randomBetween(0.03, 0.16, rng) * intensity
+      );
+      bufferContext.beginPath();
+      bufferContext.arc(x, y, randomBetween(0.28, 1.1, rng), 0, Math.PI * 2);
+      bufferContext.fill();
+    }
+
+    bufferContext.globalCompositeOperation = "destination-out";
+
+    for (let index = 0; index < Math.round(layer.darkCuts * areaFactor); index += 1) {
+      const x = rng() * textureWidth;
+      const y = rng() * textureHeight;
+      const radius = randomBetween(textureWidth * 0.04, textureWidth * 0.14, rng);
+      const cut = bufferContext.createRadialGradient(x, y, 0, x, y, radius);
+
+      cut.addColorStop(0, "rgba(0, 0, 0, 0.12)");
+      cut.addColorStop(0.42, "rgba(0, 0, 0, 0.06)");
+      cut.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+      bufferContext.fillStyle = cut;
+      bufferContext.beginPath();
+      bufferContext.arc(x, y, radius, 0, Math.PI * 2);
+      bufferContext.fill();
+    }
+
+    return buffer;
+  }
+
+  function buildNebulaLayers(path) {
+    const baseSeed = 0x31415926 ^ width ^ height;
 
     return SETTINGS.nebula.layers.map(function (layer, index) {
-      const rng = createPrng(baseSeed + index * 1777);
-      const texture = buildNebulaTexture(layer, baseSeed + index * 7331);
+      const rng = createPrng(baseSeed + index * 1337);
+      const texture = buildNebulaTexture(layer, baseSeed + index * 9137, path);
 
       return {
         texture: texture,
@@ -279,148 +438,10 @@
         phaseY: rng() * Math.PI * 2,
         speedX: (Math.PI * 2) / randomBetween(layer.driftSecondsX[0], layer.driftSecondsX[1], rng),
         speedY: (Math.PI * 2) / randomBetween(layer.driftSecondsY[0], layer.driftSecondsY[1], rng),
-        driftX: randomBetween(layer.driftDistanceX[0], layer.driftDistanceX[1], rng) * width,
-        driftY: randomBetween(layer.driftDistanceY[0], layer.driftDistanceY[1], rng) * height
+        driftX: randomBetween(layer.driftDistanceX[0], layer.driftDistanceX[1], rng) * (rng() < 0.5 ? -1 : 1),
+        driftY: randomBetween(layer.driftDistanceY[0], layer.driftDistanceY[1], rng) * (rng() < 0.5 ? -1 : 1)
       };
     });
-  }
-
-  function buildNebulaTexture(layer, seed) {
-    const rng = createPrng(seed);
-    const textureWidth = Math.max(1400, Math.round(width * SETTINGS.nebula.overscan));
-    const textureHeight = Math.max(900, Math.round(height * SETTINGS.nebula.overscan));
-    const buffer = createBuffer(textureWidth, textureHeight);
-    const bufferContext = buffer.getContext("2d");
-    const bandPath = [
-      { x: -0.18 * textureWidth, y: randomBetween(0.66, 0.8, rng) * textureHeight },
-      { x: 0.18 * textureWidth, y: randomBetween(0.84, 0.98, rng) * textureHeight },
-      { x: 0.58 * textureWidth, y: randomBetween(0.22, 0.42, rng) * textureHeight },
-      { x: 1.14 * textureWidth, y: randomBetween(0.28, 0.48, rng) * textureHeight }
-    ];
-    const minDimension = Math.min(textureWidth, textureHeight);
-    const areaFactor = (textureWidth * textureHeight) / 1200000;
-
-    bufferContext.clearRect(0, 0, textureWidth, textureHeight);
-    bufferContext.globalCompositeOperation = "screen";
-
-    for (let i = 0; i < Math.round(layer.fieldPuffs * areaFactor); i += 1) {
-      const x = rng() * textureWidth;
-      const y = rng() * textureHeight;
-      const radius = randomBetween(textureWidth * 0.025, textureWidth * 0.12, rng);
-      const alpha = randomBetween(0.012, 0.04, rng) * layer.glowBoost;
-      const colorRoll = rng();
-      let color = SETTINGS.colors.burntOrange;
-
-      if (colorRoll > 0.7) {
-        color = SETTINGS.colors.amber;
-      }
-
-      if (colorRoll > 0.93) {
-        color = SETTINGS.colors.coolBlue;
-      }
-
-      drawGlow(bufferContext, x, y, radius, color, alpha, 0.04, 0.28);
-    }
-
-    for (let i = 0; i < Math.round(layer.darkPuffs * areaFactor); i += 1) {
-      const x = rng() * textureWidth;
-      const y = rng() * textureHeight;
-      const radius = randomBetween(textureWidth * 0.04, textureWidth * 0.12, rng);
-      const darkGradient = bufferContext.createRadialGradient(x, y, 0, x, y, radius);
-
-      darkGradient.addColorStop(0, "rgba(2, 2, 4, 0.16)");
-      darkGradient.addColorStop(0.4, "rgba(4, 3, 6, 0.08)");
-      darkGradient.addColorStop(1, "rgba(4, 3, 6, 0)");
-
-      bufferContext.globalCompositeOperation = "source-over";
-      bufferContext.fillStyle = darkGradient;
-      bufferContext.beginPath();
-      bufferContext.arc(x, y, radius, 0, Math.PI * 2);
-      bufferContext.fill();
-      bufferContext.globalCompositeOperation = "screen";
-    }
-
-    for (let i = 0; i < Math.round(layer.bandPuffs * areaFactor); i += 1) {
-      const t = Math.pow(rng(), randomBetween(0.72, 1.32, rng));
-      const point = cubicPoint(bandPath, t);
-      const tangent = normalize(cubicTangent(bandPath, t));
-      const normal = { x: -tangent.y, y: tangent.x };
-      const bandWidth = randomBetween(layer.bandWidth[0], layer.bandWidth[1], rng) * minDimension;
-      const normalOffset = gaussian(rng) * bandWidth;
-      const tangentOffset = gaussian(rng) * bandWidth * 0.18;
-      const x = point.x + normal.x * normalOffset + tangent.x * tangentOffset;
-      const y = point.y + normal.y * normalOffset + tangent.y * tangentOffset;
-      const coreBias = 1 - clamp(Math.abs(normalOffset) / bandWidth, 0, 1);
-      const alpha = lerp(0.018, 0.11, Math.pow(coreBias, 1.3)) * layer.glowBoost;
-      const radius = randomBetween(bandWidth * 0.18, bandWidth * 0.68, rng);
-      const roll = rng();
-      let color = SETTINGS.colors.burntOrange;
-
-      if (roll > 0.48) {
-        color = SETTINGS.colors.amber;
-      }
-
-      if (roll > 0.86) {
-        color = SETTINGS.colors.amberBright;
-      }
-
-      if (roll > 0.97) {
-        color = SETTINGS.colors.gold;
-      }
-
-      drawGlow(bufferContext, x, y, radius, color, alpha, 0.03, 0.34);
-    }
-
-    for (let i = 0; i < Math.round(layer.brightKnots * areaFactor); i += 1) {
-      const t = randomBetween(0.1, 0.92, rng);
-      const point = cubicPoint(bandPath, t);
-      const knotRadius = randomBetween(minDimension * 0.025, minDimension * 0.06, rng);
-      const burstCount = Math.round(randomBetween(7, 14, rng));
-
-      for (let j = 0; j < burstCount; j += 1) {
-        const angle = rng() * Math.PI * 2;
-        const distance = randomBetween(0, knotRadius * 0.76, rng);
-        const x = point.x + Math.cos(angle) * distance;
-        const y = point.y + Math.sin(angle) * distance;
-        const radius = randomBetween(knotRadius * 0.3, knotRadius * 1.15, rng);
-        const alpha = randomBetween(0.036, 0.11, rng) * layer.glowBoost;
-
-        drawGlow(
-          bufferContext,
-          x,
-          y,
-          radius,
-          rng() < 0.5 ? SETTINGS.colors.amberBright : SETTINGS.colors.gold,
-          alpha,
-          0.02,
-          0.26
-        );
-      }
-    }
-
-    bufferContext.globalCompositeOperation = "screen";
-
-    for (let i = 0; i < Math.round(layer.bandGrains * areaFactor); i += 1) {
-      const t = rng();
-      const point = cubicPoint(bandPath, t);
-      const tangent = normalize(cubicTangent(bandPath, t));
-      const normal = { x: -tangent.y, y: tangent.x };
-      const bandWidth = randomBetween(layer.bandWidth[0], layer.bandWidth[1], rng) * minDimension * 0.7;
-      const normalOffset = gaussian(rng) * bandWidth;
-      const tangentOffset = gaussian(rng) * bandWidth * 0.22;
-      const x = point.x + normal.x * normalOffset + tangent.x * tangentOffset;
-      const y = point.y + normal.y * normalOffset + tangent.y * tangentOffset;
-      const alpha = randomBetween(0.05, 0.2, rng) * (1 - clamp(Math.abs(normalOffset) / bandWidth, 0, 1));
-      const radius = randomBetween(0.35, 1.28, rng);
-      const color = rng() < 0.72 ? SETTINGS.colors.amber : (rng() < 0.9 ? SETTINGS.colors.amberBright : SETTINGS.colors.gold);
-
-      bufferContext.fillStyle = rgba(color, alpha);
-      bufferContext.beginPath();
-      bufferContext.arc(x, y, radius, 0, Math.PI * 2);
-      bufferContext.fill();
-    }
-
-    return buffer;
   }
 
   function resize() {
@@ -439,48 +460,57 @@
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
       context.imageSmoothingEnabled = true;
 
+      const rng = createPrng(0x19c4d2ab ^ width ^ (height << 1));
+      screenBandPath = buildBandPath(rng, width, height);
+      textureBandPath = buildBandPath(rng, Math.round(width * SETTINGS.nebula.overscan), Math.round(height * SETTINGS.nebula.overscan));
+      laneBlooms = buildLaneBlooms(screenBandPath);
       starLayers = buildStarLayers();
-      haloLayers = buildHaloLayers();
-      nebulaLayers = buildNebulaLayers();
+      haloLayers = buildHaloLayers(screenBandPath);
+      nebulaLayers = buildNebulaLayers(textureBandPath);
+    });
+  }
+
+  function update(dt, time) {
+    starLayers.forEach(function (layer) {
+      layer.stars.forEach(function (star) {
+        star.x += star.velocityX * dt;
+        star.y += Math.sin(time * 0.7 + star.phaseA) * star.driftY * dt * 0.32;
+
+        if (layer.direction > 0 && star.x > width + layer.wrapMargin) {
+          star.x = -layer.wrapMargin;
+          star.y = Math.random() * height;
+        } else if (layer.direction < 0 && star.x < -layer.wrapMargin) {
+          star.x = width + layer.wrapMargin;
+          star.y = Math.random() * height;
+        }
+
+        if (star.y < -24) {
+          star.y = height + 24;
+        } else if (star.y > height + 24) {
+          star.y = -24;
+        }
+      });
     });
   }
 
   function drawBase() {
-    const gradient = context.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, SETTINGS.colors.backgroundTop);
-    gradient.addColorStop(1, SETTINGS.colors.backgroundBottom);
+    const base = context.createLinearGradient(0, 0, 0, height);
+    base.addColorStop(0, SETTINGS.colors.spaceTop);
+    base.addColorStop(1, SETTINGS.colors.spaceBottom);
 
-    context.fillStyle = gradient;
+    context.fillStyle = base;
     context.fillRect(0, 0, width, height);
 
-    const amberWash = context.createRadialGradient(
-      width * 0.72,
-      height * 0.46,
-      0,
-      width * 0.72,
-      height * 0.46,
-      width * 0.62
-    );
-
-    amberWash.addColorStop(0, "rgba(88, 42, 12, 0.14)");
-    amberWash.addColorStop(1, "rgba(8, 6, 8, 0)");
-
-    context.fillStyle = amberWash;
+    const topVoid = context.createRadialGradient(width * 0.22, height * 0.18, 0, width * 0.22, height * 0.18, width * 0.42);
+    topVoid.addColorStop(0, "rgba(10, 7, 10, 0.38)");
+    topVoid.addColorStop(1, "rgba(0, 0, 0, 0)");
+    context.fillStyle = topVoid;
     context.fillRect(0, 0, width, height);
 
-    const coolWash = context.createRadialGradient(
-      width * 0.1,
-      height * 0.18,
-      0,
-      width * 0.1,
-      height * 0.18,
-      width * 0.2
-    );
-
-    coolWash.addColorStop(0, "rgba(42, 58, 98, 0.08)");
-    coolWash.addColorStop(1, "rgba(6, 6, 8, 0)");
-
-    context.fillStyle = coolWash;
+    const bottomVoid = context.createRadialGradient(width * 0.78, height * 0.8, 0, width * 0.78, height * 0.8, width * 0.5);
+    bottomVoid.addColorStop(0, "rgba(14, 9, 9, 0.28)");
+    bottomVoid.addColorStop(1, "rgba(0, 0, 0, 0)");
+    context.fillStyle = bottomVoid;
     context.fillRect(0, 0, width, height);
   }
 
@@ -490,19 +520,19 @@
     context.globalCompositeOperation = "screen";
 
     haloLayers.forEach(function (halo) {
-      const pulse = 0.9 + Math.sin(time * 0.44 + halo.phaseX) * 0.14;
       const x = halo.x + Math.sin(time * halo.speedX + halo.phaseX) * halo.driftX;
       const y = halo.y + Math.cos(time * halo.speedY + halo.phaseY) * halo.driftY;
+      const pulse = 0.88 + Math.sin(time * 0.42 + halo.phaseX) * 0.16;
 
-      drawGlow(context, x, y, halo.radius, halo.color, halo.alpha * pulse, 0.04, 0.34);
-      drawGlow(context, x + halo.radius * 0.08, y - halo.radius * 0.05, halo.radius * 0.56, halo.accent, halo.alpha * 0.32 * pulse, 0.06, 0.24);
+      drawGlow(context, x, y, halo.radius, halo.color, halo.alpha * pulse, 0.04, 0.32);
+      drawGlow(context, x + halo.radius * 0.08, y - halo.radius * 0.06, halo.radius * 0.52, halo.accent, halo.alpha * 0.22 * pulse, 0.08, 0.22);
     });
 
     context.restore();
   }
 
   function drawNebula(time) {
-    // Nebula movement lives here. Each layer drifts slowly at a different speed.
+    // Nebula movement lives here.
     context.save();
     context.globalCompositeOperation = "screen";
 
@@ -511,7 +541,7 @@
       const offsetY = Math.cos(time * layer.speedY + layer.phaseY) * layer.driftY;
       const drawX = (width - layer.texture.width) * 0.5 + offsetX;
       const drawY = (height - layer.texture.height) * 0.5 + offsetY;
-      const pulse = 0.9 + Math.sin(time * 0.38 + layer.phaseX) * 0.16;
+      const pulse = 0.92 + Math.sin(time * 0.36 + layer.phaseX) * 0.12;
 
       context.globalAlpha = layer.opacity * pulse;
       context.drawImage(layer.texture, drawX, drawY, layer.texture.width, layer.texture.height);
@@ -521,42 +551,107 @@
     context.globalAlpha = 1;
   }
 
+  function drawLaneGlow(time) {
+    context.save();
+    context.globalCompositeOperation = "screen";
+
+    const laneShiftX = Math.sin(time * 0.22) * 12;
+    const laneShiftY = Math.cos(time * 0.18) * 6;
+    const laneWidth = Math.min(width, height);
+
+    context.beginPath();
+    context.moveTo(screenBandPath[0].x + laneShiftX, screenBandPath[0].y + laneShiftY);
+    context.bezierCurveTo(
+      screenBandPath[1].x + laneShiftX,
+      screenBandPath[1].y + laneShiftY,
+      screenBandPath[2].x + laneShiftX,
+      screenBandPath[2].y + laneShiftY,
+      screenBandPath[3].x + laneShiftX,
+      screenBandPath[3].y + laneShiftY
+    );
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.lineWidth = laneWidth * 0.14;
+    context.strokeStyle = rgba(SETTINGS.colors.amberSoft, 0.018);
+    context.shadowBlur = 72;
+    context.shadowColor = rgba(SETTINGS.colors.amber, 0.16);
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(screenBandPath[0].x + laneShiftX, screenBandPath[0].y + laneShiftY);
+    context.bezierCurveTo(
+      screenBandPath[1].x + laneShiftX,
+      screenBandPath[1].y + laneShiftY,
+      screenBandPath[2].x + laneShiftX,
+      screenBandPath[2].y + laneShiftY,
+      screenBandPath[3].x + laneShiftX,
+      screenBandPath[3].y + laneShiftY
+    );
+    context.lineWidth = laneWidth * 0.055;
+    context.strokeStyle = rgba(SETTINGS.colors.gold, 0.013);
+    context.shadowBlur = 34;
+    context.shadowColor = rgba(SETTINGS.colors.gold, 0.08);
+    context.stroke();
+    context.shadowBlur = 0;
+
+    laneBlooms.forEach(function (bloom) {
+      const point = cubicPoint(screenBandPath, bloom.t);
+      const tangent = normalize(cubicTangent(screenBandPath, bloom.t));
+      const normal = { x: -tangent.y, y: tangent.x };
+      const x =
+        point.x +
+        normal.x * bloom.normalOffset +
+        tangent.x * bloom.tangentOffset +
+        Math.sin(time * 0.42 + bloom.phaseX) * 18;
+      const y =
+        point.y +
+        normal.y * bloom.normalOffset +
+        tangent.y * bloom.tangentOffset +
+        Math.cos(time * 0.38 + bloom.phaseY) * 10;
+      const pulse = 0.88 + Math.sin(time * 0.46 + bloom.phaseX) * 0.14;
+
+      drawGlow(context, x, y, bloom.radius, bloom.color, bloom.alpha * pulse, 0.05, 0.3);
+    });
+
+    context.restore();
+  }
+
   function drawStars(time) {
-    // Random twinkling stars live here. Each star has its own speed, phase, and brightness range.
+    // Random twinkling stars live here.
     context.save();
     context.globalCompositeOperation = "lighter";
 
     starLayers.forEach(function (layer) {
-      const offsetX = Math.sin(time * layer.speedX + layer.phaseX) * layer.drift;
-      const offsetY = Math.cos(time * layer.speedY + layer.phaseY) * layer.drift;
-
       layer.stars.forEach(function (star) {
-        const waveA = Math.sin(time * star.speed + star.phaseA);
-        const waveB = Math.sin(time * star.speed * 0.37 + star.phaseB);
-        const waveC = Math.sin(time * star.speed * 0.11 + star.phaseC);
-        const blend = clamp(0.5 + 0.5 * (waveA * 0.56 + waveB * 0.29 + waveC * 0.15), 0, 1);
+        const waveA = Math.sin(time * star.twinkleSpeed + star.phaseA);
+        const waveB = Math.sin(time * star.twinkleSpeed * 0.63 + star.phaseB);
+        const waveC = Math.sin(time * star.twinkleSpeed * 1.38 + star.phaseC);
+        const blend = clamp(0.5 + 0.5 * (waveA * 0.48 + waveB * 0.22 + waveC * 0.3), 0, 1);
         const alpha = clamp(star.alpha * lerp(star.pulseMin, star.pulseMax, blend), 0, 1);
-        const x = star.x + offsetX;
-        const y = star.y + offsetY;
 
         if (star.sparkle) {
-          const glow = context.createRadialGradient(x, y, 0, x, y, star.radius * 3.2);
+          const glow = context.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 3.8);
           glow.addColorStop(0, rgba(star.color, alpha));
-          glow.addColorStop(0.3, rgba(star.color, alpha * 0.3));
+          glow.addColorStop(0.28, rgba(star.color, alpha * 0.26));
           glow.addColorStop(1, rgba(star.color, 0));
 
           context.fillStyle = glow;
           context.beginPath();
-          context.arc(x, y, star.radius * 3.2, 0, Math.PI * 2);
+          context.arc(star.x, star.y, star.radius * 3.8, 0, Math.PI * 2);
           context.fill();
+
+          context.fillStyle = rgba(star.color, alpha * 0.9);
+          context.fillRect(star.x - star.radius * 2.4, star.y - 0.45, star.radius * 4.8, 0.9);
+          context.fillRect(star.x - 0.45, star.y - star.radius * 2.4, 0.9, star.radius * 4.8);
         }
 
         context.fillStyle = rgba(star.color, alpha);
-        if (star.radius < 0.6) {
-          context.fillRect(x, y, 1, 1);
+
+        if (star.radius < 0.72) {
+          context.fillRect(star.x, star.y, 1, 1);
         } else {
           context.beginPath();
-          context.arc(x, y, star.radius, 0, Math.PI * 2);
+          context.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
           context.fill();
         }
       });
@@ -566,31 +661,29 @@
   }
 
   function drawVignette() {
-    const vignette = context.createRadialGradient(
-      width * 0.5,
-      height * 0.5,
-      width * 0.18,
-      width * 0.5,
-      height * 0.5,
-      width * 0.82
-    );
-
+    const vignette = context.createRadialGradient(width * 0.5, height * 0.5, width * 0.12, width * 0.5, height * 0.5, width * 0.82);
     vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
-    vignette.addColorStop(1, "rgba(0, 0, 0, 0.46)");
+    vignette.addColorStop(1, "rgba(0, 0, 0, 0.64)");
 
     context.fillStyle = vignette;
     context.fillRect(0, 0, width, height);
   }
 
-  function render(timeMs) {
-    const time = timeMs * 0.001;
+  function render(timestamp) {
+    const time = timestamp * 0.001;
+    const dt = lastFrameTime ? Math.min(0.032, (timestamp - lastFrameTime) / 1000) : 1 / 120;
+    lastFrameTime = timestamp;
+
+    update(dt, time);
 
     context.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawBase();
     drawHalos(time);
     drawNebula(time);
+    drawLaneGlow(time);
     drawStars(time);
     drawVignette();
+
     requestAnimationFrame(render);
   }
 
