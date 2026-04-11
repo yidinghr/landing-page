@@ -11,30 +11,69 @@
 </head>
 <body class="login-page">
   <div id="loginPageTools" class="yd-page-tools" aria-label="Page tools"></div>
+
   <main class="login-stage">
-    <section class="login-scene" aria-labelledby="login-title">
-      <div class="login-scene__art" aria-hidden="true"></div>
-      <div class="login-scene__lights" aria-hidden="true"></div>
-      <div class="login-scene__stars" aria-hidden="true"></div>
-      <section class="login-panel" aria-label="Login panel">
-        <header class="login-brand-block">
-          <p class="login-brand-block__cn">弈鼎國際</p>
-          <p class="login-brand-block__en">Yi Ding International</p>
-        </header>
-        <form class="login-form" id="loginForm" action="#" method="post" autocomplete="off">
-          <div class="login-field">
-            <input id="account" name="account" type="text" class="login-input" placeholder="账号" autocomplete="username" spellcheck="false" />
+    <section class="login-shell" aria-label="YiDing login dashboard">
+      <div class="login-shell__bg" aria-hidden="true"></div>
+      <div class="login-shell__overlay" aria-hidden="true"></div>
+      <div class="login-shell__sparkle" aria-hidden="true"></div>
+
+      <div class="login-layout">
+        <section class="login-hero" aria-label="YiDing brand visual"></section>
+
+        <section class="login-panel" aria-label="Login panel">
+          <div class="login-panel__inner">
+            <header class="login-panel__header">
+              <div class="login-panel__identity" aria-hidden="true">
+                <span class="login-panel__shield"></span>
+                <div class="login-panel__identity-copy">
+                  <p class="login-panel__brand-cn">弈鼎國際</p>
+                  <p class="login-panel__brand-en">Yi Ding International</p>
+                </div>
+              </div>
+
+              <h2 class="login-panel__welcome">歡迎回來</h2>
+              <p class="login-panel__desc">請輸入內部帳號和密碼登入</p>
+            </header>
+
+            <form class="login-form" id="loginForm" action="#" method="post" autocomplete="off">
+              <div class="login-field login-field--account">
+                <label for="account" class="login-visually-hidden">帳號</label>
+                <input id="account" name="account" type="text" class="login-input" placeholder="帳號" autocomplete="username" spellcheck="false" />
+              </div>
+
+              <div class="login-field login-field--password">
+                <label for="password" class="login-visually-hidden">密碼</label>
+                <input id="password" name="password" type="password" class="login-input" placeholder="密碼" autocomplete="current-password" />
+              </div>
+
+              <button type="submit" class="login-submit">登入</button>
+            </form>
+
+            <div class="login-panel__meta" aria-hidden="true">
+              <span class="login-panel__meta-item login-panel__meta-item--shield">安全登入</span>
+              <span class="login-panel__meta-item login-panel__meta-item--orbit">環球系統</span>
+            </div>
+
+            <p id="loginMessage" class="login-message" aria-live="polite"></p>
+            <button type="button" class="login-register-hidden" id="registerButton" aria-hidden="true" tabindex="-1">註冊</button>
           </div>
-          <div class="login-field">
-            <input id="password" name="password" type="password" class="login-input" placeholder="密码" autocomplete="current-password" />
-          </div>
-          <button type="submit" class="login-submit">登入</button>
-        </form>
-        <p id="loginMessage" class="login-message" aria-live="polite"></p>
-        <button type="button" class="login-register-hidden" id="registerButton" aria-hidden="true" tabindex="-1">註冊</button>
-      </section>
+        </section>
+      </div>
     </section>
   </main>
+
+  <script>
+    (async () => {
+      try {
+        const response = await fetch('image/login-scene.asset.txt', { cache: 'no-store' });
+        if (!response.ok) return;
+        const payload = (await response.text()).trim();
+        if (!payload) return;
+        document.documentElement.style.setProperty('--login-scene-url', `url("data:image/webp;base64,${payload}")`);
+      } catch (_) {}
+    })();
+  </script>
   <script src="assets/js/i18n.js"></script>
   <script src="assets/js/login.js"></script>
 </body>
