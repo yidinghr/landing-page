@@ -1,40 +1,36 @@
 .login-page {
   min-height: 100vh;
   overflow: hidden;
-  background: #050309;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(51, 31, 18, 0.24), transparent 24%),
+    radial-gradient(circle at 78% 72%, rgba(66, 34, 12, 0.18), transparent 28%),
+    linear-gradient(180deg, #070609 0%, #050406 100%);
 }
 
 .login-galaxy {
   position: fixed;
   inset: 0;
-  transform: scale(1.03);
-  background: url("../../image/login-galaxy-4k.webp") center 48%/cover no-repeat;
-  filter: saturate(1.08) contrast(1.02) brightness(1.02);
   z-index: 0;
-  animation: galaxy-drift 92s ease-in-out infinite alternate;
+  overflow: hidden;
 }
 
-.login-galaxy::before,
+.login-galaxy__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .login-galaxy::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-}
-
-.login-galaxy::before {
   background:
-    radial-gradient(circle at 68% 42%, rgba(255, 198, 112, 0.14), transparent 18%),
-    radial-gradient(circle at 12% 18%, rgba(92, 116, 210, 0.1), transparent 16%);
-  opacity: 0.82;
-  animation: galaxy-glow-shift 44s ease-in-out infinite alternate;
-}
-
-.login-galaxy::after {
-  background:
-    linear-gradient(180deg, rgba(5, 3, 9, 0.16), rgba(5, 3, 9, 0.08) 30%, rgba(5, 3, 9, 0.2) 100%),
-    radial-gradient(circle at 76% 44%, rgba(255, 208, 126, 0.08), transparent 24%);
-  opacity: 1;
+    linear-gradient(180deg, rgba(5, 4, 7, 0.12), rgba(5, 4, 7, 0.04) 34%, rgba(5, 4, 7, 0.2) 100%),
+    radial-gradient(circle at 72% 40%, rgba(255, 191, 98, 0.1), transparent 18%),
+    radial-gradient(circle at 12% 16%, rgba(90, 103, 158, 0.06), transparent 14%);
 }
 
 .login-stage {
@@ -550,26 +546,6 @@
     height: 64px;
     font-size: 28px;
     border-radius: 18px;
-  }
-}
-
-@keyframes galaxy-drift {
-  0% {
-    transform: scale(1.03) translate3d(-0.8%, -1%, 0);
-  }
-
-  100% {
-    transform: scale(1.07) translate3d(1%, 0.8%, 0);
-  }
-}
-
-@keyframes galaxy-glow-shift {
-  0% {
-    transform: translate3d(-1.2%, -0.6%, 0) scale(1);
-  }
-
-  100% {
-    transform: translate3d(1%, 0.8%, 0) scale(1.04);
   }
 }
 
