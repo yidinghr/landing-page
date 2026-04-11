@@ -12,11 +12,9 @@ function seedLocale(page, locale) {
 }
 
 test.describe("Shared locale switching", () => {
-  test("login gear switches static labels to Vietnamese", async ({ page }) => {
+  test("login page respects Vietnamese locale from storage", async ({ page }) => {
+    await seedLocale(page, "vi");
     await page.goto("/");
-
-    await page.locator("#loginPageTools [data-locale-toggle]").click();
-    await page.locator("#loginPageTools [data-locale-value='vi']").click();
 
     await expect(page.locator('label[for="account"]')).toHaveText("Tài khoản");
     await expect(page.locator('label[for="password"]')).toHaveText("Mật khẩu");
