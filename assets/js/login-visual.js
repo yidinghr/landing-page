@@ -25,12 +25,13 @@
     const orbitTime = time * 0.34;
 
     const orbitX =
-      Math.cos(orbitTime) * 136 +
-      Math.sin(orbitTime * 1.82 + 0.6) * 28 +
-      Math.sin(orbitTime * 0.54 - 1.2) * 18;
+      18 +
+      Math.cos(orbitTime) * 104 +
+      Math.sin(orbitTime * 1.82 + 0.6) * 22 +
+      Math.sin(orbitTime * 0.54 - 1.2) * 14;
     const orbitY =
-      Math.sin(orbitTime * 1.12 - 0.4) * 104 +
-      Math.cos(orbitTime * 2.24 + 0.2) * 24;
+      Math.sin(orbitTime * 1.12 - 0.4) * 88 +
+      Math.cos(orbitTime * 2.24 + 0.2) * 20;
     const orbitZ =
       Math.sin(orbitTime - 0.72) * 248 +
       Math.cos(orbitTime * 1.42 + 0.5) * 54;
