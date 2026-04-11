@@ -4,9 +4,9 @@ test.describe("Local smoke routes", () => {
   test("login page loads from local root", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page).toHaveTitle("弈鼎國際");
+    await expect(page).toHaveTitle("弈鼎国际");
     await expect(page.locator("#loginForm")).toBeVisible();
-    await expect(page.getByRole("button", { name: "登入" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "登录" })).toBeVisible();
   });
 
   test("dashboard page loads from local static server", async ({ page }) => {

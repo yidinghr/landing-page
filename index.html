@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hans">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,113 +10,93 @@
   <link rel="stylesheet" href="assets/css/login.css" />
 </head>
 <body class="login-page">
+  <div class="login-galaxy" aria-hidden="true"></div>
   <div id="loginPageTools" class="yd-page-tools" aria-label="Page tools"></div>
 
   <main class="login-stage">
-    <section class="login-shell" aria-label="YiDing login dashboard">
-      <div class="login-shell__bg" aria-hidden="true"></div>
-      <div class="login-shell__overlay" aria-hidden="true"></div>
-      <div class="login-shell__sparkle" aria-hidden="true"></div>
-
+    <section class="login-shell" aria-label="Yi Ding login workspace">
       <div class="login-layout">
-        <section class="login-hero" aria-label="YiDing galaxy visual">
-          <div class="login-hero__inner">
-            <div class="login-hero__art" aria-hidden="true">
-              <div class="login-hero__nebula"></div>
-              <div class="login-hero__aura"></div>
-              <div class="login-hero__orbit login-hero__orbit--primary"></div>
-              <div class="login-hero__orbit login-hero__orbit--secondary"></div>
-              <div class="login-hero__dragon">
-                <svg viewBox="0 0 260 140" class="login-hero__dragon-svg" xmlns="http://www.w3.org/2000/svg" role="presentation" focusable="false">
-                  <defs>
-                    <linearGradient id="loginDragonGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#fff3cf" />
-                      <stop offset="18%" stop-color="#f6de92" />
-                      <stop offset="52%" stop-color="#e3b54e" />
-                      <stop offset="100%" stop-color="#7f4718" />
-                    </linearGradient>
-                    <linearGradient id="loginDragonGlow" x1="0%" y1="50%" x2="100%" y2="50%">
-                      <stop offset="0%" stop-color="#fff0bf" stop-opacity="0.95" />
-                      <stop offset="44%" stop-color="#f2ca66" stop-opacity="0.92" />
-                      <stop offset="100%" stop-color="#d08e31" stop-opacity="0.08" />
-                    </linearGradient>
-                  </defs>
+        <section class="login-visual" aria-hidden="true">
+          <div class="login-visual__frame">
+            <div class="login-visual__art">
+              <div class="login-visual__aura login-visual__aura--left"></div>
+              <div class="login-visual__aura login-visual__aura--right"></div>
 
-                  <path d="M24 86 C54 50, 104 28, 154 40 C198 50, 228 80, 242 112" fill="none" stroke="rgba(66, 28, 7, 0.72)" stroke-width="28" stroke-linecap="round" />
-                  <path d="M24 84 C56 50, 106 28, 156 40 C198 50, 228 80, 242 110" fill="none" stroke="url(#loginDragonGold)" stroke-width="24" stroke-linecap="round" />
-                  <path d="M34 84 C62 60, 108 46, 148 54 C186 62, 214 82, 232 104" fill="none" stroke="url(#loginDragonGlow)" stroke-width="7" stroke-linecap="round" />
-
-                  <path d="M22 84 L6 68 L18 100 L36 86 Z" fill="url(#loginDragonGold)" />
-                  <path d="M88 58 L96 38 L108 58" fill="none" stroke="url(#loginDragonGlow)" stroke-width="6" stroke-linecap="round" />
-                  <path d="M118 48 L126 28 L140 52" fill="none" stroke="url(#loginDragonGlow)" stroke-width="6" stroke-linecap="round" />
-                  <path d="M148 48 L156 30 L170 56" fill="none" stroke="url(#loginDragonGlow)" stroke-width="6" stroke-linecap="round" />
-
-                  <path d="M208 76 C224 66, 244 68, 252 86 C258 100, 252 116, 238 120 C224 124, 208 118, 198 108 L194 90 Z" fill="url(#loginDragonGold)" />
-                  <circle cx="232" cy="92" r="3" fill="#391001" />
-                  <path d="M224 78 L232 58 L240 80" fill="none" stroke="url(#loginDragonGlow)" stroke-width="5" stroke-linecap="round" />
-                  <path d="M214 78 L206 60 L220 72" fill="none" stroke="url(#loginDragonGlow)" stroke-width="4" stroke-linecap="round" />
-                  <path d="M204 100 C192 98, 186 90, 186 84" fill="none" stroke="#f7dc95" stroke-width="4" stroke-linecap="round" />
-                  <path d="M230 100 C244 106, 252 116, 258 126" fill="none" stroke="rgba(255, 215, 116, 0.9)" stroke-width="3.5" stroke-linecap="round" />
-                  <path d="M222 104 C236 116, 244 128, 246 138" fill="none" stroke="rgba(255, 215, 116, 0.66)" stroke-width="2.5" stroke-linecap="round" />
-                </svg>
+              <div class="login-orbit">
+                <span class="login-orbit__ring login-orbit__ring--outer"></span>
+                <span class="login-orbit__ring login-orbit__ring--inner"></span>
+                <span class="login-orbit__sun"></span>
+                <img src="image/logo.png" alt="" class="login-visual__mark" />
+                <div class="login-visual__dragon-orbit">
+                  <img src="image/login-dragon-cutout.png" alt="" class="login-visual__dragon" />
+                </div>
               </div>
-              <img src="image/logo.png" alt="" class="login-hero__mark" />
-              <span class="login-hero__sun"></span>
-              <span class="login-hero__spark login-hero__spark--1"></span>
-              <span class="login-hero__spark login-hero__spark--2"></span>
-              <span class="login-hero__spark login-hero__spark--3"></span>
             </div>
 
-            <div class="login-hero__copy">
-              <p class="login-hero__brand-cn">弈鼎国际</p>
-              <p class="login-hero__brand-en">Yi Ding International</p>
-            </div>
+            <img src="image/login-brand-cutout.png" alt="" class="login-visual__brand-image" />
           </div>
         </section>
 
-        <section class="login-panel" aria-label="Login panel">
+        <section class="login-panel" aria-labelledby="login-title">
           <div class="login-panel__inner">
             <header class="login-panel__header">
-              <div class="login-panel__identity">
+              <div class="login-panel__brand">
                 <img src="image/logo.png" alt="弈鼎標誌" class="login-logo" />
-                <div class="login-panel__identity-copy">
+                <div class="login-panel__brand-copy">
                   <p class="login-panel__brand-cn">弈鼎国际</p>
                   <p class="login-panel__brand-en">Yi Ding International</p>
                 </div>
               </div>
 
+              <h1 id="login-title" class="login-title login-visually-hidden">弈鼎</h1>
               <h2 class="login-panel__welcome">欢迎回来</h2>
               <p class="login-panel__desc">请输入内部账号和密码登录</p>
             </header>
 
             <form class="login-form" id="loginForm" action="#" method="post" autocomplete="off">
               <div class="login-field login-field--account">
-                <label for="account" class="login-visually-hidden">账号</label>
-                <input id="account" name="account" type="text" class="login-input" placeholder="账号" autocomplete="username" spellcheck="false" />
+                <label class="login-visually-hidden" for="account">账号</label>
+                <input
+                  id="account"
+                  name="account"
+                  type="text"
+                  class="login-input"
+                  value=""
+                  placeholder="账号"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
               </div>
 
               <div class="login-field login-field--password">
-                <label for="password" class="login-visually-hidden">密码</label>
-                <input id="password" name="password" type="password" class="login-input" placeholder="密码" autocomplete="current-password" />
+                <label class="login-visually-hidden" for="password">密码</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  class="login-input"
+                  value=""
+                  placeholder="密码"
+                  autocomplete="off"
+                />
               </div>
 
-              <button type="submit" class="login-submit">登入</button>
+              <button type="submit" class="login-submit">登录</button>
             </form>
 
-            <div class="login-panel__meta">
+            <div class="login-panel__meta" aria-hidden="true">
               <span class="login-panel__meta-item login-panel__meta-item--shield">安全登录</span>
               <span class="login-panel__meta-item login-panel__meta-item--orbit">环球系统</span>
             </div>
 
             <p id="loginMessage" class="login-message" aria-live="polite"></p>
-            <button type="button" class="login-register-hidden" id="registerButton" aria-hidden="true" tabindex="-1">註冊</button>
+            <button type="button" class="login-register-hidden" id="registerButton" aria-hidden="true" tabindex="-1">注册</button>
           </div>
         </section>
       </div>
     </section>
   </main>
 
-  <script src="assets/js/i18n.js"></script>
-  <script src="assets/js/login.js"></script>
+  <script type="module" src="/src/app/entries/login.js"></script>
 </body>
 </html>
