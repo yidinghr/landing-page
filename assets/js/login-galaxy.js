@@ -16,23 +16,23 @@
     stars: {
       // Adjust these values to change star density, brightness, and twinkle strength.
       layers: [
-        { density: 0.00056, size: [0.35, 0.82], alpha: [0.14, 0.42], drift: 0.7 },
-        { density: 0.00033, size: [0.45, 1.2], alpha: [0.2, 0.72], drift: 1.4 },
-        { density: 0.00015, size: [0.7, 1.75], alpha: [0.28, 0.94], drift: 2.2 }
+        { density: 0.00058, size: [0.35, 0.82], alpha: [0.16, 0.46], drift: 2.2 },
+        { density: 0.00035, size: [0.45, 1.2], alpha: [0.22, 0.76], drift: 4.8 },
+        { density: 0.00017, size: [0.7, 1.85], alpha: [0.3, 0.98], drift: 8.2 }
       ],
-      twinkleSeconds: [2.8, 10.5],
-      staticChance: 0.2,
+      twinkleSeconds: [1.8, 8.2],
+      staticChance: 0.14,
       warmChance: 0.84,
       coolChance: 0.04,
-      sparkleChance: 0.08
+      sparkleChance: 0.11
     },
     halos: {
       // Adjust these values to control drifting halo count, size, speed, and brightness.
       count: 6,
       radius: [260, 560],
-      alpha: [0.08, 0.22],
-      driftSeconds: [96, 220],
-      driftDistance: [0.016, 0.056]
+      alpha: [0.1, 0.24],
+      driftSeconds: [54, 130],
+      driftDistance: [0.03, 0.085]
     },
     nebula: {
       // Adjust these values to control nebula density, movement speed, and color intensity.
@@ -47,10 +47,10 @@
           brightKnots: 22,
           bandWidth: [0.13, 0.24],
           glowBoost: 1.06,
-          driftSecondsX: [180, 260],
-          driftSecondsY: [210, 300],
-          driftDistanceX: [0.012, 0.026],
-          driftDistanceY: [0.01, 0.02]
+          driftSecondsX: [76, 118],
+          driftSecondsY: [92, 138],
+          driftDistanceX: [0.03, 0.062],
+          driftDistanceY: [0.02, 0.04]
         },
         {
           opacity: 0.31,
@@ -61,10 +61,10 @@
           brightKnots: 13,
           bandWidth: [0.09, 0.17],
           glowBoost: 1.18,
-          driftSecondsX: [130, 210],
-          driftSecondsY: [160, 240],
-          driftDistanceX: [0.018, 0.04],
-          driftDistanceY: [0.012, 0.024]
+          driftSecondsX: [58, 94],
+          driftSecondsY: [72, 116],
+          driftDistanceX: [0.038, 0.074],
+          driftDistanceY: [0.024, 0.046]
         }
       ]
     },
@@ -234,8 +234,8 @@
         drift: layer.drift,
         phaseX: rng() * Math.PI * 2,
         phaseY: rng() * Math.PI * 2,
-        speedX: randomBetween(0.14, 0.34, rng),
-        speedY: randomBetween(0.12, 0.28, rng),
+        speedX: randomBetween(0.18, 0.42, rng),
+        speedY: randomBetween(0.16, 0.34, rng),
         stars: stars
       };
     });
@@ -490,11 +490,12 @@
     context.globalCompositeOperation = "screen";
 
     haloLayers.forEach(function (halo) {
+      const pulse = 0.92 + Math.sin(time * 0.22 + halo.phaseX) * 0.08;
       const x = halo.x + Math.sin(time * halo.speedX + halo.phaseX) * halo.driftX;
       const y = halo.y + Math.cos(time * halo.speedY + halo.phaseY) * halo.driftY;
 
-      drawGlow(context, x, y, halo.radius, halo.color, halo.alpha, 0.04, 0.34);
-      drawGlow(context, x + halo.radius * 0.08, y - halo.radius * 0.05, halo.radius * 0.56, halo.accent, halo.alpha * 0.28, 0.06, 0.24);
+      drawGlow(context, x, y, halo.radius, halo.color, halo.alpha * pulse, 0.04, 0.34);
+      drawGlow(context, x + halo.radius * 0.08, y - halo.radius * 0.05, halo.radius * 0.56, halo.accent, halo.alpha * 0.32 * pulse, 0.06, 0.24);
     });
 
     context.restore();
@@ -510,8 +511,9 @@
       const offsetY = Math.cos(time * layer.speedY + layer.phaseY) * layer.driftY;
       const drawX = (width - layer.texture.width) * 0.5 + offsetX;
       const drawY = (height - layer.texture.height) * 0.5 + offsetY;
+      const pulse = 0.94 + Math.sin(time * 0.18 + layer.phaseX) * 0.08;
 
-      context.globalAlpha = layer.opacity;
+      context.globalAlpha = layer.opacity * pulse;
       context.drawImage(layer.texture, drawX, drawY, layer.texture.width, layer.texture.height);
     });
 
