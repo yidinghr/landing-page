@@ -19,7 +19,7 @@
       <div class="login-shell__sparkle" aria-hidden="true"></div>
 
       <div class="login-layout">
-        <section class="login-hero" aria-label="YiDing brand visual"></section>
+        <section class="login-hero" aria-label="YiDing galaxy background"></section>
 
         <section class="login-panel" aria-label="Login panel">
           <div class="login-panel__inner">
@@ -63,17 +63,6 @@
     </section>
   </main>
 
-  <script>
-    (async () => {
-      try {
-        const response = await fetch('image/login-scene.asset.txt', { cache: 'no-store' });
-        if (!response.ok) return;
-        const payload = (await response.text()).trim();
-        if (!payload) return;
-        document.documentElement.style.setProperty('--login-scene-url', `url("data:image/webp;base64,${payload}")`);
-      } catch (_) {}
-    })();
-  </script>
   <script src="assets/js/i18n.js"></script>
   <script src="assets/js/login.js"></script>
 </body>
