@@ -14,67 +14,68 @@
   const SETTINGS = {
     dprCap: 2,
     colors: {
-      spaceTop: "#040306",
-      spaceBottom: "#020205",
-      brownShadow: [18, 10, 8],
-      warmDust: [112, 54, 24],
-      amber: [255, 174, 76],
-      amberSoft: [222, 116, 42],
-      gold: [255, 228, 164],
-      coolBlue: [78, 92, 138]
+      spaceTop: "#090312",
+      spaceBottom: "#03020a",
+      brownShadow: [24, 12, 36],
+      warmDust: [86, 42, 126],
+      amber: [203, 106, 255],
+      amberSoft: [152, 90, 232],
+      gold: [250, 238, 255],
+      coolBlue: [118, 148, 255]
     },
     stars: {
       // Random twinkling stars live here:
       // density/size/alpha tune how many stars appear and how bright they get.
       layers: [
-        { density: 0.0032, size: [0.32, 0.92], alpha: [0.18, 0.52], speed: [8, 16], direction: 1, driftY: 9, sparkleChance: 0.12 },
-        { density: 0.00245, size: [0.5, 1.44], alpha: [0.26, 0.86], speed: [12, 22], direction: -1, driftY: 14, sparkleChance: 0.22 }
+        { density: 0.0041, size: [0.3, 0.94], alpha: [0.18, 0.58], speed: [2.2, 4.2], direction: -1, driftY: 8, sparkleChance: 0.12 },
+        { density: 0.0031, size: [0.48, 1.34], alpha: [0.28, 0.92], speed: [3.6, 6.2], direction: -1, driftY: 12, sparkleChance: 0.24 },
+        { density: 0.0017, size: [0.82, 1.98], alpha: [0.32, 1], speed: [5.2, 8.8], direction: -1, driftY: 16, sparkleChance: 0.34 }
       ],
-      twinkleSeconds: [0.22, 1.1],
-      warmChance: 0.9,
-      coolChance: 0.03,
-      staticChance: 0.05
+      twinkleSeconds: [0.28, 1.8],
+      warmChance: 0.76,
+      coolChance: 0.12,
+      staticChance: 0.08
     },
     halos: {
       // Drifting halos live here:
       // raise count/radius/alpha for more glow, lower driftSeconds for faster motion.
-      count: 4,
-      radius: [180, 420],
-      alpha: [0.05, 0.12],
-      driftSeconds: [24, 42],
-      driftDistanceX: [18, 64],
-      driftDistanceY: [8, 34]
+      count: 5,
+      radius: [220, 520],
+      alpha: [0.05, 0.16],
+      driftSeconds: [34, 62],
+      driftDistanceX: [28, 98],
+      driftDistanceY: [8, 30]
     },
     nebula: {
       // Nebula movement lives here:
       // opacity/bandPuffs/bandGrains/glowBoost control band intensity and presence.
-      overscan: 1.22,
-      backgroundDust: 18,
+      overscan: 1.28,
+      backgroundDust: 26,
       layers: [
         {
-          opacity: 0.38,
-          bandPuffs: 1480,
-          bandGrains: 2840,
-          darkCuts: 76,
-          brightKnots: 24,
-          bandWidth: [0.09, 0.18],
-          glowBoost: 1.24,
-          driftSecondsX: [24, 38],
-          driftSecondsY: [30, 42],
-          driftDistanceX: [24, 74],
+          opacity: 0.44,
+          bandPuffs: 1680,
+          bandGrains: 3120,
+          darkCuts: 68,
+          brightKnots: 26,
+          bandWidth: [0.12, 0.24],
+          glowBoost: 1.28,
+          driftSecondsX: [32, 48],
+          driftSecondsY: [34, 52],
+          driftDistanceX: [38, 116],
           driftDistanceY: [8, 18]
         },
         {
-          opacity: 0.24,
-          bandPuffs: 860,
-          bandGrains: 1640,
-          darkCuts: 34,
-          brightKnots: 14,
-          bandWidth: [0.06, 0.12],
-          glowBoost: 1.28,
-          driftSecondsX: [20, 30],
-          driftSecondsY: [24, 34],
-          driftDistanceX: [34, 94],
+          opacity: 0.28,
+          bandPuffs: 1020,
+          bandGrains: 1880,
+          darkCuts: 38,
+          brightKnots: 16,
+          bandWidth: [0.08, 0.16],
+          glowBoost: 1.32,
+          driftSecondsX: [24, 34],
+          driftSecondsY: [28, 38],
+          driftDistanceX: [54, 132],
           driftDistanceY: [10, 24]
         }
       ]
@@ -196,10 +197,10 @@
 
   function buildBandPath(rng, targetWidth, targetHeight) {
     return [
-      { x: -0.18 * targetWidth, y: randomBetween(0.74, 0.84, rng) * targetHeight },
-      { x: 0.16 * targetWidth, y: randomBetween(0.7, 0.84, rng) * targetHeight },
-      { x: 0.56 * targetWidth, y: randomBetween(0.28, 0.42, rng) * targetHeight },
-      { x: 1.14 * targetWidth, y: randomBetween(0.42, 0.56, rng) * targetHeight }
+      { x: 1.14 * targetWidth, y: randomBetween(0.18, 0.28, rng) * targetHeight },
+      { x: 0.82 * targetWidth, y: randomBetween(0.1, 0.22, rng) * targetHeight },
+      { x: 0.42 * targetWidth, y: randomBetween(0.56, 0.72, rng) * targetHeight },
+      { x: -0.18 * targetWidth, y: randomBetween(0.42, 0.6, rng) * targetHeight }
     ];
   }
 
@@ -284,7 +285,7 @@
     const rng = createPrng(0x3ea94f21 ^ width ^ (height << 3));
     const blooms = [];
 
-    for (let index = 0; index < 7; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
       blooms.push({
         t: randomBetween(0.08, 0.92, rng),
         radius: randomBetween(width * 0.08, width * 0.16, rng),
@@ -438,7 +439,7 @@
         phaseY: rng() * Math.PI * 2,
         speedX: (Math.PI * 2) / randomBetween(layer.driftSecondsX[0], layer.driftSecondsX[1], rng),
         speedY: (Math.PI * 2) / randomBetween(layer.driftSecondsY[0], layer.driftSecondsY[1], rng),
-        driftX: randomBetween(layer.driftDistanceX[0], layer.driftDistanceX[1], rng) * (rng() < 0.5 ? -1 : 1),
+        driftX: -randomBetween(layer.driftDistanceX[0], layer.driftDistanceX[1], rng),
         driftY: randomBetween(layer.driftDistanceY[0], layer.driftDistanceY[1], rng) * (rng() < 0.5 ? -1 : 1)
       };
     });
@@ -502,13 +503,13 @@
     context.fillRect(0, 0, width, height);
 
     const topVoid = context.createRadialGradient(width * 0.22, height * 0.18, 0, width * 0.22, height * 0.18, width * 0.42);
-    topVoid.addColorStop(0, "rgba(10, 7, 10, 0.38)");
+    topVoid.addColorStop(0, "rgba(34, 18, 54, 0.42)");
     topVoid.addColorStop(1, "rgba(0, 0, 0, 0)");
     context.fillStyle = topVoid;
     context.fillRect(0, 0, width, height);
 
     const bottomVoid = context.createRadialGradient(width * 0.78, height * 0.8, 0, width * 0.78, height * 0.8, width * 0.5);
-    bottomVoid.addColorStop(0, "rgba(14, 9, 9, 0.28)");
+    bottomVoid.addColorStop(0, "rgba(44, 18, 72, 0.34)");
     bottomVoid.addColorStop(1, "rgba(0, 0, 0, 0)");
     context.fillStyle = bottomVoid;
     context.fillRect(0, 0, width, height);
@@ -555,8 +556,8 @@
     context.save();
     context.globalCompositeOperation = "screen";
 
-    const laneShiftX = Math.sin(time * 0.22) * 12;
-    const laneShiftY = Math.cos(time * 0.18) * 6;
+    const laneShiftX = -18 - Math.sin(time * 0.18) * 18 - Math.sin(time * 0.05 + 0.8) * 26;
+    const laneShiftY = Math.cos(time * 0.16) * 8;
     const laneWidth = Math.min(width, height);
 
     context.beginPath();
@@ -571,10 +572,10 @@
     );
     context.lineCap = "round";
     context.lineJoin = "round";
-    context.lineWidth = laneWidth * 0.14;
-    context.strokeStyle = rgba(SETTINGS.colors.amberSoft, 0.018);
-    context.shadowBlur = 72;
-    context.shadowColor = rgba(SETTINGS.colors.amber, 0.16);
+    context.lineWidth = laneWidth * 0.18;
+    context.strokeStyle = rgba(SETTINGS.colors.warmDust, 0.032);
+    context.shadowBlur = 96;
+    context.shadowColor = rgba(SETTINGS.colors.amber, 0.24);
     context.stroke();
 
     context.beginPath();
@@ -587,10 +588,10 @@
       screenBandPath[3].x + laneShiftX,
       screenBandPath[3].y + laneShiftY
     );
-    context.lineWidth = laneWidth * 0.055;
-    context.strokeStyle = rgba(SETTINGS.colors.gold, 0.013);
-    context.shadowBlur = 34;
-    context.shadowColor = rgba(SETTINGS.colors.gold, 0.08);
+    context.lineWidth = laneWidth * 0.082;
+    context.strokeStyle = rgba(SETTINGS.colors.amberSoft, 0.028);
+    context.shadowBlur = 48;
+    context.shadowColor = rgba(SETTINGS.colors.gold, 0.16);
     context.stroke();
     context.shadowBlur = 0;
 
