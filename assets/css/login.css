@@ -195,23 +195,23 @@
 }
 
 .login-system__orbit-track--1 {
-  width: min(236px, 28%);
-  height: min(168px, 20%);
+  width: min(196px, 24%);
+  height: min(132px, 16%);
 }
 
 .login-system__orbit-track--2 {
-  width: min(332px, 39%);
-  height: min(220px, 26%);
+  width: min(272px, 33%);
+  height: min(182px, 22%);
 }
 
 .login-system__orbit-track--3 {
-  width: min(456px, 54%);
-  height: min(296px, 35%);
+  width: min(368px, 45%);
+  height: min(242px, 29%);
 }
 
 .login-system__orbit-track--4 {
-  width: min(610px, 72%);
-  height: min(404px, 48%);
+  width: min(534px, 64%);
+  height: min(346px, 42%);
   border-color: rgba(255, 214, 126, 0.1);
 }
 
@@ -253,11 +253,11 @@
 }
 
 .login-system__planet--mercury {
-  --planet-size: 12px;
+  --planet-size: 18px;
 }
 
 .login-system__planet--mars {
-  --planet-size: 16px;
+  --planet-size: 22px;
 }
 
 .login-system__planet--mars::before {
@@ -267,7 +267,7 @@
 }
 
 .login-system__planet--earth {
-  --planet-size: 20px;
+  --planet-size: 28px;
 }
 
 .login-system__planet--earth::before {
@@ -277,7 +277,7 @@
 }
 
 .login-system__planet--saturn {
-  --planet-size: 26px;
+  --planet-size: 38px;
 }
 
 .login-system__planet--saturn::before {
@@ -300,7 +300,7 @@
 }
 
 .login-system__planet--neptune {
-  --planet-size: 18px;
+  --planet-size: 24px;
 }
 
 .login-system__planet--neptune::before {

@@ -116,10 +116,10 @@
       const y = Math.sin(angle) * radiusY;
       const z = Math.sin(angle * 1.26 + phase) * depth;
       const zMix = clamp((z + depth) / (depth * 2), 0, 1);
-      const scale = 0.76 + zMix * 0.34;
+      const scale = 0.94 + zMix * 0.42;
       const rotation = angle * 58;
       const layer = Math.round(2 + zMix * 4 + index * 0.1);
-      const brightness = 0.9 + zMix * 0.26;
+      const brightness = 0.98 + zMix * 0.34;
 
       planetOrbit.style.transform = "translate3d(" + x.toFixed(2) + "px, " + y.toFixed(2) + "px, " + z.toFixed(2) + "px)";
       planetOrbit.style.zIndex = String(layer);
@@ -128,7 +128,7 @@
       if (planet) {
         setStyle(planet, "--planet-scale", scale.toFixed(3));
         setStyle(planet, "--planet-rotation", rotation.toFixed(2) + "deg");
-        planet.style.filter = "brightness(" + brightness.toFixed(3) + ") saturate(" + (0.9 + zMix * 0.22).toFixed(3) + ")";
+        planet.style.filter = "brightness(" + brightness.toFixed(3) + ") saturate(" + (1.02 + zMix * 0.22).toFixed(3) + ")";
       }
     });
 
