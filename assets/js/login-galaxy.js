@@ -61,10 +61,10 @@
       alpha: [0.08, 0.32]
     },
     constellations: {
-      travelSeconds: [9.2, 12.6],
-      scale: [92, 168],
-      alpha: [0.18, 0.42],
-      lineWidth: [1.1, 1.8]
+      travelSeconds: [12.8, 16.8],
+      scale: [112, 186],
+      alpha: [0.34, 0.68],
+      lineWidth: [1.7, 2.8]
     },
     halos: {
       // Drifting halos live here:
@@ -808,10 +808,10 @@
 
     context.save();
     context.globalCompositeOperation = "screen";
-    context.strokeStyle = rgba(SETTINGS.colors.lavender, alpha * 0.44);
+    context.strokeStyle = rgba(SETTINGS.colors.lavender, alpha * 0.76);
     context.lineWidth = lineWidth;
-    context.shadowBlur = 12;
-    context.shadowColor = rgba(SETTINGS.colors.violet, alpha * 0.46);
+    context.shadowBlur = 18;
+    context.shadowColor = rgba(SETTINGS.colors.violet, alpha * 0.72);
 
     pattern.links.forEach(function (link) {
       context.beginPath();
@@ -821,15 +821,16 @@
     });
 
     mapped.forEach(function (point, pointIndex) {
-      const twinkle = 0.72 + Math.sin(time * 1.1 + index + pointIndex * 0.8) * 0.18;
-      const radius = (1.4 + point.size * 1.8) * twinkle;
-      const gradient = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius * 4.2);
+      const twinkle = 0.86 + Math.sin(time * 0.72 + index + pointIndex * 0.8) * 0.16;
+      const radius = (1.8 + point.size * 2.2) * twinkle;
+      const gradient = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius * 5.6);
       gradient.addColorStop(0, rgba(SETTINGS.colors.gold, alpha));
-      gradient.addColorStop(0.24, rgba(SETTINGS.colors.lavender, alpha * 0.46));
+      gradient.addColorStop(0.18, rgba(SETTINGS.colors.lavender, alpha * 0.72));
+      gradient.addColorStop(0.38, rgba(SETTINGS.colors.violet, alpha * 0.34));
       gradient.addColorStop(1, rgba(SETTINGS.colors.lavender, 0));
       context.fillStyle = gradient;
       context.beginPath();
-      context.arc(point.x, point.y, radius * 4.2, 0, Math.PI * 2);
+      context.arc(point.x, point.y, radius * 5.6, 0, Math.PI * 2);
       context.fill();
 
       context.fillStyle = rgba(SETTINGS.colors.gold, alpha);
@@ -865,7 +866,7 @@
     }
 
     const ease = progress * progress * (3 - 2 * progress);
-    const fade = Math.sin(progress * Math.PI);
+    const fade = 0.34 + Math.sin(progress * Math.PI) * 0.66;
     const startX = width + active.offsetX + active.scale * 0.7;
     const startY = height * 0.08 + active.offsetY;
     const endX = -active.scale * 1.2;

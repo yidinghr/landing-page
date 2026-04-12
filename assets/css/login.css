@@ -320,15 +320,15 @@
 
 .login-panel {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 18px 18px 18px 22px;
+  padding: 8px 18px 18px 22px;
 }
 
 .login-panel__inner {
   width: min(100%, 720px);
   min-height: 642px;
-  padding: 24px 44px 34px;
+  padding: 18px 44px 34px;
   border-radius: 32px;
   border: 1px solid rgba(236, 194, 102, 0.14);
   background:
@@ -345,7 +345,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
+  margin-bottom: 0;
 }
 
 .login-panel__brand-lockup {
@@ -609,7 +609,7 @@
   .login-panel__inner {
     width: min(100%, 660px);
     min-height: 596px;
-    padding: 22px 30px 28px;
+    padding: 14px 30px 28px;
   }
 
   .login-panel__brand-lockup {
@@ -695,13 +695,13 @@
   }
 
   .login-panel {
-    padding: 8px 14px 14px;
+    padding: 4px 14px 14px;
   }
 
   .login-panel__inner {
     width: 100%;
     min-height: auto;
-    padding: 20px 18px 20px;
+    padding: 14px 18px 20px;
     border-radius: 24px;
   }
 
