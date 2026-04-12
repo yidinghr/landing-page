@@ -283,8 +283,8 @@
 .login-system__mark-wrap {
   left: 52.4%;
   top: 57.2%;
-  width: min(642px, 72%);
-  height: min(452px, 52vw);
+  width: min(618px, 69%);
+  height: min(432px, 49vw);
   z-index: 5;
   transform: translate(-50%, -50%);
   overflow: visible;
@@ -296,6 +296,22 @@
   content: none;
 }
 
+.login-system__mark-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 24% 16%, rgba(255, 199, 92, 0.92) 0 0.9%, rgba(255, 199, 92, 0.42) 1.8%, transparent 3.2%),
+    radial-gradient(circle at 76% 16%, rgba(255, 199, 92, 0.9) 0 0.9%, rgba(255, 199, 92, 0.4) 1.8%, transparent 3.2%),
+    radial-gradient(circle at 48% 40%, rgba(255, 210, 116, 0.94) 0 1%, rgba(255, 210, 116, 0.44) 2%, transparent 3.4%),
+    radial-gradient(circle at 23% 68%, rgba(255, 199, 92, 0.9) 0 0.9%, rgba(255, 199, 92, 0.4) 1.8%, transparent 3.2%),
+    radial-gradient(circle at 78% 68%, rgba(255, 199, 92, 0.9) 0 0.9%, rgba(255, 199, 92, 0.4) 1.8%, transparent 3.2%);
+  filter: blur(0.8px);
+  opacity: 0.52;
+  z-index: 2;
+}
+
 .login-visual__mark {
   position: absolute;
   left: 0;
@@ -304,16 +320,13 @@
   height: auto;
   display: block;
   object-fit: contain;
-  transform: translateY(4px) scale(1.18);
-  clip-path: inset(0 0 22% 0);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 62%, rgba(0, 0, 0, 0.88) 72%, rgba(0, 0, 0, 0.32) 84%, rgba(0, 0, 0, 0) 100%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 62%, rgba(0, 0, 0, 0.88) 72%, rgba(0, 0, 0, 0.32) 84%, rgba(0, 0, 0, 0) 100%);
+  transform: translateY(2px) scale(1.1);
   mix-blend-mode: screen;
   filter:
-    brightness(0.99)
-    saturate(1)
-    contrast(0.98)
-    blur(0.14px);
+    brightness(0.95)
+    saturate(0.94)
+    contrast(0.96);
+  z-index: 1;
 }
 
 .login-system__spark {
@@ -347,19 +360,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 26px;
+  margin-bottom: 18px;
 }
 
 .login-panel__brand-lockup {
   position: relative;
   display: grid;
   place-items: center;
-  width: min(100%, 664px);
-  height: clamp(188px, 14.6vw, 224px);
+  width: min(100%, 676px);
+  height: clamp(222px, 16.8vw, 266px);
   overflow: hidden;
   background: transparent;
   border: 0;
   box-shadow: none;
+}
+
+.login-panel__brand-lockup::before {
+  content: "";
+  position: absolute;
+  inset: 10% 2% 14%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(195, 112, 255, 0.12), transparent 54%),
+    linear-gradient(90deg, transparent 0%, rgba(255, 220, 136, 0.12) 22%, rgba(255, 248, 214, 0.2) 50%, rgba(255, 214, 122, 0.12) 78%, transparent 100%);
+  filter: blur(18px);
+  opacity: 0.78;
 }
 
 .login-panel__brand-graphic {
@@ -368,8 +393,15 @@
   height: 100%;
   object-fit: contain;
   mix-blend-mode: screen;
-  opacity: 0.96;
-  filter: brightness(1.18) contrast(1.12) drop-shadow(0 0 16px rgba(255, 220, 126, 0.12));
+  opacity: 0.98;
+  filter:
+    brightness(1.14)
+    contrast(1.08)
+    drop-shadow(0 0 10px rgba(255, 216, 126, 0.08))
+    drop-shadow(0 0 28px rgba(194, 112, 255, 0.06));
+  position: relative;
+  z-index: 1;
+  transform: translateY(-4px) scale(1.08);
 }
 
 .login-form {
@@ -573,8 +605,8 @@
   .login-system__mark-wrap {
     left: 52.4%;
     top: 57%;
-    width: min(586px, 69%);
-    height: 404px;
+    width: min(560px, 67%);
+    height: 390px;
   }
 
   .login-system__orbit-track--4 {
@@ -595,7 +627,7 @@
 
   .login-panel__brand-lockup {
     width: min(100%, 588px);
-    height: 178px;
+    height: 214px;
   }
 
   .login-input {
@@ -636,8 +668,8 @@
   .login-system__mark-wrap {
     left: 52%;
     top: 56%;
-    width: min(356px, 60%);
-    height: 242px;
+    width: min(336px, 58%);
+    height: 228px;
   }
 
   .login-visual__dragon-orbit {
@@ -692,7 +724,7 @@
 
   .login-panel__brand-lockup {
     width: min(100%, 360px);
-    height: 132px;
+    height: 166px;
   }
 
   .login-form {

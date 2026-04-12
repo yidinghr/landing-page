@@ -1,8 +1,9 @@
 (function () {
   const planetOrbits = Array.from(document.querySelectorAll(".login-system__planet-orbit"));
   const markWrap = document.querySelector(".login-system__mark-wrap");
+  const mark = document.querySelector(".login-visual__mark");
 
-  if (planetOrbits.length === 0 || !markWrap) {
+  if (!markWrap) {
     return;
   }
 
@@ -60,9 +61,16 @@
       }
     });
 
-    const logoFloatY = Math.sin(time * 0.96) * 2.8 + 2.4;
-    const logoFloatScale = 1.024 + Math.cos(time * 0.54) * 0.01;
-    markWrap.style.transform = "translate(-50%, calc(-50% + " + logoFloatY.toFixed(2) + "px)) scale(" + logoFloatScale.toFixed(4) + ")";
+    const logoFloatX = Math.sin(time * 0.28) * 4.6;
+    const logoFloatY = Math.sin(time * 0.52) * 6.2 + 1.6;
+    const logoFloatScale = 1.012 + Math.cos(time * 0.34) * 0.009;
+    const logoTilt = Math.sin(time * 0.24) * 1.2;
+    markWrap.style.transform = "translate(calc(-50% + " + logoFloatX.toFixed(2) + "px), calc(-50% + " + logoFloatY.toFixed(2) + "px)) scale(" + logoFloatScale.toFixed(4) + ") rotateZ(" + logoTilt.toFixed(2) + "deg)";
+
+    if (mark) {
+      const pulse = 0.94 + Math.sin(time * 0.42) * 0.03;
+      mark.style.filter = "brightness(" + pulse.toFixed(3) + ") saturate(0.94) contrast(0.96)";
+    }
 
     requestAnimationFrame(animate);
   }
