@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="../../assets/css/edit-schedule.css">
 </head>
 
-<body class="edit-page">
+<body class="edit-page" data-login-path="../../index.html" data-home-path="../home.html">
 <div id="scheduleApp" class="schedule-app">
 <main class="schedule-workspace">
 <header class="schedule-header">
@@ -153,6 +153,8 @@
 <datalist id="scheduleShiftCodeList"></datalist>
 
 <script src="../../assets/js/i18n.js"></script>
+<script src="../../assets/js/auth-store.js"></script>
+<script src="../../assets/js/admin-route-guard.js"></script>
 <script src="../../assets/js/employees-data.js"></script>
 <script src="../../assets/js/edit-schedule.js"></script>
 </body>

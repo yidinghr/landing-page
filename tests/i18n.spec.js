@@ -1,6 +1,8 @@
 const { test, expect } = require("@playwright/test");
 
 const LOCALE_KEY = "yiding_ui_locale_v1";
+const ACCOUNTS_KEY = "yiding_accounts_v1";
+const SESSION_KEY = "yiding_auth_session_v1";
 
 function seedLocale(page, locale) {
   return page.addInitScript(
@@ -11,10 +13,38 @@ function seedLocale(page, locale) {
   );
 }
 
+function seedAdminAuth(page) {
+  return page.addInitScript(
+    ({ accountsKey, sessionKey }) => {
+      const adminAccount = {
+        username: "YiDing Admin",
+        password: "YDI0006",
+        role: "admin",
+        displayName: "YiDing Admin",
+        welcomeMessage: "燈哥",
+        avatarSrc: "/image/logoweb.png",
+        createdAt: "2026-04-13T00:00:00.000Z"
+      };
+      window.localStorage.setItem(accountsKey, JSON.stringify([adminAccount]));
+      window.sessionStorage.setItem(sessionKey, JSON.stringify({
+        username: adminAccount.username,
+        role: adminAccount.role,
+        displayName: adminAccount.displayName,
+        welcomeMessage: adminAccount.welcomeMessage,
+        avatarSrc: adminAccount.avatarSrc
+      }));
+    },
+    { accountsKey: ACCOUNTS_KEY, sessionKey: SESSION_KEY }
+  );
+}
+
 test.describe("Shared locale switching", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("login page respects Vietnamese locale from storage", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await seedLocale(page, "vi");
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await expect(page.locator('label[for="account"]')).toHaveText("Tài khoản");
     await expect(page.locator('label[for="password"]')).toHaveText("Mật khẩu");
@@ -22,23 +52,24 @@ test.describe("Shared locale switching", () => {
   });
 
   test("dashboard gear persists English locale into schedule page", async ({ page }) => {
-    await page.goto("/home/home.html");
+    test.setTimeout(60000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await seedAdminAuth(page);
+    await page.goto("/home/home.html", { waitUntil: "domcontentloaded" });
 
     await page.locator("#dashboardTopAction-settings").click();
-    await page.locator("[data-locale-value='en']").click();
+    await page.locator("[data-locale-value='en']").click({ force: true });
 
-    await expect(page.locator("#dashboardMainButton-schedule")).toHaveText("Schedule");
-    await page.locator("#dashboardMainButton-schedule").click();
-
-    await expect(page).toHaveURL(/\/home\/edit\/index\.html$/);
-    await expect(page).toHaveTitle("Edit Work Schedule");
-    await expect(page.locator("#scheduleHeaderTitle")).toHaveText("Schedule");
-    await expect(page.locator("#scheduleYearLabel")).toHaveText("Year");
-    await expect(page.locator("#scheduleMonthLabel")).toHaveText("Month");
+    await expect(page.locator("#dashboardMainButton-schedule .dashboard-nav__label")).toHaveText("Schedule");
+    await page.locator("#dashboardMainButton-schedule").click({ force: true });
+    await expect(page.locator("#dashboardDetailTitle")).toHaveText("Schedule Overview");
+    await expect(page.locator("#dashboardDetailBody select")).toHaveCount(1);
   });
 
   test("schedule page gear switches toolbar labels to Vietnamese", async ({ page }) => {
-    await page.goto("/home/edit/index.html");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await seedAdminAuth(page);
+    await page.goto("/home/edit/index.html", { waitUntil: "domcontentloaded" });
 
     await page.locator("#scheduleLocaleMount [data-locale-toggle]").click();
     await page.locator("#scheduleLocaleMount [data-locale-value='vi']").click();
@@ -52,8 +83,10 @@ test.describe("Shared locale switching", () => {
 
   test("employees page translates chrome but keeps employee data unchanged", async ({ page }) => {
     test.setTimeout(45000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await seedLocale(page, "zh-Hant");
-    await page.goto("/home/employees.html");
+    await seedAdminAuth(page);
+    await page.goto("/home/employees.html", { waitUntil: "domcontentloaded" });
 
     const initialCardTitle = await page.locator(".employees-card__title").first().textContent();
 

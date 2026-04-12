@@ -1,5 +1,6 @@
 (function () {
-  const canvas = document.getElementById("loginGalaxyCanvas");
+  const canvas = document.getElementById("loginGalaxyCanvas") || document.getElementById("homeGalaxyCanvas");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const CONSTELLATION_PATTERNS = [
     { stars: [[0.06, 0.72, 1], [0.18, 0.48, 0.7], [0.34, 0.34, 0.8], [0.58, 0.26, 1], [0.78, 0.4, 0.72], [0.92, 0.18, 0.66]], links: [[0,1],[1,2],[2,3],[3,4],[4,5]] },
     { stars: [[0.08, 0.22, 0.84], [0.24, 0.34, 0.7], [0.38, 0.58, 0.9], [0.52, 0.36, 0.76], [0.74, 0.18, 0.82], [0.92, 0.32, 0.7]], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[1,3]] },
@@ -125,6 +126,7 @@
   let constellations = [];
   let resizeFrame = 0;
   let lastFrameTime = 0;
+  let animationFrame = 0;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -582,6 +584,10 @@
       nebulaLayers = buildNebulaLayers(textureBandPath);
       drifters = buildDrifters();
       constellations = createConstellationSequence();
+
+      if (prefersReducedMotion.matches) {
+        drawFrame(0);
+      }
     });
   }
 
@@ -942,12 +948,14 @@
     context.fillRect(0, 0, width, height);
   }
 
-  function render(timestamp) {
+  function drawFrame(timestamp) {
     const time = timestamp * 0.001;
     const dt = lastFrameTime ? Math.min(0.032, (timestamp - lastFrameTime) / 1000) : 1 / 120;
     lastFrameTime = timestamp;
 
-    update(dt, time);
+    if (!prefersReducedMotion.matches) {
+      update(dt, time);
+    }
 
     context.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawBase();
@@ -958,11 +966,38 @@
     drawConstellations(time);
     drawStars(time);
     drawVignette();
+  }
 
-    requestAnimationFrame(render);
+  function render(timestamp) {
+    drawFrame(timestamp);
+
+    if (prefersReducedMotion.matches) {
+      return;
+    }
+
+    animationFrame = requestAnimationFrame(render);
   }
 
   resize();
   window.addEventListener("resize", resize, { passive: true });
-  requestAnimationFrame(render);
+
+  if (typeof prefersReducedMotion.addEventListener === "function") {
+    prefersReducedMotion.addEventListener("change", function () {
+      cancelAnimationFrame(animationFrame);
+      lastFrameTime = 0;
+
+      if (prefersReducedMotion.matches) {
+        drawFrame(0);
+        return;
+      }
+
+      animationFrame = requestAnimationFrame(render);
+    });
+  }
+
+  if (prefersReducedMotion.matches) {
+    drawFrame(0);
+  } else {
+    animationFrame = requestAnimationFrame(render);
+  }
 })();

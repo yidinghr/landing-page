@@ -4,73 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>首頁</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/source-han-vf@0.1.1/source-han-sans-vf.min.css">
 <link rel="stylesheet" href="../assets/css/i18n.css">
 <link rel="stylesheet" href="../assets/css/home.css">
 </head>
+<body class="home-page dashboard-page">
 
-<body class="home-page">
+<div class="dashboard-galaxy" aria-hidden="true">
+  <canvas id="homeGalaxyCanvas" class="dashboard-galaxy__canvas"></canvas>
+</div>
 
-<div class="home-bg-orb home-bg-orb--left" aria-hidden="true"></div>
-<div class="home-bg-orb home-bg-orb--right" aria-hidden="true"></div>
-<div class="home-grid-overlay" aria-hidden="true"></div>
+<main class="dashboard-shell">
+  <div id="homeTopActions" class="dashboard-top-actions" aria-label="頂部操作"></div>
 
-<main class="home-shell">
-  <div id="homeTopActions" class="home-top-actions" aria-label="頂部操作"></div>
+  <section class="dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <div class="dashboard-profile">
+        <button type="button" id="dashboardAvatarButton" class="dashboard-avatar-button" aria-label="更換頭像">
+          <img id="dashboardAvatarImage" class="dashboard-avatar-image" src="../image/logoweb.png" alt="">
+        </button>
+        <input id="dashboardAvatarInput" class="dashboard-avatar-input" type="file" accept="image/*">
 
-  <section class="home-hero-card">
-    <div class="home-hero-card__inner">
-      <div class="home-brand">
-        <div class="home-brand__logo-wrap">
-          <img src="../image/logo.png" alt="弈鼎標誌" class="home-logo">
-        </div>
-
-        <div class="home-brand__copy">
-          <p class="home-kicker">YIDING INTERNAL WORKSPACE</p>
-          <h1 id="homeGreeting" class="home-title">燈哥，早安！</h1>
-          <p class="home-subtitle">
-            內部入口整合員工、班表、出勤與公司資訊，保留原有邏輯，只升級整體視覺與層次感。
-          </p>
+        <div class="dashboard-profile__meta">
+          <p id="dashboardProfileRole" class="dashboard-profile__role">Admin</p>
+          <h1 id="dashboardProfileName" class="dashboard-profile__name">YiDing Admin</h1>
         </div>
       </div>
 
-      <section class="home-overview" aria-label="Overview">
-        <article class="home-overview__card">
-          <span class="home-overview__label">Workspace</span>
-          <strong class="home-overview__value">Internal</strong>
-        </article>
-        <article class="home-overview__card">
-          <span class="home-overview__label">Mode</span>
-          <strong class="home-overview__value">Dashboard</strong>
-        </article>
-        <article class="home-overview__card">
-          <span class="home-overview__label">Language</span>
-          <strong class="home-overview__value">Multi-Locale</strong>
-        </article>
-      </section>
-    </div>
-  </section>
+      <nav id="homeMenu" class="dashboard-nav" aria-label="功能選單"></nav>
 
-  <section class="home-section">
-    <div class="home-section__head">
-      <div>
-        <p class="home-section__eyebrow">MAIN ACCESS</p>
-        <h2 class="home-section__title">功能入口</h2>
+      <div class="dashboard-sidebar__footer">
+        <button type="button" id="dashboardLogoutButton" class="dashboard-logout-button">退出登录</button>
       </div>
-      <p class="home-section__note">
-        點擊卡片可直接進入對應模組。
-      </p>
-    </div>
+    </aside>
 
-    <section id="homeMenu" class="home-menu" aria-label="內部功能選單"></section>
+    <section class="dashboard-chat-card">
+      <div class="dashboard-card__head">
+        <div>
+          <p class="dashboard-card__eyebrow">AI WORKSPACE</p>
+          <h2 class="dashboard-card__title">AI 對話區</h2>
+        </div>
+        <span class="dashboard-card__badge">Coming Soon</span>
+      </div>
+
+      <div class="dashboard-chat-placeholder">
+        <div class="dashboard-chat-placeholder__orb"></div>
+        <div class="dashboard-chat-placeholder__grid"></div>
+        <div class="dashboard-chat-placeholder__copy">
+          <h3>AI 助手工作區</h3>
+          <p>先預留中控畫面位置，後續可直接接 AI 對話、知識庫與內部流程助手。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-detail-card">
+      <div class="dashboard-card__head dashboard-card__head--tight">
+        <div>
+          <p id="dashboardDetailEyebrow" class="dashboard-card__eyebrow">LIVE PANEL</p>
+          <h2 id="dashboardDetailTitle" class="dashboard-card__title">控制面板</h2>
+        </div>
+      </div>
+
+      <div id="dashboardDetailBody" class="dashboard-detail-body"></div>
+    </section>
   </section>
 </main>
 
 <script src="../assets/js/i18n.js"></script>
+<script src="../assets/js/auth-store.js"></script>
+<script src="../assets/js/employees-data.js"></script>
+<script src="../assets/js/login-galaxy.js"></script>
 <script src="../assets/js/home.js"></script>
 
 </body>
