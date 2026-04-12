@@ -204,6 +204,29 @@
     ];
   }
 
+  function sampleStarPosition(rng) {
+    const roll = rng();
+
+    if (roll < 0.22) {
+      return {
+        x: rng() * width * 0.24,
+        y: rng() * height * 0.26
+      };
+    }
+
+    if (roll < 0.44) {
+      return {
+        x: width * (0.74 + rng() * 0.26),
+        y: height * (0.7 + rng() * 0.3)
+      };
+    }
+
+    return {
+      x: rng() * width,
+      y: rng() * height
+    };
+  }
+
   function buildStarLayers() {
     const rng = createPrng(0x7f4a7c15 ^ width ^ (height << 4));
     const area = width * height;
@@ -225,9 +248,11 @@
           color = SETTINGS.colors.coolBlue;
         }
 
+        const position = sampleStarPosition(rng);
+
         stars.push({
-          x: rng() * width,
-          y: rng() * height,
+          x: position.x,
+          y: position.y,
           radius: randomBetween(layer.size[0], layer.size[1], rng) * (sparkle ? 1.16 : 1),
           alpha: randomBetween(layer.alpha[0], layer.alpha[1], rng),
           color: color,
@@ -483,15 +508,22 @@
           star.y = Math.random() * height * 0.78;
         } else if (layer.direction < 0 && star.x < -layer.wrapMargin) {
           star.x = width + layer.wrapMargin;
-          star.y = Math.random() * height * 0.72 - height * 0.08;
+          const roll = Math.random();
+          if (roll < 0.34) {
+            star.y = Math.random() * height * 0.22;
+          } else if (roll < 0.64) {
+            star.y = height * (0.68 + Math.random() * 0.32);
+          } else {
+            star.y = Math.random() * height * 0.72 - height * 0.08;
+          }
         }
 
         if (star.y < -28) {
           star.y = -12;
-          star.x = Math.random() * width;
+          star.x = Math.random() * width * 0.34;
         } else if (star.y > height + 28) {
           star.y = -28;
-          star.x = width * 0.42 + Math.random() * width * 0.68;
+          star.x = width * (0.64 + Math.random() * 0.36);
         }
       });
     });
