@@ -25,7 +25,7 @@
   function animate(timestamp) {
     const time = timestamp * 0.001;
     const orbitTime = time * 0.24;
-    const orbitDiagonal = -0.46;
+    const orbitDiagonal = -0.34;
     const cosOrbitDiagonal = Math.cos(orbitDiagonal);
     const sinOrbitDiagonal = Math.sin(orbitDiagonal);
 
@@ -121,12 +121,12 @@
       const x = baseX * cosOrbitDiagonal - baseY * sinOrbitDiagonal;
       const diagonalY = baseX * sinOrbitDiagonal + baseY * cosOrbitDiagonal;
       const z = Math.sin(angle + Math.PI / 2) * depth;
-      const y = diagonalY + z * 0.09;
+      const y = diagonalY + z * 0.05;
       const zMix = clamp((z + depth) / (depth * 2), 0, 1);
-      const scale = 0.54 + zMix * 0.98;
+      const scale = 0.56 + zMix * 0.88;
       const rotation = angle * 48 + zMix * 18;
       const layer = Math.round(2 + zMix * 4 + index * 0.1);
-      const brightness = 0.82 + zMix * 0.5;
+      const brightness = 0.8 + zMix * 0.44;
       const opacity = 0.34 + zMix * 0.66;
 
       planetOrbit.style.transform = "translate3d(" + x.toFixed(2) + "px, " + y.toFixed(2) + "px, " + z.toFixed(2) + "px)";
@@ -141,7 +141,7 @@
       }
     });
 
-    const logoFloatY = Math.sin(time * 1.08) * 4 + 1.5;
+    const logoFloatY = Math.sin(time * 1.02) * 3.2 + 2.8;
     markWrap.style.transform = "translate(-50%, calc(-50% + " + logoFloatY.toFixed(2) + "px))";
 
     requestAnimationFrame(animate);

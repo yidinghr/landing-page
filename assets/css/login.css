@@ -173,33 +173,33 @@
 
 .login-system__halo {
   position: absolute;
-  left: 53%;
-  top: 55%;
-  width: min(520px, 64%);
-  height: min(520px, 64%);
+  left: 52.4%;
+  top: 57.2%;
+  width: min(548px, 66%);
+  height: min(548px, 66%);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background:
-    radial-gradient(circle, rgba(255, 221, 148, 0.22) 0%, rgba(231, 144, 255, 0.14) 26%, rgba(131, 88, 235, 0.08) 46%, rgba(131, 88, 235, 0) 74%);
-  filter: blur(12px);
+    radial-gradient(circle, rgba(255, 224, 168, 0.18) 0%, rgba(228, 142, 255, 0.16) 24%, rgba(126, 88, 246, 0.08) 46%, rgba(126, 88, 246, 0) 74%);
+  filter: blur(14px);
 }
 
 .login-system__orbit-track {
   position: absolute;
-  left: 53%;
-  top: 55%;
+  left: 52.4%;
+  top: 57.2%;
   border-radius: 50%;
-  transform: translate(-50%, -50%) rotateZ(-24deg) rotateX(72deg);
+  transform: translate(-50%, -50%) rotateZ(-21deg) rotateX(79deg);
   transform-style: preserve-3d;
-  border: 1px solid rgba(236, 220, 255, 0.16);
+  border: 1px solid rgba(236, 220, 255, 0.18);
   box-shadow:
-    0 0 22px rgba(212, 145, 255, 0.12),
-    inset 0 0 18px rgba(222, 188, 255, 0.06);
+    0 0 20px rgba(212, 145, 255, 0.1),
+    inset 0 0 16px rgba(222, 188, 255, 0.05);
 }
 
 .login-system__orbit-track--1 {
-  width: min(212px, 24%);
-  height: min(212px, 24%);
+  width: min(192px, 22%);
+  height: min(192px, 22%);
   border-color: rgba(161, 222, 255, 0.34);
   box-shadow:
     0 0 22px rgba(161, 222, 255, 0.16),
@@ -207,8 +207,8 @@
 }
 
 .login-system__orbit-track--2 {
-  width: min(296px, 34%);
-  height: min(296px, 34%);
+  width: min(264px, 31%);
+  height: min(264px, 31%);
   border-color: rgba(208, 176, 255, 0.28);
   box-shadow:
     0 0 24px rgba(208, 176, 255, 0.14),
@@ -216,8 +216,8 @@
 }
 
 .login-system__orbit-track--3 {
-  width: min(392px, 46%);
-  height: min(392px, 46%);
+  width: min(330px, 39%);
+  height: min(330px, 39%);
   border-color: rgba(255, 229, 188, 0.24);
   box-shadow:
     0 0 24px rgba(255, 229, 188, 0.12),
@@ -225,8 +225,8 @@
 }
 
 .login-system__orbit-track--4 {
-  width: min(496px, 58%);
-  height: min(496px, 58%);
+  width: min(412px, 49%);
+  height: min(412px, 49%);
   border-color: rgba(255, 195, 116, 0.2);
   box-shadow:
     0 0 26px rgba(255, 195, 116, 0.12),
@@ -234,8 +234,8 @@
 }
 
 .login-system__orbit-track--5 {
-  width: min(608px, 70%);
-  height: min(608px, 70%);
+  width: min(500px, 60%);
+  height: min(500px, 60%);
   border-color: rgba(130, 169, 255, 0.18);
   box-shadow:
     0 0 28px rgba(130, 169, 255, 0.12),
@@ -243,8 +243,8 @@
 }
 
 .login-system__planet-orbit {
-  left: 53%;
-  top: 55%;
+  left: 52.4%;
+  top: 57.2%;
   width: 0;
   height: 0;
   z-index: var(--planet-layer, 2);
@@ -347,10 +347,10 @@
 }
 
 .login-system__mark-wrap {
-  left: 53%;
-  top: 54.5%;
-  width: min(576px, 66%);
-  height: min(404px, 46vw);
+  left: 52.4%;
+  top: 57.2%;
+  width: min(610px, 68%);
+  height: min(430px, 49vw);
   z-index: 5;
   transform: translate(-50%, -50%);
   overflow: visible;
@@ -368,24 +368,24 @@
 }
 
 .login-system__mark-wrap::before {
-  width: 138%;
-  height: 104%;
+  width: 130%;
+  height: 98%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 54%, rgba(255, 222, 160, 0.28) 0%, rgba(216, 120, 255, 0.18) 24%, rgba(120, 83, 242, 0.1) 44%, rgba(120, 83, 242, 0) 76%);
-  filter: blur(26px);
-  opacity: 0.92;
+    radial-gradient(circle at 50% 50%, rgba(255, 229, 176, 0.24) 0%, rgba(218, 128, 255, 0.18) 24%, rgba(120, 83, 242, 0.08) 44%, rgba(120, 83, 242, 0) 74%);
+  filter: blur(22px);
+  opacity: 0.88;
 }
 
 .login-system__mark-wrap::after {
-  width: 164%;
-  height: 120%;
+  width: 156%;
+  height: 114%;
   background:
-    radial-gradient(circle at 24% 54%, rgba(122, 146, 255, 0.2), transparent 30%),
-    radial-gradient(circle at 74% 38%, rgba(220, 148, 255, 0.16), transparent 28%),
-    radial-gradient(circle at 52% 56%, rgba(255, 178, 98, 0.1), transparent 58%);
+    radial-gradient(circle at 26% 56%, rgba(122, 146, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 74% 40%, rgba(220, 148, 255, 0.18), transparent 26%),
+    radial-gradient(circle at 50% 50%, rgba(255, 187, 110, 0.1), transparent 54%);
   filter: blur(42px);
-  opacity: 0.86;
+  opacity: 0.8;
   z-index: -1;
 }
 
@@ -397,17 +397,17 @@
   height: auto;
   display: block;
   object-fit: contain;
-  transform: translateY(-6px) scale(1.03);
-  clip-path: inset(0 0 18% 0);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 66%, rgba(0, 0, 0, 0.78) 78%, rgba(0, 0, 0, 0.26) 90%, rgba(0, 0, 0, 0) 100%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 66%, rgba(0, 0, 0, 0.78) 78%, rgba(0, 0, 0, 0.26) 90%, rgba(0, 0, 0, 0) 100%);
+  transform: translateY(4px) scale(1.08);
+  clip-path: inset(0 0 22% 0);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 62%, rgba(0, 0, 0, 0.88) 72%, rgba(0, 0, 0, 0.32) 84%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 62%, rgba(0, 0, 0, 0.88) 72%, rgba(0, 0, 0, 0.32) 84%, rgba(0, 0, 0, 0) 100%);
   mix-blend-mode: screen;
   filter:
-    brightness(1.12)
-    saturate(1.08)
-    contrast(1.06)
-    drop-shadow(0 0 22px rgba(255, 224, 156, 0.28))
-    drop-shadow(0 0 56px rgba(208, 120, 255, 0.14));
+    brightness(1.08)
+    saturate(1.06)
+    contrast(1.08)
+    drop-shadow(0 0 18px rgba(255, 224, 156, 0.22))
+    drop-shadow(0 0 44px rgba(208, 120, 255, 0.12));
 }
 
 .login-system__spark {
@@ -582,41 +582,74 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 28px;
+  margin-bottom: 30px;
 }
 
 .login-panel__brand-lockup {
   position: relative;
-  width: min(100%, 494px);
-  height: clamp(120px, 10.6vw, 148px);
+  display: grid;
+  place-items: center;
+  width: min(100%, 512px);
+  height: clamp(132px, 11vw, 164px);
   overflow: hidden;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 222, 170, 0.08);
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 226, 160, 0.08), transparent 34%),
+    radial-gradient(circle at 18% 30%, rgba(122, 146, 255, 0.12), transparent 28%),
+    radial-gradient(circle at 80% 76%, rgba(216, 128, 255, 0.14), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.008));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -18px 40px rgba(76, 40, 128, 0.12),
+    0 18px 36px rgba(8, 6, 22, 0.18);
 }
 
+.login-panel__brand-lockup::before,
 .login-panel__brand-lockup::after {
   content: "";
   position: absolute;
-  left: 14%;
-  right: 14%;
-  bottom: 16px;
+  inset: auto;
+  pointer-events: none;
+}
+
+.login-panel__brand-lockup::before {
+  left: 50%;
+  top: 52%;
+  width: 116%;
+  height: 118%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 218, 136, 0.14), rgba(220, 122, 255, 0.08) 28%, rgba(122, 88, 255, 0.02) 48%, transparent 72%);
+  filter: blur(24px);
+}
+
+.login-panel__brand-lockup::after {
+  left: 15%;
+  right: 15%;
+  bottom: 18px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 212, 120, 0.22), transparent);
-  box-shadow: 0 0 18px rgba(255, 182, 78, 0.08);
+  background: linear-gradient(90deg, transparent, rgba(255, 212, 120, 0.18), rgba(214, 129, 255, 0.22), transparent);
+  box-shadow: 0 0 20px rgba(214, 129, 255, 0.12);
 }
 
 .login-panel__brand-graphic {
   display: block;
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
+  left: 50%;
+  top: 50%;
+  width: min(100%, 476px);
   height: auto;
   object-fit: contain;
-  transform: translateY(-18%);
+  transform: translate(-50%, -48%);
+  mix-blend-mode: screen;
   filter:
     brightness(1.08)
-    contrast(1.08)
-    drop-shadow(0 0 20px rgba(255, 214, 126, 0.18))
-    drop-shadow(0 0 42px rgba(255, 169, 72, 0.08));
+    contrast(1.1)
+    saturate(1.04)
+    drop-shadow(0 0 14px rgba(255, 214, 126, 0.14))
+    drop-shadow(0 0 36px rgba(177, 120, 255, 0.12));
 }
 
 .login-form {
@@ -654,36 +687,58 @@
   overflow: hidden;
   margin-top: 8px;
   height: 84px;
-  border: 0;
+  border: 1px solid rgba(255, 235, 188, 0.18);
   border-radius: 24px;
   background:
-    linear-gradient(135deg, rgba(255, 240, 188, 0.98) 0%, rgba(255, 212, 106, 0.98) 40%, rgba(235, 164, 52, 0.98) 100%);
-  color: #1f1309;
+    radial-gradient(circle at 22% 30%, rgba(255, 244, 214, 0.18), transparent 18%),
+    radial-gradient(circle at 78% 68%, rgba(203, 106, 255, 0.22), transparent 22%),
+    linear-gradient(135deg, rgba(52, 24, 92, 0.98) 0%, rgba(112, 54, 191, 0.96) 28%, rgba(255, 201, 108, 0.98) 58%, rgba(116, 48, 182, 0.98) 100%);
+  color: #fff4d6;
   font-family: "Noto Serif TC", "Microsoft JhengHei", "PingFang TC", serif;
   font-size: clamp(33px, 2.4vw, 42px);
   font-weight: 700;
   letter-spacing: 0.12em;
+  text-shadow:
+    0 0 12px rgba(255, 238, 196, 0.2),
+    0 1px 0 rgba(31, 12, 52, 0.36);
   box-shadow:
-    0 14px 32px rgba(238, 194, 86, 0.18),
-    0 0 30px rgba(255, 208, 103, 0.18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -18px 28px rgba(53, 22, 94, 0.22),
+    0 16px 34px rgba(28, 12, 52, 0.2),
+    0 0 30px rgba(170, 112, 255, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .login-submit:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 16px 36px rgba(238, 194, 86, 0.22),
-    0 0 36px rgba(255, 208, 103, 0.22);
-  filter: saturate(1.06);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -18px 28px rgba(53, 22, 94, 0.24),
+    0 20px 40px rgba(28, 12, 52, 0.24),
+    0 0 42px rgba(198, 126, 255, 0.22);
+  filter: saturate(1.08) brightness(1.02);
 }
 
 .login-submit::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(112deg, transparent 24%, rgba(255, 255, 255, 0.26) 44%, transparent 62%);
+  background: linear-gradient(112deg, transparent 22%, rgba(255, 255, 255, 0.24) 42%, transparent 60%);
   transform: translateX(-120%);
   animation: button-sheen 5.2s ease-in-out infinite;
+}
+
+.login-submit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 30%, rgba(255, 255, 255, 0.3) 0 1px, transparent 2px),
+    radial-gradient(circle at 30% 74%, rgba(255, 240, 198, 0.2) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 28%, rgba(236, 212, 255, 0.24) 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 70%, rgba(255, 230, 184, 0.24) 0 1px, transparent 2px);
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .login-message {
@@ -795,20 +850,20 @@
   }
 
   .login-system__mark-wrap {
-    left: 53%;
-    top: 55%;
-    width: min(492px, 62%);
-    height: 348px;
+    left: 52.4%;
+    top: 57%;
+    width: min(520px, 64%);
+    height: 366px;
   }
 
   .login-system__orbit-track--4 {
-    width: min(520px, 62%);
-    height: min(520px, 62%);
+    width: min(430px, 54%);
+    height: min(430px, 54%);
   }
 
   .login-system__orbit-track--5 {
-    width: min(596px, 70%);
-    height: min(596px, 70%);
+    width: min(510px, 62%);
+    height: min(510px, 62%);
   }
 
   .login-panel__inner {
@@ -818,8 +873,8 @@
   }
 
   .login-panel__brand-lockup {
-    width: min(100%, 420px);
-    height: 120px;
+    width: min(100%, 436px);
+    height: 128px;
   }
 
   .login-input {
@@ -859,8 +914,8 @@
 
   .login-system__mark-wrap {
     left: 52%;
-    top: 54%;
-    width: min(318px, 54%);
+    top: 56%;
+    width: min(336px, 58%);
     height: 228px;
   }
 
@@ -875,28 +930,28 @@
   }
 
   .login-system__orbit-track--1 {
-    width: min(176px, 32%);
-    height: min(176px, 32%);
+    width: min(150px, 28%);
+    height: min(150px, 28%);
   }
 
   .login-system__orbit-track--2 {
-    width: min(236px, 42%);
-    height: min(236px, 42%);
+    width: min(208px, 38%);
+    height: min(208px, 38%);
   }
 
   .login-system__orbit-track--3 {
-    width: min(304px, 54%);
-    height: min(304px, 54%);
+    width: min(266px, 48%);
+    height: min(266px, 48%);
   }
 
   .login-system__orbit-track--4 {
-    width: min(378px, 66%);
-    height: min(378px, 66%);
+    width: min(332px, 60%);
+    height: min(332px, 60%);
   }
 
   .login-system__orbit-track--5 {
-    width: min(452px, 76%);
-    height: min(452px, 76%);
+    width: min(392px, 70%);
+    height: min(392px, 70%);
   }
 
   .login-panel {
@@ -915,8 +970,8 @@
   }
 
   .login-panel__brand-lockup {
-    width: min(100%, 300px);
-    height: 92px;
+    width: min(100%, 316px);
+    height: 104px;
   }
 
   .login-form {
