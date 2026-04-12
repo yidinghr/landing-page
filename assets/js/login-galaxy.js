@@ -14,22 +14,22 @@
   const SETTINGS = {
     dprCap: 2,
     colors: {
-      spaceTop: "#090312",
-      spaceBottom: "#03020a",
-      brownShadow: [24, 12, 36],
-      warmDust: [86, 42, 126],
-      amber: [203, 106, 255],
-      amberSoft: [152, 90, 232],
-      gold: [250, 238, 255],
-      coolBlue: [118, 148, 255]
+      spaceTop: "#0b0318",
+      spaceBottom: "#020109",
+      brownShadow: [22, 10, 36],
+      warmDust: [98, 48, 166],
+      amber: [220, 124, 255],
+      amberSoft: [176, 98, 244],
+      gold: [250, 236, 255],
+      coolBlue: [126, 150, 255]
     },
     stars: {
       // Random twinkling stars live here:
       // density/size/alpha tune how many stars appear and how bright they get.
       layers: [
-        { density: 0.0044, size: [0.22, 0.62], alpha: [0.16, 0.54], speed: [3.0, 5.1], direction: -1, driftY: 5, sparkleChance: 0.04 },
-        { density: 0.0034, size: [0.32, 0.92], alpha: [0.22, 0.82], speed: [4.6, 7.0], direction: -1, driftY: 7, sparkleChance: 0.09 },
-        { density: 0.0015, size: [0.56, 1.24], alpha: [0.28, 0.94], speed: [6.2, 9.2], direction: -1, driftY: 10, sparkleChance: 0.14 }
+        { density: 0.0072, size: [0.2, 0.54], alpha: [0.16, 0.54], speed: [3.0, 5.1], direction: -1, driftY: 5, sparkleChance: 0.03 },
+        { density: 0.0058, size: [0.26, 0.76], alpha: [0.22, 0.82], speed: [4.6, 7.0], direction: -1, driftY: 7, sparkleChance: 0.05 },
+        { density: 0.0028, size: [0.42, 0.9], alpha: [0.28, 0.94], speed: [6.2, 9.2], direction: -1, driftY: 10, sparkleChance: 0.08 }
       ],
       twinkleSeconds: [0.28, 1.8],
       warmChance: 0.76,
@@ -50,29 +50,29 @@
       // Nebula movement lives here:
       // opacity/bandPuffs/bandGrains/glowBoost control band intensity and presence.
       overscan: 1.28,
-      backgroundDust: 26,
+      backgroundDust: 34,
       layers: [
         {
-          opacity: 0.44,
-          bandPuffs: 1680,
-          bandGrains: 3120,
+          opacity: 0.5,
+          bandPuffs: 1960,
+          bandGrains: 3580,
           darkCuts: 68,
           brightKnots: 26,
           bandWidth: [0.12, 0.24],
-          glowBoost: 1.28,
+          glowBoost: 1.38,
           driftSecondsX: [32, 48],
           driftSecondsY: [34, 52],
           driftDistanceX: [38, 116],
           driftDistanceY: [8, 18]
         },
         {
-          opacity: 0.28,
-          bandPuffs: 1020,
-          bandGrains: 1880,
+          opacity: 0.34,
+          bandPuffs: 1260,
+          bandGrains: 2280,
           darkCuts: 38,
           brightKnots: 16,
           bandWidth: [0.08, 0.16],
-          glowBoost: 1.32,
+          glowBoost: 1.4,
           driftSecondsX: [24, 34],
           driftSecondsY: [28, 38],
           driftDistanceX: [54, 132],
@@ -515,13 +515,13 @@
     context.fillRect(0, 0, width, height);
 
     const topVoid = context.createRadialGradient(width * 0.22, height * 0.18, 0, width * 0.22, height * 0.18, width * 0.42);
-    topVoid.addColorStop(0, "rgba(34, 18, 54, 0.22)");
+    topVoid.addColorStop(0, "rgba(56, 26, 94, 0.24)");
     topVoid.addColorStop(1, "rgba(0, 0, 0, 0)");
     context.fillStyle = topVoid;
     context.fillRect(0, 0, width, height);
 
     const bottomVoid = context.createRadialGradient(width * 0.78, height * 0.8, 0, width * 0.78, height * 0.8, width * 0.5);
-    bottomVoid.addColorStop(0, "rgba(44, 18, 72, 0.18)");
+    bottomVoid.addColorStop(0, "rgba(70, 22, 112, 0.22)");
     bottomVoid.addColorStop(1, "rgba(0, 0, 0, 0)");
     context.fillStyle = bottomVoid;
     context.fillRect(0, 0, width, height);
@@ -586,9 +586,9 @@
     context.lineCap = "round";
     context.lineJoin = "round";
     context.lineWidth = laneWidth * 0.16;
-    context.strokeStyle = rgba(SETTINGS.colors.warmDust, 0.032);
+    context.strokeStyle = rgba(SETTINGS.colors.warmDust, 0.04);
     context.shadowBlur = 96;
-    context.shadowColor = rgba(SETTINGS.colors.amber, 0.24);
+    context.shadowColor = rgba(SETTINGS.colors.amber, 0.28);
     context.stroke();
 
     context.beginPath();
@@ -602,9 +602,9 @@
       screenBandPath[3].y + laneShiftY
     );
     context.lineWidth = laneWidth * 0.068;
-    context.strokeStyle = rgba(SETTINGS.colors.amberSoft, 0.028);
+    context.strokeStyle = rgba(SETTINGS.colors.amberSoft, 0.034);
     context.shadowBlur = 48;
-    context.shadowColor = rgba(SETTINGS.colors.gold, 0.16);
+    context.shadowColor = rgba(SETTINGS.colors.gold, 0.18);
     context.stroke();
     context.shadowBlur = 0;
 

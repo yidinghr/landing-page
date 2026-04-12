@@ -2,10 +2,10 @@
   min-height: 100vh;
   overflow: hidden;
   background:
-    radial-gradient(circle at 14% 18%, rgba(122, 80, 196, 0.2), transparent 26%),
-    radial-gradient(circle at 78% 26%, rgba(198, 98, 255, 0.16), transparent 24%),
-    radial-gradient(circle at 68% 78%, rgba(94, 54, 156, 0.12), transparent 30%),
-    linear-gradient(180deg, #090412 0%, #03020a 100%);
+    radial-gradient(circle at 14% 18%, rgba(122, 80, 208, 0.24), transparent 28%),
+    radial-gradient(circle at 78% 26%, rgba(198, 98, 255, 0.22), transparent 26%),
+    radial-gradient(circle at 68% 78%, rgba(110, 68, 184, 0.16), transparent 32%),
+    linear-gradient(180deg, #0a0416 0%, #020109 100%);
 }
 
 .login-galaxy {
@@ -13,7 +13,7 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #03010a;
+  background: #020109;
 }
 
 .login-galaxy__canvas {
@@ -30,10 +30,10 @@
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(3, 2, 8, 0.16), rgba(3, 2, 8, 0.04) 36%, rgba(3, 2, 8, 0.28) 100%),
-    radial-gradient(circle at 74% 28%, rgba(214, 124, 255, 0.1), transparent 18%),
-    radial-gradient(circle at 18% 18%, rgba(110, 127, 255, 0.08), transparent 16%),
-    radial-gradient(circle at 58% 72%, rgba(147, 92, 255, 0.06), transparent 20%);
+    linear-gradient(180deg, rgba(2, 1, 7, 0.12), rgba(2, 1, 7, 0.03) 36%, rgba(2, 1, 7, 0.22) 100%),
+    radial-gradient(circle at 74% 28%, rgba(214, 124, 255, 0.12), transparent 18%),
+    radial-gradient(circle at 18% 18%, rgba(110, 127, 255, 0.07), transparent 16%),
+    radial-gradient(circle at 58% 72%, rgba(147, 92, 255, 0.08), transparent 20%);
 }
 
 .login-stage {
@@ -126,16 +126,7 @@
 }
 
 .login-system__halo {
-  position: absolute;
-  left: 52.4%;
-  top: 57.2%;
-  width: min(586px, 68%);
-  height: min(586px, 68%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  background:
-    radial-gradient(circle, rgba(255, 229, 176, 0.08) 0%, rgba(228, 142, 255, 0.05) 24%, rgba(126, 88, 246, 0.02) 46%, rgba(126, 88, 246, 0) 72%);
-  filter: blur(20px);
+  display: none;
 }
 
 .login-system__orbit-track {
@@ -143,57 +134,57 @@
   left: 52.4%;
   top: 57.2%;
   border-radius: 50%;
-  transform: translate(-50%, -50%) rotateZ(-24deg) rotateX(81deg);
+  transform: translate(-50%, -50%) rotateZ(-26deg) rotateX(81deg);
   transform-style: preserve-3d;
-  border: 1px solid rgba(255, 212, 126, 0.34);
+  border: 1px solid rgba(255, 214, 148, 0.28);
   box-shadow:
-    0 0 12px rgba(255, 196, 102, 0.14),
-    inset 0 0 8px rgba(255, 230, 188, 0.06);
+    0 0 12px rgba(255, 196, 102, 0.08),
+    inset 0 0 8px rgba(255, 230, 188, 0.03);
 }
 
 .login-system__orbit-track--1 {
-  width: min(334px, 39%);
-  height: min(334px, 39%);
-  border-color: rgba(255, 214, 130, 0.36);
+  width: min(500px, 58%);
+  height: min(500px, 58%);
+  border-color: rgba(255, 214, 130, 0.3);
   box-shadow:
-    0 0 14px rgba(255, 214, 130, 0.12),
-    inset 0 0 8px rgba(255, 230, 188, 0.05);
+    0 0 14px rgba(255, 214, 130, 0.08),
+    inset 0 0 8px rgba(255, 230, 188, 0.04);
 }
 
 .login-system__orbit-track--2 {
-  width: min(466px, 54%);
-  height: min(466px, 54%);
-  border-color: rgba(255, 208, 118, 0.3);
+  width: min(852px, 98%);
+  height: min(852px, 98%);
+  border-color: rgba(255, 208, 118, 0.26);
   box-shadow:
-    0 0 14px rgba(255, 208, 118, 0.12),
-    inset 0 0 8px rgba(255, 230, 188, 0.05);
+    0 0 14px rgba(255, 208, 118, 0.08),
+    inset 0 0 8px rgba(255, 230, 188, 0.04);
 }
 
 .login-system__orbit-track--3 {
-  width: min(626px, 72%);
-  height: min(626px, 72%);
-  border-color: rgba(255, 209, 122, 0.26);
+  width: min(1256px, 146%);
+  height: min(1256px, 146%);
+  border-color: rgba(255, 209, 122, 0.22);
   box-shadow:
-    0 0 14px rgba(255, 209, 122, 0.1),
+    0 0 14px rgba(255, 209, 122, 0.07),
     inset 0 0 8px rgba(255, 230, 188, 0.04);
 }
 
 .login-system__orbit-track--4 {
-  width: min(804px, 94%);
-  height: min(804px, 94%);
-  border-color: rgba(255, 205, 118, 0.22);
+  width: min(1724px, 198%);
+  height: min(1724px, 198%);
+  border-color: rgba(255, 205, 118, 0.18);
   box-shadow:
-    0 0 14px rgba(255, 205, 118, 0.08),
-    inset 0 0 8px rgba(255, 230, 188, 0.04);
+    0 0 14px rgba(255, 205, 118, 0.06),
+    inset 0 0 8px rgba(255, 230, 188, 0.03);
 }
 
 .login-system__orbit-track--5 {
-  width: min(980px, 116%);
-  height: min(980px, 116%);
-  border-color: rgba(255, 198, 110, 0.2);
+  width: min(2260px, 258%);
+  height: min(2260px, 258%);
+  border-color: rgba(255, 198, 110, 0.15);
   box-shadow:
-    0 0 14px rgba(255, 198, 110, 0.08),
-    inset 0 0 8px rgba(255, 230, 188, 0.04);
+    0 0 14px rgba(255, 198, 110, 0.04),
+    inset 0 0 8px rgba(255, 230, 188, 0.02);
 }
 
 .login-system__planet-orbit {
@@ -207,7 +198,7 @@
 }
 
 .login-system__planet {
-  --planet-size: 146px;
+  --planet-size: 92px;
   position: relative;
   display: block;
   width: var(--planet-size, 18px);
@@ -216,7 +207,7 @@
   margin-top: calc(var(--planet-size, 18px) * -0.5);
   border-radius: 50%;
   box-shadow:
-    0 0 16px rgba(255, 233, 188, 0.08);
+    0 0 12px rgba(255, 233, 188, 0.05);
   transform:
     rotate(var(--planet-rotation, 0deg))
     scale(var(--planet-scale, 1));
@@ -273,8 +264,8 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 214%;
-  height: 52%;
+  width: 208%;
+  height: 48%;
   border-radius: 50%;
   border: 2px solid rgba(245, 221, 176, 0.48);
   transform: translate(-50%, -50%) rotate(20deg);
@@ -292,8 +283,8 @@
 .login-system__mark-wrap {
   left: 52.4%;
   top: 57.2%;
-  width: min(610px, 68%);
-  height: min(430px, 49vw);
+  width: min(642px, 72%);
+  height: min(452px, 52vw);
   z-index: 5;
   transform: translate(-50%, -50%);
   overflow: visible;
@@ -313,15 +304,16 @@
   height: auto;
   display: block;
   object-fit: contain;
-  transform: translateY(4px) scale(1.13);
+  transform: translateY(4px) scale(1.18);
   clip-path: inset(0 0 22% 0);
   -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 62%, rgba(0, 0, 0, 0.88) 72%, rgba(0, 0, 0, 0.32) 84%, rgba(0, 0, 0, 0) 100%);
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 62%, rgba(0, 0, 0, 0.88) 72%, rgba(0, 0, 0, 0.32) 84%, rgba(0, 0, 0, 0) 100%);
   mix-blend-mode: screen;
   filter:
-    brightness(1.08)
-    saturate(1.06)
-    contrast(1.08);
+    brightness(0.99)
+    saturate(1)
+    contrast(0.98)
+    blur(0.14px);
 }
 
 .login-system__spark {
@@ -362,52 +354,22 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: min(100%, 628px);
-  height: clamp(152px, 12.4vw, 184px);
+  width: min(100%, 664px);
+  height: clamp(188px, 14.6vw, 224px);
   overflow: hidden;
   background: transparent;
   border: 0;
   box-shadow: none;
 }
 
-.login-panel__brand-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 100%;
-}
-
-.login-panel__brand-line {
-  display: block;
-  line-height: 1;
-  color: transparent;
-  background: transparent;
-  -webkit-text-stroke-color: rgba(255, 226, 156, 0.96);
-  text-shadow:
-    0 0 10px rgba(255, 220, 140, 0.1),
-    0 0 24px rgba(255, 192, 88, 0.06);
-}
-
-.login-panel__brand-line--cn {
-  font-family: "Noto Serif SC", "Songti SC", "Microsoft YaHei", serif;
-  font-size: clamp(76px, 5.4vw, 118px);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  -webkit-text-stroke-width: 2.2px;
-}
-
-.login-panel__brand-line--en {
-  font-family: "Noto Serif", "Times New Roman", serif;
-  font-size: clamp(30px, 2.3vw, 44px);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  -webkit-text-stroke-width: 1.4px;
-}
-
 .login-panel__brand-graphic {
-  display: none;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  opacity: 0.96;
+  filter: brightness(1.18) contrast(1.12) drop-shadow(0 0 16px rgba(255, 220, 126, 0.12));
 }
 
 .login-form {
@@ -448,9 +410,9 @@
   border: 1px solid rgba(255, 240, 208, 0.28);
   border-radius: 24px;
   background:
-    radial-gradient(circle at 22% 30%, rgba(255, 244, 214, 0.2), transparent 18%),
-    radial-gradient(circle at 78% 68%, rgba(203, 106, 255, 0.22), transparent 22%),
-    linear-gradient(135deg, rgba(68, 30, 116, 0.92) 0%, rgba(126, 60, 208, 0.88) 28%, rgba(255, 204, 112, 0.9) 58%, rgba(132, 56, 196, 0.9) 100%);
+    radial-gradient(circle at 22% 30%, rgba(255, 244, 214, 0.08), transparent 18%),
+    radial-gradient(circle at 78% 68%, rgba(203, 106, 255, 0.1), transparent 22%),
+    linear-gradient(135deg, rgba(68, 30, 116, 0.42) 0%, rgba(126, 60, 208, 0.34) 28%, rgba(255, 204, 112, 0.3) 58%, rgba(132, 56, 196, 0.36) 100%);
   color: #fff4d6;
   font-family: "Noto Serif TC", "Microsoft JhengHei", "PingFang TC", serif;
   font-size: clamp(33px, 2.4vw, 42px);
@@ -460,11 +422,11 @@
     0 0 12px rgba(255, 238, 196, 0.2),
     0 1px 0 rgba(31, 12, 52, 0.36);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -18px 28px rgba(53, 22, 94, 0.16),
-    0 18px 38px rgba(28, 12, 52, 0.24),
-    0 0 34px rgba(170, 112, 255, 0.18);
-  backdrop-filter: blur(2.2px) saturate(1.12);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -18px 28px rgba(53, 22, 94, 0.06),
+    0 18px 38px rgba(28, 12, 52, 0.12),
+    0 0 34px rgba(170, 112, 255, 0.1);
+  backdrop-filter: blur(8px) saturate(1.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
@@ -472,9 +434,9 @@
   transform: translateY(-2px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -18px 28px rgba(53, 22, 94, 0.18),
-    0 22px 42px rgba(28, 12, 52, 0.28),
-    0 0 44px rgba(198, 126, 255, 0.24);
+    inset 0 -18px 28px rgba(53, 22, 94, 0.12),
+    0 22px 42px rgba(28, 12, 52, 0.18),
+    0 0 44px rgba(198, 126, 255, 0.18);
   filter: saturate(1.1) brightness(1.05);
 }
 
@@ -611,18 +573,18 @@
   .login-system__mark-wrap {
     left: 52.4%;
     top: 57%;
-    width: min(556px, 66%);
-    height: 390px;
+    width: min(586px, 69%);
+    height: 404px;
   }
 
   .login-system__orbit-track--4 {
-    width: min(620px, 74%);
-    height: min(620px, 74%);
+    width: min(1260px, 146%);
+    height: min(1260px, 146%);
   }
 
   .login-system__orbit-track--5 {
-    width: min(760px, 92%);
-    height: min(760px, 92%);
+    width: min(1620px, 186%);
+    height: min(1620px, 186%);
   }
 
   .login-panel__inner {
@@ -632,8 +594,8 @@
   }
 
   .login-panel__brand-lockup {
-    width: min(100%, 560px);
-    height: 154px;
+    width: min(100%, 588px);
+    height: 178px;
   }
 
   .login-input {
@@ -674,8 +636,8 @@
   .login-system__mark-wrap {
     left: 52%;
     top: 56%;
-    width: min(336px, 58%);
-    height: 228px;
+    width: min(356px, 60%);
+    height: 242px;
   }
 
   .login-visual__dragon-orbit {
@@ -689,28 +651,28 @@
   }
 
   .login-system__orbit-track--1 {
-    width: min(238px, 42%);
-    height: min(238px, 42%);
+    width: min(264px, 44%);
+    height: min(264px, 44%);
   }
 
   .login-system__orbit-track--2 {
-    width: min(304px, 54%);
-    height: min(304px, 54%);
+    width: min(368px, 58%);
+    height: min(368px, 58%);
   }
 
   .login-system__orbit-track--3 {
-    width: min(378px, 66%);
-    height: min(378px, 66%);
+    width: min(488px, 72%);
+    height: min(488px, 72%);
   }
 
   .login-system__orbit-track--4 {
-    width: min(460px, 78%);
-    height: min(460px, 78%);
+    width: min(636px, 86%);
+    height: min(636px, 86%);
   }
 
   .login-system__orbit-track--5 {
-    width: min(548px, 90%);
-    height: min(548px, 90%);
+    width: min(780px, 102%);
+    height: min(780px, 102%);
   }
 
   .login-panel {
@@ -729,18 +691,8 @@
   }
 
   .login-panel__brand-lockup {
-    width: min(100%, 344px);
-    height: 112px;
-  }
-
-  .login-panel__brand-line--cn {
-    font-size: clamp(50px, 12vw, 72px);
-    -webkit-text-stroke-width: 1.6px;
-  }
-
-  .login-panel__brand-line--en {
-    font-size: clamp(20px, 5vw, 28px);
-    -webkit-text-stroke-width: 1px;
+    width: min(100%, 360px);
+    height: 132px;
   }
 
   .login-form {
