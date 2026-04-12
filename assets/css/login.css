@@ -173,8 +173,8 @@
 
 .login-system__halo {
   position: absolute;
-  left: 50%;
-  top: 46%;
+  left: 53%;
+  top: 55%;
   width: min(520px, 64%);
   height: min(520px, 64%);
   border-radius: 50%;
@@ -186,8 +186,8 @@
 
 .login-system__orbit-track {
   position: absolute;
-  left: 50%;
-  top: 46%;
+  left: 53%;
+  top: 55%;
   border-radius: 50%;
   transform: translate(-50%, -50%) rotateZ(-24deg) rotateX(72deg);
   transform-style: preserve-3d;
@@ -243,8 +243,8 @@
 }
 
 .login-system__planet-orbit {
-  left: 50%;
-  top: 46%;
+  left: 53%;
+  top: 55%;
   width: 0;
   height: 0;
   z-index: var(--planet-layer, 2);
@@ -347,10 +347,10 @@
 }
 
 .login-system__mark-wrap {
-  left: 50%;
-  top: 47%;
-  width: min(548px, 63%);
-  height: min(386px, 44vw);
+  left: 53%;
+  top: 54.5%;
+  width: min(576px, 66%);
+  height: min(404px, 46vw);
   z-index: 5;
   transform: translate(-50%, -50%);
   overflow: visible;
@@ -795,9 +795,10 @@
   }
 
   .login-system__mark-wrap {
-    top: 48%;
-    width: min(478px, 60%);
-    height: 338px;
+    left: 53%;
+    top: 55%;
+    width: min(492px, 62%);
+    height: 348px;
   }
 
   .login-system__orbit-track--4 {
@@ -857,9 +858,10 @@
   }
 
   .login-system__mark-wrap {
-    top: 48%;
-    width: min(308px, 52%);
-    height: 220px;
+    left: 52%;
+    top: 54%;
+    width: min(318px, 54%);
+    height: 228px;
   }
 
   .login-visual__dragon-orbit {

@@ -141,7 +141,7 @@
       }
     });
 
-    const logoFloatY = Math.sin(time * 1.08) * 5 + 6;
+    const logoFloatY = Math.sin(time * 1.08) * 4 + 1.5;
     markWrap.style.transform = "translate(-50%, calc(-50% + " + logoFloatY.toFixed(2) + "px))";
 
     requestAnimationFrame(animate);

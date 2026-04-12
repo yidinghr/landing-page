@@ -27,9 +27,9 @@
       // Random twinkling stars live here:
       // density/size/alpha tune how many stars appear and how bright they get.
       layers: [
-        { density: 0.0041, size: [0.3, 0.94], alpha: [0.18, 0.58], speed: [2.2, 4.2], direction: -1, driftY: 8, sparkleChance: 0.12 },
-        { density: 0.0031, size: [0.48, 1.34], alpha: [0.28, 0.92], speed: [3.6, 6.2], direction: -1, driftY: 12, sparkleChance: 0.24 },
-        { density: 0.0017, size: [0.82, 1.98], alpha: [0.32, 1], speed: [5.2, 8.8], direction: -1, driftY: 16, sparkleChance: 0.34 }
+        { density: 0.0044, size: [0.22, 0.62], alpha: [0.16, 0.54], speed: [3.0, 5.1], direction: -1, driftY: 5, sparkleChance: 0.04 },
+        { density: 0.0034, size: [0.32, 0.92], alpha: [0.22, 0.82], speed: [4.6, 7.0], direction: -1, driftY: 7, sparkleChance: 0.09 },
+        { density: 0.0015, size: [0.56, 1.24], alpha: [0.28, 0.94], speed: [6.2, 9.2], direction: -1, driftY: 10, sparkleChance: 0.14 }
       ],
       twinkleSeconds: [0.28, 1.8],
       warmChance: 0.76,
@@ -233,7 +233,8 @@
           color: color,
           sparkle: sparkle,
           velocityX: randomBetween(layer.speed[0], layer.speed[1], rng) * layer.direction,
-          driftY: randomBetween(layer.driftY * 0.32, layer.driftY, rng) * (rng() < 0.5 ? -1 : 1),
+          velocityY: randomBetween(layer.driftY * 0.42, layer.driftY, rng),
+          wobbleY: randomBetween(layer.driftY * 0.18, layer.driftY * 0.46, rng) * (rng() < 0.5 ? -1 : 1),
           pulseMin: staticStar ? 0.88 : randomBetween(0.38, 0.72, rng),
           pulseMax: staticStar ? 1.04 : randomBetween(1.04, 1.8, rng),
           twinkleSpeed: (Math.PI * 2) / randomBetween(SETTINGS.stars.twinkleSeconds[0], SETTINGS.stars.twinkleSeconds[1], rng),
@@ -270,7 +271,7 @@
         color: rng() < 0.62 ? SETTINGS.colors.amberSoft : SETTINGS.colors.amber,
         accent: rng() < 0.2 ? SETTINGS.colors.coolBlue : SETTINGS.colors.gold,
         driftX: randomBetween(SETTINGS.halos.driftDistanceX[0], SETTINGS.halos.driftDistanceX[1], rng) * (rng() < 0.5 ? -1 : 1),
-        driftY: randomBetween(SETTINGS.halos.driftDistanceY[0], SETTINGS.halos.driftDistanceY[1], rng) * (rng() < 0.5 ? -1 : 1),
+        driftY: randomBetween(SETTINGS.halos.driftDistanceY[0], SETTINGS.halos.driftDistanceY[1], rng),
         speedX: (Math.PI * 2) / randomBetween(SETTINGS.halos.driftSeconds[0], SETTINGS.halos.driftSeconds[1], rng),
         speedY: (Math.PI * 2) / randomBetween(SETTINGS.halos.driftSeconds[0], SETTINGS.halos.driftSeconds[1], rng),
         phaseX: rng() * Math.PI * 2,
@@ -440,7 +441,7 @@
         speedX: (Math.PI * 2) / randomBetween(layer.driftSecondsX[0], layer.driftSecondsX[1], rng),
         speedY: (Math.PI * 2) / randomBetween(layer.driftSecondsY[0], layer.driftSecondsY[1], rng),
         driftX: -randomBetween(layer.driftDistanceX[0], layer.driftDistanceX[1], rng),
-        driftY: randomBetween(layer.driftDistanceY[0], layer.driftDistanceY[1], rng) * (rng() < 0.5 ? -1 : 1)
+        driftY: randomBetween(layer.driftDistanceY[0], layer.driftDistanceY[1], rng)
       };
     });
   }
@@ -475,20 +476,22 @@
     starLayers.forEach(function (layer) {
       layer.stars.forEach(function (star) {
         star.x += star.velocityX * dt;
-        star.y += Math.sin(time * 0.7 + star.phaseA) * star.driftY * dt * 0.32;
+        star.y += star.velocityY * dt + Math.sin(time * 0.7 + star.phaseA) * star.wobbleY * dt * 0.22;
 
         if (layer.direction > 0 && star.x > width + layer.wrapMargin) {
           star.x = -layer.wrapMargin;
-          star.y = Math.random() * height;
+          star.y = Math.random() * height * 0.78;
         } else if (layer.direction < 0 && star.x < -layer.wrapMargin) {
           star.x = width + layer.wrapMargin;
-          star.y = Math.random() * height;
+          star.y = Math.random() * height * 0.72 - height * 0.08;
         }
 
-        if (star.y < -24) {
-          star.y = height + 24;
-        } else if (star.y > height + 24) {
-          star.y = -24;
+        if (star.y < -28) {
+          star.y = -12;
+          star.x = Math.random() * width;
+        } else if (star.y > height + 28) {
+          star.y = -28;
+          star.x = width * 0.42 + Math.random() * width * 0.68;
         }
       });
     });
@@ -522,7 +525,7 @@
 
     haloLayers.forEach(function (halo) {
       const x = halo.x + Math.sin(time * halo.speedX + halo.phaseX) * halo.driftX;
-      const y = halo.y + Math.cos(time * halo.speedY + halo.phaseY) * halo.driftY;
+    const y = halo.y + Math.abs(Math.cos(time * halo.speedY + halo.phaseY)) * halo.driftY;
       const pulse = 0.88 + Math.sin(time * 0.42 + halo.phaseX) * 0.16;
 
       drawGlow(context, x, y, halo.radius, halo.color, halo.alpha * pulse, 0.04, 0.32);
@@ -539,7 +542,7 @@
 
     nebulaLayers.forEach(function (layer) {
       const offsetX = Math.sin(time * layer.speedX + layer.phaseX) * layer.driftX;
-      const offsetY = Math.cos(time * layer.speedY + layer.phaseY) * layer.driftY;
+      const offsetY = Math.abs(Math.cos(time * layer.speedY + layer.phaseY)) * layer.driftY;
       const drawX = (width - layer.texture.width) * 0.5 + offsetX;
       const drawY = (height - layer.texture.height) * 0.5 + offsetY;
       const pulse = 0.92 + Math.sin(time * 0.36 + layer.phaseX) * 0.12;
@@ -556,8 +559,9 @@
     context.save();
     context.globalCompositeOperation = "screen";
 
-    const laneShiftX = -18 - Math.sin(time * 0.18) * 18 - Math.sin(time * 0.05 + 0.8) * 26;
-    const laneShiftY = Math.cos(time * 0.16) * 8;
+    const laneDrift = Math.sin(time * 0.24 + 0.4) * 26 + Math.sin(time * 0.08 + 1.2) * 34;
+    const laneShiftX = -36 - laneDrift;
+    const laneShiftY = 22 + laneDrift * 0.34 + Math.sin(time * 0.18 + 0.7) * 6;
     const laneWidth = Math.min(width, height);
 
     context.beginPath();
@@ -572,7 +576,7 @@
     );
     context.lineCap = "round";
     context.lineJoin = "round";
-    context.lineWidth = laneWidth * 0.18;
+    context.lineWidth = laneWidth * 0.16;
     context.strokeStyle = rgba(SETTINGS.colors.warmDust, 0.032);
     context.shadowBlur = 96;
     context.shadowColor = rgba(SETTINGS.colors.amber, 0.24);
@@ -588,7 +592,7 @@
       screenBandPath[3].x + laneShiftX,
       screenBandPath[3].y + laneShiftY
     );
-    context.lineWidth = laneWidth * 0.082;
+    context.lineWidth = laneWidth * 0.068;
     context.strokeStyle = rgba(SETTINGS.colors.amberSoft, 0.028);
     context.shadowBlur = 48;
     context.shadowColor = rgba(SETTINGS.colors.gold, 0.16);
@@ -631,20 +635,20 @@
         const alpha = clamp(star.alpha * lerp(star.pulseMin, star.pulseMax, blend), 0, 1);
 
         if (star.sparkle) {
-          const glow = context.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 5.2);
+          const glow = context.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 2.6);
           glow.addColorStop(0, rgba(star.color, alpha));
-          glow.addColorStop(0.18, rgba(star.color, alpha * 0.44));
-          glow.addColorStop(0.34, rgba(star.color, alpha * 0.18));
+          glow.addColorStop(0.16, rgba(star.color, alpha * 0.32));
+          glow.addColorStop(0.28, rgba(star.color, alpha * 0.1));
           glow.addColorStop(1, rgba(star.color, 0));
 
           context.fillStyle = glow;
           context.beginPath();
-          context.arc(star.x, star.y, star.radius * 5.2, 0, Math.PI * 2);
+          context.arc(star.x, star.y, star.radius * 2.6, 0, Math.PI * 2);
           context.fill();
 
           context.fillStyle = rgba(star.color, alpha);
-          context.fillRect(star.x - star.radius * 3.4, star.y - 0.55, star.radius * 6.8, 1.1);
-          context.fillRect(star.x - 0.55, star.y - star.radius * 3.4, 1.1, star.radius * 6.8);
+          context.fillRect(star.x - star.radius * 1.5, star.y - 0.35, star.radius * 3, 0.7);
+          context.fillRect(star.x - 0.35, star.y - star.radius * 1.5, 0.7, star.radius * 3);
         }
 
         context.fillStyle = rgba(star.color, alpha);
