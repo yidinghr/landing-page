@@ -205,22 +205,6 @@
   }
 
   function sampleStarPosition(rng) {
-    const roll = rng();
-
-    if (roll < 0.22) {
-      return {
-        x: rng() * width * 0.24,
-        y: rng() * height * 0.26
-      };
-    }
-
-    if (roll < 0.44) {
-      return {
-        x: width * (0.74 + rng() * 0.26),
-        y: height * (0.7 + rng() * 0.3)
-      };
-    }
-
     return {
       x: rng() * width,
       y: rng() * height
@@ -505,25 +489,18 @@
 
         if (layer.direction > 0 && star.x > width + layer.wrapMargin) {
           star.x = -layer.wrapMargin;
-          star.y = Math.random() * height * 0.78;
+          star.y = Math.random() * height;
         } else if (layer.direction < 0 && star.x < -layer.wrapMargin) {
           star.x = width + layer.wrapMargin;
-          const roll = Math.random();
-          if (roll < 0.34) {
-            star.y = Math.random() * height * 0.22;
-          } else if (roll < 0.64) {
-            star.y = height * (0.68 + Math.random() * 0.32);
-          } else {
-            star.y = Math.random() * height * 0.72 - height * 0.08;
-          }
+          star.y = Math.random() * height;
         }
 
         if (star.y < -28) {
           star.y = -12;
-          star.x = Math.random() * width * 0.34;
+          star.x = Math.random() * width;
         } else if (star.y > height + 28) {
           star.y = -28;
-          star.x = width * (0.64 + Math.random() * 0.36);
+          star.x = Math.random() * width;
         }
       });
     });
@@ -538,13 +515,13 @@
     context.fillRect(0, 0, width, height);
 
     const topVoid = context.createRadialGradient(width * 0.22, height * 0.18, 0, width * 0.22, height * 0.18, width * 0.42);
-    topVoid.addColorStop(0, "rgba(34, 18, 54, 0.42)");
+    topVoid.addColorStop(0, "rgba(34, 18, 54, 0.22)");
     topVoid.addColorStop(1, "rgba(0, 0, 0, 0)");
     context.fillStyle = topVoid;
     context.fillRect(0, 0, width, height);
 
     const bottomVoid = context.createRadialGradient(width * 0.78, height * 0.8, 0, width * 0.78, height * 0.8, width * 0.5);
-    bottomVoid.addColorStop(0, "rgba(44, 18, 72, 0.34)");
+    bottomVoid.addColorStop(0, "rgba(44, 18, 72, 0.18)");
     bottomVoid.addColorStop(1, "rgba(0, 0, 0, 0)");
     context.fillStyle = bottomVoid;
     context.fillRect(0, 0, width, height);

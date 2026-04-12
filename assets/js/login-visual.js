@@ -39,13 +39,13 @@
       const minor = Math.sin(angle) * radiusY;
       const x = axisX * major + minorAxisX * minor;
       const y = axisY * major + minorAxisY * minor;
-      const z = Math.sin(angle) * depth;
+      const z = -Math.cos(angle) * depth;
       const zMix = clamp((z + depth) / (depth * 2), 0, 1);
-      const scale = 0.16 + zMix * 0.94;
-      const rotation = angle * 28 + zMix * 12;
+      const scale = 0.14 + zMix * 0.9;
+      const rotation = angle * 18 + zMix * 10;
       const layer = Math.round(2 + zMix * 6 + index * 0.1);
-      const brightness = 0.68 + zMix * 0.48;
-      const opacity = 0.26 + zMix * 0.74;
+      const brightness = 0.82 + zMix * 0.24;
+      const opacity = 0.9 + zMix * 0.1;
 
       planetOrbit.style.transform = "translate3d(" + x.toFixed(2) + "px, " + y.toFixed(2) + "px, " + z.toFixed(2) + "px)";
       planetOrbit.style.zIndex = String(layer);
@@ -54,13 +54,13 @@
       if (planet) {
         setStyle(planet, "--planet-scale", scale.toFixed(3));
         setStyle(planet, "--planet-rotation", rotation.toFixed(2) + "deg");
-        planet.style.filter = "brightness(" + brightness.toFixed(3) + ") saturate(" + (1.04 + zMix * 0.26).toFixed(3) + ") drop-shadow(0 0 " + (8 + zMix * 14).toFixed(2) + "px rgba(255, 225, 160, " + (0.08 + zMix * 0.16).toFixed(3) + "))";
+        planet.style.filter = "brightness(" + brightness.toFixed(3) + ") saturate(" + (1.08 + zMix * 0.18).toFixed(3) + ") drop-shadow(0 0 " + (6 + zMix * 10).toFixed(2) + "px rgba(255, 225, 160, " + (0.06 + zMix * 0.08).toFixed(3) + "))";
         planet.style.opacity = opacity.toFixed(3);
       }
     });
 
     const logoFloatY = Math.sin(time * 0.96) * 2.8 + 2.4;
-    const logoFloatScale = 1.004 + Math.cos(time * 0.54) * 0.01;
+    const logoFloatScale = 1.018 + Math.cos(time * 0.54) * 0.012;
     markWrap.style.transform = "translate(-50%, calc(-50% + " + logoFloatY.toFixed(2) + "px)) scale(" + logoFloatScale.toFixed(4) + ")";
 
     requestAnimationFrame(animate);
