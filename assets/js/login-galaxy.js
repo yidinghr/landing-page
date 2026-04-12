@@ -1,5 +1,19 @@
 (function () {
   const canvas = document.getElementById("loginGalaxyCanvas");
+  const CONSTELLATION_PATTERNS = [
+    { stars: [[0.06, 0.72, 1], [0.18, 0.48, 0.7], [0.34, 0.34, 0.8], [0.58, 0.26, 1], [0.78, 0.4, 0.72], [0.92, 0.18, 0.66]], links: [[0,1],[1,2],[2,3],[3,4],[4,5]] },
+    { stars: [[0.08, 0.22, 0.84], [0.24, 0.34, 0.7], [0.38, 0.58, 0.9], [0.52, 0.36, 0.76], [0.74, 0.18, 0.82], [0.92, 0.32, 0.7]], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[1,3]] },
+    { stars: [[0.1, 0.62, 0.9], [0.22, 0.42, 0.68], [0.4, 0.26, 0.8], [0.62, 0.28, 0.74], [0.78, 0.54, 0.9], [0.92, 0.74, 0.62]], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[1,4]] },
+    { stars: [[0.08, 0.26, 0.82], [0.18, 0.56, 0.76], [0.36, 0.74, 0.92], [0.58, 0.6, 0.68], [0.78, 0.4, 0.78], [0.92, 0.2, 0.86]], links: [[0,1],[1,2],[2,3],[3,4],[4,5]] },
+    { stars: [[0.08, 0.18, 0.66], [0.24, 0.16, 0.82], [0.38, 0.3, 0.74], [0.54, 0.52, 0.92], [0.68, 0.72, 0.72], [0.88, 0.62, 0.84]], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[2,5]] },
+    { stars: [[0.06, 0.52, 0.72], [0.2, 0.34, 0.86], [0.34, 0.18, 0.78], [0.56, 0.26, 0.96], [0.74, 0.44, 0.72], [0.9, 0.66, 0.78]], links: [[0,1],[1,2],[2,3],[3,4],[4,5]] },
+    { stars: [[0.08, 0.66, 0.84], [0.24, 0.48, 0.74], [0.4, 0.38, 0.66], [0.56, 0.46, 0.86], [0.74, 0.62, 0.72], [0.92, 0.78, 0.9]], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[1,4]] },
+    { stars: [[0.1, 0.2, 0.72], [0.26, 0.32, 0.84], [0.4, 0.54, 0.78], [0.52, 0.76, 0.66], [0.74, 0.64, 0.88], [0.92, 0.42, 0.7]], links: [[0,1],[1,2],[2,3],[3,4],[4,5]] },
+    { stars: [[0.06, 0.34, 0.68], [0.2, 0.18, 0.82], [0.34, 0.22, 0.7], [0.5, 0.42, 0.96], [0.7, 0.62, 0.8], [0.92, 0.56, 0.72]], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[0,3]] },
+    { stars: [[0.08, 0.58, 0.92], [0.22, 0.38, 0.7], [0.4, 0.24, 0.84], [0.6, 0.2, 0.72], [0.8, 0.34, 0.78], [0.94, 0.54, 0.86]], links: [[0,1],[1,2],[2,3],[3,4],[4,5]] },
+    { stars: [[0.08, 0.26, 0.86], [0.18, 0.48, 0.7], [0.34, 0.62, 0.82], [0.56, 0.54, 0.74], [0.76, 0.34, 0.94], [0.92, 0.18, 0.68]], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[1,4]] },
+    { stars: [[0.06, 0.72, 0.7], [0.2, 0.56, 0.84], [0.38, 0.36, 0.72], [0.58, 0.24, 0.9], [0.76, 0.3, 0.78], [0.92, 0.5, 0.68]], links: [[0,1],[1,2],[2,3],[3,4],[4,5]] }
+  ];
 
   if (!canvas) {
     return;
@@ -21,7 +35,9 @@
       amber: [220, 124, 255],
       amberSoft: [176, 98, 244],
       gold: [250, 236, 255],
-      coolBlue: [126, 150, 255]
+      coolBlue: [126, 150, 255],
+      violet: [188, 112, 255],
+      lavender: [232, 210, 255]
     },
     stars: {
       // Random twinkling stars live here:
@@ -35,6 +51,20 @@
       warmChance: 0.76,
       coolChance: 0.12,
       staticChance: 0.08
+    },
+    drifters: {
+      motes: 140,
+      shards: 46,
+      wisps: 22,
+      speedX: [10, 48],
+      ratioY: [0.14, 0.34],
+      alpha: [0.08, 0.32]
+    },
+    constellations: {
+      travelSeconds: [9.2, 12.6],
+      scale: [92, 168],
+      alpha: [0.18, 0.42],
+      lineWidth: [1.1, 1.8]
     },
     halos: {
       // Drifting halos live here:
@@ -91,6 +121,8 @@
   let screenBandPath = [];
   let textureBandPath = [];
   let laneBlooms = [];
+  let drifters = [];
+  let constellations = [];
   let resizeFrame = 0;
   let lastFrameTime = 0;
 
@@ -193,6 +225,76 @@
     targetContext.beginPath();
     targetContext.arc(x, y, radius, 0, Math.PI * 2);
     targetContext.fill();
+  }
+
+  function shufflePatterns(rng) {
+    const pool = CONSTELLATION_PATTERNS.map(function (_, index) { return index; });
+    for (let i = pool.length - 1; i > 0; i -= 1) {
+      const swapIndex = Math.floor(rng() * (i + 1));
+      const temp = pool[i];
+      pool[i] = pool[swapIndex];
+      pool[swapIndex] = temp;
+    }
+    return pool;
+  }
+
+  function createConstellationSequence() {
+    const rng = createPrng(0x2fa7b67c ^ width ^ (height << 5));
+    const order = shufflePatterns(rng);
+
+    return order.map(function (patternIndex, index) {
+      return {
+        pattern: CONSTELLATION_PATTERNS[patternIndex],
+        scale: randomBetween(SETTINGS.constellations.scale[0], SETTINGS.constellations.scale[1], rng),
+        alpha: randomBetween(SETTINGS.constellations.alpha[0], SETTINGS.constellations.alpha[1], rng),
+        lineWidth: randomBetween(SETTINGS.constellations.lineWidth[0], SETTINGS.constellations.lineWidth[1], rng),
+        rotation: randomBetween(-0.16, 0.16, rng),
+        offsetX: randomBetween(0, width * 0.08, rng),
+        offsetY: randomBetween(-height * 0.12, height * 0.1, rng),
+        duration: randomBetween(SETTINGS.constellations.travelSeconds[0], SETTINGS.constellations.travelSeconds[1], rng),
+        phase: rng() * Math.PI * 2,
+        index: index
+      };
+    });
+  }
+
+  function buildDrifters() {
+    const rng = createPrng(0x55f0ac12 ^ width ^ (height << 6));
+    const objects = [];
+
+    function createDrifter(type) {
+      const speedX = randomBetween(SETTINGS.drifters.speedX[0], SETTINGS.drifters.speedX[1], rng);
+      const ratio = randomBetween(SETTINGS.drifters.ratioY[0], SETTINGS.drifters.ratioY[1], rng);
+      return {
+        type: type,
+        x: rng() * width,
+        y: rng() * height,
+        width: type === "wisp" ? randomBetween(38, 94, rng) : type === "shard" ? randomBetween(8, 24, rng) : randomBetween(2.2, 6.8, rng),
+        height: type === "wisp" ? randomBetween(12, 28, rng) : type === "shard" ? randomBetween(1.2, 3.4, rng) : randomBetween(1.6, 4.6, rng),
+        alpha: randomBetween(SETTINGS.drifters.alpha[0], SETTINGS.drifters.alpha[1], rng),
+        color: rng() < 0.54 ? SETTINGS.colors.violet : rng() < 0.28 ? SETTINGS.colors.coolBlue : SETTINGS.colors.lavender,
+        velocityX: -speedX,
+        velocityY: speedX * ratio,
+        rotation: randomBetween(-0.6, 0.2, rng),
+        spin: randomBetween(-0.16, 0.16, rng),
+        blur: type === "wisp" ? randomBetween(14, 28, rng) : type === "shard" ? randomBetween(2, 6, rng) : randomBetween(4, 10, rng),
+        phase: rng() * Math.PI * 2
+      };
+    }
+
+    for (let index = 0; index < SETTINGS.drifters.motes; index += 1) {
+      objects.push(createDrifter("mote"));
+    }
+
+    for (let index = 0; index < SETTINGS.drifters.shards; index += 1) {
+      objects.push(createDrifter("shard"));
+    }
+
+    for (let index = 0; index < SETTINGS.drifters.wisps; index += 1) {
+      objects.push(createDrifter("wisp"));
+    }
+
+    return objects;
   }
 
   function buildBandPath(rng, targetWidth, targetHeight) {
@@ -478,6 +580,8 @@
       starLayers = buildStarLayers();
       haloLayers = buildHaloLayers(screenBandPath);
       nebulaLayers = buildNebulaLayers(textureBandPath);
+      drifters = buildDrifters();
+      constellations = createConstellationSequence();
     });
   }
 
@@ -503,6 +607,17 @@
           star.x = Math.random() * width;
         }
       });
+    });
+
+    drifters.forEach(function (drifter) {
+      drifter.x += drifter.velocityX * dt;
+      drifter.y += drifter.velocityY * dt;
+      drifter.rotation += drifter.spin * dt;
+
+      if (drifter.x < -160 || drifter.y > height + 120) {
+        drifter.x = width + Math.random() * 160;
+        drifter.y = -Math.random() * height * 0.22;
+      }
     });
   }
 
@@ -630,6 +745,148 @@
     context.restore();
   }
 
+  function drawDrifters(time) {
+    context.save();
+    context.globalCompositeOperation = "screen";
+
+    drifters.forEach(function (drifter) {
+      const wobble = Math.sin(time * 0.42 + drifter.phase) * (drifter.type === "mote" ? 2.2 : 4.6);
+      const x = drifter.x + wobble;
+      const y = drifter.y + wobble * 0.4;
+      const alpha = drifter.alpha * (0.82 + Math.sin(time * 0.6 + drifter.phase) * 0.14);
+
+      context.save();
+      context.translate(x, y);
+      context.rotate(drifter.rotation);
+      context.shadowBlur = drifter.blur;
+      context.shadowColor = rgba(drifter.color, alpha * 0.6);
+
+      if (drifter.type === "wisp") {
+        const gradient = context.createRadialGradient(0, 0, 0, 0, 0, drifter.width);
+        gradient.addColorStop(0, rgba(drifter.color, alpha * 0.42));
+        gradient.addColorStop(0.36, rgba(drifter.color, alpha * 0.14));
+        gradient.addColorStop(1, rgba(drifter.color, 0));
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.ellipse(0, 0, drifter.width, drifter.height, 0, 0, Math.PI * 2);
+        context.fill();
+      } else if (drifter.type === "shard") {
+        context.fillStyle = rgba(drifter.color, alpha * 0.72);
+        context.fillRect(-drifter.width * 0.5, -drifter.height * 0.5, drifter.width, drifter.height);
+      } else {
+        const gradient = context.createRadialGradient(0, 0, 0, 0, 0, drifter.width);
+        gradient.addColorStop(0, rgba(drifter.color, alpha));
+        gradient.addColorStop(0.46, rgba(drifter.color, alpha * 0.28));
+        gradient.addColorStop(1, rgba(drifter.color, 0));
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(0, 0, drifter.width, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      context.restore();
+    });
+
+    context.restore();
+  }
+
+  function drawConstellationStars(pattern, originX, originY, scale, rotation, alpha, lineWidth, time, index) {
+    const cos = Math.cos(rotation);
+    const sin = Math.sin(rotation);
+
+    function mapPoint(point) {
+      const px = (point[0] - 0.5) * scale;
+      const py = (point[1] - 0.5) * scale;
+      return {
+        x: originX + px * cos - py * sin,
+        y: originY + px * sin + py * cos,
+        size: point[2]
+      };
+    }
+
+    const mapped = pattern.stars.map(mapPoint);
+
+    context.save();
+    context.globalCompositeOperation = "screen";
+    context.strokeStyle = rgba(SETTINGS.colors.lavender, alpha * 0.44);
+    context.lineWidth = lineWidth;
+    context.shadowBlur = 12;
+    context.shadowColor = rgba(SETTINGS.colors.violet, alpha * 0.46);
+
+    pattern.links.forEach(function (link) {
+      context.beginPath();
+      context.moveTo(mapped[link[0]].x, mapped[link[0]].y);
+      context.lineTo(mapped[link[1]].x, mapped[link[1]].y);
+      context.stroke();
+    });
+
+    mapped.forEach(function (point, pointIndex) {
+      const twinkle = 0.72 + Math.sin(time * 1.1 + index + pointIndex * 0.8) * 0.18;
+      const radius = (1.4 + point.size * 1.8) * twinkle;
+      const gradient = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius * 4.2);
+      gradient.addColorStop(0, rgba(SETTINGS.colors.gold, alpha));
+      gradient.addColorStop(0.24, rgba(SETTINGS.colors.lavender, alpha * 0.46));
+      gradient.addColorStop(1, rgba(SETTINGS.colors.lavender, 0));
+      context.fillStyle = gradient;
+      context.beginPath();
+      context.arc(point.x, point.y, radius * 4.2, 0, Math.PI * 2);
+      context.fill();
+
+      context.fillStyle = rgba(SETTINGS.colors.gold, alpha);
+      context.beginPath();
+      context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+      context.fill();
+    });
+
+    context.restore();
+  }
+
+  function drawConstellations(time) {
+    if (!constellations.length) {
+      return;
+    }
+
+    let elapsed = time;
+    let active = constellations[0];
+    let progress = 0;
+
+    for (let index = 0; index < constellations.length; index += 1) {
+      const item = constellations[index];
+      if (elapsed <= item.duration) {
+        active = item;
+        progress = item.duration === 0 ? 0 : elapsed / item.duration;
+        break;
+      }
+      elapsed -= item.duration;
+      if (index === constellations.length - 1) {
+        active = constellations[0];
+        progress = 0;
+      }
+    }
+
+    const ease = progress * progress * (3 - 2 * progress);
+    const fade = Math.sin(progress * Math.PI);
+    const startX = width + active.offsetX + active.scale * 0.7;
+    const startY = height * 0.08 + active.offsetY;
+    const endX = -active.scale * 1.2;
+    const endY = height * 0.8 + active.offsetY + active.scale * 0.18;
+    const x = lerp(startX, endX, ease);
+    const y = lerp(startY, endY, ease);
+    const driftRotation = active.rotation + Math.sin(time * 0.16 + active.phase) * 0.06;
+
+    drawConstellationStars(
+      active.pattern,
+      x,
+      y,
+      active.scale,
+      driftRotation,
+      active.alpha * fade,
+      active.lineWidth,
+      time,
+      active.index
+    );
+  }
+
   function drawStars(time) {
     // Random twinkling stars live here.
     context.save();
@@ -696,6 +953,8 @@
     drawHalos(time);
     drawNebula(time);
     drawLaneGlow(time);
+    drawDrifters(time);
+    drawConstellations(time);
     drawStars(time);
     drawVignette();
 
