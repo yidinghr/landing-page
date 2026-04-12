@@ -24,38 +24,38 @@
 
   function animate(timestamp) {
     const time = timestamp * 0.001;
-    const orbitTime = time * 0.22;
+    const orbitTime = time * 0.24;
 
     const orbitX =
-      42 +
-      Math.cos(orbitTime) * 96 +
-      Math.sin(orbitTime * 1.86 + 0.5) * 24 +
-      Math.sin(orbitTime * 0.58 - 1.4) * 16;
+      18 +
+      Math.cos(orbitTime) * 118 +
+      Math.sin(orbitTime * 1.92 + 0.5) * 34 +
+      Math.sin(orbitTime * 0.62 - 1.4) * 18;
     const orbitY =
-      Math.sin(orbitTime * 1.12 - 0.42) * 82 +
-      Math.cos(orbitTime * 2.16 + 0.12) * 18;
+      Math.sin(orbitTime * 1.08 - 0.42) * 94 +
+      Math.cos(orbitTime * 2.18 + 0.12) * 22;
     const orbitZ =
-      Math.sin(orbitTime - 0.72) * 224 +
-      Math.cos(orbitTime * 1.46 + 0.5) * 42;
+      Math.sin(orbitTime - 0.72) * 236 +
+      Math.cos(orbitTime * 1.48 + 0.5) * 54;
 
     const depthMix = clamp((orbitZ + 280) / 560, 0, 1);
-    const orbitScale = 0.86 + depthMix * 0.26;
-    const orbitRotateX = -5 + Math.cos(orbitTime * 1.32) * 6.2 + Math.sin(orbitTime * 3.1) * 1.6;
-    const orbitRotateY = -18 + Math.sin(orbitTime * 1.04 + 0.4) * 22 + orbitZ * 0.038;
-    const orbitRotateZ = -6 + Math.sin(orbitTime * 1.72 - 0.2) * 9.2;
+    const orbitScale = 0.84 + depthMix * 0.3;
+    const orbitRotateX = -6 + Math.cos(orbitTime * 1.38) * 7.4 + Math.sin(orbitTime * 3.2) * 2.2;
+    const orbitRotateY = -18 + Math.sin(orbitTime * 1.06 + 0.4) * 24 + orbitZ * 0.041;
+    const orbitRotateZ = -8 + Math.sin(orbitTime * 1.84 - 0.2) * 11.8;
 
-    const bodyWave = Math.sin(time * 5.6) * 4.2 + Math.sin(time * 2.8 + 0.6) * 2.1;
-    const headNod = Math.sin(time * 4.8 + 0.3) * 7.4;
-    const headYaw = Math.cos(time * 3.6 - 0.4) * 6.2;
-    const headRoll = Math.sin(time * 5.4 + 1.1) * 3.4;
-    const tailWave = Math.sin(time * 4.4 - 0.8) * 8.2 + Math.cos(time * 7.6 + 0.4) * 3.2;
-    const rearLegA = Math.sin(time * 6.2) * 14;
-    const rearLegB = Math.sin(time * 6.2 + Math.PI) * 14;
-    const localLift = Math.sin(time * 3.7 + 0.2) * 11;
-    const localZ = 46 + Math.sin(time * 2.2 - 0.5) * 18 + depthMix * 16;
-    const localScale = 0.96 + Math.sin(time * 4.2) * 0.018 + depthMix * 0.028;
-    const localRotateX = 2 + Math.cos(time * 3.7) * 3 + rearLegA * 0.08;
-    const localRotateY = -10 + Math.sin(time * 4.2 + 0.2) * 6.4 + orbitZ * 0.01;
+    const bodyWave = Math.sin(time * 5.9) * 6.6 + Math.sin(time * 3.1 + 0.6) * 2.8;
+    const headNod = Math.sin(time * 5.2 + 0.3) * 9.2;
+    const headYaw = Math.cos(time * 3.9 - 0.4) * 8.4;
+    const headRoll = Math.sin(time * 5.8 + 1.1) * 4.8;
+    const tailWave = Math.sin(time * 4.8 - 0.8) * 12.4 + Math.cos(time * 8.2 + 0.4) * 4.4;
+    const rearLegA = Math.sin(time * 6.6) * 17;
+    const rearLegB = Math.sin(time * 6.6 + Math.PI) * 17;
+    const localLift = Math.sin(time * 4 + 0.2) * 14;
+    const localZ = 52 + Math.sin(time * 2.4 - 0.5) * 22 + depthMix * 18;
+    const localScale = 0.95 + Math.sin(time * 4.6) * 0.026 + depthMix * 0.036;
+    const localRotateX = 1.5 + Math.cos(time * 3.9) * 4.4 + rearLegA * 0.09;
+    const localRotateY = -10 + Math.sin(time * 4.5 + 0.2) * 7.8 + orbitZ * 0.012;
     const localRotateZ = 1.8 + bodyWave * 0.48;
     const skewX = bodyWave * 0.3;
     const skewY = tailWave * 0.06;
@@ -116,10 +116,11 @@
       const y = Math.sin(angle) * radiusY;
       const z = Math.sin(angle * 1.26 + phase) * depth;
       const zMix = clamp((z + depth) / (depth * 2), 0, 1);
-      const scale = 0.94 + zMix * 0.42;
+      const scale = 0.72 + zMix * 0.82;
       const rotation = angle * 58;
       const layer = Math.round(2 + zMix * 4 + index * 0.1);
-      const brightness = 0.98 + zMix * 0.34;
+      const brightness = 0.88 + zMix * 0.48;
+      const opacity = 0.56 + zMix * 0.44;
 
       planetOrbit.style.transform = "translate3d(" + x.toFixed(2) + "px, " + y.toFixed(2) + "px, " + z.toFixed(2) + "px)";
       planetOrbit.style.zIndex = String(layer);
@@ -128,7 +129,8 @@
       if (planet) {
         setStyle(planet, "--planet-scale", scale.toFixed(3));
         setStyle(planet, "--planet-rotation", rotation.toFixed(2) + "deg");
-        planet.style.filter = "brightness(" + brightness.toFixed(3) + ") saturate(" + (1.02 + zMix * 0.22).toFixed(3) + ")";
+        planet.style.filter = "brightness(" + brightness.toFixed(3) + ") saturate(" + (1.02 + zMix * 0.28).toFixed(3) + ") drop-shadow(0 0 " + (10 + zMix * 12).toFixed(2) + "px rgba(255, 225, 160, " + (0.1 + zMix * 0.14).toFixed(3) + "))";
+        planet.style.opacity = opacity.toFixed(3);
       }
     });
 

@@ -195,23 +195,23 @@
 }
 
 .login-system__orbit-track--1 {
-  width: min(196px, 24%);
-  height: min(132px, 16%);
+  width: min(252px, 30%);
+  height: min(168px, 20%);
 }
 
 .login-system__orbit-track--2 {
-  width: min(272px, 33%);
-  height: min(182px, 22%);
+  width: min(364px, 43%);
+  height: min(236px, 28%);
 }
 
 .login-system__orbit-track--3 {
-  width: min(368px, 45%);
-  height: min(242px, 29%);
+  width: min(488px, 58%);
+  height: min(314px, 38%);
 }
 
 .login-system__orbit-track--4 {
-  width: min(534px, 64%);
-  height: min(346px, 42%);
+  width: min(692px, 80%);
+  height: min(444px, 52%);
   border-color: rgba(255, 214, 126, 0.1);
 }
 
@@ -317,6 +317,39 @@
   z-index: 5;
   transform: translate(-50%, -50%);
   overflow: visible;
+  isolation: isolate;
+}
+
+.login-system__mark-wrap::before,
+.login-system__mark-wrap::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.login-system__mark-wrap::before {
+  width: 124%;
+  height: 92%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(255, 216, 128, 0.34) 0%, rgba(255, 173, 68, 0.18) 22%, rgba(255, 147, 44, 0.08) 40%, rgba(255, 147, 44, 0) 72%);
+  filter: blur(18px);
+  opacity: 0.76;
+}
+
+.login-system__mark-wrap::after {
+  width: 148%;
+  height: 108%;
+  background:
+    radial-gradient(circle at 26% 56%, rgba(255, 188, 82, 0.18), transparent 28%),
+    radial-gradient(circle at 70% 42%, rgba(255, 214, 128, 0.14), transparent 30%),
+    radial-gradient(circle at 52% 52%, rgba(255, 164, 70, 0.08), transparent 58%);
+  filter: blur(34px);
+  opacity: 0.84;
+  z-index: -1;
 }
 
 .login-visual__mark {
@@ -327,11 +360,17 @@
   height: auto;
   display: block;
   object-fit: contain;
-  transform: translateY(-4px);
-  clip-path: inset(0 0 10% 0);
+  transform: translateY(-18px) scale(0.95);
+  clip-path: inset(0 0 15% 0);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 72%, rgba(0, 0, 0, 0.76) 82%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 72%, rgba(0, 0, 0, 0.76) 82%, rgba(0, 0, 0, 0) 100%);
+  mix-blend-mode: screen;
   filter:
-    drop-shadow(0 0 14px rgba(255, 208, 110, 0.22))
-    drop-shadow(0 0 36px rgba(255, 177, 76, 0.16));
+    brightness(1.08)
+    saturate(1.12)
+    contrast(1.04)
+    drop-shadow(0 0 18px rgba(255, 214, 118, 0.32))
+    drop-shadow(0 0 52px rgba(255, 166, 62, 0.18));
 }
 
 .login-system__spark {
@@ -719,13 +758,13 @@
   }
 
   .login-system__mark-wrap {
-    width: min(420px, 54%);
-    height: 304px;
+    width: min(434px, 56%);
+    height: 312px;
   }
 
   .login-system__orbit-track--4 {
-    width: min(540px, 68%);
-    height: min(356px, 44%);
+    width: min(620px, 74%);
+    height: min(398px, 48%);
   }
 
   .login-panel__inner {
@@ -790,23 +829,23 @@
   }
 
   .login-system__orbit-track--1 {
-    width: min(150px, 28%);
-    height: min(108px, 20%);
+    width: min(182px, 32%);
+    height: min(124px, 22%);
   }
 
   .login-system__orbit-track--2 {
-    width: min(210px, 38%);
-    height: min(148px, 26%);
+    width: min(250px, 44%);
+    height: min(172px, 30%);
   }
 
   .login-system__orbit-track--3 {
-    width: min(284px, 52%);
-    height: min(198px, 35%);
+    width: min(330px, 58%);
+    height: min(226px, 40%);
   }
 
   .login-system__orbit-track--4 {
-    width: min(360px, 66%);
-    height: min(248px, 44%);
+    width: min(420px, 72%);
+    height: min(288px, 48%);
   }
 
   .login-panel {
