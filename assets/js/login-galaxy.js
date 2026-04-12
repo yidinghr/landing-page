@@ -43,9 +43,9 @@
       // Random twinkling stars live here:
       // density/size/alpha tune how many stars appear and how bright they get.
       layers: [
-        { density: 0.0072, size: [0.2, 0.54], alpha: [0.16, 0.54], speed: [3.0, 5.1], direction: -1, driftY: 5, sparkleChance: 0.03 },
-        { density: 0.0058, size: [0.26, 0.76], alpha: [0.22, 0.82], speed: [4.6, 7.0], direction: -1, driftY: 7, sparkleChance: 0.05 },
-        { density: 0.0028, size: [0.42, 0.9], alpha: [0.28, 0.94], speed: [6.2, 9.2], direction: -1, driftY: 10, sparkleChance: 0.08 }
+        { density: 0.0072, size: [0.2, 0.54], alpha: [0.24, 0.66], speed: [3.0, 5.1], direction: -1, driftY: 5, sparkleChance: 0.04 },
+        { density: 0.0058, size: [0.26, 0.76], alpha: [0.3, 0.9], speed: [4.6, 7.0], direction: -1, driftY: 7, sparkleChance: 0.06 },
+        { density: 0.0028, size: [0.42, 0.9], alpha: [0.38, 1], speed: [6.2, 9.2], direction: -1, driftY: 10, sparkleChance: 0.1 }
       ],
       twinkleSeconds: [0.28, 1.8],
       warmChance: 0.76,
@@ -63,8 +63,8 @@
     constellations: {
       travelSeconds: [12.8, 16.8],
       scale: [112, 186],
-      alpha: [0.34, 0.68],
-      lineWidth: [1.7, 2.8]
+      alpha: [0.48, 0.9],
+      lineWidth: [2, 3.2]
     },
     halos: {
       // Drifting halos live here:
@@ -808,10 +808,10 @@
 
     context.save();
     context.globalCompositeOperation = "screen";
-    context.strokeStyle = rgba(SETTINGS.colors.lavender, alpha * 0.76);
+    context.strokeStyle = rgba(SETTINGS.colors.lavender, alpha * 0.92);
     context.lineWidth = lineWidth;
-    context.shadowBlur = 18;
-    context.shadowColor = rgba(SETTINGS.colors.violet, alpha * 0.72);
+    context.shadowBlur = 26;
+    context.shadowColor = rgba(SETTINGS.colors.violet, alpha * 0.92);
 
     pattern.links.forEach(function (link) {
       context.beginPath();
@@ -821,16 +821,16 @@
     });
 
     mapped.forEach(function (point, pointIndex) {
-      const twinkle = 0.86 + Math.sin(time * 0.72 + index + pointIndex * 0.8) * 0.16;
-      const radius = (1.8 + point.size * 2.2) * twinkle;
-      const gradient = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius * 5.6);
+      const twinkle = 0.92 + Math.sin(time * 0.72 + index + pointIndex * 0.8) * 0.2;
+      const radius = (2 + point.size * 2.5) * twinkle;
+      const gradient = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius * 6.2);
       gradient.addColorStop(0, rgba(SETTINGS.colors.gold, alpha));
-      gradient.addColorStop(0.18, rgba(SETTINGS.colors.lavender, alpha * 0.72));
-      gradient.addColorStop(0.38, rgba(SETTINGS.colors.violet, alpha * 0.34));
+      gradient.addColorStop(0.18, rgba(SETTINGS.colors.lavender, alpha * 0.86));
+      gradient.addColorStop(0.38, rgba(SETTINGS.colors.violet, alpha * 0.46));
       gradient.addColorStop(1, rgba(SETTINGS.colors.lavender, 0));
       context.fillStyle = gradient;
       context.beginPath();
-      context.arc(point.x, point.y, radius * 5.6, 0, Math.PI * 2);
+      context.arc(point.x, point.y, radius * 6.2, 0, Math.PI * 2);
       context.fill();
 
       context.fillStyle = rgba(SETTINGS.colors.gold, alpha);

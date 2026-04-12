@@ -21,8 +21,8 @@
     markWrap.style.transform = "translate(calc(-50% + " + logoFloatX.toFixed(2) + "px), calc(-50% + " + logoFloatY.toFixed(2) + "px)) scale(" + logoFloatScale.toFixed(4) + ") rotateZ(" + logoTilt.toFixed(2) + "deg)";
 
     if (mark) {
-      const pulse = 0.845 + Math.sin(time * 0.28) * 0.022;
-      mark.style.filter = "brightness(" + pulse.toFixed(3) + ") saturate(0.88) contrast(0.94) drop-shadow(0 18px 44px rgba(71, 30, 118, 0.12))";
+      const pulse = 0.985 + Math.sin(time * 0.28) * 0.028;
+      mark.style.filter = "brightness(" + pulse.toFixed(3) + ") saturate(0.96) contrast(0.98) drop-shadow(0 20px 52px rgba(96, 48, 154, 0.16))";
     }
 
     requestAnimationFrame(animate);
