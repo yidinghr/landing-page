@@ -30,7 +30,7 @@
     const sinOrbitDiagonal = Math.sin(orbitDiagonal);
 
     const orbitX =
-      -78 +
+      -58 +
       Math.cos(orbitTime) * 118 +
       Math.sin(orbitTime * 1.92 + 0.5) * 34 +
       Math.sin(orbitTime * 0.62 - 1.4) * 18;
