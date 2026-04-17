@@ -834,6 +834,10 @@
       event.stopPropagation();
       uiState.localeMenuOpen = false;
       i18n.setLocale(option.getAttribute("data-locale-value"));
+      renderStaticText();
+      renderLocaleControl();
+      buildLegendTable();
+      renderAll();
     });
     document.addEventListener("click", function (event) {
       if (uiState.localeMenuOpen && dom.localeMount && !dom.localeMount.contains(event.target)) {

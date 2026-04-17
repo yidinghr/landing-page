@@ -1850,3 +1850,245 @@ body.edit-page {
     overflow: visible;
   }
 }
+
+/* Final schedule correction pass:
+   use one visible frozen header layer under the hard chrome,
+   keep the sheet transparent,
+   and strip all fill color from shift cells. */
+.schedule-header,
+.schedule-period-bar {
+  background: transparent !important;
+  isolation: isolate;
+  overflow: clip !important;
+}
+
+.schedule-header {
+  overflow: visible !important;
+}
+
+.schedule-header::before,
+.schedule-period-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(6, 5, 14, 0.78) 0%, rgba(6, 5, 14, 0.46) 100%),
+    radial-gradient(circle at 50% 0%, rgba(255, 240, 204, 0.08), transparent 62%);
+  backdrop-filter: blur(10px) brightness(0.52) saturate(0.92);
+  -webkit-backdrop-filter: blur(10px) brightness(0.52) saturate(0.92);
+  pointer-events: none;
+}
+
+.schedule-header__spacer,
+.schedule-header__title,
+.schedule-header__tools,
+.schedule-period-bar__spacer,
+.schedule-period-bar__inner {
+  position: relative;
+  z-index: 1;
+}
+
+.schedule-sheet-frame {
+  position: relative;
+  overflow: hidden !important;
+}
+
+.schedule-frozen-layer {
+  display: block !important;
+  position: sticky !important;
+  top: var(--schedule-sheet-sticky-top) !important;
+  z-index: 34 !important;
+  height: 0 !important;
+  overflow: visible !important;
+  isolation: isolate;
+}
+
+.schedule-frozen-layer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc((var(--schedule-table-head-row) * 2) + 2px);
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(7, 6, 16, 0.72) 0%, rgba(7, 6, 16, 0.42) 100%);
+  backdrop-filter: blur(8px) brightness(0.58) saturate(0.92);
+  -webkit-backdrop-filter: blur(8px) brightness(0.58) saturate(0.92);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(236, 194, 102, 0.16);
+}
+
+.schedule-frozen-scroll,
+.schedule-frozen-zoom,
+.schedule-frozen-stage,
+.schedule-frozen-main,
+.schedule-frozen-summary {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+.schedule-sheet-scroll > .schedule-sheet-zoom > .schedule-sheet-stage > .schedule-sheet-main > .schedule-table > thead,
+.schedule-sheet-scroll > .schedule-sheet-zoom > .schedule-sheet-stage > .schedule-sheet-summary > .schedule-summary-table > thead {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.schedule-sheet-scroll {
+  position: relative;
+  overflow: auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+.schedule-table thead,
+.schedule-summary-table thead,
+.schedule-daily-table thead,
+.schedule-daily-spacer-table thead {
+  position: relative !important;
+  top: auto !important;
+  z-index: 12 !important;
+}
+
+.schedule-frozen-layer .schedule-table thead,
+.schedule-frozen-layer .schedule-summary-table thead {
+  position: relative !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  z-index: 36 !important;
+  transform: none !important;
+}
+
+.schedule-frozen-layer .schedule-table thead .schedule-table__sticky,
+.schedule-frozen-layer .schedule-summary-table thead th {
+  z-index: 37 !important;
+}
+
+.schedule-table__meta-head,
+.schedule-table__meta-subhead,
+.schedule-table__day-head,
+.schedule-table__weekday-head,
+.schedule-summary-table thead th,
+.schedule-daily-table thead th,
+.schedule-daily-spacer-table thead th,
+.schedule-legend-table th,
+.schedule-frozen-layer .schedule-table thead th,
+.schedule-frozen-layer .schedule-summary-table thead th {
+  background: rgba(7, 6, 16, 0.14) !important;
+  color: rgba(255, 248, 232, 0.98) !important;
+  text-shadow: 0 0 10px rgba(255, 236, 190, 0.08);
+  border-color: rgba(236, 194, 102, 0.14) !important;
+  backdrop-filter: blur(4px) saturate(1.02) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(1.02) !important;
+}
+
+.schedule-table__meta-head,
+.schedule-table__meta-subhead,
+.schedule-table__day-head,
+.schedule-table__weekday-head,
+.schedule-summary-table thead .schedule-summary-table__spacer th,
+.schedule-summary-table thead .schedule-summary-table__labels th {
+  height: var(--schedule-table-head-row) !important;
+  min-height: var(--schedule-table-head-row) !important;
+  box-sizing: border-box;
+}
+
+.schedule-table__meta-head,
+.schedule-table__day-head,
+.schedule-summary-table thead .schedule-summary-table__labels th {
+  line-height: calc(var(--schedule-table-head-row) - 2px) !important;
+}
+
+.schedule-table__meta-head,
+.schedule-summary-table thead .schedule-summary-table__labels th,
+.schedule-daily-table th,
+.schedule-daily-spacer-table th,
+.schedule-legend-table th {
+  font-size: 15px !important;
+  letter-spacing: 0.05em !important;
+}
+
+.schedule-table__day-head {
+  font-size: 15px !important;
+}
+
+.schedule-table__weekday-head {
+  font-size: 12px !important;
+}
+
+.schedule-table th,
+.schedule-table td,
+.schedule-summary-table th,
+.schedule-summary-table td,
+.schedule-daily-table th,
+.schedule-daily-table td,
+.schedule-daily-spacer-table th,
+.schedule-daily-spacer-table td {
+  background: transparent !important;
+  color: rgba(255, 247, 228, 0.98) !important;
+}
+
+.schedule-table__cell,
+.schedule-table__meta,
+.schedule-table__meta.schedule-table__sticky,
+.schedule-table__meta-head.schedule-table__sticky,
+.schedule-table__meta-subhead.schedule-table__sticky,
+.schedule-daily-table__sticky,
+.schedule-summary-table td,
+.schedule-daily-table td,
+.schedule-daily-spacer-table td,
+.schedule-daily-spacer-table th {
+  background: transparent !important;
+}
+
+.schedule-cell,
+.schedule-meta-cell,
+.schedule-summary-table td,
+.schedule-daily-table td,
+.schedule-daily-spacer-table td {
+  color: rgba(255, 249, 236, 0.99) !important;
+  text-shadow: 0 0 8px rgba(255, 240, 208, 0.08);
+}
+
+.schedule-cell,
+.schedule-meta-cell {
+  font-weight: 800;
+}
+
+.schedule-meta-cell:hover,
+.schedule-cell:hover {
+  background: rgba(255, 243, 202, 0.06) !important;
+}
+
+.schedule-meta-cell.is-selected,
+.schedule-cell.is-selected {
+  background: rgba(255, 244, 210, 0.1) !important;
+  box-shadow: inset 0 0 0 1px rgba(244, 213, 31, 0.72) !important;
+}
+
+.schedule-cell[data-code-group],
+.schedule-cell[data-code-group="A"],
+.schedule-cell[data-code-group="B"],
+.schedule-cell[data-code-group="C"],
+.schedule-cell[data-code-group="leave"],
+.schedule-cell[data-code-group="off"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.schedule-summary-table__blank,
+.schedule-daily-table__blank,
+.schedule-daily-spacer-table__blank,
+.schedule-daily-table__blank.schedule-daily-table__sticky {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.schedule-daily-stage__summary,
+.schedule-sheet-summary {
+  margin-left: 0 !important;
+}

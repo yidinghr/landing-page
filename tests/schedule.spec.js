@@ -735,7 +735,7 @@ test.describe("Schedule module", () => {
     await page.evaluate(() => window.scrollTo(0, 1200));
     await page.waitForTimeout(120);
 
-    const frozenHeaderCell = page.locator("#scheduleFrozenLayer [data-day-head='1']").first();
+    const frozenHeaderCell = page.locator("#scheduleFrozenTableHead [data-day-head='1']").first();
     const before = await page.evaluate(() => Math.round(window.scrollY));
     const box = await frozenHeaderCell.boundingBox();
     expect(box).not.toBeNull();
@@ -904,7 +904,7 @@ test.describe("Schedule module", () => {
       ])
     });
 
-    const engHandle = page.locator(".schedule-table__meta-head .schedule-column-resizer[data-resize-key='eng']").first();
+    const engHandle = page.locator("#scheduleFrozenTableHead .schedule-table__meta-head .schedule-column-resizer[data-resize-key='eng']").first();
     const before = await page.locator(".schedule-workspace").evaluate((node) =>
       getComputedStyle(node).getPropertyValue("--col-eng").trim()
     );
@@ -935,7 +935,7 @@ test.describe("Schedule module", () => {
       ])
     });
 
-    const dayHandle = page.locator(".schedule-table__day-head .schedule-column-resizer[data-resize-key='day']").first();
+    const dayHandle = page.locator("#scheduleFrozenTableHead .schedule-table__day-head .schedule-column-resizer[data-resize-key='day']").first();
     const box = await dayHandle.boundingBox();
     expect(box).not.toBeNull();
 
@@ -945,7 +945,7 @@ test.describe("Schedule module", () => {
     await page.mouse.up();
 
     const widths = await page.evaluate(() => {
-      const mainDay = document.querySelector("[data-day-head='1']");
+      const mainDay = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
       const dailyDay = document.querySelector("[data-daily-day-head='1']");
       return {
         mainWidth: Math.round(mainDay.getBoundingClientRect().width),
@@ -962,10 +962,10 @@ test.describe("Schedule module", () => {
     });
 
     const measurePositions = () => page.evaluate(() => {
-      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
-      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
-      const summarySpacer = document.querySelector("#scheduleFrozenLayer .schedule-summary-table__spacer th");
-      const summaryHead = document.querySelector("#scheduleFrozenLayer .schedule-summary-table__labels th");
+      const mainHead = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenTableHead tr:nth-child(2) th");
+      const summarySpacer = document.querySelector("#scheduleFrozenSummaryHead .schedule-summary-table__spacer th");
+      const summaryHead = document.querySelector("#scheduleFrozenSummaryHead .schedule-summary-table__labels th");
       if (!mainHead || !mainWeek || !summarySpacer || !summaryHead) {
         return null;
       }
@@ -1040,12 +1040,12 @@ test.describe("Schedule module", () => {
     await typeShiftCode(page, "A");
 
     const positions = await page.evaluate(() => {
-      const dayHead = document.querySelector("[data-day-head='1']");
+      const dayHead = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
       const dailyHead = document.querySelector("[data-daily-day-head='1']");
       const summaryRow = document.querySelector("[data-summary-row-index='0']");
       const scheduleRow = document.querySelector(".schedule-table__body-row");
-      const summaryHead = document.querySelector(".schedule-summary-table__labels th");
-      const mainHead = document.querySelector(".schedule-table thead tr:nth-child(2) th");
+      const summaryHead = document.querySelector("#scheduleFrozenSummaryHead .schedule-summary-table__labels th");
+      const mainHead = document.querySelector("#scheduleFrozenTableHead tr:nth-child(2) th");
       if (!dayHead || !dailyHead || !summaryRow || !scheduleRow || !summaryHead || !mainHead) {
         return null;
       }
@@ -1087,8 +1087,8 @@ test.describe("Schedule module", () => {
     });
 
     const baseline = await page.evaluate(() => {
-      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
-      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      const mainHead = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenTableHead tr:nth-child(2) th");
       if (!mainHead || !mainWeek) {
         return null;
       }
@@ -1105,8 +1105,8 @@ test.describe("Schedule module", () => {
     await page.waitForTimeout(150);
 
     const positions = await page.evaluate(() => {
-      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
-      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      const mainHead = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenTableHead tr:nth-child(2) th");
       const dailySection = document.getElementById("dailySummarySection");
       if (!mainHead || !mainWeek || !dailySection) {
         return null;
@@ -1141,8 +1141,8 @@ test.describe("Schedule module", () => {
     await page.keyboard.press("Control+=");
     await page.keyboard.press("Control+=");
     const baseline = await page.evaluate(() => {
-      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
-      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      const mainHead = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenTableHead tr:nth-child(2) th");
       if (!mainHead || !mainWeek) {
         return null;
       }
@@ -1158,8 +1158,8 @@ test.describe("Schedule module", () => {
     await page.waitForTimeout(150);
 
     const positions = await page.evaluate(() => {
-      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
-      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      const mainHead = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenTableHead tr:nth-child(2) th");
       if (!mainHead || !mainWeek) {
         return null;
       }
@@ -1188,7 +1188,7 @@ test.describe("Schedule module", () => {
     const positions = await page.evaluate(() => {
       const summaryLast = document.querySelector("#scheduleSummaryTable tbody tr:first-child td:last-child");
       const dailyLastSpacer = document.querySelector("#dailySummarySpacerTable tbody tr:first-child td:last-child");
-      const topDay = document.querySelector("[data-day-head='31']") || document.querySelector("[data-day-head='1']");
+      const topDay = document.querySelector("#scheduleTable [data-day-head='31']") || document.querySelector("#scheduleTable [data-day-head='1']");
       const dailyDay = document.querySelector("[data-daily-day-head='31']") || document.querySelector("[data-daily-day-head='1']");
       if (!summaryLast || !dailyLastSpacer || !topDay || !dailyDay) {
         return null;
