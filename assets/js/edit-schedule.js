@@ -1548,6 +1548,9 @@
       const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
       const firstHeadRow = dom.tableHead.querySelector("tr");
       const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
+      const tableHeadHeight = dom.tableHead ? Math.round(dom.tableHead.getBoundingClientRect().height) : rowHeight * 2;
+      const summaryHeadHeight = dom.summaryHead ? Math.round(dom.summaryHead.getBoundingClientRect().height) : rowHeight * 2;
+      const frozenBandHeight = Math.max(rowHeight * 2, tableHeadHeight, summaryHeadHeight);
       const tableRect = dom.table ? dom.table.getBoundingClientRect() : null;
       const frameRect = dom.sheetFrame ? dom.sheetFrame.getBoundingClientRect() : null;
       const periodGridRect = dom.periodGrid ? dom.periodGrid.getBoundingClientRect() : null;
@@ -1579,6 +1582,7 @@
         target.style.setProperty("--schedule-period-height", String(periodHeight) + "px");
         target.style.setProperty("--schedule-sheet-sticky-top", String(headerHeight + periodHeight) + "px");
         target.style.setProperty("--schedule-table-head-row", String(rowHeight) + "px");
+        target.style.setProperty("--schedule-frozen-band-height", String(frozenBandHeight) + "px");
         target.style.setProperty("--legend-panel-top", String(legendTop) + "px");
         target.style.setProperty("--legend-panel-left", String(legendLeft) + "px");
         target.style.setProperty("--legend-panel-right", String(legendRight) + "px");
