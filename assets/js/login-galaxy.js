@@ -4,6 +4,7 @@
     document.getElementById("homeGalaxyCanvas");
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const isAutomation = Boolean(window.navigator && window.navigator.webdriver);
+  const isSchedulePage = Boolean(document.body && document.body.classList.contains("edit-page"));
 
   if (!canvas) {
     return;
@@ -19,17 +20,17 @@
   }
 
   const SETTINGS = {
-    dprCap: 1.5,
+    dprCap: isSchedulePage ? 1.25 : 1.4,
     baseStars: {
-      density: 0.00012,
-      maxCount: 420
+      density: isSchedulePage ? 0.00023 : 0.00014,
+      maxCount: isSchedulePage ? 980 : 560
     },
     twinkleStars: {
-      density: 0.00007,
-      maxCount: 220
+      density: isSchedulePage ? 0.00012 : 0.00008,
+      maxCount: isSchedulePage ? 360 : 260
     },
-    constellationCount: 6,
-    glowCount: 7
+    constellationCount: isSchedulePage ? 8 : 6,
+    glowCount: isSchedulePage ? 9 : 7
   };
 
   const COLORS = Object.freeze({

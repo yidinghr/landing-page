@@ -659,7 +659,7 @@
 
   function renderSummary(monthState) {
     const headMarkup = [
-      '<tr class="schedule-summary-table__spacer"><th colspan="' + SUMMARY_FIELDS.length + '"></th></tr>',
+      '<tr class="schedule-summary-table__spacer"><th class="schedule-summary-table__blank" colspan="' + SUMMARY_FIELDS.length + '"></th></tr>',
       '<tr class="schedule-summary-table__labels">',
       SUMMARY_FIELDS.map(function (field) {
         return "<th>" + escapeHtml(getFixedFieldLabel(field)) + "</th>";
@@ -711,10 +711,10 @@
 
     dom.dailySection.hidden = false;
     let head = "<tr>";
-    head += '<th class="schedule-daily-table__spacer--id schedule-daily-table__sticky schedule-daily-table__sticky--id"></th>';
-    head += '<th class="schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></th>';
-    head += '<th class="schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></th>';
-    head += '<th class="schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></th>';
+    head += '<th class="schedule-daily-table__blank schedule-daily-table__spacer--id schedule-daily-table__sticky schedule-daily-table__sticky--id"></th>';
+    head += '<th class="schedule-daily-table__blank schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></th>';
+    head += '<th class="schedule-daily-table__blank schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></th>';
+    head += '<th class="schedule-daily-table__blank schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></th>';
     head += '<th class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position">' + escapeHtml(i18n.t("schedule.dailyCode")) + "</th>";
     for (let day = 1; day <= days; day += 1) {
       head += '<th data-daily-day-head="' + day + '">' + day + "</th>";
@@ -722,16 +722,16 @@
     dom.dailyHead.innerHTML = head + "</tr>";
     if (dom.dailySpacerHead) {
       dom.dailySpacerHead.innerHTML = "<tr>" + SUMMARY_FIELDS.map(function () {
-        return "<th></th>";
+        return '<th class="schedule-daily-spacer-table__blank"></th>';
       }).join("") + "</tr>";
     }
 
     dom.dailyBody.innerHTML = activeCodes.map(function (code) {
       let row = '<tr data-daily-code-row="' + escapeHtml(code) + '">';
-      row += '<td class="schedule-daily-table__spacer--id schedule-daily-table__sticky schedule-daily-table__sticky--id"></td>';
-      row += '<td class="schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></td>';
-      row += '<td class="schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></td>';
-      row += '<td class="schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></td>';
+      row += '<td class="schedule-daily-table__blank schedule-daily-table__spacer--id schedule-daily-table__sticky schedule-daily-table__sticky--id"></td>';
+      row += '<td class="schedule-daily-table__blank schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></td>';
+      row += '<td class="schedule-daily-table__blank schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></td>';
+      row += '<td class="schedule-daily-table__blank schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></td>';
       row += '<td class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position">' + escapeHtml(code) + "</td>";
       for (let day = 1; day <= days; day += 1) {
         row += '<td data-daily-code="' + escapeHtml(code) + '" data-daily-day="' + day + '">' + getDailyCount(monthState.rows, code, day) + "</td>";
@@ -741,7 +741,7 @@
     if (dom.dailySpacerBody) {
       dom.dailySpacerBody.innerHTML = activeCodes.map(function () {
         return "<tr>" + SUMMARY_FIELDS.map(function () {
-          return "<td></td>";
+          return '<td class="schedule-daily-spacer-table__blank"></td>';
         }).join("") + "</tr>";
       }).join("");
     }
