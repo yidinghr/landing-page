@@ -1,5 +1,7 @@
 const { test, expect } = require("@playwright/test");
 
+const ACCOUNTS_KEY = "yiding_accounts_v1";
+const SESSION_KEY = "yiding_auth_session_v1";
 const EMPLOYEES_KEY = "yiding_employees_module_state_v3_airtable_import";
 const SCHEDULE_KEY = "yiding_schedule_module_v3";
 
@@ -51,12 +53,39 @@ function createScheduleState(rows, year = 2026, month = 7) {
   };
 }
 
+async function seedAdminAuth(page) {
+  await page.addInitScript(
+    ({ accountsKey, sessionKey }) => {
+      const adminAccount = {
+        username: "YiDing Admin",
+        password: "YDI0006",
+        role: "admin",
+        displayName: "YiDing Admin",
+        welcomeMessage: "燈哥",
+        avatarSrc: "/image/logoweb.png",
+        createdAt: "2026-04-13T00:00:00.000Z"
+      };
+
+      window.localStorage.setItem(accountsKey, JSON.stringify([adminAccount]));
+      window.sessionStorage.setItem(sessionKey, JSON.stringify({
+        username: adminAccount.username,
+        role: adminAccount.role,
+        displayName: adminAccount.displayName,
+        welcomeMessage: adminAccount.welcomeMessage,
+        avatarSrc: adminAccount.avatarSrc
+      }));
+    },
+    { accountsKey: ACCOUNTS_KEY, sessionKey: SESSION_KEY }
+  );
+}
+
 async function prepareSchedulePage(page, options = {}) {
   const employeesState = options.employeesState === undefined
     ? { employees: [createEmployee()] }
     : options.employeesState;
   const scheduleState = options.scheduleState === undefined ? null : options.scheduleState;
 
+  await seedAdminAuth(page);
   await page.addInitScript(
     ({ employeesKey, scheduleKey, nextEmployeesState, nextScheduleState }) => {
       window.localStorage.removeItem(employeesKey);
@@ -124,12 +153,19 @@ async function dragSelect(page, start, end) {
 }
 
 test.describe("Schedule module", () => {
-  test("dashboard 班表 button routes to the local schedule page", async ({ page }) => {
-    await page.goto("/home/home.html");
+  test("dashboard 班表 flow opens the local schedule page from the summary panel", async ({ page }) => {
+    test.setTimeout(45000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await seedAdminAuth(page);
+    await page.goto("/home/home.html", { waitUntil: "domcontentloaded" });
     await page.locator("#dashboardMainButton-schedule").click();
+    await expect(page.locator("#dashboardDetailTitle")).toHaveText("班表總覽");
+    await page.locator("[data-open-module='edit/index.html']").click();
 
     await expect(page).toHaveURL(/\/home\/edit\/index\.html$/);
-    await expect(page.locator("#scheduleTable")).toBeVisible();
+    await expect(page.locator(".schedule-header")).toBeVisible();
+    await expect(page.locator("#scheduleYear")).toBeVisible();
+    await expect(page.locator("#scheduleMonth")).toBeVisible();
   });
 
   test("fresh month starts with no rows by default", async ({ page }) => {

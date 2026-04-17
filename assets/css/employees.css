@@ -1435,3 +1435,202 @@ textarea {
     overflow: visible;
   }
 }
+
+:root {
+  --employees-bg: #050311;
+  --employees-panel: rgba(13, 11, 24, 0.54);
+  --employees-panel-soft: rgba(18, 16, 31, 0.44);
+  --employees-border: rgba(236, 194, 102, 0.2);
+  --employees-border-strong: rgba(244, 215, 159, 0.46);
+  --employees-text: #f7ead1;
+  --employees-text-soft: rgba(247, 234, 209, 0.82);
+  --employees-text-muted: rgba(231, 210, 179, 0.58);
+  --employees-shadow: 0 24px 48px rgba(0, 0, 0, 0.24);
+}
+
+.employees-page {
+  position: relative;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(122, 80, 208, 0.24), transparent 28%),
+    radial-gradient(circle at 78% 26%, rgba(198, 98, 255, 0.18), transparent 24%),
+    radial-gradient(circle at 68% 78%, rgba(110, 68, 184, 0.14), transparent 30%),
+    linear-gradient(180deg, #0a0416 0%, #020109 100%);
+  color: var(--employees-text);
+}
+
+.employees-page::before,
+.employees-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.employees-page::before {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 236, 180, 0.1), transparent 16%),
+    radial-gradient(circle at 72% 18%, rgba(214, 124, 255, 0.1), transparent 16%),
+    radial-gradient(circle at 64% 74%, rgba(110, 127, 255, 0.08), transparent 18%);
+  filter: blur(28px);
+}
+
+.employees-page::after {
+  background: linear-gradient(180deg, rgba(2, 1, 7, 0.08), rgba(2, 1, 7, 0.22) 100%);
+}
+
+.employees-page *,
+.employees-page *::before,
+.employees-page *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.employees-app,
+.employees-main,
+.employees-detail__inner,
+.employees-modal__card,
+.employees-popover,
+.employees-department__menu-panel,
+.employees-cards-panel {
+  background: transparent;
+}
+
+.employees-app__sidebar,
+.employees-toolbar,
+.employees-card,
+.employees-detail__inner,
+.employees-modal__card,
+.employees-popover,
+.employees-department,
+.employees-department-add,
+.employees-department-fixed,
+.employees-sidebar__icon-button,
+.employees-primary-button,
+.employees-secondary-button,
+.employees-tool-icon,
+.employees-icon-button,
+.employee-form__ghost-button,
+.employees-toolbar__composer input,
+.employees-toolbar__composer select,
+.employees-search-box,
+.employees-popover__field select,
+.employees-popover__field input,
+.employees-modal__input,
+.employees-sidebar__title-input,
+.employees-department__edit-input,
+.employees-main__title-note-input,
+.employees-avatar-box__preview,
+.employees-empty {
+  background: rgba(10, 9, 18, 0.52) !important;
+  border-color: rgba(236, 194, 102, 0.2) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 36px rgba(0, 0, 0, 0.18) !important;
+  backdrop-filter: blur(16px) saturate(1.04);
+}
+
+.employees-app__sidebar,
+.employees-detail__inner,
+.employees-modal__card,
+.employees-cards-panel {
+  border-radius: 24px;
+}
+
+.employees-app {
+  background: transparent;
+}
+
+.employees-app__sidebar {
+  margin: 16px 0 16px 16px;
+  padding: 20px 12px 16px 16px;
+  border-right: 1px solid rgba(236, 194, 102, 0.16);
+}
+
+.employees-main {
+  padding: 16px 18px 16px 16px;
+}
+
+.employees-main__title-wrap h1,
+.employees-sidebar__title,
+.employees-card__title {
+  font-family: "Noto Serif TC", "Microsoft JhengHei", "PingFang TC", serif;
+  color: #fff0cd;
+}
+
+.employees-toolbar {
+  border-bottom-color: rgba(236, 194, 102, 0.12);
+  border-radius: 22px;
+  padding: 14px 16px;
+}
+
+.employees-card {
+  background:
+    linear-gradient(180deg, rgba(255, 244, 214, 0.06), rgba(255, 255, 255, 0)),
+    rgba(10, 9, 18, 0.52) !important;
+  border-radius: 20px;
+}
+
+.employees-card:hover,
+.employees-card--active {
+  border-color: rgba(244, 215, 159, 0.46) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 244, 214, 0.08), rgba(255, 255, 255, 0)),
+    rgba(14, 12, 24, 0.66) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 22px 40px rgba(0, 0, 0, 0.22) !important;
+}
+
+.employees-card__avatar,
+.employees-sidebar__icon-button,
+.employees-avatar-box__preview {
+  background:
+    radial-gradient(circle at 24% 20%, rgba(255, 244, 214, 0.1), transparent 18%),
+    rgba(14, 12, 24, 0.8) !important;
+}
+
+.employees-workspace--panel-open .employees-detail {
+  border-left-color: rgba(236, 194, 102, 0.16);
+}
+
+.employees-department--active,
+.employees-tab--active,
+.employees-meta-chip,
+.employees-primary-button,
+.employees-toolbar__composer-confirm {
+  background:
+    radial-gradient(circle at 18% 28%, rgba(255, 244, 214, 0.08), transparent 18%),
+    linear-gradient(135deg, rgba(68, 30, 116, 0.22) 0%, rgba(126, 60, 208, 0.16) 28%, rgba(255, 204, 112, 0.12) 58%, rgba(132, 56, 196, 0.18) 100%) !important;
+  border-color: rgba(244, 215, 159, 0.38) !important;
+}
+
+.employees-empty,
+.employees-main__title-note,
+.employees-card__label,
+.employees-sidebar__caption,
+.employees-sidebar__section-title,
+.employees-toolbar__composer-field label,
+.employees-popover__section-title,
+.employees-popover__field label,
+.employees-tab__condition {
+  color: var(--employees-text-muted);
+}
+
+.employees-card__value,
+.employees-card__title,
+.employees-card__line,
+.employees-department__name,
+.employees-main__title-wrap h1,
+.employees-toolbar,
+.employees-popover,
+.employees-modal__title,
+.employees-modal__text,
+.employee-form__section-title,
+.employee-form__field label {
+  color: var(--employees-text);
+}
+
+.employees-cards-panel::-webkit-scrollbar-thumb,
+.employees-modal__card::-webkit-scrollbar-thumb {
+  background: rgba(236, 194, 102, 0.34);
+}

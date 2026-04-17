@@ -949,6 +949,10 @@
   }
 
   function drawFrame(timestamp) {
+    if (!width || !height || screenBandPath.length < 4) {
+      return;
+    }
+
     const time = timestamp * 0.001;
     const dt = lastFrameTime ? Math.min(0.032, (timestamp - lastFrameTime) / 1000) : 1 / 120;
     lastFrameTime = timestamp;

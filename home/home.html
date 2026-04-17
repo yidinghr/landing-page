@@ -40,20 +40,13 @@
     <section class="dashboard-chat-card">
       <div class="dashboard-card__head">
         <div>
-          <p class="dashboard-card__eyebrow">AI WORKSPACE</p>
-          <h2 class="dashboard-card__title">AI 對話區</h2>
+          <p id="dashboardChatEyebrow" class="dashboard-card__eyebrow">AI WORKSPACE</p>
+          <h2 id="dashboardChatTitle" class="dashboard-card__title">AI 對話區</h2>
         </div>
-        <span class="dashboard-card__badge">Coming Soon</span>
+        <span id="dashboardChatBadge" class="dashboard-card__badge">Coming Soon</span>
       </div>
 
-      <div class="dashboard-chat-placeholder">
-        <div class="dashboard-chat-placeholder__orb"></div>
-        <div class="dashboard-chat-placeholder__grid"></div>
-        <div class="dashboard-chat-placeholder__copy">
-          <h3>AI 助手工作區</h3>
-          <p>先預留中控畫面位置，後續可直接接 AI 對話、知識庫與內部流程助手。</p>
-        </div>
-      </div>
+      <div id="dashboardChatBody" class="dashboard-chat-body"></div>
     </section>
 
     <section class="dashboard-detail-card">
@@ -69,11 +62,7 @@
   </section>
 </main>
 
-<script src="../assets/js/i18n.js"></script>
-<script src="../assets/js/auth-store.js"></script>
-<script src="../assets/js/employees-data.js"></script>
-<script src="../assets/js/login-galaxy.js"></script>
-<script src="../assets/js/home.js"></script>
+<script type="module" src="../src/app/entries/dashboard.js"></script>
 
 </body>
 </html>

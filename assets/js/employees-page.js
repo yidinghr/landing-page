@@ -219,7 +219,12 @@
     }
 
     try {
-      return hydrateState(JSON.parse(storageValue));
+      const parsedState = JSON.parse(storageValue);
+      const mergedState = dataApi.mergeStateWithSeedData
+        ? dataApi.mergeStateWithSeedData(parsedState)
+        : parsedState;
+
+      return hydrateState(mergedState);
     } catch (error) {
       return hydrateState(dataApi.createInitialState());
     }

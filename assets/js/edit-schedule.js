@@ -368,7 +368,9 @@
     try {
       const parsed = JSON.parse(localStorage.getItem(EMPLOYEES_KEY) || "null");
       if (parsed && Array.isArray(parsed.employees)) {
-        return parsed;
+        return employeesDataApi && employeesDataApi.mergeStateWithSeedData
+          ? employeesDataApi.mergeStateWithSeedData(parsed)
+          : parsed;
       }
     } catch (error) {}
     return { employees: employeesDataApi && Array.isArray(employeesDataApi.SEED_EMPLOYEES) ? employeesDataApi.SEED_EMPLOYEES : [] };
@@ -880,6 +882,21 @@
         hideCodeDropdown();
         focusSelectionInput();
       });
+    }
+    if (dom.legendPanel && dom.legendContent) {
+      dom.legendPanel.addEventListener("wheel", function (event) {
+        if (!state.legendOpen) {
+          return;
+        }
+
+        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        dom.legendContent.scrollTop += event.deltaY;
+      }, { passive: false });
     }
     dom.sheetScroll.addEventListener("wheel", function (event) {
       if (!event.ctrlKey) {
@@ -1524,6 +1541,7 @@
       const frameRect = dom.sheetFrame ? dom.sheetFrame.getBoundingClientRect() : null;
       const periodGridRect = dom.periodGrid ? dom.periodGrid.getBoundingClientRect() : null;
       const minimumTop = headerHeight + periodHeight;
+      const minimumLegendHeight = 320;
       const legendTop = frameRect
         ? Math.max(minimumTop, Math.round(frameRect.top))
         : tableRect
@@ -1532,9 +1550,13 @@
       const legendRight = frameRect
         ? Math.max(0, Math.round(window.innerWidth - frameRect.right))
         : 8;
-      const legendBottom = frameRect
+      const computedLegendBottom = frameRect
         ? Math.max(0, Math.round(window.innerHeight - frameRect.bottom))
         : 8;
+      const legendBottom = Math.min(
+        computedLegendBottom,
+        Math.max(8, window.innerHeight - legendTop - minimumLegendHeight)
+      );
       const legendLeft = periodGridRect
         ? Math.max(16, Math.round(periodGridRect.right + 12))
         : Math.max(16, Math.round(window.innerWidth * 0.58));
