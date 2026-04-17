@@ -5,6 +5,8 @@
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const isAutomation = Boolean(window.navigator && window.navigator.webdriver);
   const isSchedulePage = Boolean(document.body && document.body.classList.contains("edit-page"));
+  const isDashboardPage = Boolean(document.body && document.body.classList.contains("dashboard-page"));
+  const isLoginPage = Boolean(document.body && document.body.classList.contains("login-page"));
 
   if (!canvas) {
     return;
@@ -19,18 +21,58 @@
     return;
   }
 
+  const pageProfile = isSchedulePage
+    ? {
+        dprCap: 1.22,
+        baseDensity: 0.00048,
+        baseMaxCount: 1960,
+        twinkleDensity: 0.00027,
+        twinkleMaxCount: 860,
+        constellationCount: 16,
+        glowCount: 16
+      }
+    : isDashboardPage
+    ? {
+        dprCap: 1.28,
+        baseDensity: 0.00042,
+        baseMaxCount: 1720,
+        twinkleDensity: 0.00024,
+        twinkleMaxCount: 760,
+        constellationCount: 12,
+        glowCount: 14
+      }
+    : isLoginPage
+    ? {
+        dprCap: 1.24,
+        baseDensity: 0.0004,
+        baseMaxCount: 1560,
+        twinkleDensity: 0.00022,
+        twinkleMaxCount: 700,
+        constellationCount: 12,
+        glowCount: 14
+      }
+    : {
+        dprCap: 1.3,
+        baseDensity: 0.00022,
+        baseMaxCount: 880,
+        twinkleDensity: 0.0001,
+        twinkleMaxCount: 320,
+        constellationCount: 10,
+        glowCount: 8
+      };
+
   const SETTINGS = {
-    dprCap: isSchedulePage ? 1.25 : 1.4,
+    dprCap: pageProfile.dprCap,
     baseStars: {
-      density: isSchedulePage ? 0.00023 : 0.00014,
-      maxCount: isSchedulePage ? 980 : 560
+      density: pageProfile.baseDensity,
+      maxCount: pageProfile.baseMaxCount
     },
     twinkleStars: {
-      density: isSchedulePage ? 0.00012 : 0.00008,
-      maxCount: isSchedulePage ? 360 : 260
+      density: pageProfile.twinkleDensity,
+      maxCount: pageProfile.twinkleMaxCount
     },
-    constellationCount: isSchedulePage ? 8 : 6,
-    glowCount: isSchedulePage ? 9 : 7
+    constellationCount: pageProfile.constellationCount,
+    glowCount: pageProfile.glowCount
   };
 
   const COLORS = Object.freeze({
@@ -132,22 +174,55 @@
     const patterns = [
       [[0.08, 0.22], [0.22, 0.34], [0.38, 0.58], [0.54, 0.36], [0.72, 0.18], [0.92, 0.32]],
       [[0.06, 0.7], [0.18, 0.46], [0.32, 0.32], [0.58, 0.24], [0.8, 0.42], [0.94, 0.2]],
-      [[0.1, 0.62], [0.22, 0.42], [0.38, 0.24], [0.56, 0.28], [0.74, 0.5], [0.92, 0.72]]
+      [[0.1, 0.62], [0.22, 0.42], [0.38, 0.24], [0.56, 0.28], [0.74, 0.5], [0.92, 0.72]],
+      [[0.04, 0.26], [0.18, 0.2], [0.34, 0.44], [0.48, 0.3], [0.66, 0.48], [0.82, 0.36], [0.95, 0.54]],
+      [[0.08, 0.48], [0.24, 0.58], [0.4, 0.4], [0.54, 0.18], [0.68, 0.24], [0.84, 0.42], [0.94, 0.68]],
+      [[0.1, 0.18], [0.26, 0.3], [0.42, 0.24], [0.56, 0.44], [0.68, 0.68], [0.84, 0.56], [0.96, 0.34]]
     ];
+    const anchoredPositions = isDashboardPage || isLoginPage
+      ? [
+          [0.06, 0.12],
+          [0.24, 0.09],
+          [0.44, 0.11],
+          [0.65, 0.08],
+          [0.86, 0.13],
+          [0.12, 0.31],
+          [0.34, 0.28],
+          [0.56, 0.33],
+          [0.81, 0.29],
+          [0.16, 0.58],
+          [0.46, 0.69],
+          [0.78, 0.62]
+        ]
+      : null;
 
     targetContext.save();
     targetContext.globalCompositeOperation = "screen";
 
     for (let index = 0; index < SETTINGS.constellationCount; index += 1) {
       const pattern = patterns[index % patterns.length];
-      const constellationWidth = randomBetween(width * 0.12, width * 0.22, rng);
-      const constellationHeight = constellationWidth * randomBetween(0.34, 0.62, rng);
-      const originX = randomBetween(width * 0.04, width * 0.86, rng);
-      const originY = randomBetween(height * 0.06, height * 0.78, rng);
-      const alpha = randomBetween(0.08, 0.14, rng);
+      const depth = randomBetween(0.72, 1.22, rng);
+      const constellationWidth = randomBetween(width * 0.11, width * 0.2, rng) * depth;
+      const constellationHeight = constellationWidth * randomBetween(0.32, 0.66, rng);
+      const anchor = anchoredPositions ? anchoredPositions[index % anchoredPositions.length] : null;
+      const originX = anchor
+        ? clamp(
+            anchor[0] * width + randomBetween(width * -0.03, width * 0.03, rng),
+            width * 0.01,
+            width * 0.9
+          )
+        : randomBetween(width * 0.02, width * 0.88, rng);
+      const originY = anchor
+        ? clamp(
+            anchor[1] * height + randomBetween(height * -0.04, height * 0.04, rng),
+            height * 0.02,
+            height * 0.86
+          )
+        : randomBetween(height * 0.04, height * 0.82, rng);
+      const alpha = randomBetween(0.08, 0.16, rng);
 
       targetContext.strokeStyle = rgba(COLORS.violet, alpha);
-      targetContext.lineWidth = randomBetween(0.8, 1.4, rng);
+      targetContext.lineWidth = randomBetween(0.7, 1.55, rng) * (depth > 1 ? 1.05 : 0.95);
 
       for (let starIndex = 0; starIndex < pattern.length - 1; starIndex += 1) {
         const current = pattern[starIndex];
@@ -162,7 +237,7 @@
       pattern.forEach(function (point) {
         const starX = originX + point[0] * constellationWidth;
         const starY = originY + point[1] * constellationHeight;
-        drawGlow(targetContext, starX, starY, randomBetween(4, 9, rng), COLORS.white, alpha * 0.68);
+        drawGlow(targetContext, starX, starY, randomBetween(4, 11, rng) * depth, COLORS.white, alpha * 0.68);
       });
     }
 
@@ -181,8 +256,8 @@
     for (let index = 0; index < count; index += 1) {
       const x = rng() * width;
       const y = rng() * height;
-      const radius = randomBetween(0.28, 1.18, rng);
-      const alpha = randomBetween(0.16, 0.72, rng);
+      const radius = randomBetween(0.22, 1.62, rng);
+      const alpha = randomBetween(0.2, 0.86, rng);
       const color = rng() < 0.14 ? COLORS.cool : rng() < 0.36 ? COLORS.violet : COLORS.warm;
 
       if (radius < 0.7) {

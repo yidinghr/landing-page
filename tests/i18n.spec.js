@@ -1,15 +1,17 @@
 const { test, expect } = require("@playwright/test");
 
-const LOCALE_KEY = "yiding_ui_locale_v1";
+const LOCALE_KEY = "yiding_ui_locale_v2";
+const LOCALE_SOURCE_KEY = "yiding_ui_locale_source_v3";
 const ACCOUNTS_KEY = "yiding_accounts_v1";
 const SESSION_KEY = "yiding_auth_session_v1";
 
 function seedLocale(page, locale) {
   return page.addInitScript(
-    ({ storageKey, nextLocale }) => {
+    ({ storageKey, sourceKey, nextLocale }) => {
       window.localStorage.setItem(storageKey, nextLocale);
+      window.localStorage.setItem(sourceKey, "manual");
     },
-    { storageKey: LOCALE_KEY, nextLocale: locale }
+    { storageKey: LOCALE_KEY, sourceKey: LOCALE_SOURCE_KEY, nextLocale: locale }
   );
 }
 
@@ -71,8 +73,9 @@ test.describe("Shared locale switching", () => {
     await seedAdminAuth(page);
     await page.goto("/home/edit/index.html", { waitUntil: "domcontentloaded" });
 
-    await page.locator("#scheduleLocaleMount [data-locale-toggle]").click();
-    await page.locator("#scheduleLocaleMount [data-locale-value='vi']").click();
+    await page.locator("#scheduleLocaleMount [data-locale-toggle]").click({ force: true });
+    await expect(page.locator("#scheduleLocaleMount [data-locale-value='vi']")).toBeVisible();
+    await page.locator("#scheduleLocaleMount [data-locale-value='vi']").click({ force: true });
 
     await expect(page.locator("#scheduleHeaderTitle")).toHaveText("Ca làm");
     await expect(page.locator("#scheduleYearLabel")).toHaveText("Năm");

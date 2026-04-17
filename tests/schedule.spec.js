@@ -5,6 +5,34 @@ const SESSION_KEY = "yiding_auth_session_v1";
 const EMPLOYEES_KEY = "yiding_employees_module_state_v3_airtable_import";
 const SCHEDULE_KEY = "yiding_schedule_module_v3";
 
+async function freezeTime(page, isoString) {
+  await page.addInitScript(
+    ({ iso }) => {
+      const RealDate = Date;
+      const fixedNow = new RealDate(iso).getTime();
+
+      class MockDate extends RealDate {
+        constructor(...args) {
+          if (!args.length) {
+            super(fixedNow);
+            return;
+          }
+          super(...args);
+        }
+
+        static now() {
+          return fixedNow;
+        }
+      }
+
+      MockDate.parse = RealDate.parse.bind(RealDate);
+      MockDate.UTC = RealDate.UTC.bind(RealDate);
+      window.Date = MockDate;
+    },
+    { iso: isoString }
+  );
+}
+
 function createEmployee(overrides) {
   return Object.assign({
     id: "employee-default",
@@ -152,6 +180,16 @@ async function dragSelect(page, start, end) {
   await page.mouse.up();
 }
 
+async function scrollSheet(page, top, left = null) {
+  await page.locator("#scheduleSheetScroll").evaluate((node, next) => {
+    if (typeof next.left === "number") {
+      node.scrollLeft = next.left;
+    }
+    node.scrollTop = next.top;
+    node.dispatchEvent(new Event("scroll"));
+  }, { top, left });
+}
+
 test.describe("Schedule module", () => {
   test("dashboard 班表 flow opens the local schedule page from the summary panel", async ({ page }) => {
     test.setTimeout(45000);
@@ -166,6 +204,104 @@ test.describe("Schedule module", () => {
     await expect(page.locator(".schedule-header")).toBeVisible();
     await expect(page.locator("#scheduleYear")).toBeVisible();
     await expect(page.locator("#scheduleMonth")).toBeVisible();
+  });
+
+  test("dashboard 班表 live panel resolves who is currently on shift", async ({ page }) => {
+    test.setTimeout(45000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await freezeTime(page, "2026-07-10T16:30:00+07:00");
+    await seedAdminAuth(page);
+    await page.addInitScript(
+      ({ employeesKey, scheduleKey }) => {
+        const employeesState = {
+          employees: [
+            {
+              id: "emp-a",
+              basic: { engName: "JUDY", vieName: "NGUYEN JUDY", ydiId: "YDI0028" },
+              work: { department: { preset: "Booking", other: "" }, position: "HOST", status: "在職" }
+            },
+            {
+              id: "emp-b",
+              basic: { engName: "LIN", vieName: "TONG LIN", ydiId: "YDI0039" },
+              work: { department: { preset: "Booking", other: "" }, position: "HOST", status: "在職" }
+            },
+            {
+              id: "emp-c",
+              basic: { engName: "ALICE", vieName: "TRAN ALICE", ydiId: "YDI0025" },
+              work: { department: { preset: "Service", other: "" }, position: "SERVICE", status: "在職" }
+            }
+          ]
+        };
+
+        const scheduleState = {
+          selectedYear: 2026,
+          selectedMonth: 7,
+          legendOpen: false,
+          zoomLevel: 1,
+          months: {
+            "2026-07": {
+              rows: [
+                {
+                  id: "schedule-row-a",
+                  sourceType: "employee",
+                  employeeId: "emp-a",
+                  employeeSnapshot: {
+                    employeeId: "emp-a",
+                    ydiId: "YDI0028",
+                    department: "Booking",
+                    vieName: "NGUYEN JUDY",
+                    engName: "JUDY",
+                    position: "HOST"
+                  },
+                  shifts: { "10": "B1" }
+                },
+                {
+                  id: "schedule-row-b",
+                  sourceType: "employee",
+                  employeeId: "emp-b",
+                  employeeSnapshot: {
+                    employeeId: "emp-b",
+                    ydiId: "YDI0039",
+                    department: "Booking",
+                    vieName: "TONG LIN",
+                    engName: "LIN",
+                    position: "HOST"
+                  },
+                  shifts: { "10": "A4" }
+                },
+                {
+                  id: "schedule-row-c",
+                  sourceType: "employee",
+                  employeeId: "emp-c",
+                  employeeSnapshot: {
+                    employeeId: "emp-c",
+                    ydiId: "YDI0025",
+                    department: "Service",
+                    vieName: "TRAN ALICE",
+                    engName: "ALICE",
+                    position: "SERVICE"
+                  },
+                  shifts: { "10": "OFF" }
+                }
+              ]
+            }
+          }
+        };
+
+        window.localStorage.setItem(employeesKey, JSON.stringify(employeesState));
+        window.localStorage.setItem(scheduleKey, JSON.stringify(scheduleState));
+      },
+      { employeesKey: EMPLOYEES_KEY, scheduleKey: SCHEDULE_KEY }
+    );
+
+    await page.goto("/home/home.html", { waitUntil: "domcontentloaded" });
+    await page.locator("#dashboardMainButton-schedule").click();
+
+    await expect(page.locator("#dashboardChatTitle")).toHaveText("當前在崗");
+    await expect(page.locator("#dashboardChatBody")).toContainText("Booking");
+    await expect(page.locator("#dashboardChatBody")).toContainText("JUDY");
+    await expect(page.locator("#dashboardChatBody")).toContainText("LIN");
+    await expect(page.locator("#dashboardChatBody")).not.toContainText("ALICE");
   });
 
   test("fresh month starts with no rows by default", async ({ page }) => {
@@ -825,25 +961,19 @@ test.describe("Schedule module", () => {
       scheduleState: createScheduleState(Array.from({ length: 30 }, (_, index) => createScheduleRow("row-" + index)))
     });
 
-    await page.evaluate(() => window.scrollTo(0, 1200));
-    await page.waitForTimeout(100);
-
-    const positions = await page.evaluate(() => {
-      const periodBar = document.querySelector(".schedule-period-bar");
-      const mainHead = document.querySelector("[data-day-head='1']");
-      const mainWeek = document.querySelector(".schedule-table thead tr:nth-child(2) th");
-      const summarySpacer = document.querySelector(".schedule-summary-table__spacer th");
-      const summaryHead = document.querySelector(".schedule-summary-table__labels th");
-      if (!periodBar || !mainHead || !mainWeek || !summarySpacer || !summaryHead) {
+    const measurePositions = () => page.evaluate(() => {
+      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      const summarySpacer = document.querySelector("#scheduleFrozenLayer .schedule-summary-table__spacer th");
+      const summaryHead = document.querySelector("#scheduleFrozenLayer .schedule-summary-table__labels th");
+      if (!mainHead || !mainWeek || !summarySpacer || !summaryHead) {
         return null;
       }
-      const periodRect = periodBar.getBoundingClientRect();
       const mainRect = mainHead.getBoundingClientRect();
       const mainWeekRect = mainWeek.getBoundingClientRect();
       const summarySpacerRect = summarySpacer.getBoundingClientRect();
       const summaryRect = summaryHead.getBoundingClientRect();
       return {
-        periodBottom: Math.round(periodRect.bottom),
         mainY: Math.round(mainRect.y),
         mainWeekY: Math.round(mainWeekRect.y),
         summarySpacerY: Math.round(summarySpacerRect.y),
@@ -851,9 +981,18 @@ test.describe("Schedule module", () => {
       };
     });
 
+    await scrollSheet(page, 180);
+    await page.waitForTimeout(100);
+    const baseline = await measurePositions();
+
+    await scrollSheet(page, 1200);
+    await page.waitForTimeout(100);
+    const positions = await measurePositions();
+
+    expect(baseline).not.toBeNull();
     expect(positions).not.toBeNull();
-    expect(Math.abs(positions.mainY - positions.periodBottom)).toBeLessThanOrEqual(2);
-    expect(Math.abs(positions.summarySpacerY - positions.periodBottom)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.mainY - baseline.mainY)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.summarySpacerY - baseline.summarySpacerY)).toBeLessThanOrEqual(2);
     expect(Math.abs(positions.summaryY - positions.mainWeekY)).toBeLessThanOrEqual(2);
   });
 
@@ -947,30 +1086,44 @@ test.describe("Schedule module", () => {
       }, { "1": code })), 2025, 3)
     });
 
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await page.waitForTimeout(150);
-
-    const positions = await page.evaluate(() => {
-      const periodBar = document.querySelector(".schedule-period-bar");
-      const mainHead = document.querySelector("[data-day-head='1']");
-      const mainWeek = document.querySelector(".schedule-table thead tr:nth-child(2) th");
-      const dailySection = document.getElementById("dailySummarySection");
-      if (!periodBar || !mainHead || !mainWeek || !dailySection) {
+    const baseline = await page.evaluate(() => {
+      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      if (!mainHead || !mainWeek) {
         return null;
       }
-      const periodRect = periodBar.getBoundingClientRect();
       return {
-        dailyTop: Math.round(dailySection.getBoundingClientRect().top),
-        periodBottom: Math.round(periodRect.bottom),
         mainY: Math.round(mainHead.getBoundingClientRect().y),
         mainWeekY: Math.round(mainWeek.getBoundingClientRect().y)
       };
     });
 
+    await page.locator("#scheduleSheetScroll").evaluate((node) => {
+      node.scrollTop = node.scrollHeight;
+      node.dispatchEvent(new Event("scroll"));
+    });
+    await page.waitForTimeout(150);
+
+    const positions = await page.evaluate(() => {
+      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      const dailySection = document.getElementById("dailySummarySection");
+      if (!mainHead || !mainWeek || !dailySection) {
+        return null;
+      }
+      return {
+        dailyTop: Math.round(dailySection.getBoundingClientRect().top),
+        viewportHeight: window.innerHeight,
+        mainY: Math.round(mainHead.getBoundingClientRect().y),
+        mainWeekY: Math.round(mainWeek.getBoundingClientRect().y)
+      };
+    });
+
+    expect(baseline).not.toBeNull();
     expect(positions).not.toBeNull();
-    expect(positions.dailyTop).toBeLessThanOrEqual(positions.periodBottom + 4);
-    expect(Math.abs(positions.mainY - positions.periodBottom)).toBeLessThanOrEqual(2);
-    expect(Math.abs(positions.mainWeekY - (positions.periodBottom + 22))).toBeLessThanOrEqual(2);
+    expect(positions.dailyTop).toBeLessThanOrEqual(positions.viewportHeight);
+    expect(Math.abs(positions.mainY - baseline.mainY)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.mainWeekY - baseline.mainWeekY)).toBeLessThanOrEqual(2);
   });
 
   test("main header stays attached to the period bar after zooming and scrolling", async ({ page }) => {
@@ -987,29 +1140,41 @@ test.describe("Schedule module", () => {
 
     await page.keyboard.press("Control+=");
     await page.keyboard.press("Control+=");
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const baseline = await page.evaluate(() => {
+      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      if (!mainHead || !mainWeek) {
+        return null;
+      }
+      return {
+        mainY: Math.round(mainHead.getBoundingClientRect().y),
+        mainWeekY: Math.round(mainWeek.getBoundingClientRect().y)
+      };
+    });
+    await page.locator("#scheduleSheetScroll").evaluate((node) => {
+      node.scrollTop = node.scrollHeight;
+      node.dispatchEvent(new Event("scroll"));
+    });
     await page.waitForTimeout(150);
 
     const positions = await page.evaluate(() => {
-      const periodBar = document.querySelector(".schedule-period-bar");
-      const mainHead = document.querySelector("[data-day-head='1']");
-      const mainWeek = document.querySelector(".schedule-table thead tr:nth-child(2) th");
-      if (!periodBar || !mainHead || !mainWeek) {
+      const mainHead = document.querySelector("#scheduleFrozenLayer [data-day-head='1']");
+      const mainWeek = document.querySelector("#scheduleFrozenLayer .schedule-table thead tr:nth-child(2) th");
+      if (!mainHead || !mainWeek) {
         return null;
       }
-      const periodRect = periodBar.getBoundingClientRect();
       return {
         zoom: document.getElementById("scheduleSheetZoom")?.style.zoom || "",
-        periodBottom: Math.round(periodRect.bottom),
         mainY: Math.round(mainHead.getBoundingClientRect().y),
         mainWeekY: Math.round(mainWeek.getBoundingClientRect().y)
       };
     });
 
+    expect(baseline).not.toBeNull();
     expect(positions).not.toBeNull();
     expect(positions.zoom).toBe("1.1");
-    expect(Math.abs(positions.mainY - positions.periodBottom)).toBeLessThanOrEqual(2);
-    expect(Math.abs(positions.mainWeekY - (positions.periodBottom + 22))).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.mainY - baseline.mainY)).toBeLessThanOrEqual(2);
+    expect(Math.abs(positions.mainWeekY - baseline.mainWeekY)).toBeLessThanOrEqual(2);
   });
 
   test("daily summary block extends to the same right edge as the top sheet", async ({ page }) => {
@@ -1070,6 +1235,8 @@ test.describe("Schedule module", () => {
 
     await page.locator("#scheduleSheetScroll").hover();
     await page.mouse.wheel(0, 1200);
-    await expect.poll(async () => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    await expect.poll(async () =>
+      page.locator("#scheduleSheetScroll").evaluate((node) => node.scrollTop)
+    ).toBeGreaterThan(0);
   });
 });

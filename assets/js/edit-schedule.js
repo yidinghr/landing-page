@@ -904,10 +904,6 @@
           event.preventDefault();
           return;
         }
-        if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-          event.preventDefault();
-          window.scrollBy(0, event.deltaY);
-        }
         return;
       }
       event.preventDefault();
@@ -1505,6 +1501,17 @@
       return;
     }
     event.preventDefault();
+    if (state.legendOpen) {
+      return;
+    }
+    if (!dom.sheetScroll) {
+      return;
+    }
+    if (Math.abs(event.deltaY) >= Math.abs(event.deltaX)) {
+      dom.sheetScroll.scrollTop += event.deltaY;
+      return;
+    }
+    dom.sheetScroll.scrollLeft += event.deltaX;
   }
 
   function applyLegendScrollLock() {

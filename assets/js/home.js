@@ -7,6 +7,36 @@
   const REDIRECT_TO_LOGIN = "../index.html";
   const CHI_CHI_URL = "http://46.225.160.243";
   const ROLE_OWNER = "owner";
+  const SHIFT_CODE_DEFINITIONS = Object.freeze([
+    { code: "A", checkIn: "7", checkOut: "15", hoursPay: 8 },
+    { code: "A1", checkIn: "8", checkOut: "16", hoursPay: 8 },
+    { code: "A2", checkIn: "9", checkOut: "17", hoursPay: 8 },
+    { code: "A3", checkIn: "10", checkOut: "18", hoursPay: 8 },
+    { code: "A4", checkIn: "11", checkOut: "19", hoursPay: 8 },
+    { code: "A5", checkIn: "12", checkOut: "20", hoursPay: 8 },
+    { code: "A6", checkIn: "13", checkOut: "21", hoursPay: 8 },
+    { code: "A7", checkIn: "14", checkOut: "22", hoursPay: 8 },
+    { code: "B", checkIn: "15", checkOut: "23", hoursPay: 8 },
+    { code: "B1", checkIn: "16", checkOut: "0", hoursPay: 8 },
+    { code: "B2", checkIn: "17", checkOut: "1", hoursPay: 8 },
+    { code: "B3", checkIn: "18", checkOut: "2", hoursPay: 8 },
+    { code: "B4", checkIn: "19", checkOut: "3", hoursPay: 8 },
+    { code: "B5", checkIn: "20", checkOut: "4", hoursPay: 8 },
+    { code: "B6", checkIn: "21", checkOut: "5", hoursPay: 8 },
+    { code: "B7", checkIn: "22", checkOut: "6", hoursPay: 8 },
+    { code: "C", checkIn: "23", checkOut: "7", hoursPay: 8 },
+    { code: "C1", checkIn: "0", checkOut: "8", hoursPay: 8 },
+    { code: "C2", checkIn: "1", checkOut: "9", hoursPay: 8 },
+    { code: "C3", checkIn: "2", checkOut: "10", hoursPay: 8 },
+    { code: "C4", checkIn: "3", checkOut: "11", hoursPay: 8 },
+    { code: "C5", checkIn: "4", checkOut: "12", hoursPay: 8 },
+    { code: "C6", checkIn: "5", checkOut: "13", hoursPay: 8 },
+    { code: "C7", checkIn: "6", checkOut: "14", hoursPay: 8 }
+  ]);
+  const SHIFT_CODE_MAP = SHIFT_CODE_DEFINITIONS.reduce(function (result, item) {
+    result[item.code] = item;
+    return result;
+  }, {});
 
   const homeMenu = document.getElementById("homeMenu");
   const homeTopActions = document.getElementById("homeTopActions");
@@ -93,6 +123,15 @@
       scheduleRows: "可見列數",
       scheduleAssignments: "已排班格",
       scheduleVisibleDepartments: "可見部門",
+      scheduleLiveTitle: "當前在崗",
+      scheduleOnShiftNow: "當前上班人數",
+      scheduleActiveDepartments: "當前啟用部門",
+      scheduleCurrentTime: "現在時間",
+      scheduleCurrentDate: "對應日期",
+      scheduleLiveHint: "依照目前時間比對 A / B / C 系列班碼，跨夜班也會接續前一天的班別。",
+      scheduleLiveEmpty: "現在沒有任何員工處於班內。",
+      scheduleDepartmentActive: "在崗部門",
+      scheduleAssignedDays: "已排 {count} 天",
       scheduleOpen: "打開完整班表模組",
       attendanceTitle: "出勤區",
       attendanceBody: "保留給之後接打卡、異常與考勤摘要。",
@@ -144,86 +183,95 @@
     vi: {
       detailEyebrow: "LIVE PANEL",
       chatEyebrow: "MID PANEL",
-      help: "Huong dan",
-      logout: "Dang xuat",
-      roleAdmin: "Tai khoan admin",
-      roleViewer: "Tai khoan thuong",
-      roleOwner: "Owner / chu Chi Chi",
-      readOnly: "Chi xem",
-      editable: "Chinh sua",
-      allDepartments: "Tat ca bo phan",
-      selectedDepartments: "Bo phan chi dinh",
-      menuEmployees: "Nhan vien",
-      menuSchedule: "Ca lam",
-      menuAttendance: "Cham cong",
-      menuInfo: "Thong tin YiDing",
-      menuAccounts: "Quan ly tai khoan",
+      help: "Hướng dẫn",
+      logout: "Đăng xuất",
+      roleAdmin: "Tài khoản admin",
+      roleViewer: "Tài khoản thường",
+      roleOwner: "Owner / chủ Chi Chi",
+      readOnly: "Chỉ xem",
+      editable: "Chỉnh sửa",
+      allDepartments: "Tất cả bộ phận",
+      selectedDepartments: "Bộ phận chỉ định",
+      menuEmployees: "Nhân viên",
+      menuSchedule: "Ca làm",
+      menuAttendance: "Chấm công",
+      menuInfo: "Thông tin YiDing",
+      menuAccounts: "Quản lý tài khoản",
       menuChiChi: "Chi Chi",
-      employeesTitle: "Tong quan nhan vien",
-      employeesHintAdmin: "Du lieu nhan vien day du van nam o module cu; khu nay chi hien tong quan va loi tat.",
-      employeesHintViewer: "Tai khoan nay chi thay cac bo phan va nhan vien duoc cap quyen.",
-      employeesDepartment: "Bo phan",
-      employeesEmpty: "Khong co nhan vien nao trong pham vi quyen hien tai.",
-      employeesStatActive: "Nhan vien dang lam",
-      employeesStatRetired: "Nhan vien da nghi",
-      employeesStatDepartments: "Bo phan co the xem",
-      employeesStatSelected: "Bo phan dang chon",
-      employeesOpen: "Mo module nhan vien day du",
-      scheduleTitle: "Tong quan ca lam",
-      scheduleHintAdmin: "Logic xep ca day du van o module cu; khu nay chi hien tom tat va loi vao.",
-      scheduleHintViewer: "Tai khoan nay chi xem lich theo quyen, khong duoc sua ngoai pham vi quyen.",
-      scheduleMonth: "Thang",
-      scheduleEmpty: "Hien tai khong co du lieu ca lam de hien thi.",
-      scheduleRows: "So dong co the xem",
-      scheduleAssignments: "O da xep ca",
-      scheduleVisibleDepartments: "Bo phan co the xem",
-      scheduleOpen: "Mo module ca lam day du",
-      attendanceTitle: "Khu cham cong",
-      attendanceBody: "De danh cho phan ket noi cham cong, bat thuong va tong hop sau nay.",
-      infoTitle: "Thong tin YiDing",
-      infoBody: "De danh cho thong bao, SOP va cong vao tri thuc noi bo.",
-      accountsTitle: "Quan ly tai khoan",
-      accountsHint: "YiDing Admin co the tao, sua tai khoan va quyen truy cap. Tao xong dang nhap duoc ngay.",
-      accountsAdd: "Them tai khoan",
-      accountsHide: "An form",
-      accountEdit: "Sua tai khoan",
-      accountSave: "Luu thay doi",
-      accountCreate: "Tao tai khoan",
-      accountCancel: "Huy",
-      accountUsername: "Tai khoan",
-      accountPassword: "Mat khau",
-      accountWelcome: "Loi chao dang nhap",
-      accountPhone: "So dien thoai lien ket",
-      accountEmployeesPermission: "Quyen module nhan vien",
-      accountSchedulePermission: "Quyen module ca lam",
-      accountDepartments: "Bo phan duoc cap quyen",
-      accountSuccess: "Da tao tai khoan, hien co the dang nhap ngay.",
-      accountUpdateSuccess: "Da cap nhat tai khoan.",
-      accountDuplicate: "Tai khoan nay da ton tai, hay doi ten khac.",
-      accountMissing: "Van con truong bat buoc chua dien.",
-      accountCurrent: "Tai khoan dang dang nhap",
-      accountNoDepartments: "Hay chon it nhat 1 bo phan, hoac doi ve tat ca bo phan.",
-      accountViewer: "Tai khoan thuong",
-      accountModuleView: "Chi xem",
-      accountModuleEdit: "Duoc sua",
-      currentBinding: "Dang lien ket",
-      phoneEmpty: "Chua lien ket so dien thoai",
-      chiChiTitle: "Trung tam Chi Chi",
+      employeesTitle: "Tổng quan nhân viên",
+      employeesHintAdmin: "Dữ liệu nhân viên đầy đủ vẫn nằm ở module cũ; khu này chỉ hiện tổng quan và lối tắt.",
+      employeesHintViewer: "Tài khoản này chỉ thấy các bộ phận và nhân viên được cấp quyền.",
+      employeesDepartment: "Bộ phận",
+      employeesEmpty: "Không có nhân viên nào trong phạm vi quyền hiện tại.",
+      employeesStatActive: "Nhân viên đang làm",
+      employeesStatRetired: "Nhân viên đã nghỉ",
+      employeesStatDepartments: "Bộ phận có thể xem",
+      employeesStatSelected: "Bộ phận đang chọn",
+      employeesOpen: "Mở module nhân viên đầy đủ",
+      scheduleTitle: "Tổng quan ca làm",
+      scheduleHintAdmin: "Logic xếp ca đầy đủ vẫn ở module cũ; khu này chỉ hiện tóm tắt và lối vào.",
+      scheduleHintViewer: "Tài khoản này chỉ xem lịch theo quyền, không được sửa ngoài phạm vi quyền.",
+      scheduleMonth: "Tháng",
+      scheduleEmpty: "Hiện tại không có dữ liệu ca làm để hiển thị.",
+      scheduleRows: "Số dòng có thể xem",
+      scheduleAssignments: "Ô đã xếp ca",
+      scheduleVisibleDepartments: "Bộ phận có thể xem",
+      scheduleLiveTitle: "Nhân sự đang trên ca",
+      scheduleOnShiftNow: "Đang trên ca",
+      scheduleActiveDepartments: "Bộ phận đang hoạt động",
+      scheduleCurrentTime: "Thời điểm hiện tại",
+      scheduleCurrentDate: "Ngày đối chiếu",
+      scheduleLiveHint: "Tự đối chiếu theo giờ hiện tại với các mã ca A / B / C và cả các ca qua đêm.",
+      scheduleLiveEmpty: "Hiện tại không có nhân viên nào đang ở trên ca.",
+      scheduleDepartmentActive: "Bộ phận đang trên ca",
+      scheduleAssignedDays: "Đã xếp {count} ngày",
+      scheduleOpen: "Mở module ca làm đầy đủ",
+      attendanceTitle: "Khu chấm công",
+      attendanceBody: "Để dành cho phần kết nối chấm công, bất thường và tổng hợp sau này.",
+      infoTitle: "Thông tin YiDing",
+      infoBody: "Để dành cho thông báo, SOP và cổng vào tri thức nội bộ.",
+      accountsTitle: "Quản lý tài khoản",
+      accountsHint: "YiDing Admin có thể tạo, sửa tài khoản và quyền truy cập. Tạo xong đăng nhập được ngay.",
+      accountsAdd: "Thêm tài khoản",
+      accountsHide: "Ẩn form",
+      accountEdit: "Sửa tài khoản",
+      accountSave: "Lưu thay đổi",
+      accountCreate: "Tạo tài khoản",
+      accountCancel: "Hủy",
+      accountUsername: "Tài khoản",
+      accountPassword: "Mật khẩu",
+      accountWelcome: "Lời chào đăng nhập",
+      accountPhone: "Số điện thoại liên kết",
+      accountEmployeesPermission: "Quyền module nhân viên",
+      accountSchedulePermission: "Quyền module ca làm",
+      accountDepartments: "Bộ phận được cấp quyền",
+      accountSuccess: "Đã tạo tài khoản, hiện có thể đăng nhập ngay.",
+      accountUpdateSuccess: "Đã cập nhật tài khoản.",
+      accountDuplicate: "Tài khoản này đã tồn tại, hãy đổi tên khác.",
+      accountMissing: "Vẫn còn trường bắt buộc chưa điền.",
+      accountCurrent: "Tài khoản đang đăng nhập",
+      accountNoDepartments: "Hãy chọn ít nhất 1 bộ phận, hoặc đổi về tất cả bộ phận.",
+      accountViewer: "Tài khoản thường",
+      accountModuleView: "Chỉ xem",
+      accountModuleEdit: "Được sửa",
+      currentBinding: "Đang liên kết",
+      phoneEmpty: "Chưa liên kết số điện thoại",
+      chiChiTitle: "Trung tâm Chi Chi",
       chiChiBadge: "External",
-      chiChiPrimary: "Loi vao doi thoai Chi Chi",
-      chiChiBody: "Ban production hien chi mo an toan cua so Chi Chi ben ngoai tu day; muon nhung truc tiep vao trang nay thi van can HTTPS hoac reverse proxy.",
-      chiChiOwner: "YiDing Admin se duoc xem nhu owner.",
-      chiChiOpen: "Mo Chi Chi trong tab moi",
-      chiChiWarning: "VPS Chi Chi hien chi co HTTP, trinh duyet se chan viec nhung truc tiep tu trang HTTPS.",
-      openModule: "Mo module day du",
-      permissionScope: "Pham vi quyen",
-      permissionAccess: "Muc thao tac",
-      permissionDepartments: "Bo phan duoc cap quyen",
-      summaryViewer: "Chi xem",
-      summaryEditor: "Duoc sua",
-      summaryAll: "Tat ca bo phan",
-      summarySelected: "Bo phan chi dinh",
-      noDepartmentPermission: "Chua duoc cap quyen bo phan nao"
+      chiChiPrimary: "Lối vào đối thoại Chi Chi",
+      chiChiBody: "Bản production hiện chỉ mở an toàn cửa sổ Chi Chi bên ngoài từ đây; muốn nhúng trực tiếp vào trang này thì vẫn cần HTTPS hoặc reverse proxy.",
+      chiChiOwner: "YiDing Admin sẽ được xem như owner.",
+      chiChiOpen: "Mở Chi Chi trong tab mới",
+      chiChiWarning: "VPS Chi Chi hiện chỉ có HTTP, trình duyệt sẽ chặn việc nhúng trực tiếp từ trang HTTPS.",
+      openModule: "Mở module đầy đủ",
+      permissionScope: "Phạm vi quyền",
+      permissionAccess: "Mức thao tác",
+      permissionDepartments: "Bộ phận được cấp quyền",
+      summaryViewer: "Chỉ xem",
+      summaryEditor: "Được sửa",
+      summaryAll: "Tất cả bộ phận",
+      summarySelected: "Bộ phận chỉ định",
+      noDepartmentPermission: "Chưa được cấp quyền bộ phận nào"
     },
     en: {
       detailEyebrow: "LIVE PANEL",
@@ -261,6 +309,15 @@
       scheduleRows: "Visible Rows",
       scheduleAssignments: "Assigned Cells",
       scheduleVisibleDepartments: "Visible Departments",
+      scheduleLiveTitle: "Currently On Shift",
+      scheduleOnShiftNow: "On Shift Now",
+      scheduleActiveDepartments: "Active Departments",
+      scheduleCurrentTime: "Current Time",
+      scheduleCurrentDate: "Matched Date",
+      scheduleLiveHint: "Resolved against the current time with A / B / C shift codes, including overnight carryovers.",
+      scheduleLiveEmpty: "No employees are currently on shift.",
+      scheduleDepartmentActive: "Departments On Shift",
+      scheduleAssignedDays: "Assigned {count} days",
       scheduleOpen: "Open Full Schedule Module",
       attendanceTitle: "Attendance Zone",
       attendanceBody: "Reserved for future clock-in, exception, and attendance summary integration.",
@@ -627,26 +684,43 @@
     }
 
     if (uiState.activeTab === "schedule") {
-      const scheduleState = getScheduleState();
-      const monthKey = getResolvedScheduleMonthKey(scheduleState);
-      const monthState = getVisibleMonthState(scheduleState, monthKey, currentAccount);
-      const rows = monthState.rows || [];
-      const assignmentCount = rows.reduce(function (sum, row) {
-        return sum + Object.keys(row && row.shifts ? row.shifts : {}).length;
-      }, 0);
+      const liveSchedule = getCurrentLiveSchedule(currentAccount);
 
-      chatTitle.textContent = t("scheduleTitle");
-      chatBadge.textContent = monthKey;
+      chatTitle.textContent = t("scheduleLiveTitle");
+      chatBadge.textContent = liveSchedule.timeLabel;
       chatBody.innerHTML = [
         '<div class="dashboard-chat-stack">',
-        '<section class="dashboard-chat-surface">',
-        '<h3 class="dashboard-chat-surface__title">' + escapeHtml(t("scheduleTitle")) + "</h3>",
+        '<section class="dashboard-chat-surface dashboard-chat-surface--live">',
+        '<h3 class="dashboard-chat-surface__title">' + escapeHtml(t("scheduleLiveTitle")) + "</h3>",
+        '<p class="dashboard-chat-surface__hint">' + escapeHtml(t("scheduleLiveHint")) + "</p>",
         '<div class="dashboard-chat-chip-grid">',
-        renderChatChip(t("scheduleRows"), String(rows.length)),
-        renderChatChip(t("scheduleAssignments"), String(assignmentCount)),
-        renderChatChip(t("scheduleMonth"), monthKey),
+        renderChatChip(t("scheduleOnShiftNow"), String(liveSchedule.staff.length)),
+        renderChatChip(t("scheduleActiveDepartments"), String(liveSchedule.departments.length)),
+        renderChatChip(t("scheduleCurrentDate"), liveSchedule.dateLabel),
+        renderChatChip(t("scheduleCurrentTime"), liveSchedule.timeLabel),
         "</div>",
         "</section>",
+        liveSchedule.staff.length
+          ? '<section class="dashboard-chat-surface"><h4 class="dashboard-chat-surface__subhead">' + escapeHtml(t("scheduleDepartmentActive")) + '</h4><div class="dashboard-live-groups">' + liveSchedule.departments.map(function (department) {
+              return [
+                '<article class="dashboard-live-group">',
+                '<div class="dashboard-live-group__head">',
+                '<strong class="dashboard-live-group__title">' + escapeHtml(department.name) + "</strong>",
+                '<span class="dashboard-role-badge">' + escapeHtml(String(department.members.length)) + "</span>",
+                "</div>",
+                '<div class="dashboard-live-group__members">' + department.members.map(function (member) {
+                  const secondary = member.position ? member.position + " · " + member.code : member.code;
+                  return [
+                    '<div class="dashboard-live-member">',
+                    '<strong>' + escapeHtml(member.name) + "</strong>",
+                    '<span>' + escapeHtml(secondary) + "</span>",
+                    "</div>"
+                  ].join("");
+                }).join("") + "</div>",
+                "</article>"
+              ].join("");
+            }).join("") + "</div></section>"
+          : '<section class="dashboard-chat-surface"><div class="dashboard-empty">' + escapeHtml(t("scheduleLiveEmpty")) + "</div></section>",
         "</div>"
       ].join("");
       return;
@@ -819,7 +893,7 @@
               '<article class="dashboard-schedule-card">',
               '<strong>' + escapeHtml(snapshot.engName || snapshot.vieName || snapshot.ydiId || row.id) + "</strong>",
               '<span>' + escapeHtml((snapshot.department || "") + " · " + (snapshot.position || "")) + "</span>",
-              '<span>' + escapeHtml("Assigned days: " + Object.keys(shifts).length) + "</span>",
+              '<span>' + escapeHtml(t("scheduleAssignedDays", { count: Object.keys(shifts).length })) + "</span>",
               "</article>"
             ].join("");
           }).join("") + "</div>"
@@ -1176,6 +1250,126 @@
     return Object.keys(names).length;
   }
 
+  function normalizeShiftCode(value) {
+    return normalizeString(value).toUpperCase();
+  }
+
+  function parseShiftHour(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function getShiftWindow(code) {
+    const definition = SHIFT_CODE_MAP[normalizeShiftCode(code)];
+    if (!definition || Number(definition.hoursPay || 0) <= 0) {
+      return null;
+    }
+
+    const startHour = parseShiftHour(definition.checkIn);
+    const endHour = parseShiftHour(definition.checkOut);
+
+    if (startHour === null || endHour === null) {
+      return null;
+    }
+
+    return {
+      code: definition.code,
+      startMinutes: startHour * 60,
+      endMinutes: endHour * 60,
+      overnight: endHour <= startHour
+    };
+  }
+
+  function formatClock(date) {
+    return String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
+  }
+
+  function formatDateLabel(date) {
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0")
+    ].join("-");
+  }
+
+  function collectLiveMembers(liveMap, monthState, dayNumber, currentMinutes, sourceType) {
+    (monthState.rows || []).forEach(function (row) {
+      const shifts = row && row.shifts ? row.shifts : {};
+      const code = normalizeShiftCode(shifts[String(dayNumber)]);
+      const window = getShiftWindow(code);
+      const snapshot = row && row.employeeSnapshot ? row.employeeSnapshot : {};
+
+      if (!window) {
+        return;
+      }
+
+      const isActive = sourceType === "carry"
+        ? window.overnight && currentMinutes < window.endMinutes
+        : (
+            window.overnight
+              ? currentMinutes >= window.startMinutes
+              : currentMinutes >= window.startMinutes && currentMinutes < window.endMinutes
+          );
+
+      if (!isActive) {
+        return;
+      }
+
+      const memberKey = String(row.employeeId || snapshot.employeeId || snapshot.ydiId || row.id || "");
+      liveMap[memberKey] = {
+        id: memberKey,
+        code: window.code,
+        department: normalizeString(snapshot.department),
+        name: normalizeString(snapshot.engName) || normalizeString(snapshot.vieName) || normalizeString(snapshot.ydiId) || memberKey,
+        secondaryName: normalizeString(snapshot.vieName),
+        position: normalizeString(snapshot.position),
+        sourceType: sourceType
+      };
+    });
+  }
+
+  function getCurrentLiveSchedule(account) {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentMonthKey = buildMonthKey(now.getFullYear(), now.getMonth() + 1);
+    const previousDate = new Date(now.getTime());
+    previousDate.setDate(now.getDate() - 1);
+    const previousMonthKey = buildMonthKey(previousDate.getFullYear(), previousDate.getMonth() + 1);
+    const liveMap = {};
+
+    collectLiveMembers(liveMap, getVisibleMonthState(getScheduleState(), previousMonthKey, account), previousDate.getDate(), currentMinutes, "carry");
+    collectLiveMembers(liveMap, getVisibleMonthState(getScheduleState(), currentMonthKey, account), now.getDate(), currentMinutes, "current");
+
+    const staff = Object.keys(liveMap).map(function (key) {
+      return liveMap[key];
+    }).sort(function (left, right) {
+      const departmentCompare = left.department.localeCompare(right.department);
+      return departmentCompare || left.name.localeCompare(right.name);
+    });
+
+    const groupedDepartments = {};
+    staff.forEach(function (member) {
+      const departmentName = member.department || t("noDepartmentPermission");
+      if (!groupedDepartments[departmentName]) {
+        groupedDepartments[departmentName] = [];
+      }
+      groupedDepartments[departmentName].push(member);
+    });
+
+    return {
+      now: now,
+      timeLabel: formatClock(now),
+      dateLabel: formatDateLabel(now),
+      staff: staff,
+      departments: Object.keys(groupedDepartments).sort().map(function (name) {
+        return {
+          name: name,
+          members: groupedDepartments[name]
+        };
+      })
+    };
+  }
+
   function getResolvedScheduleMonthKey(scheduleState) {
     const monthKeys = Object.keys(scheduleState.months || {}).sort();
     return monthKeys[0] || buildMonthKey(scheduleState.selectedYear, scheduleState.selectedMonth);
@@ -1221,10 +1415,16 @@
     return String(year) + "-" + String(month).padStart(2, "0");
   }
 
-  function t(key) {
+  function t(key, params) {
     const locale = i18n.getLocale();
     const bucket = customText[locale] || customText["zh-Hant"];
-    return bucket[key] || customText["zh-Hant"][key] || key;
+    const template = bucket[key] || customText["zh-Hant"][key] || key;
+    if (!params) {
+      return template;
+    }
+    return String(template).replace(/\{([^}]+)\}/g, function (_, token) {
+      return params[token] !== undefined ? String(params[token]) : "";
+    });
   }
 
   function normalizeString(value) {

@@ -1,5 +1,6 @@
 (function () {
-  const STORAGE_KEY = "yiding_ui_locale_v1";
+  const STORAGE_KEY = "yiding_ui_locale_v2";
+  const PREFERENCE_SOURCE_KEY = "yiding_ui_locale_source_v3";
   const DEFAULT_LOCALE = "zh-Hant";
   const SUPPORTED_LOCALES = ["zh-Hant", "vi", "en"];
   const subscribers = new Set();
@@ -717,6 +718,9 @@
 
   function loadInitialLocale() {
     try {
+      if (window.localStorage.getItem(PREFERENCE_SOURCE_KEY) !== "manual") {
+        return DEFAULT_LOCALE;
+      }
       const stored = window.localStorage.getItem(STORAGE_KEY);
       return normalizeLocale(stored);
     } catch (error) {
@@ -762,10 +766,18 @@
     return currentLocale;
   }
 
-  function setLocale(locale) {
+  function setLocale(locale, options) {
     const nextLocale = normalizeLocale(locale);
+    const persistPreference = !(options && options.persist === false);
 
     if (nextLocale === currentLocale) {
+      if (persistPreference) {
+        try {
+          window.localStorage.setItem(PREFERENCE_SOURCE_KEY, "manual");
+        } catch (error) {
+          // ignore storage failure
+        }
+      }
       return currentLocale;
     }
 
@@ -773,6 +785,9 @@
 
     try {
       window.localStorage.setItem(STORAGE_KEY, currentLocale);
+      if (persistPreference) {
+        window.localStorage.setItem(PREFERENCE_SOURCE_KEY, "manual");
+      }
     } catch (error) {
       // ignore storage failure
     }
@@ -808,6 +823,7 @@
 
   window.YiDingI18n = {
     STORAGE_KEY: STORAGE_KEY,
+    PREFERENCE_SOURCE_KEY: PREFERENCE_SOURCE_KEY,
     DEFAULT_LOCALE: DEFAULT_LOCALE,
     SUPPORTED_LOCALES: SUPPORTED_LOCALES.slice(),
     getLocale: getLocale,
