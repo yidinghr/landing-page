@@ -159,7 +159,8 @@
     frozenSyncFrame: 0,
     codeDropdownOpen: false,
     codeDropdownIndex: -1,
-    lockedScrollY: null
+    lockedScrollY: null,
+    stickyMetricsObserver: null
   };
   const state = loadState();
   let legendRemarks = loadLegendRemarks();
@@ -167,6 +168,7 @@
   buildShiftCodeDatalist();
   populatePeriodOptions();
   bindEvents();
+  observeStickyMetrics();
   ensureCurrentMonthState();
   renderStaticText();
   renderLocaleControl();
@@ -948,6 +950,48 @@
     window.addEventListener("resize", updateSheetOverflowState, { passive: true });
   }
 
+  function observeStickyMetrics() {
+    if (typeof ResizeObserver === "function" && !uiState.stickyMetricsObserver) {
+      uiState.stickyMetricsObserver = new ResizeObserver(function () {
+        updateStickyMetrics();
+        updateSheetOverflowState();
+      });
+      [
+        dom.header,
+        dom.periodBar,
+        dom.sheetFrame,
+        dom.tableHead,
+        dom.summaryHead
+      ].forEach(function (target) {
+        if (target) {
+          uiState.stickyMetricsObserver.observe(target);
+        }
+      });
+    }
+
+    if (document.fonts && typeof document.fonts.ready?.then === "function") {
+      document.fonts.ready.then(function () {
+        window.requestAnimationFrame(function () {
+          updateStickyMetrics();
+          updateSheetOverflowState();
+        });
+      }).catch(function () {
+        updateStickyMetrics();
+      });
+    }
+
+    if (document.fonts && typeof document.fonts.addEventListener === "function") {
+      const refreshStickyMetrics = function () {
+        window.requestAnimationFrame(function () {
+          updateStickyMetrics();
+          updateSheetOverflowState();
+        });
+      };
+      document.fonts.addEventListener("loadingdone", refreshStickyMetrics);
+      document.fonts.addEventListener("loadingerror", refreshStickyMetrics);
+    }
+  }
+
   function handlePeriodChange(year, month) {
     const previousKey = getCurrentMonthKey();
     state.selectedYear = year;
@@ -1543,14 +1587,41 @@
     }
   }
 
+  function measureHeaderRowHeights(head) {
+    if (!head) {
+      return [];
+    }
+    return Array.from(head.querySelectorAll("tr"))
+      .map(function (row) {
+        const nextHeight = Math.ceil(row.getBoundingClientRect().height || 0);
+        return Math.min(48, Math.max(0, nextHeight));
+      })
+      .filter(function (value) {
+        return value > 0;
+      });
+  }
+
   function updateStickyMetrics() {
       const headerHeight = dom.header ? Math.round(dom.header.getBoundingClientRect().height) : 56;
       const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
-      const firstHeadRow = dom.tableHead.querySelector("tr");
-      const rowHeight = firstHeadRow ? Math.round(firstHeadRow.getBoundingClientRect().height) : 22;
-      const tableHeadHeight = dom.tableHead ? Math.round(dom.tableHead.getBoundingClientRect().height) : rowHeight * 2;
-      const summaryHeadHeight = dom.summaryHead ? Math.round(dom.summaryHead.getBoundingClientRect().height) : rowHeight * 2;
-      const frozenBandHeight = Math.max(rowHeight * 2, tableHeadHeight, summaryHeadHeight);
+      const tableRowHeights = measureHeaderRowHeights(dom.tableHead);
+      const summaryRowHeights = measureHeaderRowHeights(dom.summaryHead);
+      const measuredRowHeight = Math.max(0, ...tableRowHeights, ...summaryRowHeights);
+      const rowHeight = Math.max(24, measuredRowHeight);
+      const rawTableHeadHeight = dom.tableHead ? Math.ceil(dom.tableHead.getBoundingClientRect().height || 0) : 0;
+      const rawSummaryHeadHeight = dom.summaryHead ? Math.ceil(dom.summaryHead.getBoundingClientRect().height || 0) : 0;
+      const tableHeadHeight = Math.max(
+        rowHeight * Math.max(2, tableRowHeights.length || 0),
+        Math.min(120, Math.max(0, rawTableHeadHeight)),
+        tableRowHeights.reduce(function (sum, value) { return sum + value; }, 0)
+      );
+      const summaryHeadHeight = Math.max(
+        rowHeight * Math.max(2, summaryRowHeights.length || 0),
+        Math.min(120, Math.max(0, rawSummaryHeadHeight)),
+        summaryRowHeights.reduce(function (sum, value) { return sum + value; }, 0)
+      );
+      const measuredBandHeight = Math.max(tableHeadHeight, summaryHeadHeight);
+      const frozenBandHeight = Math.max(rowHeight * 2, measuredBandHeight);
       const tableRect = dom.table ? dom.table.getBoundingClientRect() : null;
       const frameRect = dom.sheetFrame ? dom.sheetFrame.getBoundingClientRect() : null;
       const periodGridRect = dom.periodGrid ? dom.periodGrid.getBoundingClientRect() : null;

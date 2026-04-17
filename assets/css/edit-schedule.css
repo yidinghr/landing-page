@@ -1918,9 +1918,9 @@ body.edit-page {
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(7, 6, 16, 0.82) 0%, rgba(7, 6, 16, 0.5) 100%);
-  backdrop-filter: blur(10px) brightness(0.62) saturate(0.94);
-  -webkit-backdrop-filter: blur(10px) brightness(0.62) saturate(0.94);
+    linear-gradient(180deg, rgba(7, 6, 16, 0.24) 0%, rgba(7, 6, 16, 0.08) 100%);
+  backdrop-filter: blur(16px) brightness(0.86) saturate(0.9);
+  -webkit-backdrop-filter: blur(16px) brightness(0.86) saturate(0.9);
   border-top: 1px solid rgba(255, 255, 255, 0.04);
   border-bottom: 1px solid rgba(236, 194, 102, 0.16);
 }
@@ -2002,9 +2002,20 @@ body.edit-page {
 }
 
 .schedule-table__meta-head,
+.schedule-table__meta-subhead,
 .schedule-table__day-head,
-.schedule-summary-table thead .schedule-summary-table__labels th {
+.schedule-table__weekday-head {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.schedule-table__meta-head,
+.schedule-table__day-head {
   line-height: calc(var(--schedule-table-head-row) - 2px) !important;
+}
+
+.schedule-summary-table thead .schedule-summary-table__labels th {
+  line-height: calc(var(--schedule-table-head-row) - 4px) !important;
 }
 
 .schedule-table__meta-head,
@@ -2089,11 +2100,32 @@ body.edit-page {
 .schedule-daily-spacer-table__blank,
 .schedule-daily-table__blank.schedule-daily-table__sticky {
   background: transparent !important;
+  border: 0 !important;
   border-color: transparent !important;
   box-shadow: none !important;
+  color: transparent !important;
 }
 
 .schedule-daily-stage__summary,
 .schedule-sheet-summary {
   margin-left: 0 !important;
+}
+
+.schedule-daily-stage__main {
+  position: relative;
+}
+
+.schedule-daily-stage__main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: calc(var(--sticky-left-position) + 1px);
+  z-index: 9;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(7, 6, 16, 0.16) 0%, rgba(7, 6, 16, 0.06) 100%);
+  backdrop-filter: blur(10px) brightness(0.88) saturate(0.92);
+  -webkit-backdrop-filter: blur(10px) brightness(0.88) saturate(0.92);
 }
