@@ -1860,7 +1860,7 @@
     uiState.feedbackTimer = window.setTimeout(function () {
       dom.feedback.textContent = "";
       dom.feedback.dataset.tone = "";
-    }, 1800);
+    }, 4200);
   }
 
   function escapeHtml(value) {

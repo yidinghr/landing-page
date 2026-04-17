@@ -692,3 +692,46 @@ body {
     flex-direction: column;
   }
 }
+
+body.dashboard-page {
+  --dashboard-surface: rgba(13, 9, 28, 0.34);
+  --dashboard-surface-strong: rgba(17, 12, 34, 0.42);
+  --dashboard-surface-soft: rgba(255, 255, 255, 0.026);
+  --dashboard-border: rgba(242, 214, 154, 0.12);
+  --dashboard-border-strong: rgba(242, 214, 154, 0.24);
+  --dashboard-shadow: 0 20px 44px rgba(4, 2, 10, 0.2);
+}
+
+.dashboard-sidebar,
+.dashboard-chat-card,
+.dashboard-detail-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.008)),
+    rgba(9, 7, 20, 0.3);
+  backdrop-filter: blur(14px) saturate(1.02);
+}
+
+.dashboard-top-action,
+.dashboard-logout-button,
+.dashboard-nav__item,
+.dashboard-panel,
+.dashboard-list__item,
+.dashboard-account-card,
+.dashboard-schedule-card,
+.dashboard-schedule-stat,
+.dashboard-card__badge,
+.dashboard-role-badge,
+.dashboard-select,
+.dashboard-input,
+.dashboard-button,
+.dashboard-empty {
+  background: rgba(9, 7, 20, 0.24);
+  backdrop-filter: blur(12px) saturate(1.01);
+}
+
+.dashboard-chat-placeholder {
+  background:
+    radial-gradient(circle at 24% 18%, rgba(191, 122, 255, 0.12), transparent 26%),
+    radial-gradient(circle at 76% 76%, rgba(242, 214, 154, 0.08), transparent 24%),
+    rgba(8, 6, 18, 0.2);
+}

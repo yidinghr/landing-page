@@ -27,6 +27,20 @@ import "./runtime-seeds.js";
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
   }
 
+  function isAirtableAvatarUrl(value) {
+    return /airtableusercontent\.com/i.test(normalizeString(value));
+  }
+
+  function isSeedAvatarPath(value) {
+    const normalizedValue = normalizeString(value);
+    return normalizedValue.indexOf("/image/employees/") === 0 || normalizedValue.indexOf("../image/employees/") === 0;
+  }
+
+  function isUserUploadedAvatar(value) {
+    const normalizedValue = normalizeString(value);
+    return normalizedValue.indexOf("data:") === 0 || normalizedValue.indexOf("blob:") === 0;
+  }
+
   function hasMeaningfulValue(value) {
     if (value === undefined || value === null) {
       return false;
@@ -96,9 +110,12 @@ import "./runtime-seeds.js";
     const savedAvatar = normalizeString(savedEmployee.avatarSrc);
     const seedAvatar = normalizeString(seedEmployee && seedEmployee.avatarSrc);
 
-    if (savedEmployee.avatarChanged && savedAvatar) {
+    if (savedEmployee.avatarChanged && isUserUploadedAvatar(savedAvatar)) {
       mergedEmployee.avatarSrc = savedAvatar;
       mergedEmployee.avatarChanged = true;
+    } else if (seedAvatar && (!savedAvatar || savedAvatar === defaultImageSrc || isAirtableAvatarUrl(savedAvatar) || isSeedAvatarPath(savedAvatar))) {
+      mergedEmployee.avatarSrc = seedAvatar;
+      mergedEmployee.avatarChanged = Boolean(seedEmployee && seedEmployee.avatarChanged);
     } else if (savedAvatar && savedAvatar !== defaultImageSrc) {
       mergedEmployee.avatarSrc = savedAvatar;
       mergedEmployee.avatarChanged = Boolean(savedEmployee.avatarChanged);

@@ -1264,11 +1264,7 @@
 
 .edit-page {
   position: relative;
-  background:
-    radial-gradient(circle at 14% 18%, rgba(122, 80, 208, 0.18), transparent 24%),
-    radial-gradient(circle at 78% 24%, rgba(198, 98, 255, 0.16), transparent 22%),
-    radial-gradient(circle at 68% 76%, rgba(110, 68, 184, 0.12), transparent 28%),
-    linear-gradient(180deg, #0a0416 0%, #020109 100%);
+  background: linear-gradient(180deg, rgba(10, 4, 22, 0.24) 0%, rgba(2, 1, 9, 0.08) 100%);
 }
 
 .edit-page::before,
@@ -1288,7 +1284,7 @@
 }
 
 .edit-page::after {
-  background: linear-gradient(180deg, rgba(2, 1, 7, 0.08), rgba(2, 1, 7, 0.22) 100%);
+  background: linear-gradient(180deg, rgba(2, 1, 7, 0.04), rgba(2, 1, 7, 0.14) 100%);
 }
 
 .edit-page *,
@@ -1301,6 +1297,23 @@
 .schedule-app,
 .schedule-workspace {
   background: transparent;
+}
+
+.dashboard-galaxy {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #020109;
+}
+
+.dashboard-galaxy__canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.schedule-app {
+  z-index: 1;
 }
 
 .schedule-header,
@@ -1319,12 +1332,12 @@
 .schedule-period-pair__value,
 .schedule-header__tool,
 .schedule-locale-slot .yd-locale-button {
-  background: rgba(10, 9, 18, 0.62) !important;
+  background: rgba(10, 9, 18, 0.32) !important;
   border-color: rgba(236, 194, 102, 0.2) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 18px 36px rgba(0, 0, 0, 0.18) !important;
-  backdrop-filter: blur(16px) saturate(1.04);
+  backdrop-filter: blur(12px) saturate(1.02);
 }
 
 .schedule-header,
@@ -1351,7 +1364,7 @@
 .schedule-legend-table,
 .schedule-summary-table thead .schedule-summary-table__spacer th,
 .schedule-legend-table__label-row th {
-  background: rgba(8, 8, 16, 0.74) !important;
+  background: rgba(8, 8, 16, 0.5) !important;
   border-color: rgba(236, 194, 102, 0.18) !important;
   color: #f7ead1;
 }

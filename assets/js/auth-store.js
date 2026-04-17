@@ -80,6 +80,20 @@
     return rawRole === "admin" ? "admin" : "viewer";
   }
 
+  function isAirtableAvatarUrl(value) {
+    return /airtableusercontent\.com/i.test(normalizeString(value));
+  }
+
+  function isSeedAvatarPath(value) {
+    const normalizedValue = normalizeString(value);
+    return normalizedValue.indexOf("/image/employees/") === 0 || normalizedValue.indexOf("../image/employees/") === 0;
+  }
+
+  function isUserUploadedAvatar(value) {
+    const normalizedValue = normalizeString(value);
+    return normalizedValue.indexOf("data:") === 0 || normalizedValue.indexOf("blob:") === 0;
+  }
+
   function normalizeAccount(rawAccount) {
     const username = normalizeString(rawAccount && rawAccount.username);
 
@@ -118,6 +132,33 @@
       .filter(Boolean);
   }
 
+  function mergeAccountWithSeed(seedAccount, localAccount) {
+    if (!localAccount) {
+      return seedAccount;
+    }
+
+    const nextAvatarSrc = isUserUploadedAvatar(localAccount.avatarSrc)
+      ? localAccount.avatarSrc
+      : (
+        seedAccount.avatarSrc &&
+        (!localAccount.avatarSrc || localAccount.avatarSrc === DEFAULT_AVATAR_SRC || isAirtableAvatarUrl(localAccount.avatarSrc) || isSeedAvatarPath(localAccount.avatarSrc))
+      )
+        ? seedAccount.avatarSrc
+        : localAccount.avatarSrc || seedAccount.avatarSrc;
+
+    return {
+      username: localAccount.username || seedAccount.username,
+      password: localAccount.password || seedAccount.password,
+      role: localAccount.role === "admin" ? "admin" : (localAccount.role || seedAccount.role),
+      displayName: normalizeString(localAccount.displayName) || seedAccount.displayName,
+      welcomeMessage: normalizeString(localAccount.welcomeMessage) || seedAccount.welcomeMessage,
+      avatarSrc: String(nextAvatarSrc || DEFAULT_AVATAR_SRC),
+      createdAt: String(localAccount.createdAt || seedAccount.createdAt || new Date().toISOString()),
+      phoneNumber: normalizeString(localAccount.phoneNumber) || seedAccount.phoneNumber,
+      permissions: normalizePermissions(localAccount.permissions || seedAccount.permissions, localAccount.role || seedAccount.role)
+    };
+  }
+
   function mergeAccountsWithSeeds(accounts) {
     const mergedByUsername = new Map();
 
@@ -131,7 +172,9 @@
         return;
       }
 
-      mergedByUsername.set(normalizedAccount.username.toLowerCase(), normalizedAccount);
+      const loweredUsername = normalizedAccount.username.toLowerCase();
+      const seedAccount = mergedByUsername.get(loweredUsername);
+      mergedByUsername.set(loweredUsername, seedAccount ? mergeAccountWithSeed(seedAccount, normalizedAccount) : normalizedAccount);
     });
 
     return Array.from(mergedByUsername.values());
