@@ -94,6 +94,10 @@
     return i18n ? i18n.translateLiteral(value) : value;
   }
 
+  function escapeLiteral(value) {
+    return escapeHtml(translateLiteral(value));
+  }
+
   function getInterfaceTitleText() {
     if (!i18n) {
       return state.interfaceMeta.title;
@@ -421,8 +425,9 @@
     const operator = getTabOperators(condition.fieldId).find(function (option) {
       return option.id === condition.operator;
     });
+    const conditionValue = field.type === "select" ? translateLiteral(condition.value) : condition.value;
 
-    return [field.label, operator ? operator.label : "", condition.value].filter(Boolean).join(" ");
+    return [translateLiteral(field.label), operator ? translateLiteral(operator.label) : "", conditionValue].filter(Boolean).join(" ");
   }
 
   function formatTabSummary(tab) {
@@ -434,7 +439,7 @@
 
     return conditions.map(function (condition) {
       return formatTabConditionSummary(condition);
-    }).join(" 且 ");
+    }).join(" " + translateLiteral("且") + " ");
   }
 
   function doesEmployeeMatchCondition(employee, condition) {
@@ -685,11 +690,11 @@
     dom.sidebarMount.innerHTML = [
       '<div class="employees-sidebar__header">',
       '<div class="employees-sidebar__icon-wrap">',
-      '<button type="button" class="employees-sidebar__icon-button" data-action="choose-interface-icon" data-tooltip="點擊更換介面圖片">',
-      '<img class="employees-sidebar__icon-preview" src="' + escapeHtml(state.interfaceMeta.iconSrc) + '" alt="介面圖示">',
+      '<button type="button" class="employees-sidebar__icon-button" data-action="choose-interface-icon" data-tooltip="' + escapeLiteral("點擊更換介面圖片") + '">',
+      '<img class="employees-sidebar__icon-preview" src="' + escapeHtml(state.interfaceMeta.iconSrc) + '" alt="' + escapeLiteral("介面圖示") + '">',
       "</button>",
       state.interfaceMeta.customIcon
-        ? '<div class="employees-sidebar__icon-tools"><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="reset-interface-icon" aria-label="還原介面圖片">' + getIconSvg("trash") + "</button></div>"
+        ? '<div class="employees-sidebar__icon-tools"><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="reset-interface-icon" aria-label="' + escapeLiteral("還原介面圖片") + '">' + getIconSvg("trash") + "</button></div>"
         : "",
       "</div>",
       '<div class="employees-sidebar__text">',
@@ -698,7 +703,7 @@
         ? '<input id="employeesTitleInput" class="employees-sidebar__title-input" type="text" value="' + escapeHtml(uiState.titleDraft) + '">'
         : '<h1 class="employees-sidebar__title">' + escapeHtml(getInterfaceTitleText()) + "</h1>",
       '<div class="employees-sidebar__title-actions">',
-      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-title-edit" aria-label="編輯標題">' + getIconSvg("edit") + "</button>",
+      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-title-edit" aria-label="' + escapeLiteral("編輯標題") + '">' + getIconSvg("edit") + "</button>",
       "</div>",
       "</div>",
       '<div class="employees-sidebar__subtitle-row">',
@@ -706,7 +711,7 @@
         ? '<input id="employeesSubtitleInput" class="employees-sidebar__title-input employees-sidebar__subtitle-input" type="text" value="' + escapeHtml(uiState.subtitleDraft) + '">'
         : '<div class="employees-sidebar__caption">' + escapeHtml(subtitleText) + "</div>",
       '<div class="employees-sidebar__title-actions">',
-      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-subtitle-edit" aria-label="編輯說明">' + getIconSvg("edit") + "</button>",
+      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-subtitle-edit" aria-label="' + escapeLiteral("編輯說明") + '">' + getIconSvg("edit") + "</button>",
       "</div>",
       "</div>",
       "</div>",
@@ -724,23 +729,23 @@
           '<div class="employees-department__grip" aria-hidden="true">' + escapeHtml(getIconSvg("grip")) + "</div>",
           isEditing
             ? '<input class="employees-department__edit-input" data-role="department-edit-input" type="text" value="' + escapeHtml(uiState.departmentEditDraft) + '">'
-            : '<div class="employees-department__name">' + escapeHtml(department.name) + "</div>",
+            : '<div class="employees-department__name">' + escapeHtml(translateLiteral(department.name)) + "</div>",
           '<div class="employees-department__menu">',
-          '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-department__menu-button" data-action="toggle-department-menu" data-department-id="' + escapeHtml(department.id) + '" aria-label="部門選單">' + getIconSvg("more") + "</button>",
+          '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-department__menu-button" data-action="toggle-department-menu" data-department-id="' + escapeHtml(department.id) + '" aria-label="' + escapeLiteral("部門選單") + '">' + getIconSvg("more") + "</button>",
           isMenuOpen
-            ? '<div class="employees-department__menu-panel"><button type="button" data-action="start-edit-department" data-department-id="' + escapeHtml(department.id) + '">編輯</button><button type="button" data-action="delete-department" data-department-id="' + escapeHtml(department.id) + '">刪除</button></div>'
+            ? '<div class="employees-department__menu-panel"><button type="button" data-action="start-edit-department" data-department-id="' + escapeHtml(department.id) + '">' + escapeLiteral("編輯") + '</button><button type="button" data-action="delete-department" data-department-id="' + escapeHtml(department.id) + '">' + escapeLiteral("刪除") + "</button></div>"
             : "",
           "</div>",
           "</div>"
         ].join("");
       }).join(""),
       '<div class="employees-department-fixed employees-department--retired">',
-      '<button type="button" class="employees-department employees-department--retired-row' + (selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id ? " employees-department--active" : "") + '" data-action="select-department" data-department-id="' + escapeHtml(dataApi.RETIRED_DEPARTMENT.id) + '"><div class="employees-department__grip employees-department__grip--empty" aria-hidden="true"></div><div class="employees-department__name">' + escapeHtml(dataApi.RETIRED_DEPARTMENT.name) + "</div></button>",
+      '<button type="button" class="employees-department employees-department--retired-row' + (selectedDepartmentId === dataApi.RETIRED_DEPARTMENT.id ? " employees-department--active" : "") + '" data-action="select-department" data-department-id="' + escapeHtml(dataApi.RETIRED_DEPARTMENT.id) + '"><div class="employees-department__grip employees-department__grip--empty" aria-hidden="true"></div><div class="employees-department__name">' + escapeHtml(translateLiteral(dataApi.RETIRED_DEPARTMENT.name)) + "</div></button>",
       "</div>",
       '<div class="employees-department-add">',
       uiState.addingDepartment
-        ? '<input id="employeesDepartmentInput" class="employees-department-add__input" type="text" value="' + escapeHtml(uiState.departmentDraft) + '" placeholder="請輸入部門名稱">'
-        : '<button type="button" class="employees-department-add__button" data-action="start-add-department"><span>' + getIconSvg("plus") + '</span><strong>新增部門</strong></button>',
+        ? '<input id="employeesDepartmentInput" class="employees-department-add__input" type="text" value="' + escapeHtml(uiState.departmentDraft) + '" placeholder="' + escapeLiteral("請輸入部門名稱") + '">'
+        : '<button type="button" class="employees-department-add__button" data-action="start-add-department"><span>' + getIconSvg("plus") + '</span><strong>' + escapeLiteral("新增部門") + "</strong></button>",
       "</div>",
       "</div>",
       "</div>"
@@ -760,7 +765,7 @@
         ? '<input id="employeesMainNoteInput" class="employees-main__title-note-input" type="text" value="' + escapeHtml(uiState.mainNoteDraft) + '">'
         : '<div class="employees-main__title-note">' + escapeHtml(mainNote) + "</div>",
       '<div class="employees-main__note-actions">',
-      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-main-note-edit" aria-label="編輯主區說明">' + getIconSvg("edit") + "</button>",
+      '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="toggle-main-note-edit" aria-label="' + escapeLiteral("編輯主區說明") + '">' + getIconSvg("edit") + "</button>",
       "</div>",
       "</div>",
       "</div>",
@@ -772,16 +777,16 @@
   function renderFilterPopover() {
     return [
       '<div class="employees-popover" data-modal-body="true">',
-      '<div class="employees-popover__section-title">篩選</div>',
-      '<div class="employees-popover__field"><label>職位</label><select data-setting="filter-position"><option value="全部">全部</option>' + dataApi.POSITION_OPTIONS.map(function (option) {
-        return '<option value="' + escapeHtml(option) + '"' + (state.filters.position === option ? " selected" : "") + ">" + escapeHtml(option) + "</option>";
+      '<div class="employees-popover__section-title">' + escapeLiteral("篩選") + "</div>",
+      '<div class="employees-popover__field"><label>' + escapeLiteral("職位") + '</label><select data-setting="filter-position"><option value="全部">' + escapeLiteral("全部") + "</option>" + dataApi.POSITION_OPTIONS.map(function (option) {
+        return '<option value="' + escapeHtml(option) + '"' + (state.filters.position === option ? " selected" : "") + ">" + escapeHtml(translateLiteral(option)) + "</option>";
       }).join("") + "</select></div>",
-      '<div class="employees-popover__field"><label>狀態</label><select data-setting="filter-status">' +
+      '<div class="employees-popover__field"><label>' + escapeLiteral("狀態") + '</label><select data-setting="filter-status">' +
       ['全部'].concat(dataApi.STATUS_OPTIONS).map(function (option) {
-        return '<option value="' + escapeHtml(option) + '"' + (state.filters.status === option ? " selected" : "") + ">" + escapeHtml(option) + "</option>";
+        return '<option value="' + escapeHtml(option) + '"' + (state.filters.status === option ? " selected" : "") + ">" + escapeHtml(translateLiteral(option)) + "</option>";
       }).join("") +
       "</select></div>",
-      '<button type="button" class="employees-inline-action" data-action="clear-filters">清除篩選</button>',
+      '<button type="button" class="employees-inline-action" data-action="clear-filters">' + escapeLiteral("清除篩選") + "</button>",
       "</div>"
     ].join("");
   }
@@ -791,20 +796,20 @@
 
     return [
       '<div class="employees-popover" data-modal-body="true">',
-      '<div class="employees-popover__section-title">卡片顯示</div>',
-      '<div class="employees-popover__field"><label>主標題</label><select data-setting="card-title">' + dataApi.CARD_FIELD_OPTIONS.map(function (field) {
-        return '<option value="' + escapeHtml(field.id) + '"' + (state.cardDisplay.titleField === field.id ? " selected" : "") + ">" + escapeHtml(field.label) + "</option>";
+      '<div class="employees-popover__section-title">' + escapeLiteral("卡片顯示") + "</div>",
+      '<div class="employees-popover__field"><label>' + escapeLiteral("主標題") + '</label><select data-setting="card-title">' + dataApi.CARD_FIELD_OPTIONS.map(function (field) {
+        return '<option value="' + escapeHtml(field.id) + '"' + (state.cardDisplay.titleField === field.id ? " selected" : "") + ">" + escapeHtml(translateLiteral(field.label)) + "</option>";
       }).join("") + "</select></div>",
       state.cardDisplay.extraFieldIds.map(function (fieldId, index) {
-        return '<div class="employees-popover__field"><label>欄位 ' + String(index + 1) + '</label><select data-setting="card-extra-' + String(index) + '">' + dataApi.CARD_FIELD_OPTIONS.map(function (field) {
-          return '<option value="' + escapeHtml(field.id) + '"' + (fieldId === field.id ? " selected" : "") + ">" + escapeHtml(field.label) + "</option>";
+        return '<div class="employees-popover__field"><label>' + escapeLiteral("欄位 " + String(index + 1)) + '</label><select data-setting="card-extra-' + String(index) + '">' + dataApi.CARD_FIELD_OPTIONS.map(function (field) {
+          return '<option value="' + escapeHtml(field.id) + '"' + (fieldId === field.id ? " selected" : "") + ">" + escapeHtml(translateLiteral(field.label)) + "</option>";
         }).join("") + "</select></div>";
       }).join(""),
-      '<div class="employees-popover__section-title">排序</div>',
-      '<div class="employees-popover__field"><label>排序方式</label><select data-setting="sort-mode">' + dataApi.SORT_OPTIONS.filter(function (option) {
+      '<div class="employees-popover__section-title">' + escapeLiteral("排序") + "</div>",
+      '<div class="employees-popover__field"><label>' + escapeLiteral("排序方式") + '</label><select data-setting="sort-mode">' + dataApi.SORT_OPTIONS.filter(function (option) {
         return !isRetiredView() || option.id === "retiredSoonest";
       }).map(function (option) {
-        return '<option value="' + escapeHtml(option.id) + '"' + (selectedSort === option.id ? " selected" : "") + ">" + escapeHtml(option.label) + "</option>";
+        return '<option value="' + escapeHtml(option.id) + '"' + (selectedSort === option.id ? " selected" : "") + ">" + escapeHtml(translateLiteral(option.label)) + "</option>";
       }).join("") + "</select></div>",
       "</div>"
     ].join("");
@@ -815,35 +820,35 @@
     const inputAttrs = 'data-tab-condition-index="' + String(conditionIndex) + '" data-tab-condition-key="value"';
 
     if (draftField.type === "select") {
-      return '<div class="employees-toolbar__composer-field"><label>內容</label><select ' + inputAttrs + '>' + getFieldOptionList(draftField.id).map(function (option) {
-        return '<option value="' + escapeHtml(option) + '"' + (condition.value === option ? " selected" : "") + ">" + escapeHtml(option) + "</option>";
+      return '<div class="employees-toolbar__composer-field"><label>' + escapeLiteral("內容") + '</label><select ' + inputAttrs + '>' + getFieldOptionList(draftField.id).map(function (option) {
+        return '<option value="' + escapeHtml(option) + '"' + (condition.value === option ? " selected" : "") + ">" + escapeHtml(translateLiteral(option)) + "</option>";
       }).join("") + "</select></div>";
     }
 
     if (draftField.type === "date") {
-      return '<div class="employees-toolbar__composer-field"><label>日期</label><input type="text" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="2026-03-31"></div>';
+      return '<div class="employees-toolbar__composer-field"><label>' + escapeLiteral("日期") + '</label><input type="text" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="2026-03-31"></div>';
     }
 
     if (draftField.type === "number") {
-      return '<div class="employees-toolbar__composer-field"><label>數值</label><input type="number" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="0"></div>';
+      return '<div class="employees-toolbar__composer-field"><label>' + escapeLiteral("數值") + '</label><input type="number" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="0"></div>';
     }
 
-    return '<div class="employees-toolbar__composer-field"><label>內容</label><input type="text" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="請輸入條件"></div>';
+    return '<div class="employees-toolbar__composer-field"><label>' + escapeLiteral("內容") + '</label><input type="text" ' + inputAttrs + ' value="' + escapeHtml(condition.value) + '" placeholder="' + escapeLiteral("請輸入條件") + '"></div>';
   }
 
   function renderTabConditionComposer(condition, conditionIndex, totalConditions) {
     return [
       '<div class="employees-toolbar__condition-row">',
-      '<div class="employees-toolbar__composer-field"><label>欄位</label><select data-tab-condition-index="' + String(conditionIndex) + '" data-tab-condition-key="fieldId">' + TAB_FILTER_FIELDS.map(function (field) {
-        return '<option value="' + escapeHtml(field.id) + '"' + (condition.fieldId === field.id ? " selected" : "") + ">" + escapeHtml(field.label) + "</option>";
+      '<div class="employees-toolbar__composer-field"><label>' + escapeLiteral("欄位") + '</label><select data-tab-condition-index="' + String(conditionIndex) + '" data-tab-condition-key="fieldId">' + TAB_FILTER_FIELDS.map(function (field) {
+        return '<option value="' + escapeHtml(field.id) + '"' + (condition.fieldId === field.id ? " selected" : "") + ">" + escapeHtml(translateLiteral(field.label)) + "</option>";
       }).join("") + "</select></div>",
-      '<div class="employees-toolbar__composer-field"><label>條件</label><select data-tab-condition-index="' + String(conditionIndex) + '" data-tab-condition-key="operator">' + getTabOperators(condition.fieldId).map(function (operator) {
-        return '<option value="' + escapeHtml(operator.id) + '"' + (condition.operator === operator.id ? " selected" : "") + ">" + escapeHtml(operator.label) + "</option>";
+      '<div class="employees-toolbar__composer-field"><label>' + escapeLiteral("條件") + '</label><select data-tab-condition-index="' + String(conditionIndex) + '" data-tab-condition-key="operator">' + getTabOperators(condition.fieldId).map(function (operator) {
+        return '<option value="' + escapeHtml(operator.id) + '"' + (condition.operator === operator.id ? " selected" : "") + ">" + escapeHtml(translateLiteral(operator.label)) + "</option>";
       }).join("") + "</select></div>",
       renderTabValueControl(condition, conditionIndex),
       '<div class="employees-toolbar__condition-actions">' +
         (totalConditions > 1
-          ? '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="remove-tab-condition" data-tab-condition-index="' + String(conditionIndex) + '" aria-label="移除條件">✕</button>'
+          ? '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="remove-tab-condition" data-tab-condition-index="' + String(conditionIndex) + '" aria-label="' + escapeLiteral("移除條件") + '">✕</button>'
           : "") +
       "</div>",
       "</div>"
@@ -860,10 +865,10 @@
         '<div class="employees-toolbar">',
         '<div class="employees-toolbar__left"></div>',
         '<div class="employees-toolbar__right">',
-        uiState.showSearchInput ? '<input class="employees-search-box" data-path="searchQuery" value="' + escapeHtml(state.searchQuery) + '" placeholder="搜尋員工">' : "",
-        '<button type="button" class="employees-tool-icon" data-action="toggle-search" data-tooltip="搜尋">' + getIconSvg("search") + "</button>",
+        uiState.showSearchInput ? '<input class="employees-search-box" data-path="searchQuery" value="' + escapeHtml(state.searchQuery) + '" placeholder="' + escapeLiteral("搜尋員工") + '">' : "",
+        '<button type="button" class="employees-tool-icon" data-action="toggle-search" data-tooltip="' + escapeLiteral("搜尋") + '">' + getIconSvg("search") + "</button>",
         '<div class="employees-tool-group" data-tool-group="filter">',
-        '<button type="button" class="employees-tool-icon" data-action="toggle-filter-menu" data-tooltip="篩選">' + getIconSvg("filter") + "</button>",
+        '<button type="button" class="employees-tool-icon" data-action="toggle-filter-menu" data-tooltip="' + escapeLiteral("篩選") + '">' + getIconSvg("filter") + "</button>",
         uiState.showFilterMenu ? renderFilterPopover() : "",
         "</div>",
         "</div>",
@@ -881,37 +886,37 @@
         return '<button type="button" class="employees-tab' + (activeTabId === tab.id ? " employees-tab--active" : "") + '" data-action="select-tab" data-tab-id="' + escapeHtml(tab.id) + '" title="' + escapeHtml(formatTabSummary(tab)) + '">' + escapeHtml(tab.name || formatTabSummary(tab)) + '<span class="employees-tab__condition">' + escapeHtml(formatTabSummary(tab)) + "</span></button>";
       }).join(""),
       visibleTabsData.hiddenTabs.length
-        ? '<div class="employees-tool-group" data-tool-group="more-tabs"><button type="button" class="employees-tab" data-action="toggle-more-tabs">更多</button>' +
+        ? '<div class="employees-tool-group" data-tool-group="more-tabs"><button type="button" class="employees-tab" data-action="toggle-more-tabs">' + escapeLiteral("更多") + "</button>" +
           (uiState.openMoreTabs ? '<div class="employees-popover" data-modal-body="true">' + visibleTabsData.hiddenTabs.map(function (tab) {
             return '<button type="button" class="employees-inline-action" data-action="select-tab" data-tab-id="' + escapeHtml(tab.id) + '">' + escapeHtml(tab.name || formatTabSummary(tab)) + "</button>";
           }).join("") + "</div>" : "") +
           "</div>"
         : "",
-      '<button type="button" class="employees-tab" data-action="start-create-tab" title="新增分頁">' + getIconSvg("plus") + "</button>",
+      '<button type="button" class="employees-tab" data-action="start-create-tab" title="' + escapeLiteral("新增分頁") + '">' + getIconSvg("plus") + "</button>",
       activeTab && !uiState.creatingTab
-        ? '<div class="employees-tabs__actions"><button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="start-edit-tab" aria-label="編輯分頁">' + getIconSvg("edit") + '</button><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="delete-active-tab" aria-label="刪除分頁">✕</button></div>'
+        ? '<div class="employees-tabs__actions"><button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="start-edit-tab" aria-label="' + escapeLiteral("編輯分頁") + '">' + getIconSvg("edit") + '</button><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="delete-active-tab" aria-label="' + escapeLiteral("刪除分頁") + '">✕</button></div>'
         : "",
       "</div>",
       uiState.creatingTab
         ? '<div class="employees-toolbar__composer">' +
-          '<div class="employees-toolbar__composer-field employees-toolbar__composer-field--wide"><label>分頁名稱</label><input type="text" id="employeesTabNameInput" value="' + escapeHtml(uiState.tabDraft.name) + '" placeholder="可留空，由條件自動命名"></div>' +
-          '<div class="employees-toolbar__composer-note">同一分頁內的條件必須全部成立，才會顯示在這個分頁。</div>' +
+          '<div class="employees-toolbar__composer-field employees-toolbar__composer-field--wide"><label>' + escapeLiteral("分頁名稱") + '</label><input type="text" id="employeesTabNameInput" value="' + escapeHtml(uiState.tabDraft.name) + '" placeholder="' + escapeLiteral("可留空，由條件自動命名") + '"></div>' +
+          '<div class="employees-toolbar__composer-note">' + escapeLiteral("同一分頁內的條件必須全部成立，才會顯示在這個分頁。") + "</div>" +
           uiState.tabDraft.conditions.map(function (condition, index) {
             return renderTabConditionComposer(condition, index, uiState.tabDraft.conditions.length);
           }).join("") +
-          '<div class="employees-toolbar__composer-footer"><button type="button" class="employees-secondary-button" data-action="add-tab-condition">' + getIconSvg("plus") + '<span>新增條件</span></button><button type="button" class="employees-secondary-button" data-action="cancel-tab-composer">取消</button><button type="button" class="employees-primary-button employees-toolbar__composer-confirm" data-action="confirm-create-tab">' + (uiState.editingTabId ? "儲存分頁" : "建立分頁") + "</button></div>" +
+          '<div class="employees-toolbar__composer-footer"><button type="button" class="employees-secondary-button" data-action="add-tab-condition">' + getIconSvg("plus") + '<span>' + escapeLiteral("新增條件") + '</span></button><button type="button" class="employees-secondary-button" data-action="cancel-tab-composer">' + escapeLiteral("取消") + '</button><button type="button" class="employees-primary-button employees-toolbar__composer-confirm" data-action="confirm-create-tab">' + escapeLiteral(uiState.editingTabId ? "儲存分頁" : "建立分頁") + "</button></div>" +
           "</div>"
         : "",
       "</div>",
       '<div class="employees-toolbar__right">',
-      uiState.showSearchInput ? '<input class="employees-search-box" data-path="searchQuery" value="' + escapeHtml(state.searchQuery) + '" placeholder="搜尋員工">' : "",
-      '<button type="button" class="employees-tool-icon" data-action="toggle-search" data-tooltip="搜尋">' + getIconSvg("search") + "</button>",
+      uiState.showSearchInput ? '<input class="employees-search-box" data-path="searchQuery" value="' + escapeHtml(state.searchQuery) + '" placeholder="' + escapeLiteral("搜尋員工") + '">' : "",
+      '<button type="button" class="employees-tool-icon" data-action="toggle-search" data-tooltip="' + escapeLiteral("搜尋") + '">' + getIconSvg("search") + "</button>",
       '<div class="employees-tool-group" data-tool-group="filter">',
-      '<button type="button" class="employees-tool-icon" data-action="toggle-filter-menu" data-tooltip="篩選">' + getIconSvg("filter") + "</button>",
+      '<button type="button" class="employees-tool-icon" data-action="toggle-filter-menu" data-tooltip="' + escapeLiteral("篩選") + '">' + getIconSvg("filter") + "</button>",
       uiState.showFilterMenu ? renderFilterPopover() : "",
       "</div>",
       '<div class="employees-tool-group" data-tool-group="display">',
-      '<button type="button" class="employees-tool-icon" data-action="toggle-display-menu" data-tooltip="顯示設定">' + getIconSvg("more") + "</button>",
+      '<button type="button" class="employees-tool-icon" data-action="toggle-display-menu" data-tooltip="' + escapeLiteral("顯示設定") + '">' + getIconSvg("more") + "</button>",
       uiState.showDisplayMenu ? renderDisplayPopover() : "",
       "</div>",
       "</div>",
@@ -923,7 +928,7 @@
     const employees = getVisibleEmployees();
 
     if (!employees.length) {
-      dom.cardsMount.innerHTML = '<div class="employees-cards-panel"><div class="employees-empty">目前沒有符合條件的員工資料。</div></div>';
+      dom.cardsMount.innerHTML = '<div class="employees-cards-panel"><div class="employees-empty">' + escapeLiteral("目前沒有符合條件的員工資料。") + "</div></div>";
       return;
     }
 
@@ -933,7 +938,7 @@
 
         return [
           '<div class="employees-card__line">',
-          '<div class="employees-card__label">' + escapeHtml(fieldOption ? fieldOption.label : fieldId) + "</div>",
+          '<div class="employees-card__label">' + escapeHtml(fieldOption ? translateLiteral(fieldOption.label) : fieldId) + "</div>",
           '<div class="employees-card__value">' + escapeHtml(formApi.getFieldDisplayValue(employee, fieldId)) + "</div>",
           "</div>"
         ].join("");
@@ -941,7 +946,7 @@
 
       return [
         '<article class="employees-card' + (uiState.selectedEmployeeId === employee.id ? " employees-card--active" : "") + '" data-action="select-employee" data-employee-id="' + escapeHtml(employee.id) + '">',
-        '<img class="employees-card__avatar" data-image-kind="employee-avatar" src="' + escapeHtml(employee.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="' + escapeHtml(employee.basic.engName || employee.basic.vieName || "員工頭像") + '">',
+        '<img class="employees-card__avatar" data-image-kind="employee-avatar" src="' + escapeHtml(employee.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="' + escapeHtml(employee.basic.engName || employee.basic.vieName || translateLiteral("員工頭像")) + '">',
         '<div class="employees-card__body">',
         '<h2 class="employees-card__title">' + escapeHtml(formApi.getFieldDisplayValue(employee, state.cardDisplay.titleField)) + "</h2>",
         lines,
@@ -1031,26 +1036,26 @@
       '<button type="button" class="employees-secondary-button employees-detail__collapse" data-action="request-close-panel">&gt;&gt;</button>',
       '<div class="employees-detail__actions-right">' +
         (selectedEmployee && uiState.detailMode !== "add"
-          ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">刪除</button>'
+          ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="request-delete-employee">' + escapeLiteral("刪除") + "</button>"
           : "") +
-        (!inRetired ? '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>新增</span></button>' : "") +
+        (!inRetired ? '<button type="button" class="employees-primary-button" data-action="open-add-panel">' + getIconSvg("plus") + '<span>' + escapeLiteral("新增") + "</span></button>" : "") +
       "</div>",
       "</div>",
       '<div class="employees-detail__content">',
       '<div class="employees-avatar-box">',
       '<div class="employees-avatar-box__preview-wrap">',
-      '<button type="button" class="employees-avatar-box__preview" data-action="preview-avatar" data-tooltip="' + escapeHtml(isEditable ? "點擊查看或更換頭像" : "點擊查看頭像") + '">',
-      '<img data-image-kind="employee-avatar" src="' + escapeHtml(draft.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="員工頭像">',
+      '<button type="button" class="employees-avatar-box__preview" data-action="preview-avatar" data-tooltip="' + escapeLiteral(isEditable ? "點擊查看或更換頭像" : "點擊查看頭像") + '">',
+      '<img data-image-kind="employee-avatar" src="' + escapeHtml(draft.avatarSrc || dataApi.DEFAULT_IMAGE_SRC) + '" alt="' + escapeLiteral("員工頭像") + '">',
       "</button>",
       "</div>",
-      '<div class="employees-avatar-box__meta">' + (isEditable ? "點擊頭像可預覽或更換" : "點擊頭像可放大預覽") + "</div>",
+      '<div class="employees-avatar-box__meta">' + escapeLiteral(isEditable ? "點擊頭像可預覽或更換" : "點擊頭像可放大預覽") + "</div>",
       "</div>",
       '<div class="employee-form">' + formApi.renderEmployeeFormSections(draft, { isEditable: isEditable, statusLocked: uiState.detailMode === "add", pendingAttachments: uiState.pendingAttachments }) + "</div>",
       "</div>",
       !inRetired ? [
         '<div class="employees-detail__footer">',
-        '<button type="button" class="employees-primary-button" data-action="save-employee"' + (uiState.detailMode === "view" ? " disabled" : "") + ">儲存</button>",
-        '<button type="button" class="employees-secondary-button" data-action="start-edit-employee"' + (uiState.detailMode !== "view" ? " disabled" : "") + ">編輯</button>",
+        '<button type="button" class="employees-primary-button" data-action="save-employee"' + (uiState.detailMode === "view" ? " disabled" : "") + ">" + escapeLiteral("儲存") + "</button>",
+        '<button type="button" class="employees-secondary-button" data-action="start-edit-employee"' + (uiState.detailMode !== "view" ? " disabled" : "") + ">" + escapeLiteral("編輯") + "</button>",
         "</div>"
       ].join("") : ""
     ].join("");
@@ -1071,11 +1076,11 @@
     if (uiState.openModal === "confirm-delete") {
       dom.modalMount.innerHTML = [
         '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
-        '<h2 class="employees-modal__title">確認刪除</h2>',
-        '<div class="employees-modal__text">確定要刪除此員工資料嗎？</div>',
+        '<h2 class="employees-modal__title">' + escapeLiteral("確認刪除") + "</h2>",
+        '<div class="employees-modal__text">' + escapeLiteral("確定要刪除此員工資料嗎？") + "</div>",
         '<div class="employees-modal__actions">',
-        '<button type="button" class="employees-secondary-button" data-action="close-modal">取消</button>',
-        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="open-password-modal">確認</button>',
+        '<button type="button" class="employees-secondary-button" data-action="close-modal">' + escapeLiteral("取消") + '</button>',
+        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="open-password-modal">' + escapeLiteral("確認") + "</button>",
         "</div></div></div>"
       ].join("");
       return;
@@ -1084,13 +1089,13 @@
     if (uiState.openModal === "password-delete") {
       dom.modalMount.innerHTML = [
         '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
-        '<h2 class="employees-modal__title">請輸入刪除密碼</h2>',
-        '<div class="employees-modal__text">密碼固定為：091100</div>',
+        '<h2 class="employees-modal__title">' + escapeLiteral("請輸入刪除密碼") + "</h2>",
+        '<div class="employees-modal__text">' + escapeLiteral("密碼固定為：091100") + "</div>",
         '<input id="employeesPasswordInput" class="employees-modal__input" type="password" value="' + escapeHtml(uiState.passwordDraft) + '">',
         uiState.passwordError ? '<div class="employees-modal__text" style="color:#ff8a80;">' + escapeHtml(uiState.passwordError) + "</div>" : "",
         '<div class="employees-modal__actions">',
-        '<button type="button" class="employees-secondary-button" data-action="close-modal">取消</button>',
-        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="confirm-delete-employee">刪除</button>',
+        '<button type="button" class="employees-secondary-button" data-action="close-modal">' + escapeLiteral("取消") + '</button>',
+        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="confirm-delete-employee">' + escapeLiteral("刪除") + "</button>",
         "</div></div></div>"
       ].join("");
       return;
@@ -1099,13 +1104,13 @@
     if (uiState.openModal === "password-delete-attachment") {
       dom.modalMount.innerHTML = [
         '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
-        '<h2 class="employees-modal__title">請輸入檔案刪除密碼</h2>',
-        '<div class="employees-modal__text">密碼固定為：09110</div>',
+        '<h2 class="employees-modal__title">' + escapeLiteral("請輸入檔案刪除密碼") + "</h2>",
+        '<div class="employees-modal__text">' + escapeLiteral("密碼固定為：09110") + "</div>",
         '<input id="employeesPasswordInput" class="employees-modal__input" type="password" value="' + escapeHtml(uiState.passwordDraft) + '">',
         uiState.passwordError ? '<div class="employees-modal__text" style="color:#ff8a80;">' + escapeHtml(uiState.passwordError) + "</div>" : "",
         '<div class="employees-modal__actions">',
-        '<button type="button" class="employees-secondary-button" data-action="close-modal">取消</button>',
-        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="confirm-delete-attachment">刪除</button>',
+        '<button type="button" class="employees-secondary-button" data-action="close-modal">' + escapeLiteral("取消") + '</button>',
+        '<button type="button" class="employees-primary-button employees-primary-button--danger" data-action="confirm-delete-attachment">' + escapeLiteral("刪除") + "</button>",
         "</div></div></div>"
       ].join("");
       return;
@@ -1114,11 +1119,11 @@
     if (uiState.openModal === "confirm-close") {
       dom.modalMount.innerHTML = [
         '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
-        '<h2 class="employees-modal__title">確認關閉</h2>',
-        '<div class="employees-modal__text">各項資料可能不會儲存，是否確認繼續？</div>',
+        '<h2 class="employees-modal__title">' + escapeLiteral("確認關閉") + "</h2>",
+        '<div class="employees-modal__text">' + escapeLiteral("各項資料可能不會儲存，是否確認繼續？") + "</div>",
         '<div class="employees-modal__actions">',
-        '<button type="button" class="employees-secondary-button" data-action="close-modal">取消</button>',
-        '<button type="button" class="employees-primary-button" data-action="confirm-close-panel">確認</button>',
+        '<button type="button" class="employees-secondary-button" data-action="close-modal">' + escapeLiteral("取消") + '</button>',
+        '<button type="button" class="employees-primary-button" data-action="confirm-close-panel">' + escapeLiteral("確認") + "</button>",
         "</div></div></div>"
       ].join("");
       return;
@@ -1127,9 +1132,9 @@
     if (uiState.openModal === "notice") {
       dom.modalMount.innerHTML = [
         '<div class="employees-modal"><div class="employees-modal__card" data-modal-body="true">',
-        '<h2 class="employees-modal__title">提示</h2>',
+        '<h2 class="employees-modal__title">' + escapeLiteral("提示") + "</h2>",
         '<div class="employees-modal__text">' + escapeHtml(uiState.noticeText) + "</div>",
-        '<div class="employees-modal__actions"><button type="button" class="employees-primary-button" data-action="close-modal">確認</button></div>',
+        '<div class="employees-modal__actions"><button type="button" class="employees-primary-button" data-action="close-modal">' + escapeLiteral("確認") + "</button></div>",
         "</div></div>"
       ].join("");
       return;
@@ -1138,17 +1143,17 @@
     if (uiState.openModal === "preview-avatar") {
       dom.modalMount.innerHTML = [
         '<div class="employees-modal">',
-        '<button type="button" class="employees-image-preview__backdrop" data-action="close-modal" aria-label="關閉預覽"></button>',
+        '<button type="button" class="employees-image-preview__backdrop" data-action="close-modal" aria-label="' + escapeLiteral("關閉預覽") + '"></button>',
         '<div class="employees-image-preview" data-modal-body="true">',
         '<div class="employees-image-preview__frame-wrap">',
-        '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-image-preview__close" data-action="close-modal" aria-label="關閉預覽">✕</button>',
+        '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-image-preview__close" data-action="close-modal" aria-label="' + escapeLiteral("關閉預覽") + '">✕</button>',
         '<div class="employees-image-preview__frame">',
-        '<img data-image-kind="employee-avatar" src="' + escapeHtml(uiState.previewImageSrc) + '" alt="頭像預覽">',
+        '<img data-image-kind="employee-avatar" src="' + escapeHtml(uiState.previewImageSrc) + '" alt="' + escapeLiteral("頭像預覽") + '">',
         "</div></div>",
         '<div class="employees-image-preview__actions">' +
           (uiState.detailMode === "add" || uiState.detailMode === "edit"
-            ? '<button type="button" class="employees-secondary-button" data-action="choose-avatar">更換</button>' +
-              (uiState.draftEmployee && uiState.draftEmployee.avatarChanged ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="reset-avatar">還原</button>' : "")
+            ? '<button type="button" class="employees-secondary-button" data-action="choose-avatar">' + escapeLiteral("更換") + '</button>' +
+              (uiState.draftEmployee && uiState.draftEmployee.avatarChanged ? '<button type="button" class="employees-secondary-button employees-primary-button--danger" data-action="reset-avatar">' + escapeLiteral("還原") + "</button>" : "")
             : "") +
         "</div>",
         "</div></div>"
@@ -1235,7 +1240,7 @@
   }
 
   function openNotice(message) {
-    uiState.noticeText = message;
+    uiState.noticeText = translateLiteral(message);
     uiState.openModal = "notice";
     renderModal();
   }
@@ -1350,7 +1355,7 @@
 
   function deleteSelectedEmployee() {
     if (uiState.passwordDraft !== "091100") {
-      uiState.passwordError = "密碼錯誤。";
+      uiState.passwordError = translateLiteral("密碼錯誤。");
       renderModal();
       return;
     }
@@ -1796,7 +1801,7 @@
 
   function deleteSelectedAttachment() {
     if (uiState.passwordDraft !== "09110") {
-      uiState.passwordError = "密碼錯誤。";
+      uiState.passwordError = translateLiteral("密碼錯誤。");
       renderModal();
       return;
     }

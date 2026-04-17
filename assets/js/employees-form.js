@@ -227,50 +227,50 @@
     const day = date.getDate();
 
     if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) {
-      return "♈ 牡羊";
+      return translateLiteral("♈ 牡羊");
     }
 
     if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) {
-      return "♉ 金牛";
+      return translateLiteral("♉ 金牛");
     }
 
     if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) {
-      return "♊ 雙子";
+      return translateLiteral("♊ 雙子");
     }
 
     if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) {
-      return "♋ 巨蟹";
+      return translateLiteral("♋ 巨蟹");
     }
 
     if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) {
-      return "♌ 獅子";
+      return translateLiteral("♌ 獅子");
     }
 
     if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) {
-      return "♍ 處女";
+      return translateLiteral("♍ 處女");
     }
 
     if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) {
-      return "♎ 天秤";
+      return translateLiteral("♎ 天秤");
     }
 
     if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) {
-      return "♏ 天蠍";
+      return translateLiteral("♏ 天蠍");
     }
 
     if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) {
-      return "♐ 射手";
+      return translateLiteral("♐ 射手");
     }
 
     if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) {
-      return "♑ 摩羯";
+      return translateLiteral("♑ 摩羯");
     }
 
     if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) {
-      return "♒ 水瓶";
+      return translateLiteral("♒ 水瓶");
     }
 
-    return "♓ 雙魚";
+    return translateLiteral("♓ 雙魚");
   }
 
   function syncEmploymentDates(draft, changedPath) {
@@ -468,7 +468,7 @@
 
   function formatDateParts(parts) {
     if (!parts || !parts.year || !parts.month || !parts.day) {
-      return "未設定";
+      return translateLiteral("未設定");
     }
 
     return [parts.year, parts.month, parts.day].join("-");
@@ -512,36 +512,38 @@
   }
 
   function getFieldDisplayValue(employee, fieldId) {
+    const unsetText = translateLiteral("未設定");
+
     switch (fieldId) {
       case "vieName":
-        return employee.basic.vieName || "未設定";
+        return employee.basic.vieName || unsetText;
       case "engName":
-        return employee.basic.engName || "未設定";
+        return employee.basic.engName || unsetText;
       case "ydiId":
-        return employee.basic.ydiId || "未設定";
+        return employee.basic.ydiId || unsetText;
       case "haId":
-        return employee.basic.haId || "未設定";
+        return employee.basic.haId || unsetText;
       case "position":
-        return employee.work.position || "未設定";
+        return employee.work.position || unsetText;
       case "titleJob":
-        return employee.work.titleJob.preset === "其他" ? employee.work.titleJob.other || "其他" : employee.work.titleJob.preset || "未設定";
+        return employee.work.titleJob.preset === "其他" ? employee.work.titleJob.other || translateLiteral("其他") : employee.work.titleJob.preset || unsetText;
       case "phoneNumber":
         return [
           normalizePhoneValue(employee.contact.phoneNumber).countryCode,
           normalizePhoneValue(employee.contact.phoneNumber).number
-        ].filter(Boolean).join(" ").trim() || "未設定";
+        ].filter(Boolean).join(" ").trim() || unsetText;
       case "dateOfBirth":
         return formatDateParts(employee.basic.dateOfBirth);
       case "onboardDate":
         return formatDateParts(employee.work.onboardDate);
       case "nationality":
-        return employee.basic.nationality || "未設定";
+        return employee.basic.nationality || unsetText;
       case "status":
-        return employee.work.status || "未設定";
+        return employee.work.status || unsetText;
       case "lastDay":
         return formatDateParts(employee.work.lastDay);
       default:
-        return "未設定";
+        return unsetText;
     }
   }
 
@@ -564,7 +566,7 @@
       const label = typeof optionValue === "string" ? optionValue : optionValue.label;
       const selected = value === selectedValue ? " selected" : "";
 
-      return '<option value="' + escapeHtml(value) + '"' + selected + ">" + escapeHtml(label) + "</option>";
+      return '<option value="' + escapeHtml(value) + '"' + selected + ">" + escapeHtml(translateLiteral(label)) + "</option>";
     }).join("");
   }
 
@@ -578,13 +580,15 @@
   }
 
   function renderDatePart(label, path, options, selectedValue, disabled) {
+    const translatedLabel = translateLiteral(label);
+
     return [
       '<label class="employee-form__date-part">',
       renderSelectControl(
         'data-path="' + escapeHtml(path) + '"' + (disabled ? " disabled" : ""),
-        '<option value="">' + escapeHtml(label) + "</option>" + renderOptionList(options, selectedValue)
+        '<option value="">' + escapeHtml(translatedLabel) + "</option>" + renderOptionList(options, selectedValue)
       ),
-      '<span class="employee-form__date-unit">' + escapeHtml(label) + "</span>",
+      '<span class="employee-form__date-unit">' + escapeHtml(translatedLabel) + "</span>",
       "</label>"
     ].join("");
   }
@@ -625,7 +629,7 @@
     }
 
     if (field.type === "computed") {
-      return '<div class="employee-form__readonly">' + escapeHtml(value || "自動計算") + "</div>";
+      return '<div class="employee-form__readonly">' + escapeHtml(value || translateLiteral("自動計算")) + "</div>";
     }
 
     if (field.type === "dateTriple") {
@@ -639,12 +643,12 @@
       return [
         '<div class="employee-form__compound employee-form__compound--phone">',
         '<div class="employee-form__country-wrap">',
-        '<input class="employee-form__country-input" type="text" list="' + escapeHtml(listId) + '" data-path="' + escapeHtml(field.path) + '.countryCode" value="' + escapeHtml(phoneValue.countryCode) + '" placeholder="國家 + 區碼"' + (disabled ? " disabled" : "") + '>',
+        '<input class="employee-form__country-input" type="text" list="' + escapeHtml(listId) + '" data-path="' + escapeHtml(field.path) + '.countryCode" value="' + escapeHtml(phoneValue.countryCode) + '" placeholder="' + escapeHtml(translateLiteral("國家 + 區碼")) + '"' + (disabled ? " disabled" : "") + '>',
         '<datalist id="' + escapeHtml(listId) + '">' + dataApi.PHONE_COUNTRY_OPTIONS.map(function (option) {
           return '<option value="' + escapeHtml(option) + '"></option>';
         }).join("") + "</datalist>",
         "</div>",
-        '<input type="text" data-path="' + escapeHtml(field.path) + '.number" value="' + escapeHtml(phoneValue.number) + '" placeholder="電話號碼"' + (disabled ? " disabled" : "") + '>',
+        '<input type="text" data-path="' + escapeHtml(field.path) + '.number" value="' + escapeHtml(phoneValue.number) + '" placeholder="' + escapeHtml(translateLiteral("電話號碼")) + '"' + (disabled ? " disabled" : "") + '>',
         "</div>"
       ].join("");
     }
@@ -659,7 +663,7 @@
           renderOptionList(dataApi.RELATIONSHIP_OPTIONS, value.preset)
         ),
         otherVisible
-          ? '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="請輸入關係"' + (disabled ? " disabled" : "") + '>'
+          ? '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="' + escapeHtml(translateLiteral("請輸入關係")) + '"' + (disabled ? " disabled" : "") + '>'
           : "",
         "</div>"
       ].join("");
@@ -675,7 +679,7 @@
           renderOptionList(field.options, value.preset)
         ),
         otherVisible
-          ? '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="請輸入其他"' + (disabled ? " disabled" : "") + '>'
+          ? '<input type="text" data-path="' + escapeHtml(field.path) + '.other" value="' + escapeHtml(value.other) + '" placeholder="' + escapeHtml(translateLiteral("請輸入其他")) + '"' + (disabled ? " disabled" : "") + '>'
           : "",
         "</div>"
       ].join("");
@@ -690,10 +694,10 @@
             const selected = statusValue === value ? " selected" : "";
             const disabledOption = options.statusLocked && statusValue === "離職" ? " disabled" : "";
 
-            return '<option value="' + escapeHtml(statusValue) + '"' + selected + disabledOption + ">" + escapeHtml(statusValue) + "</option>";
+            return '<option value="' + escapeHtml(statusValue) + '"' + selected + disabledOption + ">" + escapeHtml(translateLiteral(statusValue)) + "</option>";
           }).join("")
         ),
-        value === "離職" ? '<div class="employee-form__nested"><div class="employee-form__field-label employee-form__field-label--nested">最後工作日</div>' + renderDateTripleField({ path: "work.lastDay" }, draft.work.lastDay, !options.isEditable) + "</div>" : "",
+        value === "離職" ? '<div class="employee-form__nested"><div class="employee-form__field-label employee-form__field-label--nested">' + escapeHtml(translateLiteral("最後工作日")) + "</div>" + renderDateTripleField({ path: "work.lastDay" }, draft.work.lastDay, !options.isEditable) + "</div>" : "",
         "</div>"
       ].join("");
     }
@@ -721,25 +725,25 @@
             '<div class="employee-form__attachment-item">',
             '<button type="button" class="employee-form__attachment-link" data-action="preview-attachment" data-attachment-index="' + String(index) + '">' + escapeHtml(attachment.name) + "</button>",
             '<div class="employee-form__attachment-actions">',
-            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="replace-attachment" data-attachment-index="' + String(index) + '"' + (!options.isEditable ? " disabled" : "") + ' aria-label="更換檔案">↺</button>',
-            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="move-attachment-up" data-attachment-index="' + String(index) + '"' + (!options.isEditable || index === 0 ? " disabled" : "") + ' aria-label="上移檔案">↑</button>',
-            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="move-attachment-down" data-attachment-index="' + String(index) + '"' + (!options.isEditable || index === attachments.length - 1 ? " disabled" : "") + ' aria-label="下移檔案">↓</button>',
-            '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="request-delete-attachment" data-attachment-index="' + String(index) + '"' + (!options.isEditable ? " disabled" : "") + ' aria-label="刪除檔案">✕</button>',
+            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="replace-attachment" data-attachment-index="' + String(index) + '"' + (!options.isEditable ? " disabled" : "") + ' aria-label="' + escapeHtml(translateLiteral("更換檔案")) + '">↺</button>',
+            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="move-attachment-up" data-attachment-index="' + String(index) + '"' + (!options.isEditable || index === 0 ? " disabled" : "") + ' aria-label="' + escapeHtml(translateLiteral("上移檔案")) + '">↑</button>',
+            '<button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="move-attachment-down" data-attachment-index="' + String(index) + '"' + (!options.isEditable || index === attachments.length - 1 ? " disabled" : "") + ' aria-label="' + escapeHtml(translateLiteral("下移檔案")) + '">↓</button>',
+            '<button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="request-delete-attachment" data-attachment-index="' + String(index) + '"' + (!options.isEditable ? " disabled" : "") + ' aria-label="' + escapeHtml(translateLiteral("刪除檔案")) + '">✕</button>',
             "</div>",
             "</div>"
           ].join("");
         }).join(""),
         pendingAttachments.map(function (attachment, index) {
-          return '<div class="employee-form__attachment-item employee-form__attachment-item--pending"><div class="employee-form__attachment-link employee-form__attachment-link--static">' + escapeHtml(attachment.name) + '</div><div class="employee-form__attachment-actions"><button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="confirm-pending-attachment" data-pending-index="' + String(index) + '" aria-label="確認檔案">✓</button><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="cancel-pending-attachment" data-pending-index="' + String(index) + '" aria-label="取消檔案">✕</button></div></div>';
+          return '<div class="employee-form__attachment-item employee-form__attachment-item--pending"><div class="employee-form__attachment-link employee-form__attachment-link--static">' + escapeHtml(attachment.name) + '</div><div class="employee-form__attachment-actions"><button type="button" class="employees-icon-button employees-icon-button--ghost" data-action="confirm-pending-attachment" data-pending-index="' + String(index) + '" aria-label="' + escapeHtml(translateLiteral("確認檔案")) + '">✓</button><button type="button" class="employees-icon-button employees-icon-button--ghost employees-icon-button--danger" data-action="cancel-pending-attachment" data-pending-index="' + String(index) + '" aria-label="' + escapeHtml(translateLiteral("取消檔案")) + '">✕</button></div></div>';
         }).join(""),
-        '<div class="employee-form__file-row"><button type="button" class="employee-form__ghost-button employee-form__attachment-add" data-action="choose-employee-file"' + (!options.isEditable ? " disabled" : "") + ">" + escapeHtml(attachments.length ? "新增檔案" : "選擇檔案") + "</button></div>",
-        pendingAttachments.length ? '<div class="employee-form__field-hint">按 Enter 可直接確認最上方待確認檔案。</div>' : "",
+        '<div class="employee-form__file-row"><button type="button" class="employee-form__ghost-button employee-form__attachment-add" data-action="choose-employee-file"' + (!options.isEditable ? " disabled" : "") + ">" + escapeHtml(translateLiteral(attachments.length ? "新增檔案" : "選擇檔案")) + "</button></div>",
+        pendingAttachments.length ? '<div class="employee-form__field-hint">' + escapeHtml(translateLiteral("按 Enter 可直接確認最上方待確認檔案。")) + "</div>" : "",
         "</div>"
       ].join("");
     }
 
     if (field.type === "textarea") {
-      return '<textarea data-path="' + escapeHtml(field.path) + '" placeholder="' + escapeHtml(field.placeholder || "") + '"' + (disabled ? " disabled" : "") + ">" + escapeHtml(value) + "</textarea>";
+      return '<textarea data-path="' + escapeHtml(field.path) + '" placeholder="' + escapeHtml(translateLiteral(field.placeholder || "")) + '"' + (disabled ? " disabled" : "") + ">" + escapeHtml(value) + "</textarea>";
     }
 
     return "";
@@ -750,7 +754,7 @@
       const fieldMarkup = section.fields.map(function (field) {
         return [
           '<section class="employee-form__field" data-field="' + escapeHtml(field.path) + '">',
-          '<div class="employee-form__field-label">' + escapeHtml(field.label) + "</div>",
+          '<div class="employee-form__field-label">' + escapeHtml(translateLiteral(field.label)) + "</div>",
           renderFieldContent(field, draft, options),
           "</section>"
         ].join("");
