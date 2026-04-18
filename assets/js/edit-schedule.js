@@ -1642,21 +1642,6 @@
     }
   }
 
-  function measureBodyStartOffset(row) {
-    if (!row || !dom.sheetFrame || !dom.sheetScroll) {
-      return 0;
-    }
-
-    return Math.max(
-      0,
-      Math.round(
-        row.getBoundingClientRect().top
-        - dom.sheetFrame.getBoundingClientRect().top
-        + dom.sheetScroll.scrollTop
-      )
-    );
-  }
-
   function updateStickyMetrics() {
       const headerHeight = dom.header ? Math.round(dom.header.getBoundingClientRect().height) : 56;
       const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
@@ -1668,16 +1653,12 @@
         const summaryRowsSum = summaryRowHeights.reduce(function (sum, value) { return sum + value; }, 0);
         const rawTableHeadHeight = dom.tableHead ? Math.ceil(dom.tableHead.getBoundingClientRect().height || 0) : 0;
         const rawSummaryHeadHeight = dom.summaryHead ? Math.ceil(dom.summaryHead.getBoundingClientRect().height || 0) : 0;
-        const bodyStartOffset = measureBodyStartOffset(dom.tableBody && dom.tableBody.querySelector("tr"));
-        const summaryStartOffset = measureBodyStartOffset(dom.summaryBody && dom.summaryBody.querySelector("tr"));
         const measuredBandHeight = Math.max(
           rowCount * 24,
           Math.min(120, Math.max(0, rawTableHeadHeight)),
           Math.min(120, Math.max(0, rawSummaryHeadHeight)),
           tableRowsSum,
-          summaryRowsSum,
-          bodyStartOffset,
-          summaryStartOffset
+          summaryRowsSum
         );
 
         return {

@@ -43,6 +43,7 @@
   --sticky-left-vie: calc(var(--col-id) + var(--col-dept));
   --sticky-left-eng: calc(var(--col-id) + var(--col-dept) + var(--col-vie));
   --sticky-left-position: calc(var(--col-id) + var(--col-dept) + var(--col-vie) + var(--col-eng));
+  --schedule-freeze-boundary: calc(var(--sticky-left-position) + var(--col-position));
   min-width: 0;
   min-height: 100vh;
   display: grid;
@@ -517,6 +518,23 @@
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+.schedule-sheet-main::before,
+.schedule-frozen-main::before,
+.schedule-daily-stage__main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: calc(var(--schedule-freeze-boundary) + 1px);
+  z-index: 6;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(7, 6, 16, 0.54) 0%, rgba(7, 6, 16, 0.38) 100%);
+  backdrop-filter: blur(18px) brightness(0.66) saturate(0.88);
+  -webkit-backdrop-filter: blur(18px) brightness(0.66) saturate(0.88);
 }
 
 .schedule-sheet-summary {
@@ -2113,24 +2131,4 @@ body.edit-page {
 
 .schedule-daily-stage__main {
   position: relative;
-}
-
-.schedule-daily-stage__main::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: calc(var(--sticky-left-position) + 1px);
-  z-index: 9;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(7, 6, 16, 0.16) 0%, rgba(7, 6, 16, 0.06) 100%);
-  backdrop-filter: blur(10px) brightness(0.88) saturate(0.92);
-  -webkit-backdrop-filter: blur(10px) brightness(0.88) saturate(0.92);
-}
-
-.edit-page.schedule-sheet--x-shifted .schedule-daily-stage__main::before,
-.schedule-workspace.schedule-sheet--x-shifted .schedule-daily-stage__main::before {
-  width: calc(var(--sticky-left-position) + var(--col-position, 92px) + 1px);
 }
