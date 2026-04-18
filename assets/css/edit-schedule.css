@@ -2129,3 +2129,8 @@ body.edit-page {
   backdrop-filter: blur(10px) brightness(0.88) saturate(0.92);
   -webkit-backdrop-filter: blur(10px) brightness(0.88) saturate(0.92);
 }
+
+.edit-page.schedule-sheet--x-shifted .schedule-daily-stage__main::before,
+.schedule-workspace.schedule-sheet--x-shifted .schedule-daily-stage__main::before {
+  width: calc(var(--sticky-left-position) + var(--col-position, 92px) + 1px);
+}

@@ -1541,7 +1541,14 @@
       return;
     }
     const hasHorizontalOverflow = dom.sheetScroll.scrollWidth > dom.sheetScroll.clientWidth + 1;
+    const isShiftedHorizontally = dom.sheetScroll.scrollLeft > 1;
     dom.sheetScroll.classList.toggle("schedule-sheet-scroll--fit", !hasHorizontalOverflow);
+    [dom.workspace, dom.app].forEach(function (target) {
+      if (!target) {
+        return;
+      }
+      target.classList.toggle("schedule-sheet--x-shifted", isShiftedHorizontally);
+    });
   }
 
   function handleLockedSurfaceWheel(event) {
@@ -1601,27 +1608,86 @@
       });
   }
 
+  function withDefaultHeaderVars(measure) {
+    const targets = [dom.workspace, dom.app].filter(Boolean);
+    const previous = targets.map(function (target) {
+      return {
+        target: target,
+        row: target.style.getPropertyValue("--schedule-table-head-row"),
+        band: target.style.getPropertyValue("--schedule-frozen-band-height")
+      };
+    });
+
+    targets.forEach(function (target) {
+      target.style.removeProperty("--schedule-table-head-row");
+      target.style.removeProperty("--schedule-frozen-band-height");
+    });
+
+    try {
+      return measure();
+    } finally {
+      previous.forEach(function (entry) {
+        if (entry.row) {
+          entry.target.style.setProperty("--schedule-table-head-row", entry.row);
+        } else {
+          entry.target.style.removeProperty("--schedule-table-head-row");
+        }
+
+        if (entry.band) {
+          entry.target.style.setProperty("--schedule-frozen-band-height", entry.band);
+        } else {
+          entry.target.style.removeProperty("--schedule-frozen-band-height");
+        }
+      });
+    }
+  }
+
+  function measureBodyStartOffset(row) {
+    if (!row || !dom.sheetFrame || !dom.sheetScroll) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.round(
+        row.getBoundingClientRect().top
+        - dom.sheetFrame.getBoundingClientRect().top
+        + dom.sheetScroll.scrollTop
+      )
+    );
+  }
+
   function updateStickyMetrics() {
       const headerHeight = dom.header ? Math.round(dom.header.getBoundingClientRect().height) : 56;
       const periodHeight = dom.periodBar ? Math.round(dom.periodBar.getBoundingClientRect().height) : 52;
-      const tableRowHeights = measureHeaderRowHeights(dom.tableHead);
-      const summaryRowHeights = measureHeaderRowHeights(dom.summaryHead);
-      const measuredRowHeight = Math.max(0, ...tableRowHeights, ...summaryRowHeights);
-      const rowHeight = Math.max(24, measuredRowHeight);
-      const rawTableHeadHeight = dom.tableHead ? Math.ceil(dom.tableHead.getBoundingClientRect().height || 0) : 0;
-      const rawSummaryHeadHeight = dom.summaryHead ? Math.ceil(dom.summaryHead.getBoundingClientRect().height || 0) : 0;
-      const tableHeadHeight = Math.max(
-        rowHeight * Math.max(2, tableRowHeights.length || 0),
-        Math.min(120, Math.max(0, rawTableHeadHeight)),
-        tableRowHeights.reduce(function (sum, value) { return sum + value; }, 0)
-      );
-      const summaryHeadHeight = Math.max(
-        rowHeight * Math.max(2, summaryRowHeights.length || 0),
-        Math.min(120, Math.max(0, rawSummaryHeadHeight)),
-        summaryRowHeights.reduce(function (sum, value) { return sum + value; }, 0)
-      );
-      const measuredBandHeight = Math.max(tableHeadHeight, summaryHeadHeight);
-      const frozenBandHeight = Math.max(rowHeight * 2, measuredBandHeight);
+      const naturalMetrics = withDefaultHeaderVars(function () {
+        const tableRowHeights = measureHeaderRowHeights(dom.tableHead);
+        const summaryRowHeights = measureHeaderRowHeights(dom.summaryHead);
+        const rowCount = Math.max(2, tableRowHeights.length || 0, summaryRowHeights.length || 0);
+        const tableRowsSum = tableRowHeights.reduce(function (sum, value) { return sum + value; }, 0);
+        const summaryRowsSum = summaryRowHeights.reduce(function (sum, value) { return sum + value; }, 0);
+        const rawTableHeadHeight = dom.tableHead ? Math.ceil(dom.tableHead.getBoundingClientRect().height || 0) : 0;
+        const rawSummaryHeadHeight = dom.summaryHead ? Math.ceil(dom.summaryHead.getBoundingClientRect().height || 0) : 0;
+        const bodyStartOffset = measureBodyStartOffset(dom.tableBody && dom.tableBody.querySelector("tr"));
+        const summaryStartOffset = measureBodyStartOffset(dom.summaryBody && dom.summaryBody.querySelector("tr"));
+        const measuredBandHeight = Math.max(
+          rowCount * 24,
+          Math.min(120, Math.max(0, rawTableHeadHeight)),
+          Math.min(120, Math.max(0, rawSummaryHeadHeight)),
+          tableRowsSum,
+          summaryRowsSum,
+          bodyStartOffset,
+          summaryStartOffset
+        );
+
+        return {
+          rowCount: rowCount,
+          frozenBandHeight: measuredBandHeight,
+          rowHeight: Math.max(24, Math.ceil(measuredBandHeight / rowCount))
+        };
+      });
+      const rowHeight = naturalMetrics.rowHeight;
+      const frozenBandHeight = naturalMetrics.frozenBandHeight;
       const tableRect = dom.table ? dom.table.getBoundingClientRect() : null;
       const frameRect = dom.sheetFrame ? dom.sheetFrame.getBoundingClientRect() : null;
       const periodGridRect = dom.periodGrid ? dom.periodGrid.getBoundingClientRect() : null;
@@ -1693,6 +1759,12 @@
       return;
     }
     dom.frozenScroll.scrollLeft = dom.sheetScroll.scrollLeft;
+    [dom.workspace, dom.app].forEach(function (target) {
+      if (!target) {
+        return;
+      }
+      target.classList.toggle("schedule-sheet--x-shifted", dom.sheetScroll.scrollLeft > 1);
+    });
   }
 
   function getFilteredShiftCodes() {
