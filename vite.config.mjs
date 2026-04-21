@@ -18,9 +18,25 @@ function copyRootImageDirectory() {
   };
 }
 
+function copyAssetsJsDirectory() {
+  return {
+    name: "copy-assets-js-directory",
+    closeBundle() {
+      const sourceDir = resolve(process.cwd(), "assets/js");
+      const targetDir = resolve(process.cwd(), "dist/assets/js");
+
+      if (!existsSync(sourceDir)) {
+        return;
+      }
+
+      cpSync(sourceDir, targetDir, { recursive: true, force: true });
+    }
+  };
+}
+
 export default defineConfig({
   appType: "mpa",
-  plugins: [copyRootImageDirectory()],
+  plugins: [copyRootImageDirectory(), copyAssetsJsDirectory()],
   server: {
     host: "127.0.0.1",
     port: 4173
