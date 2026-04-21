@@ -729,6 +729,147 @@ body.training-page {
 .log-chip--p { background: rgba(181, 112, 255, 0.15); color: #c484ff; }
 .log-chip--l { background: rgba(80, 216, 144, 0.15);  color: var(--tr-tie); }
 
+/* === Role selector === */
+.tr-role-selector {
+  display: flex;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--tr-border);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.tr-role-btn {
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--tr-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.tr-role-btn:hover { color: var(--tr-accent); }
+
+.tr-role-btn.is-active {
+  background: var(--tr-accent);
+  color: #1a1205;
+  font-weight: 700;
+}
+
+/* === Insurance panel === */
+.tr-insurance-panel {
+  background: rgba(20, 8, 42, 0.97);
+  border: 2px solid rgba(181, 112, 255, 0.5);
+  border-radius: var(--tr-radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tr-ins-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tr-ins-icon { font-size: 18px; }
+
+.tr-ins-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #c484ff;
+}
+
+.tr-ins-banker-score {
+  margin-left: auto;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--tr-banker);
+  background: rgba(255, 90, 90, 0.15);
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 90, 90, 0.4);
+}
+
+.tr-ins-info {
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  color: var(--tr-text-soft);
+}
+
+.tr-ins-info strong { color: var(--tr-accent); }
+
+.tr-ins-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tr-ins-opt-btn {
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: var(--tr-radius-sm);
+  border: 1px solid rgba(181, 112, 255, 0.35);
+  background: rgba(181, 112, 255, 0.08);
+  color: #c484ff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.tr-ins-opt-btn:hover:not(:disabled)  { background: rgba(181, 112, 255, 0.18); }
+.tr-ins-opt-btn:disabled              { opacity: 0.3; cursor: not-allowed; }
+
+.tr-ins-opt-btn.is-selected {
+  background: rgba(181, 112, 255, 0.28);
+  border-color: rgba(181, 112, 255, 0.75);
+  box-shadow: 0 0 10px rgba(181, 112, 255, 0.2);
+}
+
+.tr-btn--ins-confirm {
+  background: rgba(181, 112, 255, 0.18);
+  border-color: rgba(181, 112, 255, 0.5);
+  color: #c484ff;
+}
+
+.tr-btn--ins-confirm:hover:not(:disabled) {
+  background: rgba(181, 112, 255, 0.3);
+  border-color: #c484ff;
+  color: #d8a8ff;
+}
+
+.tr-ins-current {
+  font-size: 13px;
+  color: var(--tr-text-soft);
+  text-align: center;
+}
+
+.tr-ins-current strong { color: #c484ff; font-variant-numeric: tabular-nums; }
+
+/* === Insurance log badge === */
+.log-chip--ins { background: rgba(181, 112, 255, 0.15); color: #c484ff; }
+
+/* === Insurance detail row === */
+.detail-row--ins {
+  border-top: 1px dashed var(--tr-border);
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
 /* === Utility === */
 .hint-text {
   color: var(--tr-text-faint);

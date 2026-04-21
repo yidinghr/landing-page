@@ -19,6 +19,11 @@
     <span class="tr-header-title">Operation Training</span>
     <span class="tr-header-badge">Baccarat · Free Practice</span>
   </div>
+  <div class="tr-role-selector">
+    <button type="button" class="tr-role-btn is-active" data-role="dealer">Dealer</button>
+    <button type="button" class="tr-role-btn" data-role="customer">Customer</button>
+    <button type="button" class="tr-role-btn" data-role="insurance">Insurance</button>
+  </div>
   <div class="tr-header-right">
     <span class="tr-rules-label">Rules:</span>
     <span id="rulesName" class="tr-rules-name">Standard Rules</span>
@@ -72,6 +77,26 @@
         <div id="pScore" class="bac-score">—</div>
       </div>
 
+    </div>
+
+    <!-- Insurance offer panel -->
+    <div id="insurancePanel" class="tr-insurance-panel" hidden>
+      <div class="tr-ins-header">
+        <span class="tr-ins-icon">🛡</span>
+        <span class="tr-ins-title">INSURANCE OFFERED</span>
+        <span id="insBankerScore" class="tr-ins-banker-score">—</span>
+      </div>
+      <div class="tr-ins-info">
+        <span>Player bet: <strong id="insPlayerBet">—</strong></span>
+        <span>Max insurance: <strong id="insMaxBet">—</strong></span>
+      </div>
+      <div class="tr-ins-options">
+        <button type="button" class="tr-btn tr-btn--ghost tr-btn--sm" id="btnInsDecline">Decline</button>
+        <button type="button" class="tr-ins-opt-btn" data-ins-pct="25" id="btnIns25">25%</button>
+        <button type="button" class="tr-ins-opt-btn" data-ins-pct="50" id="btnIns50">50%</button>
+        <button type="button" class="tr-btn tr-btn--ins-confirm tr-btn--sm" id="btnInsConfirm">Confirm Insurance</button>
+      </div>
+      <div id="insCurrentBet" class="tr-ins-current">Insurance bet: <strong>0</strong></div>
     </div>
 
     <!-- Bet zones (interactive) -->

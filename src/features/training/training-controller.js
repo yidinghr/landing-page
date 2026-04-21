@@ -5,7 +5,10 @@ import {
   handTotal, isNatural, playerDraws, bankerDraws, resolveRound
 } from './engines/baccarat-engine.js';
 import { calcPayout, betTotal, fmtAmt, fmtBalance } from './engines/payout-engine.js';
-import { getRules } from './config/config-manager.js';
+import {
+  shouldOfferInsurance, insuranceMaxBet, calcInsurancePayout
+} from './engines/insurance-engine.js';
+import { getRules, getInsuranceConfig } from './config/config-manager.js';
 
 // --- Constants ---
 const CHIPS = [
@@ -19,15 +22,6 @@ const CHIPS = [
 
 const ZONES = ['playerPair', 'player', 'tie', 'banker', 'bankerPair', 'luckySix'];
 
-const ZONE_META = {
-  playerPair: { label: 'P. Pair',  odds: '11:1'    },
-  player:     { label: 'PLAYER',   odds: '1:1'     },
-  tie:        { label: 'TIE',      odds: '8:1'     },
-  banker:     { label: 'BANKER',   odds: '0.95:1'  },
-  bankerPair: { label: 'B. Pair',  odds: '11:1'    },
-  luckySix:   { label: 'Lucky 6',  odds: '12–20:1' },
-};
-
 const WINNER_LABEL = { player: 'PLAYER WINS', banker: 'BANKER WINS', tie: 'TIE' };
 const LOG_LETTER   = { player: 'P', banker: 'B', tie: 'T' };
 
@@ -37,55 +31,66 @@ let pCards = [], bCards = [];
 let result = null;
 let roundNum = 0;
 let log = [];
-let phase = 'idle'; // 'idle' | 'dealt'
+let phase = 'idle'; // 'idle' | 'insurance' | 'dealt'
 
 let rules = {};
+let insuranceConfig = {};
 let bets = { player: 0, banker: 0, tie: 0, playerPair: 0, bankerPair: 0, luckySix: 0 };
 let selectedChip = null;
 let balance = 1000000;
 let payouts = null;
+let role = 'dealer';  // 'dealer' | 'customer' | 'insurance'
+let insuranceBet = 0;
 
 // --- DOM ---
 const el = {
-  shoeRem:      document.getElementById('shoeRem'),
-  shoeTotal:    document.getElementById('shoeTotal'),
-  shoeFill:     document.getElementById('shoeFill'),
-  shoeWarn:     document.getElementById('shoeWarn'),
-  pCards:       document.getElementById('pCards'),
-  bCards:       document.getElementById('bCards'),
-  pScore:       document.getElementById('pScore'),
-  bScore:       document.getElementById('bScore'),
-  resultBox:    document.getElementById('resultBox'),
-  roundDetail:  document.getElementById('roundDetail'),
-  sessionLog:   document.getElementById('sessionLog'),
-  btnDeal:      document.getElementById('btnDeal'),
-  btnNext:      document.getElementById('btnNext'),
-  btnShoe:      document.getElementById('btnShoe'),
-  balanceAmt:   document.getElementById('balanceAmt'),
-  totalBetAmt:  document.getElementById('totalBetAmt'),
-  payoutSummary:document.getElementById('payoutSummary'),
-  chipTray:     document.getElementById('chipTray'),
-  betZones:     document.getElementById('betZones'),
-  btnClearBets: document.getElementById('btnClearBets'),
-  rulesName:    document.getElementById('rulesName'),
+  shoeRem:        document.getElementById('shoeRem'),
+  shoeTotal:      document.getElementById('shoeTotal'),
+  shoeFill:       document.getElementById('shoeFill'),
+  shoeWarn:       document.getElementById('shoeWarn'),
+  pCards:         document.getElementById('pCards'),
+  bCards:         document.getElementById('bCards'),
+  pScore:         document.getElementById('pScore'),
+  bScore:         document.getElementById('bScore'),
+  resultBox:      document.getElementById('resultBox'),
+  roundDetail:    document.getElementById('roundDetail'),
+  sessionLog:     document.getElementById('sessionLog'),
+  btnDeal:        document.getElementById('btnDeal'),
+  btnNext:        document.getElementById('btnNext'),
+  btnShoe:        document.getElementById('btnShoe'),
+  balanceAmt:     document.getElementById('balanceAmt'),
+  totalBetAmt:    document.getElementById('totalBetAmt'),
+  payoutSummary:  document.getElementById('payoutSummary'),
+  chipTray:       document.getElementById('chipTray'),
+  betZones:       document.getElementById('betZones'),
+  btnClearBets:   document.getElementById('btnClearBets'),
+  rulesName:      document.getElementById('rulesName'),
+  // Insurance panel
+  insurancePanel: document.getElementById('insurancePanel'),
+  insBankerScore: document.getElementById('insBankerScore'),
+  insPlayerBet:   document.getElementById('insPlayerBet'),
+  insMaxBet:      document.getElementById('insMaxBet'),
+  insCurrentBet:  document.getElementById('insCurrentBet'),
+  btnInsDecline:  document.getElementById('btnInsDecline'),
+  btnIns25:       document.getElementById('btnIns25'),
+  btnIns50:       document.getElementById('btnIns50'),
+  btnInsConfirm:  document.getElementById('btnInsConfirm'),
 };
 
-// --- Chip tray rendering ---
+// --- Chip tray ---
 function renderChipTray() {
   el.chipTray.innerHTML = CHIPS.map(function (c) {
-    const active = selectedChip === c.value ? ' is-selected' : '';
-    const disabled = balance < c.value ? ' is-disabled' : '';
+    const active    = selectedChip === c.value ? ' is-selected' : '';
+    const disabled  = balance < c.value ? ' is-disabled' : '';
     return [
       '<button class="tr-chip ' + c.cls + active + disabled + '" data-chip="' + c.value + '"',
       disabled ? ' disabled' : '',
-      '>',
-      '<span class="tr-chip__label">' + c.label + '</span>',
-      '</button>'
+      '><span class="tr-chip__label">' + c.label + '</span></button>'
     ].join('');
   }).join('');
 }
 
-// --- Bet zones rendering ---
+// --- Bet zones ---
 function renderBetZones() {
   const total = betTotal(bets);
   el.totalBetAmt.textContent = total > 0 ? total.toLocaleString() : '—';
@@ -112,7 +117,6 @@ function renderBetZones() {
       payEl.hidden = true;
     }
 
-    // Highlight zone if active payout
     const zoneEl = document.querySelector('[data-zone="' + zone + '"]');
     if (!zoneEl) return;
     zoneEl.classList.remove('is-win', 'is-lose', 'is-push', 'has-bet');
@@ -133,15 +137,18 @@ function renderBalance() {
 // --- Payout summary ---
 function renderPayoutSummary() {
   if (!payouts) { el.payoutSummary.hidden = true; return; }
-  const net = payouts.net;
-  const comm = payouts.commission || 0;
-  const parts = [
+  const insPay = payouts.insurance || 0;
+  const net    = payouts.net + insPay;
+  const comm   = payouts.commission || 0;
+  const parts  = [
     '<span class="payout-net ' + (net > 0 ? 'is-win' : net < 0 ? 'is-lose' : 'is-push') + '">',
-    'Net: ' + fmtAmt(net),
-    '</span>'
+    'Net: ' + fmtAmt(net), '</span>'
   ];
   if (comm > 0) {
     parts.push('<span class="payout-comm">Commission: ' + comm.toLocaleString() + '</span>');
+  }
+  if (payouts.insuranceBet) {
+    parts.push('<span class="payout-comm">Insurance: ' + fmtAmt(insPay) + '</span>');
   }
   el.payoutSummary.innerHTML = parts.join('');
   el.payoutSummary.hidden = false;
@@ -202,10 +209,9 @@ function renderResult() {
     const nat  = r.pNatural ? r.pTotal : r.bTotal;
     badges.push('<span class="res-badge res-badge--natural">Natural ' + nat + ' (' + side + ')</span>');
   }
-  if (r.pPair)   badges.push('<span class="res-badge res-badge--pair">Player Pair</span>');
-  if (r.bPair)   badges.push('<span class="res-badge res-badge--pair">Banker Pair</span>');
+  if (r.pPair)    badges.push('<span class="res-badge res-badge--pair">Player Pair</span>');
+  if (r.bPair)    badges.push('<span class="res-badge res-badge--pair">Banker Pair</span>');
   if (r.luckySix) badges.push('<span class="res-badge res-badge--lucky6">Lucky Six (' + r.luckySix + ')</span>');
-
   el.resultBox.innerHTML = [
     '<div class="res-winner res-winner--' + r.winner + '">' + WINNER_LABEL[r.winner] + '</div>',
     '<div class="res-score">' + r.pTotal + ' — ' + r.bTotal + '</div>',
@@ -218,6 +224,31 @@ function renderResult() {
 function cardDesc(card) {
   if (!card) return '—';
   return card.rank + SUIT_SYMBOL[card.suit] + ' (' + cardValue(card.rank) + ')';
+}
+
+function renderPayoutDetail() {
+  if (!payouts) return '';
+  const rows = [];
+  if (payouts.player     !== undefined) rows.push(detailPayRow('Player bet', payouts.player));
+  if (payouts.banker     !== undefined) rows.push(detailPayRow('Banker bet', payouts.banker));
+  if (payouts.tie        !== undefined) rows.push(detailPayRow('Tie bet',    payouts.tie));
+  if (payouts.playerPair !== undefined) rows.push(detailPayRow('P. Pair',    payouts.playerPair));
+  if (payouts.bankerPair !== undefined) rows.push(detailPayRow('B. Pair',    payouts.bankerPair));
+  if (payouts.luckySix   !== undefined) rows.push(detailPayRow('Lucky Six',  payouts.luckySix));
+  if (payouts.commission) {
+    rows.push('<div class="detail-row detail-row--comm"><span>Commission</span><span>-' + payouts.commission.toLocaleString() + '</span></div>');
+  }
+  if (payouts.insuranceBet) {
+    const insPay = payouts.insurance || 0;
+    rows.push('<div class="detail-row detail-row--ins"><span>Insurance (' + payouts.insuranceBet.toLocaleString() + ')</span><span class="' + (insPay >= 0 ? 'payout-win' : 'payout-lose') + '">' + fmtAmt(insPay) + '</span></div>');
+  }
+  if (!rows.length) return '';
+  return '<div class="detail-payout-section"><div class="detail-head">PAYOUT</div>' + rows.join('') + '</div>';
+}
+
+function detailPayRow(label, val) {
+  const cls = val > 0 ? 'payout-win' : val < 0 ? 'payout-lose' : '';
+  return '<div class="detail-row"><span>' + label + '</span><span class="' + cls + '">' + fmtAmt(val) + '</span></div>';
 }
 
 function renderDetail() {
@@ -247,22 +278,8 @@ function renderDetail() {
     '</div>',
     '<div class="detail-winner">Round ' + roundNum + ': <strong class="detail-winner--' + r.winner + '">' + WINNER_LABEL[r.winner] + '</strong></div>',
     r.luckySix ? '<div class="detail-row detail-row--full"><span>Lucky Six</span><span>' + r.luckySix + '</span></div>' : '',
-    payouts ? renderPayoutDetail() : ''
+    renderPayoutDetail()
   ].join('');
-}
-
-function renderPayoutDetail() {
-  if (!payouts) return '';
-  const rows = [];
-  if (payouts.player   !== undefined) rows.push('<div class="detail-row"><span>Player bet</span><span class="' + (payouts.player > 0 ? 'payout-win' : payouts.player < 0 ? 'payout-lose' : '') + '">' + fmtAmt(payouts.player) + '</span></div>');
-  if (payouts.banker   !== undefined) rows.push('<div class="detail-row"><span>Banker bet</span><span class="' + (payouts.banker > 0 ? 'payout-win' : payouts.banker < 0 ? 'payout-lose' : '') + '">' + fmtAmt(payouts.banker) + '</span></div>');
-  if (payouts.tie      !== undefined) rows.push('<div class="detail-row"><span>Tie bet</span><span class="' + (payouts.tie > 0 ? 'payout-win' : payouts.tie < 0 ? 'payout-lose' : '') + '">' + fmtAmt(payouts.tie) + '</span></div>');
-  if (payouts.playerPair !== undefined) rows.push('<div class="detail-row"><span>P. Pair</span><span class="' + (payouts.playerPair > 0 ? 'payout-win' : 'payout-lose') + '">' + fmtAmt(payouts.playerPair) + '</span></div>');
-  if (payouts.bankerPair !== undefined) rows.push('<div class="detail-row"><span>B. Pair</span><span class="' + (payouts.bankerPair > 0 ? 'payout-win' : 'payout-lose') + '">' + fmtAmt(payouts.bankerPair) + '</span></div>');
-  if (payouts.luckySix !== undefined) rows.push('<div class="detail-row"><span>Lucky Six</span><span class="' + (payouts.luckySix > 0 ? 'payout-win' : 'payout-lose') + '">' + fmtAmt(payouts.luckySix) + '</span></div>');
-  if (payouts.commission) rows.push('<div class="detail-row detail-row--comm"><span>Commission</span><span>-' + payouts.commission.toLocaleString() + '</span></div>');
-  if (!rows.length) return '';
-  return '<div class="detail-payout-section"><div class="detail-head">PAYOUT</div>' + rows.join('') + '</div>';
 }
 
 // --- Session log ---
@@ -273,26 +290,68 @@ function renderLog() {
   }
   el.sessionLog.innerHTML = log.map(function (e) {
     const chips = [];
-    if (e.natural) chips.push('<span class="log-chip log-chip--n">N</span>');
-    if (e.pPair)   chips.push('<span class="log-chip log-chip--p">PP</span>');
-    if (e.bPair)   chips.push('<span class="log-chip log-chip--p">BP</span>');
-    if (e.luckySix) chips.push('<span class="log-chip log-chip--l">L6</span>');
-    const net = e.net;
+    if (e.natural)   chips.push('<span class="log-chip log-chip--n">N</span>');
+    if (e.pPair)     chips.push('<span class="log-chip log-chip--p">PP</span>');
+    if (e.bPair)     chips.push('<span class="log-chip log-chip--p">BP</span>');
+    if (e.luckySix)  chips.push('<span class="log-chip log-chip--l">L6</span>');
+    if (e.insurance) chips.push('<span class="log-chip log-chip--ins">INS</span>');
+    const net    = e.net;
     const netCls = net > 0 ? 'log-net-win' : net < 0 ? 'log-net-lose' : '';
-    const netStr = net !== null ? fmtAmt(net) : '';
     return [
       '<div class="log-entry">',
       '<span class="log-num">#' + e.round + '</span>',
       '<span class="log-dot log-dot--' + e.winner + '">' + LOG_LETTER[e.winner] + '</span>',
       '<span class="log-score">' + e.pTotal + ':' + e.bTotal + '</span>',
       chips.join(''),
-      net !== null ? '<span class="log-net ' + netCls + '">' + netStr + '</span>' : '',
+      net !== null ? '<span class="log-net ' + netCls + '">' + fmtAmt(net) + '</span>' : '',
       '</div>'
     ].join('');
   }).join('');
 }
 
-// --- Controls ---
+// --- Insurance panel ---
+function renderInsurancePanel() {
+  if (!el.insurancePanel) return;
+  const bTotal    = handTotal(bCards);
+  const playerBet = bets.player || 0;
+  const maxBet    = insuranceMaxBet(playerBet, insuranceConfig);
+
+  if (el.insBankerScore) el.insBankerScore.textContent = bTotal;
+  if (el.insPlayerBet)   el.insPlayerBet.textContent   = playerBet.toLocaleString();
+  if (el.insMaxBet)      el.insMaxBet.textContent       = maxBet.toLocaleString();
+  if (el.insCurrentBet)  el.insCurrentBet.innerHTML     = 'Insurance bet: <strong>' + insuranceBet.toLocaleString() + '</strong>';
+
+  const pct25 = Math.min(Math.floor(playerBet * 0.25), balance);
+  const pct50 = Math.min(Math.floor(playerBet * 0.50), maxBet, balance);
+
+  if (el.btnIns25) {
+    el.btnIns25.textContent = '25% (' + pct25.toLocaleString() + ')';
+    el.btnIns25.classList.toggle('is-selected', insuranceBet === pct25 && pct25 > 0);
+    el.btnIns25.disabled = pct25 === 0;
+  }
+  if (el.btnIns50) {
+    el.btnIns50.textContent = '50% (' + pct50.toLocaleString() + ')';
+    el.btnIns50.classList.toggle('is-selected', insuranceBet === pct50 && pct50 > 0);
+    el.btnIns50.disabled = pct50 === 0;
+  }
+}
+
+// --- Role ---
+function renderRole() {
+  document.querySelectorAll('.tr-role-btn').forEach(function (btn) {
+    btn.classList.toggle('is-active', btn.getAttribute('data-role') === role);
+  });
+  document.body.setAttribute('data-role', role);
+}
+
+function onRoleClick(e) {
+  const btn = e.target.closest('.tr-role-btn');
+  if (!btn) return;
+  const r = btn.getAttribute('data-role');
+  if (r) { role = r; renderRole(); }
+}
+
+// --- Phase control ---
 function setPhase(p) {
   phase = p;
   const rem = shoeRemaining(shoe);
@@ -300,7 +359,10 @@ function setPhase(p) {
   el.btnNext.disabled = p !== 'dealt';
   el.btnDeal.textContent = rem < 6 ? 'Shoe Empty' : 'DEAL';
   if (el.betZones) {
-    el.betZones.classList.toggle('zones-locked', p === 'dealt');
+    el.betZones.classList.toggle('zones-locked', p !== 'idle');
+  }
+  if (el.insurancePanel) {
+    el.insurancePanel.hidden = p !== 'insurance';
   }
 }
 
@@ -315,9 +377,9 @@ function onChipClick(e) {
 
 // --- Bet placement ---
 function onZoneClick(e) {
-  if (phase === 'dealt') return;
+  if (phase !== 'idle') return;
   const zone = e.currentTarget.getAttribute('data-zone');
-  if (!zone || !bets.hasOwnProperty(zone)) return;
+  if (!zone || !Object.prototype.hasOwnProperty.call(bets, zone)) return;
   if (!selectedChip) {
     el.chipTray.classList.add('chip-tray-nudge');
     setTimeout(function () { el.chipTray.classList.remove('chip-tray-nudge'); }, 600);
@@ -333,9 +395,8 @@ function onZoneClick(e) {
 
 // --- Clear bets ---
 function onClearBets() {
-  if (phase === 'dealt') return;
-  const total = betTotal(bets);
-  balance += total;
+  if (phase !== 'idle') return;
+  balance += betTotal(bets);
   ZONES.forEach(function (z) { bets[z] = 0; });
   payouts = null;
   renderBalance();
@@ -344,7 +405,29 @@ function onClearBets() {
   el.payoutSummary.hidden = true;
 }
 
-// --- Deal round ---
+// --- Insurance handlers ---
+function onInsDecline() {
+  insuranceBet = 0;
+  finalizeDeal();
+}
+
+function onInsPercentClick(e) {
+  const btn = e.target.closest('[data-ins-pct]');
+  if (!btn || btn.disabled) return;
+  const pct        = parseInt(btn.getAttribute('data-ins-pct'), 10);
+  const playerBet  = bets.player || 0;
+  const maxBet     = insuranceMaxBet(playerBet, insuranceConfig);
+  const raw        = Math.floor(playerBet * pct / 100);
+  insuranceBet     = Math.min(raw, maxBet, balance);
+  renderInsurancePanel();
+}
+
+function onInsConfirm() {
+  if (insuranceBet > 0) balance -= insuranceBet;
+  finalizeDeal();
+}
+
+// --- Deal logic ---
 function doDeal() {
   if (phase !== 'idle') return;
 
@@ -359,10 +442,28 @@ function doDeal() {
 
   pCards = [dealt[0], dealt[2]]; // P1 P2
   bCards = [dealt[1], dealt[3]]; // B1 B2
-  shoe = s;
+  shoe   = s;
+  insuranceBet = 0;
 
-  const pInit = handTotal(pCards);
   const bInit = handTotal(bCards);
+
+  // Pause for insurance decision if condition is met
+  if (shouldOfferInsurance(bInit, bets.player, insuranceConfig)) {
+    renderShoe();
+    renderHands();
+    renderBalance();
+    renderBetZones();
+    renderInsurancePanel();
+    setPhase('insurance');
+    return;
+  }
+
+  finalizeDeal();
+}
+
+function finalizeDeal() {
+  const pInit   = handTotal(pCards);
+  const bInit   = handTotal(bCards);
   const natural = isNatural(pInit) || isNatural(bInit);
 
   if (!natural) {
@@ -380,25 +481,34 @@ function doDeal() {
   roundNum++;
   result = resolveRound(pCards, bCards);
 
-  // Calculate payouts if any bets were placed
   const total = betTotal(bets);
   if (total > 0) {
     payouts = calcPayout(bets, result, rules);
-    balance += total + payouts.net; // return stakes + net profit/loss
+    balance += total + payouts.net;
   } else {
     payouts = null;
   }
 
+  // Settle insurance
+  if (insuranceBet > 0) {
+    const insPay = calcInsurancePayout(insuranceBet, result.winner, insuranceConfig);
+    balance += insuranceBet + insPay;
+    if (!payouts) payouts = { net: 0 };
+    payouts.insurance    = insPay;
+    payouts.insuranceBet = insuranceBet;
+  }
+
   log.unshift({
-    round: roundNum,
-    winner: result.winner,
-    pTotal: result.pTotal,
-    bTotal: result.bTotal,
-    natural: result.pNatural || result.bNatural,
-    pPair: result.pPair,
-    bPair: result.bPair,
-    luckySix: result.luckySix,
-    net: payouts ? payouts.net : null
+    round:     roundNum,
+    winner:    result.winner,
+    pTotal:    result.pTotal,
+    bTotal:    result.bTotal,
+    natural:   result.pNatural || result.bNatural,
+    pPair:     result.pPair,
+    bPair:     result.bPair,
+    luckySix:  result.luckySix,
+    insurance: insuranceBet > 0,
+    net:       payouts ? (payouts.net + (payouts.insurance || 0)) : null
   });
   if (log.length > 60) log.pop();
 
@@ -407,27 +517,28 @@ function doDeal() {
 }
 
 function doNext() {
-  // Clear bets after settlement (player places new bets each round)
   ZONES.forEach(function (z) { bets[z] = 0; });
   payouts = null;
-  pCards = [];
-  bCards = [];
-  result = null;
+  pCards  = [];
+  bCards  = [];
+  result  = null;
+  insuranceBet = 0;
   setPhase('idle');
   renderAll();
 }
 
 function doNewShoe() {
   if (!confirm('Start a new shoe? Session log will be cleared.')) return;
-  shoe = initShoe();
-  pCards = [];
-  bCards = [];
-  result = null;
+  shoe     = initShoe();
+  pCards   = [];
+  bCards   = [];
+  result   = null;
   roundNum = 0;
-  log = [];
+  log      = [];
   ZONES.forEach(function (z) { bets[z] = 0; });
-  payouts = null;
-  balance = 1000000;
+  payouts      = null;
+  balance      = 1000000;
+  insuranceBet = 0;
   setPhase('idle');
   renderAll();
 }
@@ -442,6 +553,7 @@ function renderAll() {
   renderBalance();
   renderBetZones();
   renderPayoutSummary();
+  renderRole();
 }
 
 // --- Init ---
@@ -452,24 +564,34 @@ export function init() {
     return;
   }
 
-  rules = getRules();
-  shoe = initShoe();
+  rules           = getRules();
+  insuranceConfig = getInsuranceConfig();
+  shoe            = initShoe();
 
-  // Build chip tray
   renderChipTray();
   setPhase('idle');
   renderAll();
 
-  // Attach bet zone listeners
+  // Bet zone listeners
   document.querySelectorAll('[data-zone]').forEach(function (zoneEl) {
     zoneEl.addEventListener('click', onZoneClick);
   });
 
-  // Chip tray (event delegation)
+  // Chip tray
   el.chipTray.addEventListener('click', onChipClick);
 
+  // Controls
   el.btnDeal.addEventListener('click', doDeal);
   el.btnNext.addEventListener('click', doNext);
   el.btnShoe.addEventListener('click', doNewShoe);
-  el.btnClearBets && el.btnClearBets.addEventListener('click', onClearBets);
+  if (el.btnClearBets) el.btnClearBets.addEventListener('click', onClearBets);
+
+  // Insurance
+  if (el.btnInsDecline) el.btnInsDecline.addEventListener('click', onInsDecline);
+  if (el.btnInsConfirm) el.btnInsConfirm.addEventListener('click', onInsConfirm);
+  if (el.insurancePanel) el.insurancePanel.addEventListener('click', onInsPercentClick);
+
+  // Role selector
+  const roleSelector = document.querySelector('.tr-role-selector');
+  if (roleSelector) roleSelector.addEventListener('click', onRoleClick);
 }

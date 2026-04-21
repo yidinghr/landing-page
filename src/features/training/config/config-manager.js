@@ -1,4 +1,24 @@
-const KEY = 'yiding_training_rules_v1';
+const KEY     = 'yiding_training_rules_v1';
+const INS_KEY = 'yiding_training_insurance_v1';
+
+export const DEFAULT_INSURANCE = Object.freeze({
+  enabled:          false,
+  offerCondition:   'banker8',  // 'banker7' | 'banker8' | 'always'
+  maxInsurancePct:  50,         // max % of player bet
+  payout:           1,          // 1:1
+});
+
+export function getInsuranceConfig() {
+  try {
+    const raw = localStorage.getItem(INS_KEY);
+    if (raw) return { ...DEFAULT_INSURANCE, ...JSON.parse(raw) };
+  } catch (_) {}
+  return { ...DEFAULT_INSURANCE };
+}
+
+export function saveInsuranceConfig(c) {
+  try { localStorage.setItem(INS_KEY, JSON.stringify(c)); } catch (_) {}
+}
 
 export const DEFAULT_RULES = Object.freeze({
   id: 'default',
