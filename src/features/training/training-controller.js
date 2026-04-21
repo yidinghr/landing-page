@@ -9,6 +9,9 @@ import {
   shouldOfferInsurance, insuranceMaxBet, calcInsurancePayout
 } from './engines/insurance-engine.js';
 import { getRules, getInsuranceConfig } from './config/config-manager.js';
+import {
+  shoeValueCounts, approxNaturalRate, sessionStats, fmtPct, fmtNet
+} from './engines/prob-engine.js';
 
 // --- Constants ---
 const CHIPS = [
@@ -65,6 +68,8 @@ const el = {
   betZones:       document.getElementById('betZones'),
   btnClearBets:   document.getElementById('btnClearBets'),
   rulesName:      document.getElementById('rulesName'),
+  // Stats panel
+  statsPanel:     document.getElementById('statsPanel'),
   // Insurance panel
   insurancePanel: document.getElementById('insurancePanel'),
   insBankerScore: document.getElementById('insBankerScore'),
@@ -344,6 +349,68 @@ function renderRole() {
   document.body.setAttribute('data-role', role);
 }
 
+// --- Stats panel ---
+function renderStats() {
+  if (!el.statsPanel) return;
+
+  const stats = sessionStats(log);
+  const rem   = shoeRemaining(shoe);
+  const vc    = shoeValueCounts(shoe);
+  const nat   = approxNaturalRate(vc, rem);
+
+  if (!stats.rounds) {
+    // Still show shoe composition even before any rounds
+    el.statsPanel.innerHTML = [
+      '<p class="hint-text" style="margin-bottom:10px">No rounds played yet.</p>',
+      renderShoeChart(vc, rem, nat)
+    ].join('');
+    return;
+  }
+
+  const netCls = stats.net > 0 ? 'is-win' : stats.net < 0 ? 'is-lose' : '';
+  el.statsPanel.innerHTML = [
+    '<div class="stat-row">',
+      '<span class="stat-label">Rounds</span>',
+      '<strong class="stat-val">' + stats.rounds + '</strong>',
+      '<span class="stat-net ' + netCls + '">' + fmtNet(stats.net) + '</span>',
+    '</div>',
+    '<div class="stat-wlt-row">',
+      '<span class="stat-pill stat-pill--p">P ' + stats.playerWins + ' · ' + fmtPct(stats.playerWins, stats.rounds) + '</span>',
+      '<span class="stat-pill stat-pill--b">B ' + stats.bankerWins + ' · ' + fmtPct(stats.bankerWins, stats.rounds) + '</span>',
+      '<span class="stat-pill stat-pill--t">T ' + stats.ties + ' · ' + fmtPct(stats.ties, stats.rounds) + '</span>',
+    '</div>',
+    '<div class="stat-row" style="margin-top:4px">',
+      '<span class="stat-label">Naturals</span>',
+      '<span class="stat-val-sm">' + stats.naturals + ' (' + fmtPct(stats.naturals, stats.rounds) + ')</span>',
+    '</div>',
+    renderShoeChart(vc, rem, nat)
+  ].join('');
+}
+
+function renderShoeChart(vc, rem, nat) {
+  const maxCnt = Math.max(...vc, 1);
+  const rows = vc.map(function (cnt, val) {
+    const w = Math.round(cnt / maxCnt * 100);
+    return [
+      '<div class="shoe-bar-row">',
+        '<span class="shoe-bar-val">' + val + '</span>',
+        '<div class="shoe-bar-track">',
+          '<div class="shoe-bar-fill' + (val === 0 ? ' shoe-bar-fill--zero' : val >= 8 ? ' shoe-bar-fill--nat' : '') + '" style="width:' + w + '%"></div>',
+        '</div>',
+        '<span class="shoe-bar-cnt">' + cnt + '</span>',
+      '</div>'
+    ].join('');
+  }).join('');
+  return [
+    '<div class="stat-section-head">SHOE VALUES</div>',
+    '<div class="stat-shoe-chart">' + rows + '</div>',
+    '<div class="stat-row stat-natural">',
+      '<span class="stat-label">Natural est.</span>',
+      '<span class="stat-val-sm stat-val-sm--nat">' + (nat * 100).toFixed(1) + '%</span>',
+    '</div>'
+  ].join('');
+}
+
 function onRoleClick(e) {
   const btn = e.target.closest('.tr-role-btn');
   if (!btn) return;
@@ -553,6 +620,7 @@ function renderAll() {
   renderBalance();
   renderBetZones();
   renderPayoutSummary();
+  renderStats();
   renderRole();
 }
 
