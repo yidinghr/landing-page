@@ -51,7 +51,8 @@ export default defineConfig({
         login: resolve(process.cwd(), "index.html"),
         dashboard: resolve(process.cwd(), "home/home.html"),
         employees: resolve(process.cwd(), "home/employees.html"),
-        schedule: resolve(process.cwd(), "home/edit/index.html")
+        schedule: resolve(process.cwd(), "home/edit/index.html"),
+        training: resolve(process.cwd(), "home/training/index.html")
       }
     }
   }

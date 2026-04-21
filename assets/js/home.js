@@ -178,7 +178,16 @@
       summaryEditor: "可編輯",
       summaryAll: "全部部門",
       summarySelected: "指定部門",
-      noDepartmentPermission: "尚未授權任何部門"
+      noDepartmentPermission: "尚未授權任何部門",
+      menuTraining: "運營培訓",
+      trainingTitle: "運營培訓系統",
+      trainingBadge: "Beta",
+      trainingBody: "Baccarat 桌台操作模擬訓練。包含完整 Shoe 管理、牌規引擎、第三張牌規則與多角色切換。",
+      trainingLaunch: "進入培訓系統",
+      trainingDetailTitle: "培訓內容",
+      trainingDetailPhase: "Phase 1 · 自由練習",
+      trainingDetailEngine: "規則引擎",
+      trainingDetailShoe: "8 副牌 Shoe"
     },
     vi: {
       detailEyebrow: "LIVE PANEL",
@@ -271,7 +280,16 @@
       summaryEditor: "Được sửa",
       summaryAll: "Tất cả bộ phận",
       summarySelected: "Bộ phận chỉ định",
-      noDepartmentPermission: "Chưa được cấp quyền bộ phận nào"
+      noDepartmentPermission: "Chưa được cấp quyền bộ phận nào",
+      menuTraining: "Đào tạo vận hành",
+      trainingTitle: "Hệ thống đào tạo vận hành",
+      trainingBadge: "Beta",
+      trainingBody: "Mô phỏng bàn Baccarat với quản lý Shoe đầy đủ, rule engine và tính toán kết quả theo luật thật.",
+      trainingLaunch: "Vào hệ thống đào tạo",
+      trainingDetailTitle: "Nội dung đào tạo",
+      trainingDetailPhase: "Phase 1 · Luyện tập tự do",
+      trainingDetailEngine: "Rule engine",
+      trainingDetailShoe: "Shoe 8 bộ bài"
     },
     en: {
       detailEyebrow: "LIVE PANEL",
@@ -364,13 +382,23 @@
       summaryEditor: "Can edit",
       summaryAll: "All departments",
       summarySelected: "Selected departments",
-      noDepartmentPermission: "No departments have been authorized yet"
+      noDepartmentPermission: "No departments have been authorized yet",
+      menuTraining: "Operation Training",
+      trainingTitle: "Operation Training System",
+      trainingBadge: "Beta",
+      trainingBody: "Baccarat table simulation with full shoe management, rule engine and third-card rules.",
+      trainingLaunch: "Launch Training",
+      trainingDetailTitle: "Training Content",
+      trainingDetailPhase: "Phase 1 · Free Practice",
+      trainingDetailEngine: "Rule engine",
+      trainingDetailShoe: "8-deck shoe"
     }
   };
 
   const menuConfigs = [
     { id: "employees", labelKey: "menuEmployees", icon: "👥" },
     { id: "schedule", labelKey: "menuSchedule", icon: "🗓" },
+    { id: "operationTraining", labelKey: "menuTraining", icon: "🎯" },
     { id: "chiChi", labelKey: "menuChiChi", icon: "💬" },
     { id: "attendance", labelKey: "menuAttendance", icon: "⏱" },
     { id: "yidingInfo", labelKey: "menuInfo", icon: "✦" },
@@ -726,6 +754,26 @@
       return;
     }
 
+    if (uiState.activeTab === "operationTraining") {
+      chatTitle.textContent = t("trainingTitle");
+      chatBadge.textContent = t("trainingBadge");
+      chatBody.innerHTML = [
+        '<div class="dashboard-chat-stack">',
+        '<section class="dashboard-chat-surface">',
+        '<h3 class="dashboard-chat-surface__title">' + escapeHtml(t("trainingTitle")) + "</h3>",
+        '<p class="dashboard-chat-surface__body">' + escapeHtml(t("trainingBody")) + "</p>",
+        '<div class="dashboard-chat-chip-grid">',
+        renderChatChip(t("trainingDetailPhase"), ""),
+        renderChatChip(t("trainingDetailEngine"), "Baccarat"),
+        renderChatChip(t("trainingDetailShoe"), "416"),
+        "</div>",
+        '<a href="/home/training/index.html" class="dashboard-button dashboard-button--accent" style="display:inline-block;margin-top:12px;">' + escapeHtml(t("trainingLaunch")) + "</a>",
+        "</section>",
+        "</div>"
+      ].join("");
+      return;
+    }
+
     chatTitle.textContent = i18n.t("home.welcome");
     chatBadge.textContent = "Ready";
     chatBody.innerHTML = [
@@ -766,6 +814,20 @@
     if (uiState.activeTab === "yidingInfo") {
       detailTitle.textContent = t("infoTitle");
       detailBody.innerHTML = renderStaticPanel(t("infoTitle"), t("infoBody"));
+      return;
+    }
+
+    if (uiState.activeTab === "operationTraining") {
+      detailTitle.textContent = t("trainingDetailTitle");
+      detailBody.innerHTML = [
+        '<div class="dashboard-detail-stack">',
+        '<div class="dashboard-chat-chip-grid">',
+        renderChatChip(t("trainingDetailPhase"), "✓"),
+        renderChatChip(t("trainingDetailEngine"), "✓"),
+        renderChatChip(t("trainingDetailShoe"), "✓"),
+        "</div>",
+        "</div>"
+      ].join("");
       return;
     }
 

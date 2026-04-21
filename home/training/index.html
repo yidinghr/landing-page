@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operation Training — YiDing</title>
+<link rel="icon" type="image/png" href="/assets/logoweb-ThflCB1y.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/i18n.css">
+<link rel="stylesheet" href="../../assets/css/training.css">
+</head>
+<body class="training-page">
+
+<header class="tr-header">
+  <a href="../home.html" class="tr-back">← Home</a>
+  <div class="tr-header-center">
+    <span class="tr-header-title">Operation Training</span>
+    <span class="tr-header-badge">Baccarat · Free Practice</span>
+  </div>
+  <div class="tr-header-right">
+    <span id="shoeWarn" class="tr-shoe-warn" hidden>⚠ Low Cards</span>
+  </div>
+</header>
+
+<main class="tr-main">
+
+  <!-- ===== LEFT: Table ===== -->
+  <section class="tr-table-section">
+
+    <!-- Shoe status bar -->
+    <div class="tr-shoe-bar">
+      <span class="tr-shoe-label">SHOE</span>
+      <div class="tr-shoe-track">
+        <div id="shoeFill" class="tr-shoe-fill"></div>
+      </div>
+      <span class="tr-shoe-count"><span id="shoeRem">—</span> / <span id="shoeTotal">416</span></span>
+    </div>
+
+    <!-- Felt -->
+    <div class="tr-felt">
+
+      <!-- Banker hand -->
+      <div class="tr-hand tr-hand--banker">
+        <div class="tr-hand-label">BANKER</div>
+        <div id="bCards" class="tr-cards-row tr-cards-row--banker"></div>
+        <div id="bScore" class="bac-score">—</div>
+      </div>
+
+      <!-- VS marker -->
+      <div class="tr-vs">VS</div>
+
+      <!-- Player hand -->
+      <div class="tr-hand tr-hand--player">
+        <div class="tr-hand-label">PLAYER</div>
+        <div id="pCards" class="tr-cards-row tr-cards-row--player"></div>
+        <div id="pScore" class="bac-score">—</div>
+      </div>
+
+    </div>
+
+    <!-- Betting zones (visual reference, Phase 1) -->
+    <div class="tr-bet-zones">
+      <div class="tr-zone tr-zone--ppair">P. Pair</div>
+      <div class="tr-zone tr-zone--player">PLAYER</div>
+      <div class="tr-zone tr-zone--tie">TIE</div>
+      <div class="tr-zone tr-zone--banker">BANKER</div>
+      <div class="tr-zone tr-zone--bpair">B. Pair</div>
+      <div class="tr-zone tr-zone--lucky6">Lucky 6</div>
+    </div>
+
+    <!-- Result -->
+    <div id="resultBox" class="tr-result" hidden></div>
+
+    <!-- Controls -->
+    <div class="tr-controls">
+      <button id="btnDeal" class="tr-btn tr-btn--deal">DEAL</button>
+      <button id="btnNext" class="tr-btn" disabled>Next Round</button>
+      <button id="btnShoe" class="tr-btn tr-btn--ghost">New Shoe</button>
+    </div>
+
+  </section>
+
+  <!-- ===== RIGHT: Sidebar ===== -->
+  <aside class="tr-sidebar">
+
+    <div class="tr-sidebar-section">
+      <h3 class="tr-sidebar-title">ROUND DETAIL</h3>
+      <div id="roundDetail" class="tr-round-detail">
+        <p class="hint-text">Deal a hand to see the breakdown.</p>
+      </div>
+    </div>
+
+    <div class="tr-sidebar-section tr-sidebar-section--log">
+      <h3 class="tr-sidebar-title">SESSION LOG</h3>
+      <div id="sessionLog" class="tr-log">
+        <p class="hint-text">No hands played yet.</p>
+      </div>
+    </div>
+
+  </aside>
+
+</main>
+
+<script type="module" src="../../src/app/entries/training.js"></script>
+
+</body>
+</html>
