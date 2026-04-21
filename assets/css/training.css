@@ -279,16 +279,69 @@ body.training-page {
   box-shadow: 0 0 16px rgba(242, 212, 134, 0.35);
 }
 
+/* === Balance bar === */
+.tr-balance-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--tr-surface);
+  border: 1px solid var(--tr-border);
+  border-radius: var(--tr-radius-sm);
+  padding: 10px 16px;
+}
+
+.tr-balance-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.tr-balance-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--tr-text-faint);
+}
+
+.tr-balance-amount {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--tr-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-balance-bet {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tr-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-payout-summary {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.payout-net { font-size: 16px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.payout-net.is-win  { color: var(--tr-tie); }
+.payout-net.is-lose { color: var(--tr-banker); }
+.payout-net.is-push { color: var(--tr-text-soft); }
+.payout-comm { font-size: 12px; color: var(--tr-text-faint); }
+
 /* === Bet zones === */
 .tr-bet-zones {
   display: flex;
   gap: 6px;
 }
 
+.zones-locked .tr-zone { cursor: not-allowed; opacity: 0.75; }
+
 .tr-zone {
   flex: 1;
   text-align: center;
-  padding: 10px 4px;
+  padding: 10px 4px 8px;
   border-radius: var(--tr-radius-sm);
   font-size: 11px;
   font-weight: 700;
@@ -296,11 +349,137 @@ body.training-page {
   color: var(--tr-text-soft);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--tr-border);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 72px;
+  position: relative;
 }
 
-.tr-zone--player { background: rgba(74, 158, 255, 0.08); border-color: rgba(74, 158, 255, 0.25); color: var(--tr-player); }
-.tr-zone--banker { background: rgba(255, 90, 90, 0.08); border-color: rgba(255, 90, 90, 0.25); color: var(--tr-banker); }
-.tr-zone--tie    { background: rgba(80, 216, 144, 0.08); border-color: rgba(80, 216, 144, 0.25); color: var(--tr-tie); }
+.tr-zone:hover:not(.zones-locked .tr-zone) {
+  border-color: var(--tr-accent);
+  background: var(--tr-accent-soft);
+}
+
+.tr-zone:active:not(.zones-locked .tr-zone) { transform: scale(0.96); }
+.tr-zone.has-bet { border-width: 2px; }
+.tr-zone.is-win  { box-shadow: 0 0 12px rgba(80, 216, 144, 0.3); }
+.tr-zone.is-lose { box-shadow: 0 0 12px rgba(255, 90, 90, 0.2); }
+
+.tr-zone--player { background: rgba(74, 158, 255, 0.06); border-color: rgba(74, 158, 255, 0.22); color: var(--tr-player); }
+.tr-zone--banker { background: rgba(255, 90, 90, 0.06);  border-color: rgba(255, 90, 90, 0.22);  color: var(--tr-banker); }
+.tr-zone--tie    { background: rgba(80, 216, 144, 0.06); border-color: rgba(80, 216, 144, 0.22); color: var(--tr-tie); }
+
+.tr-zone--player.has-bet { border-color: rgba(74, 158, 255, 0.7); }
+.tr-zone--banker.has-bet { border-color: rgba(255, 90, 90, 0.7); }
+.tr-zone--tie.has-bet    { border-color: rgba(80, 216, 144, 0.7); }
+
+.tr-zone-name { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; }
+.tr-zone-odds { font-size: 10px; font-weight: 400; color: var(--tr-text-faint); }
+
+.tr-zone-bet-amt {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--tr-accent);
+  font-variant-numeric: tabular-nums;
+  background: rgba(242, 212, 134, 0.12);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.tr-zone-payout {
+  font-size: 12px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.tr-zone-payout.is-win  { color: var(--tr-tie);       background: rgba(80, 216, 144, 0.15); }
+.tr-zone-payout.is-lose { color: var(--tr-banker);    background: rgba(255, 90, 90, 0.15); }
+.tr-zone-payout.is-push { color: var(--tr-text-soft); background: rgba(255, 255, 255, 0.06); }
+
+/* === Chip tray === */
+.tr-chip-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--tr-border);
+  border-radius: var(--tr-radius-sm);
+  padding: 10px 14px;
+}
+
+.tr-chip-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--tr-text-faint);
+  white-space: nowrap;
+}
+
+.tr-chip-tray {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.tr-chip {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px dashed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.tr-chip:hover:not(.is-disabled) { transform: scale(1.08); }
+
+.tr-chip.is-selected {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7), 0 0 18px rgba(255, 255, 255, 0.25);
+}
+
+.tr-chip.is-disabled { opacity: 0.25; cursor: not-allowed; }
+
+.tr-chip--100k { background: rgba(123, 31, 162, 0.28); border-color: #9c27b0; color: #ce93d8; }
+.tr-chip--50k  { background: rgba(245, 124, 0, 0.28);  border-color: #f57c00; color: #ffcc80; }
+.tr-chip--10k  { background: rgba(97, 97, 97, 0.35);   border-color: #757575; color: #e0e0e0; }
+.tr-chip--5k   { background: rgba(56, 142, 60, 0.28);  border-color: #43a047; color: #a5d6a7; }
+.tr-chip--1k   { background: rgba(211, 47, 47, 0.28);  border-color: #e53935; color: #ef9a9a; }
+.tr-chip--500  { background: rgba(25, 118, 210, 0.28); border-color: #1976d2; color: #90caf9; }
+
+.chip-tray-nudge { outline: 2px solid var(--tr-accent); border-radius: var(--tr-radius-sm); }
+
+.tr-btn--sm { padding: 8px 14px; font-size: 12px; }
+
+/* === Detail payout section === */
+.detail-payout-section {
+  margin-top: 10px;
+  border-top: 1px solid var(--tr-border);
+  padding-top: 10px;
+}
+
+.payout-win  { color: var(--tr-tie); }
+.payout-lose { color: var(--tr-banker); }
+.detail-row--comm { color: var(--tr-text-faint); font-size: 11px; }
+
+/* === Log net payout === */
+.log-net { margin-left: auto; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.log-net-win  { color: var(--tr-tie); }
+.log-net-lose { color: var(--tr-banker); }
 
 /* === Result display === */
 .tr-result {

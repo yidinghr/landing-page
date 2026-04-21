@@ -20,6 +20,8 @@
     <span class="tr-header-badge">Baccarat · Free Practice</span>
   </div>
   <div class="tr-header-right">
+    <span class="tr-rules-label">Rules:</span>
+    <span id="rulesName" class="tr-rules-name">Standard Rules</span>
     <span id="shoeWarn" class="tr-shoe-warn" hidden>⚠ Low Cards</span>
   </div>
 </header>
@@ -38,6 +40,19 @@
       <span class="tr-shoe-count"><span id="shoeRem">—</span> / <span id="shoeTotal">416</span></span>
     </div>
 
+    <!-- Balance bar -->
+    <div class="tr-balance-bar">
+      <div class="tr-balance-item">
+        <span class="tr-balance-label">BALANCE</span>
+        <span id="balanceAmt" class="tr-balance-amount">1,000,000</span>
+      </div>
+      <div class="tr-balance-item">
+        <span class="tr-balance-label">TOTAL BET</span>
+        <span id="totalBetAmt" class="tr-balance-bet">—</span>
+      </div>
+      <div id="payoutSummary" class="tr-payout-summary" hidden></div>
+    </div>
+
     <!-- Felt -->
     <div class="tr-felt">
 
@@ -48,7 +63,6 @@
         <div id="bScore" class="bac-score">—</div>
       </div>
 
-      <!-- VS marker -->
       <div class="tr-vs">VS</div>
 
       <!-- Player hand -->
@@ -60,14 +74,58 @@
 
     </div>
 
-    <!-- Betting zones (visual reference, Phase 1) -->
-    <div class="tr-bet-zones">
-      <div class="tr-zone tr-zone--ppair">P. Pair</div>
-      <div class="tr-zone tr-zone--player">PLAYER</div>
-      <div class="tr-zone tr-zone--tie">TIE</div>
-      <div class="tr-zone tr-zone--banker">BANKER</div>
-      <div class="tr-zone tr-zone--bpair">B. Pair</div>
-      <div class="tr-zone tr-zone--lucky6">Lucky 6</div>
+    <!-- Bet zones (interactive) -->
+    <div id="betZones" class="tr-bet-zones">
+
+      <div class="tr-zone tr-zone--ppair" data-zone="playerPair">
+        <div class="tr-zone-name">P. Pair</div>
+        <div class="tr-zone-odds">11:1</div>
+        <div id="betAmt-playerPair" class="tr-zone-bet-amt" hidden></div>
+        <div id="payoutAmt-playerPair" class="tr-zone-payout" hidden></div>
+      </div>
+
+      <div class="tr-zone tr-zone--player" data-zone="player">
+        <div class="tr-zone-name">PLAYER</div>
+        <div class="tr-zone-odds">1:1</div>
+        <div id="betAmt-player" class="tr-zone-bet-amt" hidden></div>
+        <div id="payoutAmt-player" class="tr-zone-payout" hidden></div>
+      </div>
+
+      <div class="tr-zone tr-zone--tie" data-zone="tie">
+        <div class="tr-zone-name">TIE</div>
+        <div class="tr-zone-odds">8:1</div>
+        <div id="betAmt-tie" class="tr-zone-bet-amt" hidden></div>
+        <div id="payoutAmt-tie" class="tr-zone-payout" hidden></div>
+      </div>
+
+      <div class="tr-zone tr-zone--banker" data-zone="banker">
+        <div class="tr-zone-name">BANKER</div>
+        <div class="tr-zone-odds">0.95:1</div>
+        <div id="betAmt-banker" class="tr-zone-bet-amt" hidden></div>
+        <div id="payoutAmt-banker" class="tr-zone-payout" hidden></div>
+      </div>
+
+      <div class="tr-zone tr-zone--bpair" data-zone="bankerPair">
+        <div class="tr-zone-name">B. Pair</div>
+        <div class="tr-zone-odds">11:1</div>
+        <div id="betAmt-bankerPair" class="tr-zone-bet-amt" hidden></div>
+        <div id="payoutAmt-bankerPair" class="tr-zone-payout" hidden></div>
+      </div>
+
+      <div class="tr-zone tr-zone--lucky6" data-zone="luckySix">
+        <div class="tr-zone-name">Lucky 6</div>
+        <div class="tr-zone-odds">12–20:1</div>
+        <div id="betAmt-luckySix" class="tr-zone-bet-amt" hidden></div>
+        <div id="payoutAmt-luckySix" class="tr-zone-payout" hidden></div>
+      </div>
+
+    </div>
+
+    <!-- Chip tray -->
+    <div class="tr-chip-section">
+      <span class="tr-chip-label">SELECT CHIP →</span>
+      <div id="chipTray" class="tr-chip-tray"></div>
+      <button type="button" id="btnClearBets" class="tr-btn tr-btn--ghost tr-btn--sm">Clear Bets</button>
     </div>
 
     <!-- Result -->
@@ -75,9 +133,9 @@
 
     <!-- Controls -->
     <div class="tr-controls">
-      <button id="btnDeal" class="tr-btn tr-btn--deal">DEAL</button>
-      <button id="btnNext" class="tr-btn" disabled>Next Round</button>
-      <button id="btnShoe" class="tr-btn tr-btn--ghost">New Shoe</button>
+      <button type="button" id="btnDeal" class="tr-btn tr-btn--deal">DEAL</button>
+      <button type="button" id="btnNext" class="tr-btn" disabled>Next Round</button>
+      <button type="button" id="btnShoe" class="tr-btn tr-btn--ghost">New Shoe</button>
     </div>
 
   </section>
