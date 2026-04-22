@@ -93,6 +93,33 @@ export function roundToChipUnit(amount, unit = 5) {
   return Math.round(amount / unit) * unit;
 }
 
+export function floorToChipUnit(amount, unit = 5) {
+  if (!unit) return amount;
+  return Math.floor(amount / unit) * unit;
+}
+
+export function shortChangeForChipUnit(amount, unit = 5) {
+  if (amount <= 0 || !unit) {
+    return {
+      required: false,
+      chipUnit: unit,
+      exactAmount: amount,
+      payableAmount: amount,
+      shortAmount: 0
+    };
+  }
+
+  const payableAmount = floorToChipUnit(amount, unit);
+  const shortAmount = amount - payableAmount;
+  return {
+    required: shortAmount > 0,
+    chipUnit: unit,
+    exactAmount: amount,
+    payableAmount: payableAmount,
+    shortAmount: shortAmount
+  };
+}
+
 export function fmtAmt(n) {
   if (n === 0) return 'PUSH';
   const sign = n > 0 ? '+' : '';

@@ -306,6 +306,9 @@ export function renderLog(host, log) {
       const insCount = Array.isArray(e.insuranceSeats) ? e.insuranceSeats.length : 1;
       chips.push('<span class="log-chip log-chip--ins">INS ' + insCount + '</span>');
     }
+    if (e.wrongPayoutSeat) chips.push('<span class="log-chip log-chip--drill">DRILL</span>');
+    if (e.procedureCatches) chips.push('<span class="log-chip log-chip--catch">CATCH ' + e.procedureCatches + '</span>');
+    if (e.procedureErrors) chips.push('<span class="log-chip log-chip--err">ERR ' + e.procedureErrors + '</span>');
     const net = e.net;
     const netCls = net > 0 ? 'log-net-win' : net < 0 ? 'log-net-lose' : '';
     return [
@@ -320,13 +323,19 @@ export function renderLog(host, log) {
   }).join('');
 }
 
-export function renderStats(host, shoe, log) {
+export function renderStats(host, shoe, log, procedureStats = { errors: 0, catches: 0 }) {
   if (!host || !shoe) return;
   const stats = sessionStats(log);
+  const procedure = {
+    errors: Number(procedureStats.errors || 0),
+    catches: Number(procedureStats.catches || 0)
+  };
 
   if (!stats.rounds) {
     host.innerHTML = [
       '<p class="hint-text" style="margin-bottom:10px">No rounds played yet.</p>',
+      '<div class="stat-row"><span class="stat-label">Dealer err.</span><span class="stat-val-sm">' + procedure.errors + '</span></div>',
+      '<div class="stat-row"><span class="stat-label">Catches</span><span class="stat-val-sm">' + procedure.catches + '</span></div>',
       renderShoeChart(shoe)
     ].join('');
     return;
@@ -347,6 +356,14 @@ export function renderStats(host, shoe, log) {
     '<div class="stat-row" style="margin-top:4px">',
     '<span class="stat-label">Naturals</span>',
     '<span class="stat-val-sm">' + stats.naturals + ' (' + fmtPct(stats.naturals, stats.rounds) + ')</span>',
+    '</div>',
+    '<div class="stat-row">',
+    '<span class="stat-label">Dealer err.</span>',
+    '<span class="stat-val-sm">' + procedure.errors + '</span>',
+    '</div>',
+    '<div class="stat-row">',
+    '<span class="stat-label">Catches</span>',
+    '<span class="stat-val-sm">' + procedure.catches + '</span>',
     '</div>',
     renderShoeChart(shoe)
   ].join('');

@@ -24,6 +24,7 @@ export const DEFAULT_TABLE_PREFS = Object.freeze({
   activeSeatId: 1,
   autoDealEnabled: true,
   insuranceNpcMode: 'decline', // 'decline' | 'maxAccept'
+  wrongPayoutEnabled: false,
 });
 
 export function getInsuranceConfig() {

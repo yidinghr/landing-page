@@ -36,6 +36,7 @@ import {
 } from './engines/seat-engine.js';
 import { settleRound } from './engines/settlement-engine.js';
 import { npcAutoBet, npcResolveInsuranceForSeats } from './npc/npc-behavior.js';
+import { seedWrongPayout } from './scenarios/wrong-payout.js';
 import {
   renderBalance,
   renderBetZones,
@@ -100,6 +101,8 @@ let payouts = null;
 let settlement = null;
 let role = 'dealer';
 let insuranceDrafts = {};
+let settlementProcedure = null;
+let procedureStats = { errors: 0, catches: 0 };
 let npcBetsApplied = false;
 let autoAfterInsurance = false;
 let burnTimer = 0;
@@ -189,6 +192,26 @@ function clearInsuranceDraft(seatId) {
 
 function resetInsuranceDrafts() {
   insuranceDrafts = {};
+}
+
+function createSettlementProcedure() {
+  return {
+    collectedCommissions: {},
+    acknowledgedChange: {},
+    catchesThisRound: 0,
+    confirmed: false
+  };
+}
+
+function resetSettlementProcedure() {
+  settlementProcedure = createSettlementProcedure();
+}
+
+function currentSettlementProcedure() {
+  if (!settlementProcedure) {
+    resetSettlementProcedure();
+  }
+  return settlementProcedure;
 }
 
 function isIdlePhase() {
@@ -410,7 +433,10 @@ function renderControls() {
     el.btnAutoDeal.disabled = !isDealer || !idle || rem < 6;
   }
   if (el.btnReveal) el.btnReveal.disabled = !isDealer || phase !== 'reveal';
-  if (el.btnNext) el.btnNext.disabled = !isDealer || (phase !== 'settlement' && phase !== 'round-end');
+  if (el.btnNext) {
+    el.btnNext.textContent = phase === 'settlement' ? 'Confirm Round' : 'Next Round';
+    el.btnNext.disabled = !isDealer || (phase !== 'settlement' && phase !== 'round-end');
+  }
   if (el.btnClearBets) el.btnClearBets.disabled = !isCustomer || !idle;
   if (el.btnSubmitBets) {
     el.btnSubmitBets.textContent = phase === 'settlement' ? 'Next Round' : 'Submit Bets';
@@ -443,8 +469,12 @@ function renderAll() {
   renderBetZones(el.betZones, seat.bets, payouts, el.totalBetAmt);
   renderSeats(el.seatsRow, seats, activeSeatId, settlement);
   renderPayoutSummary(el.payoutSummary, payouts);
-  renderStats(el.statsPanel, shoe, log);
-  renderSettlementBoard(el.settlementBoard, settlement);
+  renderStats(el.statsPanel, shoe, log, procedureStats);
+  renderSettlementBoard(el.settlementBoard, settlement, {
+    canUseDealerActions: role === 'dealer' && phase === 'settlement',
+    collectedCommissions: currentSettlementProcedure().collectedCommissions,
+    acknowledgedChange: currentSettlementProcedure().acknowledgedChange
+  });
   renderInsurancePanel();
   renderRole();
   renderControls();
@@ -495,7 +525,7 @@ function initRoleControllers() {
       deal: dealCurrentPhase,
       autoDeal: doAutoDeal,
       reveal: revealRound,
-      nextRound: doNext,
+      nextRound: confirmRound,
       newShoe: doNewShoe
     }
   });
@@ -561,6 +591,7 @@ function placeActiveSeatBet(zone) {
   seats = setBet(seats, activeSeatId, zone, selectedChip);
   payouts = null;
   settlement = null;
+  resetSettlementProcedure();
   ensureNpcBets();
   renderAll();
 }
@@ -569,6 +600,7 @@ function clearActiveSeatBets() {
   seats = clearBets(seats, activeSeatId);
   payouts = null;
   settlement = null;
+  resetSettlementProcedure();
   renderAll();
 }
 
@@ -802,6 +834,7 @@ function doAutoDeal() {
   result = null;
   payouts = null;
   settlement = null;
+  resetSettlementProcedure();
   resetInsuranceDrafts();
   autoAfterInsurance = true;
 
@@ -929,6 +962,128 @@ function onInsuranceNpcRound() {
   runNpcDealerRound();
 }
 
+function updateCurrentLogProcedure(errors) {
+  if (!log.length) return;
+  log[0] = {
+    ...log[0],
+    procedureErrors: (log[0].procedureErrors || 0) + errors,
+    procedureCatches: currentSettlementProcedure().catchesThisRound
+  };
+}
+
+function settlementProcedureErrors() {
+  if (!settlement) return [];
+  const proc = currentSettlementProcedure();
+  const errors = [];
+
+  settlement.seats.forEach(function (row) {
+    if (row.commission > 0 && !proc.collectedCommissions[row.seatId]) {
+      errors.push({ seatId: row.seatId, type: 'commission' });
+    }
+    if (row.change && row.change.required && !proc.acknowledgedChange[row.seatId]) {
+      errors.push({ seatId: row.seatId, type: 'change' });
+    }
+    if (row.wrongPayout && row.wrongPayout.seeded && !row.wrongPayout.caught) {
+      errors.push({ seatId: row.seatId, type: 'wrong-payout' });
+    }
+  });
+
+  return errors;
+}
+
+function collectCommission(seatId) {
+  if (phase !== 'settlement' || role !== 'dealer') return;
+  const proc = currentSettlementProcedure();
+  settlementProcedure = {
+    ...proc,
+    collectedCommissions: {
+      ...proc.collectedCommissions,
+      [seatId]: true
+    }
+  };
+  renderAll();
+}
+
+function acknowledgeChange(seatId) {
+  if (phase !== 'settlement' || role !== 'dealer') return;
+  const proc = currentSettlementProcedure();
+  settlementProcedure = {
+    ...proc,
+    acknowledgedChange: {
+      ...proc.acknowledgedChange,
+      [seatId]: true
+    }
+  };
+  renderAll();
+}
+
+function correctWrongPayout(seatId) {
+  if (phase !== 'settlement' || role !== 'dealer' || !settlement) return;
+  let caught = false;
+  settlement = {
+    ...settlement,
+    seats: settlement.seats.map(function (row) {
+      if (Number(row.seatId) !== Number(seatId) || !row.wrongPayout || row.wrongPayout.caught) {
+        return row;
+      }
+      caught = true;
+      return {
+        ...row,
+        wrongPayout: {
+          ...row.wrongPayout,
+          caught: true
+        }
+      };
+    })
+  };
+
+  if (caught) {
+    const proc = currentSettlementProcedure();
+    settlementProcedure = {
+      ...proc,
+      catchesThisRound: proc.catchesThisRound + 1
+    };
+    procedureStats = {
+      ...procedureStats,
+      catches: procedureStats.catches + 1
+    };
+    updateCurrentLogProcedure(0);
+  }
+
+  renderAll();
+}
+
+function onSettlementActionClick(e) {
+  const btn = e.target.closest('[data-settle-action]');
+  if (!btn || btn.disabled) return;
+  const seatId = clampSeatId(btn.getAttribute('data-seat-id'));
+  const action = btn.getAttribute('data-settle-action');
+
+  if (action === 'collect-commission') {
+    collectCommission(seatId);
+  } else if (action === 'ack-change') {
+    acknowledgeChange(seatId);
+  } else if (action === 'correct-payout') {
+    correctWrongPayout(seatId);
+  }
+}
+
+function confirmRound() {
+  if (phase !== 'settlement' && phase !== 'round-end') return;
+  if (role === 'dealer' && settlement) {
+    const errors = settlementProcedureErrors();
+    if (errors.length) {
+      procedureStats = {
+        ...procedureStats,
+        errors: procedureStats.errors + errors.length
+      };
+      updateCurrentLogProcedure(errors.length);
+    }
+    currentSettlementProcedure().confirmed = true;
+  }
+  doNext();
+}
+
 function revealRound() {
   if (phase !== 'reveal' && phase !== 'settlement') return;
   if (phase === 'settlement') return;
@@ -936,6 +1091,10 @@ function revealRound() {
   roundNum++;
   result = resolveRound(pCards, bCards);
   settlement = settleRound(seats, result, rules, insuranceConfig);
+  if (tablePrefs.wrongPayoutEnabled) {
+    settlement = seedWrongPayout(settlement);
+  }
+  resetSettlementProcedure();
 
   settlement.seats.forEach(function (row) {
     if (row.creditAmount > 0) {
@@ -960,6 +1119,9 @@ function revealRound() {
   }).map(function (row) {
     return row.seatId;
   });
+  const wrongPayoutRow = settlement.seats.find(function (row) {
+    return row.wrongPayout && row.wrongPayout.seeded;
+  });
 
   log.unshift({
     round: roundNum,
@@ -972,6 +1134,9 @@ function revealRound() {
     luckySix: result.luckySix,
     insurance: insuranceSeatIds.length > 0,
     insuranceSeats: insuranceSeatIds,
+    wrongPayoutSeat: wrongPayoutRow ? wrongPayoutRow.seatId : null,
+    procedureErrors: 0,
+    procedureCatches: 0,
     net: activeRow ? activeRow.net : null
   });
   if (log.length > 60) log.pop();
@@ -987,6 +1152,7 @@ function doNext() {
   result = null;
   payouts = null;
   settlement = null;
+  resetSettlementProcedure();
   resetInsuranceDrafts();
   npcBetsApplied = false;
   autoAfterInsurance = false;
@@ -1003,8 +1169,10 @@ function doNewShoe() {
   result = null;
   roundNum = 0;
   log = [];
+  procedureStats = { errors: 0, catches: 0 };
   payouts = null;
   settlement = null;
+  resetSettlementProcedure();
   resetInsuranceDrafts();
   npcBetsApplied = false;
   autoAfterInsurance = false;
@@ -1056,6 +1224,7 @@ export function init() {
   if (el.btnReveal) el.btnReveal.addEventListener('click', function () { dealerController.reveal(); });
   if (el.btnClearBets) el.btnClearBets.addEventListener('click', onClearBets);
   if (el.btnSubmitBets) el.btnSubmitBets.addEventListener('click', onSubmitBets);
+  if (el.settlementBoard) el.settlementBoard.addEventListener('click', onSettlementActionClick);
 
   if (el.btnInsDecline) el.btnInsDecline.addEventListener('click', onInsDecline);
   if (el.btnInsConfirm) el.btnInsConfirm.addEventListener('click', onInsConfirm);

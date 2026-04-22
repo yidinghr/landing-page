@@ -48,7 +48,8 @@ function prefsFromForm(form, currentPrefs) {
     role: form.elements.defaultRole.value,
     activeSeatId: readNumber(form, 'activeSeatId', currentPrefs.activeSeatId),
     autoDealEnabled: Boolean(form.elements.autoDealEnabled && form.elements.autoDealEnabled.checked),
-    insuranceNpcMode: form.elements.insuranceNpcMode.value
+    insuranceNpcMode: form.elements.insuranceNpcMode.value,
+    wrongPayoutEnabled: Boolean(form.elements.wrongPayoutEnabled && form.elements.wrongPayoutEnabled.checked)
   };
 }
 
@@ -133,6 +134,7 @@ export function createSettingsPanel(options) {
       '<option value="decline"' + selected(prefs.insuranceNpcMode, 'decline') + '>Auto decline</option>',
       '<option value="maxAccept"' + selected(prefs.insuranceNpcMode, 'maxAccept') + '>Max accept</option>',
       '</select></label>',
+      '<label class="tr-settings-check"><input name="wrongPayoutEnabled" type="checkbox"' + checked(prefs.wrongPayoutEnabled) + '>Wrong-payout drill</label>',
       '</fieldset>',
       '</div>',
       '<div class="tr-settings-actions">',

@@ -104,6 +104,14 @@ Binary, observable checks. A phase is done only when every listed criterion pass
 5. Session stats show dealer procedure error count.
 6. No regression in Phase 3 criteria.
 
+**Verification — 2026-04-22**
+- [x] 1. Browser smoke confirmed skipping `[Collect Commission]` before `[Confirm Round]` increments Dealer error count.
+- [x] 2. Browser smoke confirmed a 25-chip Banker win shows `Ack short 3` when the exact payout cannot be paid with the 5-chip unit.
+- [x] 3. Browser smoke confirmed wrong-payout drill mode seeds exactly one `[Correct]` target in a settlement round.
+- [x] 4. Browser smoke confirmed clicking `[Correct]` marks the row corrected and increments the catch count.
+- [x] 5. Browser smoke confirmed Statistics displays Dealer errors and Catches.
+- [x] 6. `npm run build`, browser smoke, and full regression tests passed.
+
 ---
 
 ## Phase 5 — Probability + Squeeze + Scenarios

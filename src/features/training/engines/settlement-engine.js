@@ -1,6 +1,8 @@
 import { calcInsurancePayoutForResult } from './insurance-engine.js';
-import { betTotal, calcPayout } from './payout-engine.js';
+import { betTotal, calcPayout, shortChangeForChipUnit } from './payout-engine.js';
 import { ZONES } from './seat-engine.js';
+
+const CHIP_UNIT = 5;
 
 function summarizeBets(bets) {
   const parts = ZONES.filter(function (zone) {
@@ -61,6 +63,7 @@ export function settleRound(seats, result, rules, insuranceConfig) {
     const betNet = Number(payouts.net || 0);
     const net = betNet + Number(insurance.payout || 0);
     const commission = Number(payouts.commission || 0);
+    const change = shortChangeForChipUnit(net, CHIP_UNIT);
 
     return {
       seatId: seat.id,
@@ -72,6 +75,7 @@ export function settleRound(seats, result, rules, insuranceConfig) {
       payouts: payouts,
       commission: commission,
       insurance: insurance,
+      change: change,
       net: net,
       creditAmount: totalBet + betNet + insurance.amount + insurance.payout
     };
@@ -83,6 +87,7 @@ export function settleRound(seats, result, rules, insuranceConfig) {
       totals.paidOut += Math.max(0, row.net);
       totals.collected += Math.max(0, -row.net);
       totals.commissionTotal += row.commission;
+      totals.shortChange += row.change && row.change.required ? row.change.shortAmount : 0;
       return totals;
     }, {
       paidOut: 0,

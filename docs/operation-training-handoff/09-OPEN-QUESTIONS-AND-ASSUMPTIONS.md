@@ -42,6 +42,7 @@ Three buckets. Keep them separate.
 | 17 | Burn card visible duration | 3 seconds (acceptance requires at least 2 seconds) | UX sign-off |
 | 18 | Commission box is visualized as a separate chip stack in dealer view | yes | Visual sign-off |
 | 19 | Insurance NPC behavior when trainee is not insurance staff | `decline` by default; `maxAccept` via table prefs | Simulation tuning |
+| 20 | Wrong-payout drill default | off; when enabled, exactly one payout row is seeded per round | Settings default |
 
 Rule for the engineer: if an assumption blocks implementation, mark it blocked here, continue with the default, and flag it in the PR description.
 
@@ -59,7 +60,7 @@ Rule for the engineer: if an assumption blocks implementation, mark it blocked h
   - Min bet per zone
   - Max bet per seat
   - Seat count (5 today, but supports up to 7 or 9 in future)
-- Wrong-payout injection frequency (0%, 10%, 25%, 50%, 100%)
+- Wrong-payout injection frequency beyond the Phase 4 on/off drill (0%, 10%, 25%, 50%, 100%)
 - Wrong-payout types (short, over, wrong winner, missed commission)
 - Deal speed per role
 - Card reveal animation style (flat / squeeze)
@@ -90,7 +91,7 @@ Only block on these if the default is unusable. Otherwise, implement with defaul
 |---|---|---|
 | `yiding_training_rules_v1` | rule object | `config-manager.js` |
 | `yiding_training_insurance_v1` | enabled, offerCondition, maxInsurancePct, payout, payoutMode, settleOnTie, whoCanInsure, staffControlled | `config-manager.js` |
-| `yiding_training_table_prefs_v1` | role, active seat, dev auto-deal, NPC insurance mode | `config-manager.js` |
+| `yiding_training_table_prefs_v1` | role, active seat, dev auto-deal, NPC insurance mode, wrong-payout drill toggle | `config-manager.js` |
 
 **Planned new keys (add to this list before shipping):**
 - `yiding_training_npc_profile_v1` — NPC betting profile overrides.

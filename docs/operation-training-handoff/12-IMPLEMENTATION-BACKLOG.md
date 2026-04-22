@@ -76,14 +76,21 @@ Legend: `[ ]` todo · `[/]` in progress · `[x]` done · `[~]` deferred · `[!]`
 
 ## Phase 4 — Commission / Change / Wrong-Payout
 
-- [ ] **P4-01** Commission collection as explicit dealer action
-- [ ] **P4-02** Change handling (`roundToChipUnit`, short-change tracking)
-- [ ] **P4-03** Wrong-payout mode in `scenarios/wrong-payout.js`
-- [ ] **P4-04** Correction UI on settlement rows
-- [ ] **P4-05** Dealer error log in session log
-- [ ] **P4-06** Session score summary
-- [ ] **P4-07** Regression pass against Phase 3 criteria
-- [ ] **P4-08** PR: Phase 4 with report
+- [x] **P4-01** Commission collection as explicit dealer action
+- [x] **P4-02** Change handling (`roundToChipUnit`, short-change tracking)
+- [x] **P4-03** Wrong-payout mode in `scenarios/wrong-payout.js`
+- [x] **P4-04** Correction UI on settlement rows
+- [x] **P4-05** Dealer error log in session log
+- [x] **P4-06** Session score summary
+- [x] **P4-07** Regression pass against Phase 3 criteria
+- [x] **P4-08** PR: Phase 4 with report — https://github.com/yidinghr/landing-page/pull/17
+
+**Phase 4 verification — 2026-04-22**
+- Browser smoke passed for missing commission/change procedure errors.
+- Browser smoke passed for one wrong-payout drill target and correction catch count.
+- `npm run build` passed.
+- `npx playwright test tests/smoke.spec.js tests/i18n.spec.js --workers=1` passed 11/11.
+- `npm run test:e2e -- --workers=1` passed 55/55.
 
 ---
 
