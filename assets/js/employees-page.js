@@ -524,7 +524,7 @@
     const filteredEmployees = state.employees.filter(function (employee) {
       const inDepartment = isRetiredView()
         ? employee.work.status === "離職"
-        : employee.departmentId === selectedDepartmentId;
+        : employee.departmentId === selectedDepartmentId && employee.work.status !== "離職";
 
       if (!inDepartment) {
         return false;
@@ -1971,6 +1971,10 @@
     }
 
     if (action === "select-employee") {
+      const _authStore = window.YiDingAuthStore;
+      if (!_authStore || !_authStore.isAdmin(_authStore.getCurrentAccount())) {
+        return;
+      }
       selectEmployee(button.getAttribute("data-employee-id"));
       return;
     }

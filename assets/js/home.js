@@ -396,12 +396,12 @@
   };
 
   const menuConfigs = [
-    { id: "employees", labelKey: "menuEmployees", icon: "👥" },
-    { id: "schedule", labelKey: "menuSchedule", icon: "🗓" },
+    { id: "employees", labelKey: "menuEmployees", icon: "👥", adminOnly: true },
+    { id: "schedule", labelKey: "menuSchedule", icon: "🗓", adminOnly: true },
     { id: "operationTraining", labelKey: "menuTraining", icon: "🎯" },
-    { id: "chiChi", labelKey: "menuChiChi", icon: "💬" },
-    { id: "attendance", labelKey: "menuAttendance", icon: "⏱" },
-    { id: "yidingInfo", labelKey: "menuInfo", icon: "✦" },
+    { id: "chiChi", labelKey: "menuChiChi", icon: "💬", adminOnly: true },
+    { id: "attendance", labelKey: "menuAttendance", icon: "⏱", adminOnly: true },
+    { id: "yidingInfo", labelKey: "menuInfo", icon: "✦", adminOnly: true },
     { id: "accounts", labelKey: "menuAccounts", icon: "🛡", adminOnly: true }
   ];
 
@@ -637,7 +637,7 @@
     });
 
     if (!buttons.some(function (item) { return item.id === uiState.activeTab; })) {
-      uiState.activeTab = authStore.isAdmin(currentAccount) ? "accounts" : "employees";
+      uiState.activeTab = authStore.isAdmin(currentAccount) ? "accounts" : "operationTraining";
     }
 
     homeMenu.setAttribute("aria-label", i18n.t("home.menuAria"));
@@ -1442,7 +1442,7 @@
     if (stored) {
       return stored;
     }
-    return authStore.isAdmin(account) ? "accounts" : "employees";
+    return authStore.isAdmin(account) ? "accounts" : "operationTraining";
   }
 
   function storeActiveTab(account, nextTab) {

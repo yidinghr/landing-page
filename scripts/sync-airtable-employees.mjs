@@ -7,6 +7,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 
+// Auto-load .env if present
+try {
+  const envContent = await fs.readFile(path.join(rootDir, ".env"), "utf8");
+  for (const line of envContent.split(/\r?\n/)) {
+    const match = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+    if (match && !process.env[match[1]]) process.env[match[1]] = match[2].trim();
+  }
+} catch { /* no .env file — rely on shell env */ }
+
 const AIRTABLE_BASE_ID = String(process.env.AIRTABLE_BASE_ID || "").trim();
 const AIRTABLE_TABLE_ID = String(process.env.AIRTABLE_EMPLOYEES_TABLE_ID || "").trim();
 const AIRTABLE_TOKEN = String(process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN || "").trim();
