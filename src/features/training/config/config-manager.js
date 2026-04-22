@@ -13,6 +13,9 @@ export const DEFAULT_INSURANCE = Object.freeze({
   offerCondition:   'banker8',  // 'banker7' | 'banker8' | 'always'
   maxInsurancePct:  50,         // max % of player bet
   payout:           1,          // 1:1
+  payoutMode:       'flat',     // 'flat' | 'onlyIfBankerNatural' | 'onlyIfBankerWinsNon-tie'
+  settleOnTie:      false,      // false means insurance pushes on tie
+  whoCanInsure:     'player-only',
   staffControlled:  false,
 });
 
@@ -69,6 +72,12 @@ export const INSURANCE_PRESETS = Object.freeze({
     enabled: true,
     offerCondition: 'always',
     staffControlled: true
+  }),
+  banker8AllPlayers: Object.freeze({
+    ...DEFAULT_INSURANCE,
+    enabled: true,
+    offerCondition: 'banker8',
+    staffControlled: false
   })
 });
 

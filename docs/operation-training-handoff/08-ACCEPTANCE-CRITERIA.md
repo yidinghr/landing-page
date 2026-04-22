@@ -83,6 +83,15 @@ Binary, observable checks. A phase is done only when every listed criterion pass
 6. NPC Insurance Staff resolves all eligible seats automatically when staff is not the trainee.
 7. No regression in Phase 2 criteria.
 
+**Verification — 2026-04-22**
+- [x] 1. Browser smoke confirmed Insurance Staff role opens a 5-row console when the offer condition is forced to `always`.
+- [x] 2. Browser smoke confirmed each eligible seat has its own row/action state; controller records decisions on each seat.
+- [x] 3. Engine smoke confirmed insurance amount clamps through `maxInsurancePct`; browser smoke used `whoCanInsure=main-bets` across 5 seats.
+- [x] 4. Engine smoke confirmed `flat`, `onlyIfBankerNatural`, and default tie-push behavior; settlement now passes full round result into the insurance engine.
+- [x] 5. Browser smoke confirmed the settlement board renders 5 rows with per-seat insurance values in the insurance column.
+- [x] 6. Browser smoke confirmed Dealer trainee path lets NPC Insurance Staff resolve all eligible seats automatically.
+- [x] 7. `npm run build`, tracked smoke+i18n tests, and full `npm run test:e2e` all passed.
+
 ---
 
 ## Phase 4 — Commission / Change / Wrong-Payout

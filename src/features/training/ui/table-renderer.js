@@ -302,7 +302,10 @@ export function renderLog(host, log) {
     if (e.pPair) chips.push('<span class="log-chip log-chip--p">PP</span>');
     if (e.bPair) chips.push('<span class="log-chip log-chip--p">BP</span>');
     if (e.luckySix) chips.push('<span class="log-chip log-chip--l">L6</span>');
-    if (e.insurance) chips.push('<span class="log-chip log-chip--ins">INS</span>');
+    if (e.insurance) {
+      const insCount = Array.isArray(e.insuranceSeats) ? e.insuranceSeats.length : 1;
+      chips.push('<span class="log-chip log-chip--ins">INS ' + insCount + '</span>');
+    }
     const net = e.net;
     const netCls = net > 0 ? 'log-net-win' : net < 0 ? 'log-net-lose' : '';
     return [

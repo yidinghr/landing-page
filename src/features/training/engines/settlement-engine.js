@@ -1,4 +1,4 @@
-import { calcInsurancePayout } from './insurance-engine.js';
+import { calcInsurancePayoutForResult } from './insurance-engine.js';
 import { betTotal, calcPayout } from './payout-engine.js';
 import { ZONES } from './seat-engine.js';
 
@@ -42,7 +42,7 @@ function resolveInsurance(seat, result, insuranceConfig) {
     };
   }
 
-  const payout = calcInsurancePayout(amount, result.winner, insuranceConfig);
+  const payout = calcInsurancePayoutForResult(amount, result, insuranceConfig);
   return {
     offered: Boolean(decision.offered),
     accepted: true,

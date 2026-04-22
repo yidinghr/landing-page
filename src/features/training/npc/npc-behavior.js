@@ -1,4 +1,4 @@
-import { insuranceMaxBet } from '../engines/insurance-engine.js';
+import { insuranceBaseBet, insuranceMaxBet } from '../engines/insurance-engine.js';
 import { debitSeat, getSeat, setBet, setInsuranceDecision } from '../engines/seat-engine.js';
 
 const ALL_SEAT_IDS = [1, 2, 3, 4, 5];
@@ -44,8 +44,8 @@ export function npcAutoBet(seats, activeSeatId, shoe, options = {}) {
 
 export function npcResolveInsurance(seats, seatId, insuranceConfig, mode = 'decline') {
   const seat = getSeat(seats, seatId);
-  const playerBet = Number(seat.bets.player || 0);
-  const maxBet = insuranceMaxBet(playerBet, insuranceConfig);
+  const baseBet = insuranceBaseBet(seat, insuranceConfig);
+  const maxBet = insuranceMaxBet(baseBet, insuranceConfig);
 
   if (mode === 'maxAccept' && maxBet > 0 && seat.balance >= maxBet) {
     let nextSeats = debitSeat(seats, seatId, maxBet);
@@ -71,4 +71,19 @@ export function npcResolveInsurance(seats, seatId, insuranceConfig, mode = 'decl
     }),
     amount: 0
   };
+}
+
+export function npcResolveInsuranceForSeats(seats, seatIds, insuranceConfig, mode = 'decline') {
+  return seatIds.reduce(function (result, seatId) {
+    const decision = npcResolveInsurance(result.seats, seatId, insuranceConfig, mode);
+    result.seats = decision.seats;
+    result.decisions.push({
+      seatId: seatId,
+      amount: decision.amount
+    });
+    return result;
+  }, {
+    seats: seats,
+    decisions: []
+  });
 }

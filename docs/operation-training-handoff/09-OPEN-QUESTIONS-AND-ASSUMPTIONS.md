@@ -53,9 +53,7 @@ Rule for the engineer: if an assumption blocks implementation, mark it blocked h
   - No Commission
   - EZ Baccarat (push on 3-card banker 7)
   - Lucky Six variants (Macau 12:1 / 20:1 vs other venues)
-- Insurance payout modes beyond `flat`:
-  - `onlyIfBankerNatural`
-  - `onlyIfBankerWinsNon-tie`
+- Additional insurance presets beyond the Phase 3 modes now implemented in `config-manager.js`.
 - Table-level settings:
   - Max bet per zone
   - Min bet per zone
@@ -91,7 +89,7 @@ Only block on these if the default is unusable. Otherwise, implement with defaul
 | Key | Shape | Owner |
 |---|---|---|
 | `yiding_training_rules_v1` | rule object | `config-manager.js` |
-| `yiding_training_insurance_v1` | insurance object | `config-manager.js` |
+| `yiding_training_insurance_v1` | enabled, offerCondition, maxInsurancePct, payout, payoutMode, settleOnTie, whoCanInsure, staffControlled | `config-manager.js` |
 | `yiding_training_table_prefs_v1` | role, active seat, dev auto-deal, NPC insurance mode | `config-manager.js` |
 
 **Planned new keys (add to this list before shipping):**

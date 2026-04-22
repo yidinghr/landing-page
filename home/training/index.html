@@ -89,17 +89,21 @@
         <span id="insBankerScore" class="tr-ins-banker-score">—</span>
       </div>
       <div class="tr-ins-info">
-        <span>Player bet: <strong id="insPlayerBet">—</strong></span>
+        <span>Eligible base: <strong id="insPlayerBet">—</strong></span>
         <span>Max insurance: <strong id="insMaxBet">—</strong></span>
+        <span>Seats: <strong id="insEligibleCount">0</strong></span>
       </div>
-      <div class="tr-ins-options">
+      <div id="insuranceSeatRows" class="tr-ins-seat-rows"></div>
+      <div class="tr-ins-options tr-ins-options--legacy">
         <button type="button" class="tr-btn tr-btn--ghost tr-btn--sm" id="btnInsDecline">Decline</button>
         <button type="button" class="tr-ins-opt-btn" data-ins-pct="25" id="btnIns25">25%</button>
         <button type="button" class="tr-ins-opt-btn" data-ins-pct="50" id="btnIns50">50%</button>
         <button type="button" class="tr-btn tr-btn--ins-confirm tr-btn--sm" id="btnInsConfirm">Confirm Insurance</button>
-        <button type="button" class="tr-btn tr-btn--ghost tr-btn--sm" id="btnInsuranceNpcRound">Start NPC Round</button>
       </div>
       <div id="insCurrentBet" class="tr-ins-current">Insurance bet: <strong>0</strong></div>
+      <div class="tr-ins-footer">
+        <button type="button" class="tr-btn tr-btn--ghost tr-btn--sm" id="btnInsuranceNpcRound">Start NPC Round</button>
+      </div>
     </div>
 
     <!-- Bet zones (interactive) -->

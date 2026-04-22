@@ -635,6 +635,7 @@ body[data-role="insurance"] .tr-main {
 .chip-tray-nudge { outline: 2px solid var(--tr-accent); border-radius: var(--tr-radius-sm); }
 
 .tr-btn--sm { padding: 8px 14px; font-size: 12px; }
+.tr-btn--xs { padding: 7px 10px; font-size: 11px; }
 
 /* === Detail payout section === */
 .detail-payout-section {
@@ -1201,12 +1202,109 @@ body[data-role="customer"] .tr-btn--customer {
 
 .tr-ins-info {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
   font-size: 13px;
   color: var(--tr-text-soft);
 }
 
 .tr-ins-info strong { color: var(--tr-accent); }
+
+.tr-ins-seat-rows {
+  display: grid;
+  gap: 8px;
+}
+
+.tr-ins-empty {
+  border: 1px dashed rgba(181, 112, 255, 0.28);
+  border-radius: var(--tr-radius-sm);
+  color: var(--tr-text-faint);
+  font-size: 13px;
+  font-style: italic;
+  padding: 12px;
+}
+
+.tr-ins-seat-row {
+  display: grid;
+  grid-template-columns: 118px minmax(210px, 1fr) minmax(340px, auto);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(181, 112, 255, 0.28);
+  border-radius: var(--tr-radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+  padding: 10px;
+}
+
+.tr-ins-seat-main,
+.tr-ins-seat-meta,
+.tr-ins-seat-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tr-ins-seat-main {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.tr-ins-seat-main strong {
+  color: var(--tr-text);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tr-ins-seat-status {
+  border: 1px solid var(--tr-border-mid);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tr-ins-seat-status--pending {
+  color: var(--tr-accent);
+  background: rgba(242, 212, 134, 0.1);
+  border-color: rgba(242, 212, 134, 0.32);
+}
+
+.tr-ins-seat-status--accepted {
+  color: var(--tr-tie);
+  background: rgba(80, 216, 144, 0.1);
+  border-color: rgba(80, 216, 144, 0.3);
+}
+
+.tr-ins-seat-status--declined {
+  color: var(--tr-text-faint);
+}
+
+.tr-ins-seat-meta {
+  flex-wrap: wrap;
+  color: var(--tr-text-soft);
+  font-size: 12px;
+}
+
+.tr-ins-seat-meta strong {
+  color: #c484ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-ins-seat-actions {
+  justify-content: flex-end;
+}
+
+.tr-ins-seat-actions .tr-ins-opt-btn {
+  flex: 0 0 auto;
+  min-width: 58px;
+}
+
+.tr-insurance-panel.is-multi .tr-ins-options--legacy {
+  display: none;
+}
 
 .tr-ins-options {
   display: flex;
@@ -1256,6 +1354,11 @@ body[data-role="customer"] .tr-btn--customer {
 }
 
 .tr-ins-current strong { color: #c484ff; font-variant-numeric: tabular-nums; }
+
+.tr-ins-footer {
+  display: flex;
+  justify-content: flex-end;
+}
 
 body[data-role="insurance"] .tr-insurance-panel {
   display: flex;
@@ -1385,6 +1488,15 @@ body[data-role="insurance"] .tr-insurance-panel {
 }
 
 @media (max-width: 900px) {
+  .tr-ins-seat-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tr-ins-seat-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
   .tr-settings-grid {
     grid-template-columns: 1fr;
   }

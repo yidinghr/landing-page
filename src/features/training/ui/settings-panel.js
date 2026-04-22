@@ -35,6 +35,9 @@ function insuranceFromForm(form, currentInsurance) {
     offerCondition: form.elements.offerCondition.value,
     maxInsurancePct: readNumber(form, 'maxInsurancePct', currentInsurance.maxInsurancePct),
     payout: readNumber(form, 'insurancePayout', currentInsurance.payout),
+    payoutMode: form.elements.payoutMode.value,
+    settleOnTie: Boolean(form.elements.settleOnTie && form.elements.settleOnTie.checked),
+    whoCanInsure: form.elements.whoCanInsure.value,
     staffControlled: Boolean(form.elements.staffControlled && form.elements.staffControlled.checked)
   };
 }
@@ -104,6 +107,17 @@ export function createSettingsPanel(options) {
       '</select></label>',
       '<label>Max %<input name="maxInsurancePct" type="number" min="0" max="100" step="1" value="' + insurance.maxInsurancePct + '"></label>',
       '<label>Payout<input name="insurancePayout" type="number" min="0" step="0.1" value="' + insurance.payout + '"></label>',
+      '<label>Payout mode<select name="payoutMode">',
+      '<option value="flat"' + selected(insurance.payoutMode, 'flat') + '>Flat banker win</option>',
+      '<option value="onlyIfBankerNatural"' + selected(insurance.payoutMode, 'onlyIfBankerNatural') + '>Banker natural only</option>',
+      '<option value="onlyIfBankerWinsNon-tie"' + selected(insurance.payoutMode, 'onlyIfBankerWinsNon-tie') + '>Banker non-tie win</option>',
+      '</select></label>',
+      '<label>Who can insure<select name="whoCanInsure">',
+      '<option value="player-only"' + selected(insurance.whoCanInsure, 'player-only') + '>Player bet only</option>',
+      '<option value="main-bets"' + selected(insurance.whoCanInsure, 'main-bets') + '>Player or Banker</option>',
+      '<option value="all-bets"' + selected(insurance.whoCanInsure, 'all-bets') + '>Any bet base</option>',
+      '</select></label>',
+      '<label class="tr-settings-check"><input name="settleOnTie" type="checkbox"' + checked(insurance.settleOnTie) + '>Settle on tie</label>',
       '<label class="tr-settings-check"><input name="staffControlled" type="checkbox"' + checked(insurance.staffControlled) + '>Staff controlled</label>',
       '</fieldset>',
       '<fieldset>',

@@ -5,17 +5,21 @@ export function createInsuranceController(context) {
 
   return {
     canResolve: canResolve,
-    decline: function () {
+    decline: function (seatId) {
       if (!canResolve()) return;
-      context.actions.decline();
+      context.actions.decline(seatId);
     },
-    selectPercent: function (pct) {
+    selectPercent: function (pct, seatId) {
       if (!canResolve()) return;
-      context.actions.selectPercent(pct);
+      context.actions.selectPercent(pct, seatId);
     },
-    confirm: function () {
+    selectMax: function (seatId) {
       if (!canResolve()) return;
-      context.actions.confirm();
+      context.actions.selectMax(seatId);
+    },
+    confirm: function (seatId) {
+      if (!canResolve()) return;
+      context.actions.confirm(seatId);
     }
   };
 }

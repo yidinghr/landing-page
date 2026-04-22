@@ -1,7 +1,13 @@
 import { handTotal, isNatural, playerDraws, bankerDraws, resolveRound } from './engines/baccarat-engine.js';
 import { dealOne, initShoe, shoeRemaining, cardValue, SUIT_SYMBOL } from './engines/shoe-engine.js';
 import { betTotal } from './engines/payout-engine.js';
-import { insuranceMaxBet, shouldOfferInsurance } from './engines/insurance-engine.js';
+import {
+  clampInsuranceAmount,
+  getEligibleInsuranceSeats,
+  insuranceBaseBet,
+  insuranceMaxBet,
+  shouldOfferInsurance
+} from './engines/insurance-engine.js';
 import {
   DEFAULT_INSURANCE,
   DEFAULT_RULES,
@@ -29,7 +35,7 @@ import {
   setInsuranceDecision
 } from './engines/seat-engine.js';
 import { settleRound } from './engines/settlement-engine.js';
-import { npcAutoBet, npcResolveInsurance } from './npc/npc-behavior.js';
+import { npcAutoBet, npcResolveInsuranceForSeats } from './npc/npc-behavior.js';
 import {
   renderBalance,
   renderBetZones,
@@ -93,7 +99,7 @@ let selectedChip = null;
 let payouts = null;
 let settlement = null;
 let role = 'dealer';
-let insuranceBet = 0;
+let insuranceDrafts = {};
 let npcBetsApplied = false;
 let autoAfterInsurance = false;
 let burnTimer = 0;
@@ -138,6 +144,8 @@ const el = {
   insBankerScore: document.getElementById('insBankerScore'),
   insPlayerBet: document.getElementById('insPlayerBet'),
   insMaxBet: document.getElementById('insMaxBet'),
+  insEligibleCount: document.getElementById('insEligibleCount'),
+  insuranceSeatRows: document.getElementById('insuranceSeatRows'),
   insCurrentBet: document.getElementById('insCurrentBet'),
   btnInsDecline: document.getElementById('btnInsDecline'),
   btnIns25: document.getElementById('btnIns25'),
@@ -156,6 +164,31 @@ function activeBets() {
 
 function activeBalance() {
   return activeSeat().balance;
+}
+
+function fmtMoney(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function getInsuranceDraft(seatId) {
+  return Number(insuranceDrafts[seatId] || 0);
+}
+
+function setInsuranceDraft(seatId, amount) {
+  insuranceDrafts = {
+    ...insuranceDrafts,
+    [seatId]: Number(amount || 0)
+  };
+}
+
+function clearInsuranceDraft(seatId) {
+  const next = { ...insuranceDrafts };
+  delete next[seatId];
+  insuranceDrafts = next;
+}
+
+function resetInsuranceDrafts() {
+  insuranceDrafts = {};
 }
 
 function isIdlePhase() {
@@ -228,39 +261,134 @@ function renderRole() {
   }
 }
 
+function insuranceOfferSeats() {
+  return seats.filter(function (seat) {
+    return Boolean(seat.insurance && seat.insurance.offered);
+  });
+}
+
+function pendingInsuranceSeats() {
+  return insuranceOfferSeats().filter(function (seat) {
+    return seat.insurance && seat.insurance.outcome === 'pending';
+  });
+}
+
+function isHumanInsuranceSeat(seatId) {
+  if (insuranceConfig.staffControlled) {
+    return role === 'insurance';
+  }
+  if (role === 'insurance') return true;
+  if (role === 'customer') {
+    return Number(seatId) === Number(activeSeatId);
+  }
+  return false;
+}
+
+function canResolveInsuranceSeat(seatId) {
+  return phase === 'insurance' && isHumanInsuranceSeat(seatId);
+}
+
+function hasPendingInsurance() {
+  return pendingInsuranceSeats().length > 0;
+}
+
 function renderInsurancePanel() {
   if (!el.insurancePanel) return;
-  const seat = activeSeat();
   const bTotal = handTotal(bCards);
-  const playerBet = seat.bets.player || 0;
-  const maxBet = insuranceMaxBet(playerBet, insuranceConfig);
-  const balance = seat.balance;
+  const rowSeats = insuranceOfferSeats();
+  const summarySeats = rowSeats.length ? rowSeats : getEligibleInsuranceSeats(seats, insuranceConfig);
+  const totalBase = summarySeats.reduce(function (sum, seat) {
+    return sum + insuranceBaseBet(seat, insuranceConfig);
+  }, 0);
+  const totalMax = summarySeats.reduce(function (sum, seat) {
+    return sum + insuranceMaxBet(insuranceBaseBet(seat, insuranceConfig), insuranceConfig);
+  }, 0);
+  const pendingSeats = pendingInsuranceSeats();
+  const acceptedSeats = rowSeats.filter(function (seat) {
+    return seat.insurance && seat.insurance.accepted;
+  });
+  const activeBase = insuranceBaseBet(activeSeat(), insuranceConfig);
+  const activeMax = insuranceMaxBet(activeBase, insuranceConfig);
+  const activeDraft = getInsuranceDraft(activeSeatId);
   const canResolve = insuranceController ? insuranceController.canResolve() : phase === 'insurance';
 
   if (el.insBankerScore) el.insBankerScore.textContent = bTotal;
-  if (el.insPlayerBet) el.insPlayerBet.textContent = playerBet.toLocaleString();
-  if (el.insMaxBet) el.insMaxBet.textContent = maxBet.toLocaleString();
-  if (el.insCurrentBet) el.insCurrentBet.innerHTML = 'Insurance bet: <strong>' + insuranceBet.toLocaleString() + '</strong>';
+  if (el.insPlayerBet) el.insPlayerBet.textContent = totalBase > 0 ? fmtMoney(totalBase) : '-';
+  if (el.insMaxBet) el.insMaxBet.textContent = totalMax > 0 ? fmtMoney(totalMax) : '-';
+  if (el.insEligibleCount) el.insEligibleCount.textContent = String(summarySeats.length);
+  if (el.insCurrentBet) {
+    el.insCurrentBet.innerHTML = 'Pending: <strong>' + pendingSeats.length + '</strong> · Accepted: <strong>' + acceptedSeats.length + '</strong>';
+  }
 
-  const pct25 = Math.min(Math.floor(playerBet * 0.25), maxBet, balance);
-  const pct50 = Math.min(Math.floor(playerBet * 0.5), maxBet, balance);
+  const pct25 = clampInsuranceAmount(activeSeat(), Math.floor(activeBase * 0.25), insuranceConfig);
+  const pct50 = clampInsuranceAmount(activeSeat(), Math.floor(activeBase * 0.5), insuranceConfig);
 
   if (el.btnIns25) {
-    el.btnIns25.textContent = '25% (' + pct25.toLocaleString() + ')';
-    el.btnIns25.classList.toggle('is-selected', insuranceBet === pct25 && pct25 > 0);
-    el.btnIns25.disabled = !canResolve || pct25 === 0;
+    el.btnIns25.textContent = '25% (' + fmtMoney(pct25) + ')';
+    el.btnIns25.classList.toggle('is-selected', activeDraft === pct25 && pct25 > 0);
+    el.btnIns25.disabled = !canResolve || !canResolveInsuranceSeat(activeSeatId) || pct25 === 0;
   }
   if (el.btnIns50) {
-    el.btnIns50.textContent = '50% (' + pct50.toLocaleString() + ')';
-    el.btnIns50.classList.toggle('is-selected', insuranceBet === pct50 && pct50 > 0);
-    el.btnIns50.disabled = !canResolve || pct50 === 0;
+    el.btnIns50.textContent = '50% (' + fmtMoney(pct50) + ')';
+    el.btnIns50.classList.toggle('is-selected', activeDraft === pct50 && pct50 > 0);
+    el.btnIns50.disabled = !canResolve || !canResolveInsuranceSeat(activeSeatId) || pct50 === 0;
   }
-  if (el.btnInsDecline) el.btnInsDecline.disabled = !canResolve;
-  if (el.btnInsConfirm) el.btnInsConfirm.disabled = !canResolve;
+  if (el.btnInsDecline) el.btnInsDecline.disabled = !canResolve || !canResolveInsuranceSeat(activeSeatId);
+  if (el.btnInsConfirm) el.btnInsConfirm.disabled = !canResolve || !canResolveInsuranceSeat(activeSeatId);
   if (el.btnInsuranceNpcRound) {
     el.btnInsuranceNpcRound.textContent = phase === 'settlement' ? 'Next Round' : 'Start NPC Round';
     el.btnInsuranceNpcRound.hidden = role !== 'insurance' || phase === 'insurance' || (!isIdlePhase() && phase !== 'settlement');
     el.btnInsuranceNpcRound.disabled = role !== 'insurance' || (!isIdlePhase() && phase !== 'settlement');
+  }
+
+  el.insurancePanel.classList.toggle('is-multi', rowSeats.length > 0);
+  if (el.insuranceSeatRows) {
+    if (!rowSeats.length) {
+      el.insuranceSeatRows.innerHTML = '<p class="tr-ins-empty">No active insurance offer.</p>';
+      return;
+    }
+
+    el.insuranceSeatRows.innerHTML = rowSeats.map(function (seat) {
+      const decision = seat.insurance || {};
+      const baseBet = Number(decision.baseBet || insuranceBaseBet(seat, insuranceConfig));
+      const maxBet = Number(decision.maxAmount || insuranceMaxBet(baseBet, insuranceConfig));
+      const draft = getInsuranceDraft(seat.id);
+      const pending = decision.outcome === 'pending';
+      const rowCanResolve = pending && canResolveInsuranceSeat(seat.id);
+      const pct25Amount = clampInsuranceAmount(seat, Math.floor(baseBet * 0.25), insuranceConfig);
+      const pct50Amount = clampInsuranceAmount(seat, Math.floor(baseBet * 0.5), insuranceConfig);
+      const selected25 = draft === pct25Amount && pct25Amount > 0 ? ' is-selected' : '';
+      const selected50 = draft === pct50Amount && pct50Amount > 0 ? ' is-selected' : '';
+      const selectedMax = draft === maxBet && maxBet > 0 ? ' is-selected' : '';
+      const disabled = rowCanResolve ? '' : ' disabled';
+      const statusClass = pending
+        ? 'tr-ins-seat-status--pending'
+        : decision.accepted ? 'tr-ins-seat-status--accepted' : 'tr-ins-seat-status--declined';
+      const statusText = pending
+        ? 'Pending'
+        : decision.accepted ? 'Accepted ' + fmtMoney(decision.amount) : 'Declined';
+
+      return [
+        '<div class="tr-ins-seat-row" data-seat-id="' + seat.id + '">',
+        '<div class="tr-ins-seat-main">',
+        '<strong>Seat ' + seat.id + '</strong>',
+        '<span class="tr-ins-seat-status ' + statusClass + '">' + statusText + '</span>',
+        '</div>',
+        '<div class="tr-ins-seat-meta">',
+        '<span>Base <strong>' + fmtMoney(baseBet) + '</strong></span>',
+        '<span>Max <strong>' + fmtMoney(maxBet) + '</strong></span>',
+        '<span>Draft <strong>' + fmtMoney(draft) + '</strong></span>',
+        '</div>',
+        '<div class="tr-ins-seat-actions">',
+        '<button type="button" class="tr-btn tr-btn--ghost tr-btn--xs" data-ins-action="decline" data-seat-id="' + seat.id + '"' + disabled + '>Decline</button>',
+        '<button type="button" class="tr-ins-opt-btn' + selected25 + '" data-ins-action="pct" data-ins-pct="25" data-seat-id="' + seat.id + '"' + (rowCanResolve && pct25Amount > 0 ? '' : ' disabled') + '>25%</button>',
+        '<button type="button" class="tr-ins-opt-btn' + selected50 + '" data-ins-action="pct" data-ins-pct="50" data-seat-id="' + seat.id + '"' + (rowCanResolve && pct50Amount > 0 ? '' : ' disabled') + '>50%</button>',
+        '<button type="button" class="tr-ins-opt-btn' + selectedMax + '" data-ins-action="max" data-seat-id="' + seat.id + '"' + (rowCanResolve && maxBet > 0 ? '' : ' disabled') + '>Max</button>',
+        '<button type="button" class="tr-btn tr-btn--ins-confirm tr-btn--xs" data-ins-action="confirm" data-seat-id="' + seat.id + '"' + disabled + '>Confirm</button>',
+        '</div>',
+        '</div>'
+      ].join('');
+    }).join('');
   }
 }
 
@@ -390,6 +518,7 @@ function initRoleControllers() {
     actions: {
       decline: declineInsurance,
       selectPercent: selectInsurancePercent,
+      selectMax: selectInsuranceMax,
       confirm: confirmInsurance
     }
   });
@@ -511,42 +640,72 @@ function routeDrawPhase() {
 }
 
 function canHumanResolveInsurance() {
-  if (insuranceConfig.staffControlled) {
-    return role === 'insurance';
-  }
-  return role === 'customer' || role === 'insurance';
+  return pendingInsuranceSeats().some(function (seat) {
+    return canResolveInsuranceSeat(seat.id);
+  });
 }
 
-function applyNpcInsuranceDecision() {
-  const decision = npcResolveInsurance(
+function applyNpcInsuranceDecision(seatIds) {
+  const result = npcResolveInsuranceForSeats(
     seats,
-    activeSeatId,
+    seatIds,
     insuranceConfig,
     tablePrefs.insuranceNpcMode
   );
-  seats = decision.seats;
-  insuranceBet = decision.amount;
+  seats = result.seats;
+  result.decisions.forEach(function (decision) {
+    if (decision.amount > 0) {
+      setInsuranceDraft(decision.seatId, decision.amount);
+    } else {
+      clearInsuranceDraft(decision.seatId);
+    }
+  });
+}
+
+function markInsuranceOffers(eligibleSeats) {
+  eligibleSeats.forEach(function (seat) {
+    const baseBet = insuranceBaseBet(seat, insuranceConfig);
+    seats = setInsuranceDecision(seats, seat.id, {
+      offered: true,
+      accepted: false,
+      amount: 0,
+      outcome: 'pending',
+      payout: 0,
+      baseBet: baseBet,
+      maxAmount: insuranceMaxBet(baseBet, insuranceConfig)
+    });
+  });
+}
+
+function resolveNpcPendingInsurance() {
+  const npcSeatIds = pendingInsuranceSeats()
+    .filter(function (seat) {
+      return !isHumanInsuranceSeat(seat.id);
+    })
+    .map(function (seat) {
+      return seat.id;
+    });
+
+  applyNpcInsuranceDecision(npcSeatIds);
 }
 
 function maybeOfferInsurance() {
   const bInit = handTotal(bCards);
-  const playerBet = activeBets().player || 0;
-  if (!shouldOfferInsurance(bInit, playerBet, insuranceConfig)) {
+  const eligibleSeats = getEligibleInsuranceSeats(seats, insuranceConfig);
+  const totalEligibleBase = eligibleSeats.reduce(function (sum, seat) {
+    return sum + insuranceBaseBet(seat, insuranceConfig);
+  }, 0);
+
+  if (!shouldOfferInsurance(bInit, totalEligibleBase, insuranceConfig)) {
     routeDrawPhase();
     return false;
   }
 
-  insuranceBet = 0;
-  seats = setInsuranceDecision(seats, activeSeatId, {
-    offered: true,
-    accepted: false,
-    amount: 0,
-    outcome: 'pending',
-    payout: 0
-  });
+  resetInsuranceDrafts();
+  markInsuranceOffers(eligibleSeats);
+  resolveNpcPendingInsurance();
 
-  if (!canHumanResolveInsurance()) {
-    applyNpcInsuranceDecision();
+  if (!hasPendingInsurance()) {
     routeDrawPhase();
     return false;
   }
@@ -643,7 +802,7 @@ function doAutoDeal() {
   result = null;
   payouts = null;
   settlement = null;
-  insuranceBet = 0;
+  resetInsuranceDrafts();
   autoAfterInsurance = true;
 
   if (!dealOpeningFour()) {
@@ -666,6 +825,7 @@ function runNpcDealerRound() {
 }
 
 function continueAfterInsurance() {
+  resetInsuranceDrafts();
   if (autoAfterInsurance) {
     autoAfterInsurance = false;
     autoDrawToReveal();
@@ -676,49 +836,85 @@ function continueAfterInsurance() {
   renderAll();
 }
 
-function declineInsurance() {
-  insuranceBet = 0;
-  seats = setInsuranceDecision(seats, activeSeatId, {
+function finishInsuranceDecision() {
+  if (hasPendingInsurance()) {
+    renderAll();
+    return;
+  }
+  continueAfterInsurance();
+}
+
+function declineInsurance(seatId = activeSeatId) {
+  clearInsuranceDraft(seatId);
+  seats = setInsuranceDecision(seats, seatId, {
     offered: true,
     accepted: false,
     amount: 0,
     outcome: 'declined',
     payout: 0
   });
-  continueAfterInsurance();
+  finishInsuranceDecision();
 }
 
-function selectInsurancePercent(pct) {
-  const playerBet = activeBets().player || 0;
-  const maxBet = insuranceMaxBet(playerBet, insuranceConfig);
-  const raw = Math.floor(playerBet * pct / 100);
-  insuranceBet = Math.min(raw, maxBet, activeBalance());
+function selectInsurancePercent(pct, seatId = activeSeatId) {
+  const seat = getSeat(seats, seatId);
+  const baseBet = insuranceBaseBet(seat, insuranceConfig);
+  const raw = Math.floor(baseBet * pct / 100);
+  setInsuranceDraft(seatId, clampInsuranceAmount(seat, raw, insuranceConfig));
   renderInsurancePanel();
 }
 
-function confirmInsurance() {
-  if (insuranceBet > 0) {
-    seats = debitSeat(seats, activeSeatId, insuranceBet);
+function selectInsuranceMax(seatId = activeSeatId) {
+  const seat = getSeat(seats, seatId);
+  const baseBet = insuranceBaseBet(seat, insuranceConfig);
+  setInsuranceDraft(seatId, clampInsuranceAmount(seat, insuranceMaxBet(baseBet, insuranceConfig), insuranceConfig));
+  renderInsurancePanel();
+}
+
+function confirmInsurance(seatId = activeSeatId) {
+  const seat = getSeat(seats, seatId);
+  const amount = clampInsuranceAmount(seat, getInsuranceDraft(seatId), insuranceConfig);
+  if (amount > 0) {
+    seats = debitSeat(seats, seatId, amount);
   }
-  seats = setInsuranceDecision(seats, activeSeatId, {
+  seats = setInsuranceDecision(seats, seatId, {
     offered: true,
-    accepted: insuranceBet > 0,
-    amount: insuranceBet,
-    outcome: insuranceBet > 0 ? 'accepted' : 'declined',
+    accepted: amount > 0,
+    amount: amount,
+    outcome: amount > 0 ? 'accepted' : 'declined',
     payout: 0
   });
-  continueAfterInsurance();
+  clearInsuranceDraft(seatId);
+  finishInsuranceDecision();
 }
 
 function onInsDecline() {
   insuranceController.decline();
 }
 
-function onInsPercentClick(e) {
-  const btn = e.target.closest('[data-ins-pct]');
+function onInsActionClick(e) {
+  const btn = e.target.closest('[data-ins-action], [data-ins-pct]');
   if (!btn || btn.disabled) return;
+  const seatId = btn.getAttribute('data-seat-id')
+    ? clampSeatId(btn.getAttribute('data-seat-id'))
+    : activeSeatId;
+  const action = btn.getAttribute('data-ins-action') || 'pct';
+
+  if (action === 'decline') {
+    insuranceController.decline(seatId);
+    return;
+  }
+  if (action === 'confirm') {
+    insuranceController.confirm(seatId);
+    return;
+  }
+  if (action === 'max') {
+    insuranceController.selectMax(seatId);
+    return;
+  }
+
   const pct = parseInt(btn.getAttribute('data-ins-pct'), 10);
-  insuranceController.selectPercent(pct);
+  insuranceController.selectPercent(pct, seatId);
 }
 
 function onInsConfirm() {
@@ -759,6 +955,11 @@ function revealRound() {
     payouts.insurance = activeRow.insurance.payout;
     payouts.insuranceBet = activeRow.insurance.amount;
   }
+  const insuranceSeatIds = settlement.seats.filter(function (row) {
+    return row.insurance && row.insurance.accepted;
+  }).map(function (row) {
+    return row.seatId;
+  });
 
   log.unshift({
     round: roundNum,
@@ -769,7 +970,8 @@ function revealRound() {
     pPair: result.pPair,
     bPair: result.bPair,
     luckySix: result.luckySix,
-    insurance: Boolean(activeRow && activeRow.insurance && activeRow.insurance.accepted),
+    insurance: insuranceSeatIds.length > 0,
+    insuranceSeats: insuranceSeatIds,
     net: activeRow ? activeRow.net : null
   });
   if (log.length > 60) log.pop();
@@ -785,7 +987,7 @@ function doNext() {
   result = null;
   payouts = null;
   settlement = null;
-  insuranceBet = 0;
+  resetInsuranceDrafts();
   npcBetsApplied = false;
   autoAfterInsurance = false;
   setPhase('idle');
@@ -803,7 +1005,7 @@ function doNewShoe() {
   log = [];
   payouts = null;
   settlement = null;
-  insuranceBet = 0;
+  resetInsuranceDrafts();
   npcBetsApplied = false;
   autoAfterInsurance = false;
   setPhase('idle');
@@ -858,7 +1060,7 @@ export function init() {
   if (el.btnInsDecline) el.btnInsDecline.addEventListener('click', onInsDecline);
   if (el.btnInsConfirm) el.btnInsConfirm.addEventListener('click', onInsConfirm);
   if (el.btnInsuranceNpcRound) el.btnInsuranceNpcRound.addEventListener('click', onInsuranceNpcRound);
-  if (el.insurancePanel) el.insurancePanel.addEventListener('click', onInsPercentClick);
+  if (el.insurancePanel) el.insurancePanel.addEventListener('click', onInsActionClick);
 
   const roleSelector = document.querySelector('.tr-role-selector');
   if (roleSelector) roleSelector.addEventListener('click', onRoleClick);

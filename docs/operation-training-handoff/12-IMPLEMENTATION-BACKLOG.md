@@ -57,14 +57,20 @@ Legend: `[ ]` todo · `[/]` in progress · `[x]` done · `[~]` deferred · `[!]`
 
 ## Phase 3 — Multi-Seat Insurance + Insurance Staff
 
-- [ ] **P3-01** Expand `insurance-engine.js` for `payoutMode`, `whoCanInsure`, `settleOnTie`
-- [ ] **P3-02** Add per-seat decision record shape (see `04`)
-- [ ] **P3-03** Full Insurance Console for staff role
-- [ ] **P3-04** NPC-staff behavior: auto-offer max when not trainee
-- [ ] **P3-05** Settlement board: add insurance column, per-seat
-- [ ] **P3-06** Session log: insurance chips per seat
-- [ ] **P3-07** Regression pass against Phase 2 criteria
-- [ ] **P3-08** PR: Phase 3 with report
+- [x] **P3-01** Expand `insurance-engine.js` for `payoutMode`, `whoCanInsure`, `settleOnTie`
+- [x] **P3-02** Add per-seat decision record shape (see `04`)
+- [x] **P3-03** Full Insurance Console for staff role
+- [x] **P3-04** NPC-staff behavior: auto-offer max when not trainee
+- [x] **P3-05** Settlement board: add insurance column, per-seat
+- [x] **P3-06** Session log: insurance chips per seat
+- [x] **P3-07** Regression pass against Phase 2 criteria
+- [x] **P3-08** PR: Phase 3 with report — https://github.com/yidinghr/landing-page/pull/16
+
+**Phase 3 verification — 2026-04-22**
+- Browser smoke passed for Insurance Staff 5-row console and Dealer trainee NPC insurance settlement.
+- `npm run build` passed.
+- `npx playwright test tests/smoke.spec.js tests/i18n.spec.js --workers=1` passed 11/11.
+- `npm run test:e2e -- --workers=1` passed 55/55.
 
 ---
 

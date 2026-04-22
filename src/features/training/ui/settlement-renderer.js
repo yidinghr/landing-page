@@ -20,8 +20,11 @@ function betsText(row) {
 }
 
 function insuranceText(row) {
-  if (!row.insurance || !row.insurance.accepted) {
+  if (!row.insurance) {
     return '-';
+  }
+  if (!row.insurance.accepted) {
+    return row.insurance.offered ? 'Declined' : '-';
   }
 
   return fmtBalance(row.insurance.amount) + ' / ' + fmtAmt(row.insurance.payout);
