@@ -44,6 +44,7 @@
       </div>
       <span class="tr-shoe-count"><span id="shoeRem">—</span> / <span id="shoeTotal">416</span></span>
     </div>
+    <div id="burnNotice" class="tr-burn-notice" hidden></div>
 
     <!-- Balance bar -->
     <div class="tr-balance-bar">
@@ -146,6 +147,89 @@
 
     </div>
 
+    <!-- Seats row (multi-seat scaffold) -->
+    <div id="seatsRow" class="tr-seats">
+      <div class="tr-seat tr-seat--active" data-seat="1">
+        <div class="tr-seat__head">
+          <span class="tr-seat__label">Seat 1</span>
+          <span class="tr-seat__badge">active</span>
+        </div>
+        <div class="tr-seat__bets">
+          <span class="tr-seat__bet" data-seat-bet="playerPair" hidden>P.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="player" hidden>Player <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="tie" hidden>Tie <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="banker" hidden>Banker <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="bankerPair" hidden>B.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="luckySix" hidden>Lucky 6 <strong>0</strong></span>
+        </div>
+        <div class="tr-seat__balance">Balance <strong>1,000,000</strong></div>
+      </div>
+
+      <div class="tr-seat" data-seat="2">
+        <div class="tr-seat__head">
+          <span class="tr-seat__label">Seat 2</span>
+          <span class="tr-seat__badge">idle</span>
+        </div>
+        <div class="tr-seat__bets">
+          <span class="tr-seat__bet" data-seat-bet="playerPair" hidden>P.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="player" hidden>Player <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="tie" hidden>Tie <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="banker" hidden>Banker <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="bankerPair" hidden>B.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="luckySix" hidden>Lucky 6 <strong>0</strong></span>
+        </div>
+        <div class="tr-seat__balance">Balance <strong>1,000,000</strong></div>
+      </div>
+
+      <div class="tr-seat" data-seat="3">
+        <div class="tr-seat__head">
+          <span class="tr-seat__label">Seat 3</span>
+          <span class="tr-seat__badge">idle</span>
+        </div>
+        <div class="tr-seat__bets">
+          <span class="tr-seat__bet" data-seat-bet="playerPair" hidden>P.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="player" hidden>Player <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="tie" hidden>Tie <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="banker" hidden>Banker <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="bankerPair" hidden>B.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="luckySix" hidden>Lucky 6 <strong>0</strong></span>
+        </div>
+        <div class="tr-seat__balance">Balance <strong>1,000,000</strong></div>
+      </div>
+
+      <div class="tr-seat" data-seat="4">
+        <div class="tr-seat__head">
+          <span class="tr-seat__label">Seat 4</span>
+          <span class="tr-seat__badge">idle</span>
+        </div>
+        <div class="tr-seat__bets">
+          <span class="tr-seat__bet" data-seat-bet="playerPair" hidden>P.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="player" hidden>Player <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="tie" hidden>Tie <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="banker" hidden>Banker <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="bankerPair" hidden>B.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="luckySix" hidden>Lucky 6 <strong>0</strong></span>
+        </div>
+        <div class="tr-seat__balance">Balance <strong>1,000,000</strong></div>
+      </div>
+
+      <div class="tr-seat" data-seat="5">
+        <div class="tr-seat__head">
+          <span class="tr-seat__label">Seat 5</span>
+          <span class="tr-seat__badge">idle</span>
+        </div>
+        <div class="tr-seat__bets">
+          <span class="tr-seat__bet" data-seat-bet="playerPair" hidden>P.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="player" hidden>Player <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="tie" hidden>Tie <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="banker" hidden>Banker <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="bankerPair" hidden>B.Pair <strong>0</strong></span>
+          <span class="tr-seat__bet" data-seat-bet="luckySix" hidden>Lucky 6 <strong>0</strong></span>
+        </div>
+        <div class="tr-seat__balance">Balance <strong>1,000,000</strong></div>
+      </div>
+    </div>
+
     <!-- Chip tray -->
     <div class="tr-chip-section">
       <span class="tr-chip-label">SELECT CHIP →</span>
@@ -155,10 +239,14 @@
 
     <!-- Result -->
     <div id="resultBox" class="tr-result" hidden></div>
+    <div id="settlementBoard" class="tr-settlement-board" hidden></div>
 
     <!-- Controls -->
     <div class="tr-controls">
+      <button type="button" id="btnCloseBets" class="tr-btn tr-btn--ghost">Close Bets</button>
       <button type="button" id="btnDeal" class="tr-btn tr-btn--deal">DEAL</button>
+      <button type="button" id="btnAutoDeal" class="tr-btn tr-btn--ghost">Auto-Deal</button>
+      <button type="button" id="btnReveal" class="tr-btn" disabled>Reveal</button>
       <button type="button" id="btnNext" class="tr-btn" disabled>Next Round</button>
       <button type="button" id="btnShoe" class="tr-btn tr-btn--ghost">New Shoe</button>
     </div>

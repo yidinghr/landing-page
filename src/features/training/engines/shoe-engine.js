@@ -36,10 +36,17 @@ export function initShoe() {
   const cut = [...cards.slice(cutAt), ...cards.slice(0, cutAt)];
 
   // Burn: first card reveals how many extra cards to burn (face cards = 10)
-  const burnCount = cardValue(cut[0].rank) || 10;
-  const startPos = 1 + burnCount;
+  const burnCard = cut[0];
+  const burnExtraCount = cardValue(burnCard.rank) || 10;
+  const startPos = 1 + burnExtraCount;
 
-  return { cards: cut, pos: startPos, total: cut.length };
+  return {
+    cards: cut,
+    pos: startPos,
+    total: cut.length,
+    burnCard: burnCard,
+    burnCount: startPos
+  };
 }
 
 export function dealOne(shoe) {

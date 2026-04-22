@@ -62,6 +62,37 @@ export function betTotal(bets) {
   return Object.values(bets).reduce((s, v) => s + v, 0);
 }
 
+export function calcPayoutPerSeat(seats, result, rules) {
+  return seats.map(function (seat) {
+    const payouts = calcPayout(seat.bets || {}, result, rules);
+    return {
+      seatId: seat.id,
+      totalBet: betTotal(seat.bets || {}),
+      payouts: payouts,
+      net: payouts.net || 0,
+      commission: payouts.commission || 0
+    };
+  });
+}
+
+export function aggregatePayouts(rows) {
+  return rows.reduce(function (totals, row) {
+    totals.net += row.net || 0;
+    totals.commission += row.commission || 0;
+    totals.totalBet += row.totalBet || 0;
+    return totals;
+  }, {
+    totalBet: 0,
+    net: 0,
+    commission: 0
+  });
+}
+
+export function roundToChipUnit(amount, unit = 5) {
+  if (!unit) return amount;
+  return Math.round(amount / unit) * unit;
+}
+
 export function fmtAmt(n) {
   if (n === 0) return 'PUSH';
   const sign = n > 0 ? '+' : '';

@@ -158,6 +158,17 @@ body.training-page {
   font-variant-numeric: tabular-nums;
 }
 
+.tr-burn-notice {
+  background: rgba(242, 212, 134, 0.1);
+  border: 1px solid rgba(242, 212, 134, 0.32);
+  border-radius: var(--tr-radius-sm);
+  color: var(--tr-accent);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 10px 14px;
+}
+
 /* === Felt table === */
 .tr-felt {
   background: var(--tr-felt);
@@ -402,6 +413,117 @@ body.training-page {
 .tr-zone-payout.is-lose { color: var(--tr-banker);    background: rgba(255, 90, 90, 0.15); }
 .tr-zone-payout.is-push { color: var(--tr-text-soft); background: rgba(255, 255, 255, 0.06); }
 
+/* === Seats === */
+.tr-seats {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.tr-seat {
+  flex: 1 1 0;
+  min-width: 154px;
+  border: 1px solid var(--tr-border);
+  border-radius: var(--tr-radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.tr-seat--active {
+  border-color: rgba(242, 212, 134, 0.65);
+  background: rgba(242, 212, 134, 0.08);
+  box-shadow: 0 0 16px rgba(242, 212, 134, 0.12);
+}
+
+.tr-seat--winner {
+  border-color: rgba(80, 216, 144, 0.6);
+  box-shadow: 0 0 14px rgba(80, 216, 144, 0.2);
+}
+
+.tr-seat--loser {
+  border-color: rgba(255, 90, 90, 0.5);
+  box-shadow: 0 0 14px rgba(255, 90, 90, 0.16);
+}
+
+.tr-seat__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tr-seat__label {
+  color: var(--tr-text);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tr-seat__badge {
+  border: 1px solid var(--tr-border-mid);
+  border-radius: 999px;
+  padding: 2px 7px;
+  color: var(--tr-text-faint);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tr-seat--active .tr-seat__badge {
+  border-color: rgba(242, 212, 134, 0.55);
+  color: var(--tr-accent);
+  background: rgba(242, 212, 134, 0.1);
+}
+
+.tr-seat__bets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 24px;
+}
+
+.tr-seat__bet {
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--tr-text-soft);
+  font-size: 10px;
+  line-height: 1.3;
+  padding: 3px 6px;
+}
+
+.tr-seat__bet strong {
+  color: var(--tr-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-seat__balance {
+  margin-top: auto;
+  border-top: 1px solid var(--tr-border);
+  padding-top: 7px;
+  color: var(--tr-text-faint);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tr-seat__balance strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--tr-accent);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* === Chip tray === */
 .tr-chip-section {
   display: flex;
@@ -454,12 +576,17 @@ body.training-page {
 
 .tr-chip.is-disabled { opacity: 0.25; cursor: not-allowed; }
 
+.tr-chip--1m   { background: rgba(242, 212, 134, 0.32); border-color: #f2d486; color: #fff3bf; }
+.tr-chip--500k { background: rgba(142, 28, 44, 0.34);   border-color: #c8374d; color: #ffc0c8; }
 .tr-chip--100k { background: rgba(123, 31, 162, 0.28); border-color: #9c27b0; color: #ce93d8; }
 .tr-chip--50k  { background: rgba(245, 124, 0, 0.28);  border-color: #f57c00; color: #ffcc80; }
 .tr-chip--10k  { background: rgba(97, 97, 97, 0.35);   border-color: #757575; color: #e0e0e0; }
 .tr-chip--5k   { background: rgba(56, 142, 60, 0.28);  border-color: #43a047; color: #a5d6a7; }
 .tr-chip--1k   { background: rgba(211, 47, 47, 0.28);  border-color: #e53935; color: #ef9a9a; }
 .tr-chip--500  { background: rgba(25, 118, 210, 0.28); border-color: #1976d2; color: #90caf9; }
+.tr-chip--100  { background: rgba(111, 78, 55, 0.36);  border-color: #9a6a48; color: #e8c0a2; }
+.tr-chip--25   { background: rgba(176, 186, 198, 0.32); border-color: #c8d0da; color: #f0f4f8; }
+.tr-chip--5    { background: rgba(166, 93, 45, 0.34);  border-color: #b87333; color: #ffc69b; }
 
 .chip-tray-nudge { outline: 2px solid var(--tr-accent); border-radius: var(--tr-radius-sm); }
 
@@ -528,10 +655,83 @@ body.training-page {
 .res-badge--pair    { background: rgba(181, 112, 255, 0.1);  border-color: rgba(181, 112, 255, 0.3); color: #c484ff; }
 .res-badge--lucky6  { background: rgba(80, 216, 144, 0.1);   border-color: rgba(80, 216, 144, 0.3); color: var(--tr-tie); }
 
+/* === Settlement board === */
+.tr-settlement-board {
+  overflow-x: auto;
+}
+
+.tr-settle {
+  background: var(--tr-surface);
+  border: 1px solid var(--tr-border);
+  border-radius: var(--tr-radius);
+  overflow: hidden;
+}
+
+.tr-settle__head,
+.tr-settle-row {
+  display: grid;
+  grid-template-columns: 64px minmax(150px, 1.4fr) 92px 92px 92px 92px 92px 92px;
+  gap: 0;
+  align-items: stretch;
+}
+
+.tr-settle__head {
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--tr-border);
+}
+
+.tr-settle__head span,
+.tr-settle-row > span {
+  padding: 9px 10px;
+  border-right: 1px solid var(--tr-border);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.tr-settle__head span {
+  color: var(--tr-text-faint);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tr-settle-row {
+  border-bottom: 1px solid var(--tr-border);
+  color: var(--tr-text-soft);
+}
+
+.tr-settle-row:last-child {
+  border-bottom: 0;
+}
+
+.tr-settle-row--win {
+  background: rgba(80, 216, 144, 0.06);
+}
+
+.tr-settle-row--lose {
+  background: rgba(255, 90, 90, 0.055);
+}
+
+.tr-settle-row strong,
+.tr-settle-col--net {
+  color: var(--tr-text);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-settle-row--win .tr-settle-col--net {
+  color: var(--tr-tie);
+}
+
+.tr-settle-row--lose .tr-settle-col--net {
+  color: var(--tr-banker);
+}
+
 /* === Controls === */
 .tr-controls {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .tr-btn {
@@ -561,6 +761,7 @@ body.training-page {
 
 .tr-btn--deal {
   flex: 1;
+  min-width: 160px;
   font-size: 16px;
   letter-spacing: 0.15em;
   background: linear-gradient(135deg, rgba(242, 212, 134, 0.14), rgba(242, 212, 134, 0.06));
