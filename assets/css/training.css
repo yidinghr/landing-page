@@ -259,6 +259,17 @@ body.training-page {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+body[data-role="dealer"][data-squeeze="enabled"] .bac-card--squeeze {
+  animation: card-in 0.2s ease-out, squeeze-reveal 0.55s ease-out;
+  transform-origin: 50% 80%;
+}
+
+@keyframes squeeze-reveal {
+  0%   { filter: brightness(0.68); transform: rotateY(78deg) translateY(-4px) scale(0.96); }
+  58%  { filter: brightness(0.95); transform: rotateY(-10deg) translateY(0) scale(1.02); }
+  100% { filter: brightness(1); transform: rotateY(0deg) translateY(0) scale(1); }
+}
+
 .bac-card--red { color: #c0392b; }
 
 .bac-card__face {
@@ -1119,6 +1130,34 @@ body[data-role="customer"] .tr-btn--customer {
 .stat-pill--p { background: rgba(74, 158, 255, 0.1);  border-color: rgba(74, 158, 255, 0.3);  color: var(--tr-player); }
 .stat-pill--b { background: rgba(255, 90, 90, 0.1);   border-color: rgba(255, 90, 90, 0.3);   color: var(--tr-banker); }
 .stat-pill--t { background: rgba(80, 216, 144, 0.1);  border-color: rgba(80, 216, 144, 0.3);  color: var(--tr-tie); }
+
+.stat-ev-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stat-ev-cell {
+  border: 1px solid var(--tr-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.stat-ev-cell span {
+  display: block;
+  color: var(--tr-text-faint);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stat-ev-cell strong {
+  color: var(--tr-text-soft);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
 
 .stat-section-head {
   font-size: 9px;

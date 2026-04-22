@@ -36,6 +36,7 @@ import {
 } from './engines/seat-engine.js';
 import { settleRound } from './engines/settlement-engine.js';
 import { npcAutoBet, npcResolveInsuranceForSeats } from './npc/npc-behavior.js';
+import { applyShoePreset, SHOE_PRESETS } from './scenarios/shoe-presets.js';
 import { seedWrongPayout } from './scenarios/wrong-payout.js';
 import {
   renderBalance,
@@ -228,6 +229,12 @@ function clampSeatId(id) {
   return Math.min(5, Math.max(1, Math.floor(n)));
 }
 
+function clampCutPct(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 50;
+  return Math.min(80, Math.max(20, Math.round(n)));
+}
+
 function emptyBets() {
   return ZONES.reduce(function (bets, zone) {
     bets[zone] = 0;
@@ -254,9 +261,38 @@ function resetRoundSeats(nextSeats) {
   });
 }
 
+function createConfiguredShoe(options = {}) {
+  let cutPct = clampCutPct(tablePrefs.manualCutPct);
+
+  if (options.promptForCut && tablePrefs.manualCutEnabled && role === 'dealer') {
+    const answer = window.prompt('Place cut card at % of shoe (20-80).', String(cutPct));
+    if (answer === null) return null;
+    cutPct = clampCutPct(answer);
+    tablePrefs = {
+      ...tablePrefs,
+      manualCutPct: cutPct
+    };
+    saveTablePrefs(tablePrefs);
+  }
+
+  const nextShoe = initShoe(tablePrefs.manualCutEnabled ? { cutAtRatio: cutPct / 100 } : {});
+  return applyShoePreset(nextShoe, tablePrefs.shoePreset);
+}
+
 function formatBurnNotice() {
   if (!shoe || !shoe.burnCard) return '';
-  return 'Burn card: ' + shoe.burnCard.rank + SUIT_SYMBOL[shoe.burnCard.suit] + ' - Burned ' + shoe.burnCount + ' cards';
+  const parts = [
+    'Burn card: ' + shoe.burnCard.rank + SUIT_SYMBOL[shoe.burnCard.suit],
+    'Burned ' + shoe.burnCount + ' cards'
+  ];
+  if (tablePrefs.manualCutEnabled && shoe.cutAtRatio) {
+    parts.push('Cut ' + Math.round(shoe.cutAtRatio * 100) + '%');
+  }
+  if (shoe.presetId && shoe.presetId !== 'random') {
+    const preset = SHOE_PRESETS[shoe.presetId];
+    parts.push('Preset ' + (preset ? preset.name : shoe.presetId));
+  }
+  return parts.join(' | ');
 }
 
 function showBurnNotice() {
@@ -277,6 +313,7 @@ function renderRole() {
   document.body.setAttribute('data-role', role);
   document.body.setAttribute('data-phase', phase);
   document.body.setAttribute('data-auto-deal', tablePrefs.autoDealEnabled ? 'enabled' : 'disabled');
+  document.body.setAttribute('data-squeeze', tablePrefs.squeezeEnabled ? 'enabled' : 'disabled');
 
   const roleSelector = document.querySelector('.tr-role-selector');
   if (roleSelector) {
@@ -454,7 +491,11 @@ function setPhase(nextPhase) {
 function renderAll() {
   const seat = activeSeat();
   renderShoe(el, shoe);
-  renderHands(el, pCards, bCards);
+  renderHands(el, pCards, bCards, {
+    role: role,
+    phase: phase,
+    squeezeEnabled: tablePrefs.squeezeEnabled
+  });
   renderResult(el.resultBox, result);
   renderDetail(el.roundDetail, {
     result: result,
@@ -469,7 +510,7 @@ function renderAll() {
   renderBetZones(el.betZones, seat.bets, payouts, el.totalBetAmt);
   renderSeats(el.seatsRow, seats, activeSeatId, settlement);
   renderPayoutSummary(el.payoutSummary, payouts);
-  renderStats(el.statsPanel, shoe, log, procedureStats);
+  renderStats(el.statsPanel, shoe, log, procedureStats, tablePrefs);
   renderSettlementBoard(el.settlementBoard, settlement, {
     canUseDealerActions: role === 'dealer' && phase === 'settlement',
     collectedCommissions: currentSettlementProcedure().collectedCommissions,
@@ -494,7 +535,9 @@ function applySettings(next) {
   tablePrefs = {
     ...DEFAULT_TABLE_PREFS,
     ...next.tablePrefs,
-    activeSeatId: clampSeatId(next.tablePrefs.activeSeatId)
+    activeSeatId: clampSeatId(next.tablePrefs.activeSeatId),
+    manualCutPct: clampCutPct(next.tablePrefs.manualCutPct),
+    shoePreset: SHOE_PRESETS[next.tablePrefs.shoePreset] ? next.tablePrefs.shoePreset : DEFAULT_TABLE_PREFS.shoePreset
   };
   activeSeatId = tablePrefs.activeSeatId;
   role = tablePrefs.role || role;
@@ -1162,7 +1205,9 @@ function doNext() {
 
 function doNewShoe() {
   if (!confirm('Start a new shoe? Session log will be cleared.')) return;
-  shoe = initShoe();
+  const nextShoe = createConfiguredShoe({ promptForCut: true });
+  if (!nextShoe) return;
+  shoe = nextShoe;
   seats = createSeats();
   pCards = [];
   bCards = [];
@@ -1194,7 +1239,7 @@ export function init() {
   tablePrefs = getTablePrefs();
   activeSeatId = clampSeatId(tablePrefs.activeSeatId);
   role = tablePrefs.role || 'dealer';
-  shoe = initShoe();
+  shoe = createConfiguredShoe();
   seats = createSeats();
   initRoleControllers();
   settingsPanel = createSettingsPanel({
@@ -1204,7 +1249,8 @@ export function init() {
     onSave: applySettings,
     onReset: resetSettings,
     rulePresets: RULE_PRESETS,
-    insurancePresets: INSURANCE_PRESETS
+    insurancePresets: INSURANCE_PRESETS,
+    shoePresets: SHOE_PRESETS
   });
 
   renderChipTray(el.chipTray, CHIPS, selectedChip, activeBalance());

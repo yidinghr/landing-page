@@ -49,7 +49,12 @@ function prefsFromForm(form, currentPrefs) {
     activeSeatId: readNumber(form, 'activeSeatId', currentPrefs.activeSeatId),
     autoDealEnabled: Boolean(form.elements.autoDealEnabled && form.elements.autoDealEnabled.checked),
     insuranceNpcMode: form.elements.insuranceNpcMode.value,
-    wrongPayoutEnabled: Boolean(form.elements.wrongPayoutEnabled && form.elements.wrongPayoutEnabled.checked)
+    wrongPayoutEnabled: Boolean(form.elements.wrongPayoutEnabled && form.elements.wrongPayoutEnabled.checked),
+    evPanelEnabled: Boolean(form.elements.evPanelEnabled && form.elements.evPanelEnabled.checked),
+    squeezeEnabled: Boolean(form.elements.squeezeEnabled && form.elements.squeezeEnabled.checked),
+    manualCutEnabled: Boolean(form.elements.manualCutEnabled && form.elements.manualCutEnabled.checked),
+    manualCutPct: readNumber(form, 'manualCutPct', currentPrefs.manualCutPct),
+    shoePreset: form.elements.shoePreset.value
   };
 }
 
@@ -130,10 +135,15 @@ export function createSettingsPanel(options) {
       '</select></label>',
       '<label>Active seat<input name="activeSeatId" type="number" min="1" max="5" step="1" value="' + prefs.activeSeatId + '"></label>',
       '<label class="tr-settings-check"><input name="autoDealEnabled" type="checkbox"' + checked(prefs.autoDealEnabled) + '>Dev Auto-Deal</label>',
+      '<label class="tr-settings-check"><input name="evPanelEnabled" type="checkbox"' + checked(prefs.evPanelEnabled) + '>EV panel</label>',
+      '<label class="tr-settings-check"><input name="squeezeEnabled" type="checkbox"' + checked(prefs.squeezeEnabled) + '>Squeeze / reveal</label>',
       '<label>NPC insurance<select name="insuranceNpcMode">',
       '<option value="decline"' + selected(prefs.insuranceNpcMode, 'decline') + '>Auto decline</option>',
       '<option value="maxAccept"' + selected(prefs.insuranceNpcMode, 'maxAccept') + '>Max accept</option>',
       '</select></label>',
+      '<label>Preset shoe<select name="shoePreset">' + presetOptions(options.shoePresets || {}, prefs.shoePreset || 'random') + '</select></label>',
+      '<label class="tr-settings-check"><input name="manualCutEnabled" type="checkbox"' + checked(prefs.manualCutEnabled) + '>Manual cut on New Shoe</label>',
+      '<label>Cut card %<input name="manualCutPct" type="number" min="20" max="80" step="1" value="' + prefs.manualCutPct + '"></label>',
       '<label class="tr-settings-check"><input name="wrongPayoutEnabled" type="checkbox"' + checked(prefs.wrongPayoutEnabled) + '>Wrong-payout drill</label>',
       '</fieldset>',
       '</div>',

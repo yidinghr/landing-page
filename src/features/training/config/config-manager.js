@@ -25,6 +25,11 @@ export const DEFAULT_TABLE_PREFS = Object.freeze({
   autoDealEnabled: true,
   insuranceNpcMode: 'decline', // 'decline' | 'maxAccept'
   wrongPayoutEnabled: false,
+  evPanelEnabled: false,
+  squeezeEnabled: true,
+  manualCutEnabled: false,
+  manualCutPct: 50,
+  shoePreset: 'random',
 });
 
 export function getInsuranceConfig() {

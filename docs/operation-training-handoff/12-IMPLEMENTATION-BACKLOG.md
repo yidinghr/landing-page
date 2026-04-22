@@ -96,15 +96,21 @@ Legend: `[ ]` todo · `[/]` in progress · `[x]` done · `[~]` deferred · `[!]`
 
 ## Phase 5 — Probability + Squeeze + Scenarios
 
-- [ ] **P5-01** Streak indicator
-- [ ] **P5-02** Tie drought counter
-- [ ] **P5-03** Pair-rate estimate
-- [ ] **P5-04** EV per bet (configurable on/off)
-- [ ] **P5-05** Squeeze / reveal animation
-- [ ] **P5-06** Manual cut-card placement UI
-- [ ] **P5-07** Preset shoe scenarios (`scenarios/shoe-presets.js`)
-- [ ] **P5-08** Regression pass against Phase 4 criteria
-- [ ] **P5-09** PR: Phase 5 with report
+- [x] **P5-01** Streak indicator
+- [x] **P5-02** Tie drought counter
+- [x] **P5-03** Pair-rate estimate
+- [x] **P5-04** EV per bet (configurable on/off)
+- [x] **P5-05** Squeeze / reveal animation
+- [x] **P5-06** Manual cut-card placement UI
+- [x] **P5-07** Preset shoe scenarios (`scenarios/shoe-presets.js`)
+- [x] **P5-08** Regression pass against Phase 4 criteria
+- [x] **P5-09** PR: Phase 5 with report
+
+Phase 5 verification notes:
+- Browser smoke passed for Settings preset/cut/EV/squeeze, tie preset result, live stats, and New Shoe cut-card prompt.
+- `npm run build` passed.
+- `npx playwright test tests/smoke.spec.js tests/i18n.spec.js --workers=2` passed 11/11.
+- `npx playwright test --workers=1` passed 55/55.
 
 ---
 

@@ -1,11 +1,18 @@
 import { handTotal, isNatural } from '../engines/baccarat-engine.js';
 import { cardValue, shoePct, shoeRemaining, SUIT_SYMBOL } from '../engines/shoe-engine.js';
 import { betTotal, fmtAmt, fmtBalance } from '../engines/payout-engine.js';
-import { shoeValueCounts, approxNaturalRate, sessionStats, fmtPct, fmtNet } from '../engines/prob-engine.js';
+import { shoeValueCounts, approxNaturalRate, approxPairRate, sessionStats, fmtPct, fmtNet } from '../engines/prob-engine.js';
 import { ZONES } from '../engines/seat-engine.js';
 
 const WINNER_LABEL = { player: 'PLAYER WINS', banker: 'BANKER WINS', tie: 'TIE' };
 const LOG_LETTER = { player: 'P', banker: 'B', tie: 'T' };
+const STREAK_LABEL = { player: 'Player', banker: 'Banker', tie: 'Tie' };
+const EV_ESTIMATES = [
+  { label: 'Player', value: '-1.24%' },
+  { label: 'Banker', value: '-1.06%' },
+  { label: 'Tie', value: '-14.36%' },
+  { label: 'Pairs', value: '-10.36%' }
+];
 
 function zoneLabel(zone) {
   return {
@@ -23,17 +30,38 @@ function detailPayRow(label, val) {
   return '<div class="detail-row"><span>' + label + '</span><span class="' + cls + '">' + fmtAmt(val) + '</span></div>';
 }
 
-function cardHTML(card) {
+function cardHTML(card, extraClass = '') {
   const sym = SUIT_SYMBOL[card.suit];
   const val = cardValue(card.rank);
   const red = card.suit === 'H' || card.suit === 'D';
   return [
-    '<div class="bac-card' + (red ? ' bac-card--red' : '') + '">',
+    '<div class="bac-card' + (red ? ' bac-card--red' : '') + extraClass + '">',
     '<div class="bac-card__face">',
     '<span class="bac-card__rank">' + card.rank + '</span>',
     '<span class="bac-card__suit">' + sym + '</span>',
     '</div>',
     '<div class="bac-card__val">' + val + '</div>',
+    '</div>'
+  ].join('');
+}
+
+function shouldSqueezeCard(index, phase) {
+  return index >= 2 || phase === 'reveal' || phase === 'settlement';
+}
+
+function streakText(stats) {
+  if (!stats.streakSide || !stats.streakCount) return '-';
+  return STREAK_LABEL[stats.streakSide] + ' x' + stats.streakCount;
+}
+
+function renderEvPanel(tablePrefs) {
+  if (!tablePrefs || !tablePrefs.evPanelEnabled) return '';
+  return [
+    '<div class="stat-section-head">EV PER BET</div>',
+    '<div class="stat-ev-grid">',
+    EV_ESTIMATES.map(function (row) {
+      return '<div class="stat-ev-cell"><span>' + row.label + '</span><strong>' + row.value + '</strong></div>';
+    }).join(''),
     '</div>'
   ].join('');
 }
@@ -214,9 +242,16 @@ export function renderShoe(elements, shoe) {
   if (elements.shoeWarn) elements.shoeWarn.hidden = rem >= 20;
 }
 
-export function renderHands(elements, pCards, bCards) {
-  if (elements.pCards) elements.pCards.innerHTML = pCards.map(cardHTML).join('');
-  if (elements.bCards) elements.bCards.innerHTML = bCards.map(cardHTML).join('');
+export function renderHands(elements, pCards, bCards, options = {}) {
+  const useSqueeze = options.squeezeEnabled && options.role === 'dealer';
+  const phase = options.phase || 'idle';
+  function renderCard(card, index) {
+    const squeezeClass = useSqueeze && shouldSqueezeCard(index, phase) ? ' bac-card--squeeze' : '';
+    return cardHTML(card, squeezeClass);
+  }
+
+  if (elements.pCards) elements.pCards.innerHTML = pCards.map(renderCard).join('');
+  if (elements.bCards) elements.bCards.innerHTML = bCards.map(renderCard).join('');
 
   function applyScore(cards, scoreEl) {
     if (!scoreEl) return;
@@ -323,9 +358,11 @@ export function renderLog(host, log) {
   }).join('');
 }
 
-export function renderStats(host, shoe, log, procedureStats = { errors: 0, catches: 0 }) {
+export function renderStats(host, shoe, log, procedureStats = { errors: 0, catches: 0 }, tablePrefs = {}) {
   if (!host || !shoe) return;
   const stats = sessionStats(log);
+  const pairEst = approxPairRate(shoe);
+  const pairEstimateText = (pairEst.anyPairRate * 100).toFixed(1) + '% any pair';
   const procedure = {
     errors: Number(procedureStats.errors || 0),
     catches: Number(procedureStats.catches || 0)
@@ -334,8 +371,12 @@ export function renderStats(host, shoe, log, procedureStats = { errors: 0, catch
   if (!stats.rounds) {
     host.innerHTML = [
       '<p class="hint-text" style="margin-bottom:10px">No rounds played yet.</p>',
+      '<div class="stat-row"><span class="stat-label">Streak</span><span class="stat-val-sm">-</span></div>',
+      '<div class="stat-row"><span class="stat-label">Tie drought</span><span class="stat-val-sm">0 hands</span></div>',
+      '<div class="stat-row"><span class="stat-label">Pair est.</span><span class="stat-val-sm">' + pairEstimateText + '</span></div>',
       '<div class="stat-row"><span class="stat-label">Dealer err.</span><span class="stat-val-sm">' + procedure.errors + '</span></div>',
       '<div class="stat-row"><span class="stat-label">Catches</span><span class="stat-val-sm">' + procedure.catches + '</span></div>',
+      renderEvPanel(tablePrefs),
       renderShoeChart(shoe)
     ].join('');
     return;
@@ -358,6 +399,18 @@ export function renderStats(host, shoe, log, procedureStats = { errors: 0, catch
     '<span class="stat-val-sm">' + stats.naturals + ' (' + fmtPct(stats.naturals, stats.rounds) + ')</span>',
     '</div>',
     '<div class="stat-row">',
+    '<span class="stat-label">Streak</span>',
+    '<span class="stat-val-sm">' + streakText(stats) + '</span>',
+    '</div>',
+    '<div class="stat-row">',
+    '<span class="stat-label">Tie drought</span>',
+    '<span class="stat-val-sm">' + stats.tieDrought + ' hands</span>',
+    '</div>',
+    '<div class="stat-row">',
+    '<span class="stat-label">Pair rate</span>',
+    '<span class="stat-val-sm">' + stats.pairRounds + ' (' + fmtPct(stats.pairRounds, stats.rounds) + ') · est ' + pairEstimateText + '</span>',
+    '</div>',
+    '<div class="stat-row">',
     '<span class="stat-label">Dealer err.</span>',
     '<span class="stat-val-sm">' + procedure.errors + '</span>',
     '</div>',
@@ -365,6 +418,7 @@ export function renderStats(host, shoe, log, procedureStats = { errors: 0, catch
     '<span class="stat-label">Catches</span>',
     '<span class="stat-val-sm">' + procedure.catches + '</span>',
     '</div>',
+    renderEvPanel(tablePrefs),
     renderShoeChart(shoe)
   ].join('');
 }
