@@ -28,6 +28,7 @@
     <span class="tr-rules-label">Rules:</span>
     <span id="rulesName" class="tr-rules-name">Standard Rules</span>
     <span id="shoeWarn" class="tr-shoe-warn" hidden>⚠ Low Cards</span>
+    <button type="button" id="btnSettings" class="tr-settings-btn">Settings</button>
   </div>
 </header>
 
@@ -96,6 +97,7 @@
         <button type="button" class="tr-ins-opt-btn" data-ins-pct="25" id="btnIns25">25%</button>
         <button type="button" class="tr-ins-opt-btn" data-ins-pct="50" id="btnIns50">50%</button>
         <button type="button" class="tr-btn tr-btn--ins-confirm tr-btn--sm" id="btnInsConfirm">Confirm Insurance</button>
+        <button type="button" class="tr-btn tr-btn--ghost tr-btn--sm" id="btnInsuranceNpcRound">Start NPC Round</button>
       </div>
       <div id="insCurrentBet" class="tr-ins-current">Insurance bet: <strong>0</strong></div>
     </div>
@@ -235,6 +237,7 @@
       <span class="tr-chip-label">SELECT CHIP →</span>
       <div id="chipTray" class="tr-chip-tray"></div>
       <button type="button" id="btnClearBets" class="tr-btn tr-btn--ghost tr-btn--sm">Clear Bets</button>
+      <button type="button" id="btnSubmitBets" class="tr-btn tr-btn--customer tr-btn--sm">Submit Bets</button>
     </div>
 
     <!-- Result -->
@@ -280,6 +283,8 @@
   </aside>
 
 </main>
+
+<div id="settingsRoot" class="tr-settings-root" hidden></div>
 
 <script type="module" src="../../src/app/entries/training.js"></script>
 

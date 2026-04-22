@@ -2,7 +2,22 @@ import { handTotal, isNatural, playerDraws, bankerDraws, resolveRound } from './
 import { dealOne, initShoe, shoeRemaining, cardValue, SUIT_SYMBOL } from './engines/shoe-engine.js';
 import { betTotal } from './engines/payout-engine.js';
 import { insuranceMaxBet, shouldOfferInsurance } from './engines/insurance-engine.js';
-import { getInsuranceConfig, getRules } from './config/config-manager.js';
+import {
+  DEFAULT_INSURANCE,
+  DEFAULT_RULES,
+  DEFAULT_TABLE_PREFS,
+  INSURANCE_PRESETS,
+  RULE_PRESETS,
+  getInsuranceConfig,
+  getRules,
+  getTablePrefs,
+  saveInsuranceConfig,
+  saveRules,
+  saveTablePrefs
+} from './config/config-manager.js';
+import { createDealerController } from './controllers/dealer-controller.js';
+import { createCustomerController } from './controllers/customer-controller.js';
+import { createInsuranceController } from './controllers/insurance-controller.js';
 import {
   ZONES,
   clearBets,
@@ -14,7 +29,7 @@ import {
   setInsuranceDecision
 } from './engines/seat-engine.js';
 import { settleRound } from './engines/settlement-engine.js';
-import { npcAutoBet } from './npc/npc-behavior.js';
+import { npcAutoBet, npcResolveInsurance } from './npc/npc-behavior.js';
 import {
   renderBalance,
   renderBetZones,
@@ -29,6 +44,7 @@ import {
   renderStats
 } from './ui/table-renderer.js';
 import { renderSettlementBoard } from './ui/settlement-renderer.js';
+import { createSettingsPanel } from './ui/settings-panel.js';
 
 const CHIPS = [
   { value: 1000000, label: '1M', cls: 'tr-chip--1m' },
@@ -70,6 +86,7 @@ let phase = 'idle';
 
 let rules = {};
 let insuranceConfig = {};
+let tablePrefs = {};
 let seats = createSeats();
 let activeSeatId = 1;
 let selectedChip = null;
@@ -80,6 +97,10 @@ let insuranceBet = 0;
 let npcBetsApplied = false;
 let autoAfterInsurance = false;
 let burnTimer = 0;
+let dealerController = null;
+let customerController = null;
+let insuranceController = null;
+let settingsPanel = null;
 
 const el = {
   shoeRem: document.getElementById('shoeRem'),
@@ -87,6 +108,8 @@ const el = {
   shoeFill: document.getElementById('shoeFill'),
   shoeWarn: document.getElementById('shoeWarn'),
   burnNotice: document.getElementById('burnNotice'),
+  btnSettings: document.getElementById('btnSettings'),
+  settingsRoot: document.getElementById('settingsRoot'),
   pCards: document.getElementById('pCards'),
   bCards: document.getElementById('bCards'),
   pScore: document.getElementById('pScore'),
@@ -105,6 +128,7 @@ const el = {
   payoutSummary: document.getElementById('payoutSummary'),
   chipTray: document.getElementById('chipTray'),
   betZones: document.getElementById('betZones'),
+  btnSubmitBets: document.getElementById('btnSubmitBets'),
   seatsRow: document.getElementById('seatsRow'),
   settlementBoard: document.getElementById('settlementBoard'),
   btnClearBets: document.getElementById('btnClearBets'),
@@ -118,7 +142,8 @@ const el = {
   btnInsDecline: document.getElementById('btnInsDecline'),
   btnIns25: document.getElementById('btnIns25'),
   btnIns50: document.getElementById('btnIns50'),
-  btnInsConfirm: document.getElementById('btnInsConfirm')
+  btnInsConfirm: document.getElementById('btnInsConfirm'),
+  btnInsuranceNpcRound: document.getElementById('btnInsuranceNpcRound')
 };
 
 function activeSeat() {
@@ -131,6 +156,20 @@ function activeBets() {
 
 function activeBalance() {
   return activeSeat().balance;
+}
+
+function isIdlePhase() {
+  return phase === 'idle' || phase === 'betting';
+}
+
+function canSwitchRole() {
+  return isIdlePhase();
+}
+
+function clampSeatId(id) {
+  const n = Number(id);
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(5, Math.max(1, Math.floor(n)));
 }
 
 function emptyBets() {
@@ -177,8 +216,16 @@ function showBurnNotice() {
 function renderRole() {
   document.querySelectorAll('.tr-role-btn').forEach(function (btn) {
     btn.classList.toggle('is-active', btn.getAttribute('data-role') === role);
+    btn.disabled = !canSwitchRole() && btn.getAttribute('data-role') !== role;
   });
   document.body.setAttribute('data-role', role);
+  document.body.setAttribute('data-phase', phase);
+  document.body.setAttribute('data-auto-deal', tablePrefs.autoDealEnabled ? 'enabled' : 'disabled');
+
+  const roleSelector = document.querySelector('.tr-role-selector');
+  if (roleSelector) {
+    roleSelector.classList.toggle('is-locked', !canSwitchRole());
+  }
 }
 
 function renderInsurancePanel() {
@@ -188,6 +235,7 @@ function renderInsurancePanel() {
   const playerBet = seat.bets.player || 0;
   const maxBet = insuranceMaxBet(playerBet, insuranceConfig);
   const balance = seat.balance;
+  const canResolve = insuranceController ? insuranceController.canResolve() : phase === 'insurance';
 
   if (el.insBankerScore) el.insBankerScore.textContent = bTotal;
   if (el.insPlayerBet) el.insPlayerBet.textContent = playerBet.toLocaleString();
@@ -200,12 +248,19 @@ function renderInsurancePanel() {
   if (el.btnIns25) {
     el.btnIns25.textContent = '25% (' + pct25.toLocaleString() + ')';
     el.btnIns25.classList.toggle('is-selected', insuranceBet === pct25 && pct25 > 0);
-    el.btnIns25.disabled = pct25 === 0;
+    el.btnIns25.disabled = !canResolve || pct25 === 0;
   }
   if (el.btnIns50) {
     el.btnIns50.textContent = '50% (' + pct50.toLocaleString() + ')';
     el.btnIns50.classList.toggle('is-selected', insuranceBet === pct50 && pct50 > 0);
-    el.btnIns50.disabled = pct50 === 0;
+    el.btnIns50.disabled = !canResolve || pct50 === 0;
+  }
+  if (el.btnInsDecline) el.btnInsDecline.disabled = !canResolve;
+  if (el.btnInsConfirm) el.btnInsConfirm.disabled = !canResolve;
+  if (el.btnInsuranceNpcRound) {
+    el.btnInsuranceNpcRound.textContent = phase === 'settlement' ? 'Next Round' : 'Start NPC Round';
+    el.btnInsuranceNpcRound.hidden = role !== 'insurance' || phase === 'insurance' || (!isIdlePhase() && phase !== 'settlement');
+    el.btnInsuranceNpcRound.disabled = role !== 'insurance' || (!isIdlePhase() && phase !== 'settlement');
   }
 }
 
@@ -213,18 +268,28 @@ function renderControls() {
   const rem = shoe ? shoeRemaining(shoe) : 0;
   const dealAllowed = DEAL_PHASES.indexOf(phase) >= 0 && rem > 0 && phase !== 'insurance';
   const idle = phase === 'idle' || phase === 'betting';
+  const isDealer = role === 'dealer';
+  const isCustomer = role === 'customer';
+  const isInsurance = role === 'insurance';
 
   if (el.btnDeal) {
     el.btnDeal.textContent = rem < 6 && idle ? 'Shoe Empty' : (DEAL_LABELS[phase] || 'DEAL');
-    el.btnDeal.disabled = !dealAllowed || (idle && rem < 6);
+    el.btnDeal.disabled = !isDealer || !dealAllowed || (idle && rem < 6);
   }
-  if (el.btnCloseBets) el.btnCloseBets.disabled = !idle;
-  if (el.btnAutoDeal) el.btnAutoDeal.disabled = !idle || rem < 6;
-  if (el.btnReveal) el.btnReveal.disabled = phase !== 'reveal';
-  if (el.btnNext) el.btnNext.disabled = phase !== 'settlement' && phase !== 'round-end';
-  if (el.btnClearBets) el.btnClearBets.disabled = !idle;
+  if (el.btnCloseBets) el.btnCloseBets.disabled = !isDealer || !idle;
+  if (el.btnAutoDeal) {
+    el.btnAutoDeal.hidden = !tablePrefs.autoDealEnabled;
+    el.btnAutoDeal.disabled = !isDealer || !idle || rem < 6;
+  }
+  if (el.btnReveal) el.btnReveal.disabled = !isDealer || phase !== 'reveal';
+  if (el.btnNext) el.btnNext.disabled = !isDealer || (phase !== 'settlement' && phase !== 'round-end');
+  if (el.btnClearBets) el.btnClearBets.disabled = !isCustomer || !idle;
+  if (el.btnSubmitBets) {
+    el.btnSubmitBets.textContent = phase === 'settlement' ? 'Next Round' : 'Submit Bets';
+    el.btnSubmitBets.disabled = !isCustomer || (!idle && phase !== 'settlement');
+  }
   if (el.betZones) el.betZones.classList.toggle('zones-locked', !idle);
-  if (el.insurancePanel) el.insurancePanel.hidden = phase !== 'insurance';
+  if (el.insurancePanel) el.insurancePanel.hidden = !isInsurance && phase !== 'insurance';
 }
 
 function setPhase(nextPhase) {
@@ -257,9 +322,84 @@ function renderAll() {
   renderControls();
 }
 
+function getSettingsState() {
+  return {
+    rules: rules,
+    insuranceConfig: insuranceConfig,
+    tablePrefs: tablePrefs
+  };
+}
+
+function applySettings(next) {
+  rules = next.rules;
+  insuranceConfig = next.insuranceConfig;
+  tablePrefs = {
+    ...DEFAULT_TABLE_PREFS,
+    ...next.tablePrefs,
+    activeSeatId: clampSeatId(next.tablePrefs.activeSeatId)
+  };
+  activeSeatId = tablePrefs.activeSeatId;
+  role = tablePrefs.role || role;
+  saveRules(rules);
+  saveInsuranceConfig(insuranceConfig);
+  saveTablePrefs(tablePrefs);
+  renderAll();
+}
+
+function resetSettings() {
+  rules = { ...DEFAULT_RULES };
+  insuranceConfig = { ...DEFAULT_INSURANCE };
+  tablePrefs = { ...DEFAULT_TABLE_PREFS };
+  activeSeatId = tablePrefs.activeSeatId;
+  role = tablePrefs.role;
+  saveRules(rules);
+  saveInsuranceConfig(insuranceConfig);
+  saveTablePrefs(tablePrefs);
+  renderAll();
+}
+
+function initRoleControllers() {
+  dealerController = createDealerController({
+    getRole: function () { return role; },
+    getPhase: function () { return phase; },
+    actions: {
+      closeBets: closeBets,
+      deal: dealCurrentPhase,
+      autoDeal: doAutoDeal,
+      reveal: revealRound,
+      nextRound: doNext,
+      newShoe: doNewShoe
+    }
+  });
+
+  customerController = createCustomerController({
+    getRole: function () { return role; },
+    getPhase: function () { return phase; },
+    actions: {
+      selectChip: selectChipValue,
+      placeBet: placeActiveSeatBet,
+      clearBets: clearActiveSeatBets,
+      submitBets: submitCustomerBets
+    }
+  });
+
+  insuranceController = createInsuranceController({
+    getRole: function () { return role; },
+    getPhase: function () { return phase; },
+    canResolveInsurance: canHumanResolveInsurance,
+    actions: {
+      decline: declineInsurance,
+      selectPercent: selectInsurancePercent,
+      confirm: confirmInsurance
+    }
+  });
+}
+
 function ensureNpcBets() {
-  if (npcBetsApplied || activeSeatId !== 1) return;
-  seats = npcAutoBet(seats, activeSeatId, shoe);
+  if (npcBetsApplied) return;
+  seats = npcAutoBet(seats, activeSeatId, shoe, {
+    includeActiveSeat: role !== 'customer'
+  });
   npcBetsApplied = true;
 }
 
@@ -268,22 +408,19 @@ function onRoleClick(e) {
   if (!btn) return;
   const nextRole = btn.getAttribute('data-role');
   if (!nextRole) return;
+  if (!canSwitchRole() && nextRole !== role) return;
   role = nextRole;
-  renderRole();
+  tablePrefs = { ...tablePrefs, role: role };
+  saveTablePrefs(tablePrefs);
+  renderAll();
 }
 
-function onChipClick(e) {
-  const btn = e.target.closest('[data-chip]');
-  if (!btn || btn.disabled) return;
-  const val = parseInt(btn.getAttribute('data-chip'), 10);
+function selectChipValue(val) {
   selectedChip = selectedChip === val ? null : val;
   renderChipTray(el.chipTray, CHIPS, selectedChip, activeBalance());
 }
 
-function onZoneClick(e) {
-  if (phase !== 'idle' && phase !== 'betting') return;
-  const zone = e.currentTarget.getAttribute('data-zone');
-  if (!zone || ZONES.indexOf(zone) < 0) return;
+function placeActiveSeatBet(zone) {
   if (!selectedChip) {
     el.chipTray.classList.add('chip-tray-nudge');
     setTimeout(function () { el.chipTray.classList.remove('chip-tray-nudge'); }, 600);
@@ -299,12 +436,41 @@ function onZoneClick(e) {
   renderAll();
 }
 
-function onClearBets() {
-  if (phase !== 'idle' && phase !== 'betting') return;
+function clearActiveSeatBets() {
   seats = clearBets(seats, activeSeatId);
   payouts = null;
   settlement = null;
   renderAll();
+}
+
+function submitCustomerBets() {
+  ensureNpcBets();
+  runNpcDealerRound();
+}
+
+function onChipClick(e) {
+  const btn = e.target.closest('[data-chip]');
+  if (!btn || btn.disabled) return;
+  const val = parseInt(btn.getAttribute('data-chip'), 10);
+  customerController.selectChip(val);
+}
+
+function onZoneClick(e) {
+  const zone = e.currentTarget.getAttribute('data-zone');
+  if (!zone || ZONES.indexOf(zone) < 0) return;
+  customerController.placeBet(zone);
+}
+
+function onClearBets() {
+  customerController.clearBets();
+}
+
+function onSubmitBets() {
+  if (phase === 'settlement') {
+    doNext();
+    return;
+  }
+  customerController.submitBets();
 }
 
 function closeBets() {
@@ -344,6 +510,24 @@ function routeDrawPhase() {
   setPhase('reveal');
 }
 
+function canHumanResolveInsurance() {
+  if (insuranceConfig.staffControlled) {
+    return role === 'insurance';
+  }
+  return role === 'customer' || role === 'insurance';
+}
+
+function applyNpcInsuranceDecision() {
+  const decision = npcResolveInsurance(
+    seats,
+    activeSeatId,
+    insuranceConfig,
+    tablePrefs.insuranceNpcMode
+  );
+  seats = decision.seats;
+  insuranceBet = decision.amount;
+}
+
 function maybeOfferInsurance() {
   const bInit = handTotal(bCards);
   const playerBet = activeBets().player || 0;
@@ -360,6 +544,13 @@ function maybeOfferInsurance() {
     outcome: 'pending',
     payout: 0
   });
+
+  if (!canHumanResolveInsurance()) {
+    applyNpcInsuranceDecision();
+    routeDrawPhase();
+    return false;
+  }
+
   setPhase('insurance');
   return true;
 }
@@ -469,6 +660,11 @@ function doAutoDeal() {
   autoDrawToReveal();
 }
 
+function runNpcDealerRound() {
+  if (!isIdlePhase()) return;
+  doAutoDeal();
+}
+
 function continueAfterInsurance() {
   if (autoAfterInsurance) {
     autoAfterInsurance = false;
@@ -480,7 +676,7 @@ function continueAfterInsurance() {
   renderAll();
 }
 
-function onInsDecline() {
+function declineInsurance() {
   insuranceBet = 0;
   seats = setInsuranceDecision(seats, activeSeatId, {
     offered: true,
@@ -492,10 +688,7 @@ function onInsDecline() {
   continueAfterInsurance();
 }
 
-function onInsPercentClick(e) {
-  const btn = e.target.closest('[data-ins-pct]');
-  if (!btn || btn.disabled) return;
-  const pct = parseInt(btn.getAttribute('data-ins-pct'), 10);
+function selectInsurancePercent(pct) {
   const playerBet = activeBets().player || 0;
   const maxBet = insuranceMaxBet(playerBet, insuranceConfig);
   const raw = Math.floor(playerBet * pct / 100);
@@ -503,7 +696,7 @@ function onInsPercentClick(e) {
   renderInsurancePanel();
 }
 
-function onInsConfirm() {
+function confirmInsurance() {
   if (insuranceBet > 0) {
     seats = debitSeat(seats, activeSeatId, insuranceBet);
   }
@@ -515,6 +708,29 @@ function onInsConfirm() {
     payout: 0
   });
   continueAfterInsurance();
+}
+
+function onInsDecline() {
+  insuranceController.decline();
+}
+
+function onInsPercentClick(e) {
+  const btn = e.target.closest('[data-ins-pct]');
+  if (!btn || btn.disabled) return;
+  const pct = parseInt(btn.getAttribute('data-ins-pct'), 10);
+  insuranceController.selectPercent(pct);
+}
+
+function onInsConfirm() {
+  insuranceController.confirm();
+}
+
+function onInsuranceNpcRound() {
+  if (phase === 'settlement') {
+    doNext();
+    return;
+  }
+  runNpcDealerRound();
 }
 
 function revealRound() {
@@ -605,8 +821,21 @@ export function init() {
 
   rules = getRules();
   insuranceConfig = getInsuranceConfig();
+  tablePrefs = getTablePrefs();
+  activeSeatId = clampSeatId(tablePrefs.activeSeatId);
+  role = tablePrefs.role || 'dealer';
   shoe = initShoe();
   seats = createSeats();
+  initRoleControllers();
+  settingsPanel = createSettingsPanel({
+    host: el.settingsRoot,
+    openButton: el.btnSettings,
+    getState: getSettingsState,
+    onSave: applySettings,
+    onReset: resetSettings,
+    rulePresets: RULE_PRESETS,
+    insurancePresets: INSURANCE_PRESETS
+  });
 
   renderChipTray(el.chipTray, CHIPS, selectedChip, activeBalance());
   setPhase('idle');
@@ -617,16 +846,18 @@ export function init() {
   });
 
   el.chipTray.addEventListener('click', onChipClick);
-  el.btnDeal.addEventListener('click', dealCurrentPhase);
-  el.btnNext.addEventListener('click', doNext);
-  el.btnShoe.addEventListener('click', doNewShoe);
-  if (el.btnCloseBets) el.btnCloseBets.addEventListener('click', closeBets);
-  if (el.btnAutoDeal) el.btnAutoDeal.addEventListener('click', doAutoDeal);
-  if (el.btnReveal) el.btnReveal.addEventListener('click', revealRound);
+  el.btnDeal.addEventListener('click', function () { dealerController.deal(); });
+  el.btnNext.addEventListener('click', function () { dealerController.nextRound(); });
+  el.btnShoe.addEventListener('click', function () { dealerController.newShoe(); });
+  if (el.btnCloseBets) el.btnCloseBets.addEventListener('click', function () { dealerController.closeBets(); });
+  if (el.btnAutoDeal) el.btnAutoDeal.addEventListener('click', function () { dealerController.autoDeal(); });
+  if (el.btnReveal) el.btnReveal.addEventListener('click', function () { dealerController.reveal(); });
   if (el.btnClearBets) el.btnClearBets.addEventListener('click', onClearBets);
+  if (el.btnSubmitBets) el.btnSubmitBets.addEventListener('click', onSubmitBets);
 
   if (el.btnInsDecline) el.btnInsDecline.addEventListener('click', onInsDecline);
   if (el.btnInsConfirm) el.btnInsConfirm.addEventListener('click', onInsConfirm);
+  if (el.btnInsuranceNpcRound) el.btnInsuranceNpcRound.addEventListener('click', onInsuranceNpcRound);
   if (el.insurancePanel) el.insurancePanel.addEventListener('click', onInsPercentClick);
 
   const roleSelector = document.querySelector('.tr-role-selector');

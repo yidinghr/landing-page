@@ -35,17 +35,23 @@ Legend: `[ ]` todo · `[/]` in progress · `[x]` done · `[~]` deferred · `[!]`
 
 ## Phase 2 — Role Separation
 
-- [ ] **P2-01** Create `controllers/dealer-controller.js`
-- [ ] **P2-02** Create `controllers/customer-controller.js`
-- [ ] **P2-03** Create `controllers/insurance-controller.js` (idle-only placeholder)
-- [ ] **P2-04** Body `data-role` gating in CSS for panel visibility
-- [ ] **P2-05** Role switch lock during non-idle phases
-- [ ] **P2-06** Create `ui/settings-panel.js` (modal for rules + insurance)
-- [ ] **P2-07** Wire presets in `config-manager.js` (`RULE_PRESETS`, `INSURANCE_PRESETS`)
-- [ ] **P2-08** Extend `npc-behavior.js` with dealer and insurance profiles
-- [ ] **P2-09** New storage key `yiding_training_table_prefs_v1`; register in `09`
-- [ ] **P2-10** Regression pass against Phase 1 criteria
-- [ ] **P2-11** PR: Phase 2 with report
+- [x] **P2-01** Create `controllers/dealer-controller.js`
+- [x] **P2-02** Create `controllers/customer-controller.js`
+- [x] **P2-03** Create `controllers/insurance-controller.js` (idle-only placeholder)
+- [x] **P2-04** Body `data-role` gating in CSS for panel visibility
+- [x] **P2-05** Role switch lock during non-idle phases
+- [x] **P2-06** Create `ui/settings-panel.js` (modal for rules + insurance)
+- [x] **P2-07** Wire presets in `config-manager.js` (`RULE_PRESETS`, `INSURANCE_PRESETS`)
+- [x] **P2-08** Extend `npc-behavior.js` with dealer and insurance profiles
+- [x] **P2-09** New storage key `yiding_training_table_prefs_v1`; register in `09`
+- [x] **P2-10** Regression pass against Phase 1 criteria
+- [/] **P2-11** PR: Phase 2 with report
+
+**Phase 2 carryovers**
+- Insurance remains single-seat by design; multi-seat insurance starts in Phase 3.
+- Auto-Deal remains available through `tablePrefs.autoDealEnabled` and the Settings modal.
+- Tracked tests do not include the legacy `tests/training.spec.js` 6-chip assertion in this clean branch.
+- Full `npm run test:e2e` currently times out in unrelated schedule-module tests; `tests/smoke.spec.js` + `tests/i18n.spec.js` pass and Phase 2 browser smoke passes.
 
 ---
 

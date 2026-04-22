@@ -82,6 +82,23 @@ body.training-page {
 
 .tr-header-right { display: flex; align-items: center; gap: 8px; }
 
+.tr-settings-btn {
+  border: 1px solid var(--tr-border-mid);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tr-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+}
+
+.tr-settings-btn:hover {
+  border-color: var(--tr-accent);
+  color: var(--tr-accent);
+}
+
 .tr-shoe-warn {
   font-size: 13px;
   color: #ffaa33;
@@ -348,6 +365,32 @@ body.training-page {
 }
 
 .zones-locked .tr-zone { cursor: not-allowed; opacity: 0.75; }
+
+body[data-role="dealer"] .tr-bet-zones,
+body[data-role="dealer"] .tr-chip-tray {
+  pointer-events: none;
+}
+
+body[data-role="dealer"] .tr-zone,
+body[data-role="dealer"] .tr-chip {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+body[data-role="insurance"] .tr-bet-zones,
+body[data-role="insurance"] .tr-chip-section,
+body[data-role="insurance"] .tr-controls,
+body[data-role="insurance"] .tr-balance-bar,
+body[data-role="insurance"] .tr-sidebar,
+body[data-role="insurance"] .tr-seats,
+body[data-role="insurance"] .tr-settlement-board,
+body[data-role="insurance"] .tr-result {
+  display: none;
+}
+
+body[data-role="insurance"] .tr-main {
+  grid-template-columns: 1fr;
+}
 
 .tr-zone {
   flex: 1;
@@ -780,6 +823,19 @@ body.training-page {
   font-weight: 600;
 }
 
+.tr-btn--customer {
+  display: none;
+}
+
+body[data-role="customer"] .tr-controls {
+  display: none;
+}
+
+body[data-role="customer"] .tr-btn--customer {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* === Sidebar === */
 .tr-sidebar {
   display: flex;
@@ -1093,6 +1149,14 @@ body.training-page {
   font-weight: 700;
 }
 
+.tr-role-selector.is-locked {
+  opacity: 0.65;
+}
+
+.tr-role-selector.is-locked .tr-role-btn {
+  cursor: not-allowed;
+}
+
 /* === Insurance panel === */
 .tr-insurance-panel {
   background: rgba(20, 8, 42, 0.97);
@@ -1192,6 +1256,10 @@ body.training-page {
 
 .tr-ins-current strong { color: #c484ff; font-variant-numeric: tabular-nums; }
 
+body[data-role="insurance"] .tr-insurance-panel {
+  display: flex;
+}
+
 /* === Insurance log badge === */
 .log-chip--ins { background: rgba(181, 112, 255, 0.15); color: #c484ff; }
 
@@ -1208,4 +1276,119 @@ body.training-page {
   font-size: 13px;
   font-style: italic;
   line-height: 1.5;
+}
+
+/* === Settings modal === */
+.tr-settings-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+.tr-settings-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.64);
+}
+
+.tr-settings-modal {
+  position: absolute;
+  inset: 52px 24px auto;
+  max-width: 920px;
+  margin: 0 auto;
+  background: rgba(12, 8, 26, 0.98);
+  border: 1px solid var(--tr-border-mid);
+  border-radius: var(--tr-radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.48);
+  padding: 20px;
+}
+
+.tr-settings-head,
+.tr-settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tr-settings-head h2 {
+  color: var(--tr-accent);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.tr-settings-close {
+  border: 1px solid var(--tr-border-mid);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tr-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.tr-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.tr-settings-form fieldset {
+  border: 1px solid var(--tr-border);
+  border-radius: var(--tr-radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.tr-settings-form legend {
+  color: var(--tr-text-faint);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 0 6px;
+  text-transform: uppercase;
+}
+
+.tr-settings-form label {
+  color: var(--tr-text-soft);
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 5px;
+}
+
+.tr-settings-form input,
+.tr-settings-form select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--tr-border-mid);
+  border-radius: 8px;
+  color: var(--tr-text);
+  font: inherit;
+  min-height: 36px;
+  padding: 7px 9px;
+}
+
+.tr-settings-check {
+  align-items: center;
+  flex-direction: row !important;
+}
+
+.tr-settings-check input {
+  min-height: auto;
+  width: auto;
+}
+
+@media (max-width: 900px) {
+  .tr-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tr-settings-modal {
+    inset: 18px 12px auto;
+  }
 }

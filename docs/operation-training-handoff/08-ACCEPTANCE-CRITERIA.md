@@ -60,6 +60,16 @@ Binary, observable checks. A phase is done only when every listed criterion pass
 7. Settings persist to localStorage and load on refresh.
 8. No regression in Phase 1 criteria.
 
+**Verification — 2026-04-22**
+- [x] 1. Browser smoke confirmed Dealer role keeps chip tray/bet zones read-only.
+- [x] 2. Browser smoke confirmed Customer role can place active-seat bets and submit to NPC dealer flow.
+- [x] 3. Browser smoke confirmed Insurance role shows writable insurance console and hides customer/dealer betting controls.
+- [x] 4. Browser smoke confirmed role switch is blocked during a deal phase.
+- [x] 5. Browser smoke confirmed non-trainee customer/dealer/insurance NPC paths are wired at a basic level.
+- [x] 6. Browser smoke confirmed Settings modal can change and persist table prefs; build covers rules/insurance wiring.
+- [x] 7. Browser smoke confirmed `yiding_training_table_prefs_v1` persists `autoDealEnabled`.
+- [x] 8. Phase 1 5-seat, 11-chip, settlement, and burn-card paths remain covered by browser smoke/build. Tracked smoke+i18n tests pass; full E2E still has unrelated schedule-module timeouts.
+
 ---
 
 ## Phase 3 — Multi-Seat Insurance + Insurance Staff

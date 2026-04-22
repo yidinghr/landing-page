@@ -35,12 +35,13 @@ Three buckets. Keep them separate.
 | 10 | NPC customer bet distribution | 40% P / 45% B / 10% T / 5% Pairs | Simulation tuning |
 | 11 | NPC customer bet probability per round | Phase 1: 100% for seats 2-5 so acceptance check is deterministic; later tuning target: 60% | Simulation tuning |
 | 12 | Role persists across reloads | no | UX sign-off |
-| 13 | Auto-deal option stays available after Phase 2 | yes, behind a dev-only toggle | UX sign-off |
+| 13 | Auto-deal option stays available after Phase 2 | yes, behind `tablePrefs.autoDealEnabled` | UX sign-off |
 | 14 | Commission rounding default | `ceil` (matches current code) | Rule sign-off |
 | 15 | Smallest chip for change calculation | 5 | Rule sign-off |
 | 16 | Phase 1 shows burn card to all roles | yes | UX sign-off |
 | 17 | Burn card visible duration | 3 seconds (acceptance requires at least 2 seconds) | UX sign-off |
 | 18 | Commission box is visualized as a separate chip stack in dealer view | yes | Visual sign-off |
+| 19 | Insurance NPC behavior when trainee is not insurance staff | `decline` by default; `maxAccept` via table prefs | Simulation tuning |
 
 Rule for the engineer: if an assumption blocks implementation, mark it blocked here, continue with the default, and flag it in the PR description.
 
@@ -91,8 +92,8 @@ Only block on these if the default is unusable. Otherwise, implement with defaul
 |---|---|---|
 | `yiding_training_rules_v1` | rule object | `config-manager.js` |
 | `yiding_training_insurance_v1` | insurance object | `config-manager.js` |
+| `yiding_training_table_prefs_v1` | role, active seat, dev auto-deal, NPC insurance mode | `config-manager.js` |
 
 **Planned new keys (add to this list before shipping):**
-- `yiding_training_table_prefs_v1` — role, active seat, speed preferences.
 - `yiding_training_npc_profile_v1` — NPC betting profile overrides.
 - `yiding_training_scenario_v1` — scenario mode state.
