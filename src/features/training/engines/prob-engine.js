@@ -1,6 +1,64 @@
 // Pure probability & statistics — no state, no DOM
 import { RANKS, cardValue } from './shoe-engine.js';
 
+// ---------------------------------------------------------------------------
+// Phase5: Live probability after any dealt card state
+// ---------------------------------------------------------------------------
+
+/**
+ * Estimates win probabilities from current shoe composition.
+ * Call this after every dealOne() to update live probability bar.
+ * All values are approximations — sufficient for training display.
+ *
+ * @param {object} shoe - current shoe state (any point mid-round or between rounds)
+ * @returns {{ banker: number, player: number, tie: number,
+ *             bankerPair: number, playerPair: number, luckySix: number }}
+ */
+export function probFromShoe(shoe) {
+  // TODO[Phase5]: implement
+  // Use shoeValueCounts() and approxNaturalRate() already in this file.
+  // Approximate method:
+  //   player: base rate ~44.6% adjusted by zero-card count (tens) in shoe
+  //   banker: base rate ~45.8% adjusted similarly
+  //   tie:    base rate ~9.5% — decreases as zeros (10-value cards) are removed
+  //   bankerPair/playerPair: use approxPairRate().sidePairRate for each hand
+  //   luckySix: approximate as P(banker wins with 6) ≈ count(6-value remaining) / total * ~0.5
+
+  const counts = shoeValueCounts(shoe);
+  const total  = counts.reduce(function (s, n) { return s + n; }, 0);
+
+  if (total < 10) {
+    return { banker: 0.458, player: 0.446, tie: 0.095, bankerPair: 0.075, playerPair: 0.075, luckySix: 0.05 };
+  }
+
+  // Density of zero-value cards (10, J, Q, K) affects outcomes
+  const zeroCount   = counts[0];
+  const zeroDensity = zeroCount / total;
+
+  // Base rates — shift slightly based on zero density vs expected (16/52 ≈ 0.308 per deck)
+  const expectedZero = 0.308;
+  const zeroDiff = zeroDensity - expectedZero;
+
+  const bankerProb = Math.max(0.35, Math.min(0.52, 0.4585 - zeroDiff * 0.3));
+  const tieProb    = Math.max(0.05, Math.min(0.15, 0.0953 + zeroDiff * 0.1));
+  const playerProb = Math.max(0.33, Math.min(0.52, 1 - bankerProb - tieProb));
+
+  const { sidePairRate } = approxPairRate(shoe);
+
+  // Lucky six: rough estimate — banker 6 win rate is ~5% of total rounds
+  const sixCount   = counts[6] || 0;
+  const luckySix   = Math.min(0.12, (sixCount / Math.max(total, 1)) * 0.8);
+
+  return {
+    banker:     bankerProb,
+    player:     playerProb,
+    tie:        tieProb,
+    bankerPair: sidePairRate,
+    playerPair: sidePairRate,
+    luckySix:   luckySix
+  };
+}
+
 // Count remaining cards (after shoe.pos) by baccarat value 0-9
 export function shoeValueCounts(shoe) {
   const counts = new Array(10).fill(0);

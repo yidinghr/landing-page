@@ -1606,3 +1606,338 @@ body[data-role="insurance"] .tr-insurance-panel {
     inset: 18px 12px auto;
   }
 }
+
+/* === Phase 2 one-screen workstation layout === */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body.training-page {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tr-app {
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#tr-header {
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+}
+
+#tr-header .tr-header-center {
+  min-width: 0;
+}
+
+#tr-header .tr-header-title,
+#tr-header .tr-header-badge,
+#tr-header .tr-rules-name {
+  white-space: nowrap;
+}
+
+#tr-header .tr-settings-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.tr-main,
+body[data-role="insurance"] .tr-main {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  overflow: hidden;
+}
+
+#tr-left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+  border-right: 1px solid var(--tr-border);
+}
+
+#tr-left-panel .tr-balance-bar,
+#tr-left-panel .tr-chip-section {
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+}
+
+#tr-left-panel .tr-balance-item {
+  justify-content: space-between;
+}
+
+#tr-left-panel .tr-payout-summary {
+  margin-left: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+#tr-chip-tray {
+  gap: 6px;
+  justify-content: center;
+}
+
+#tr-card-source {
+  flex-shrink: 0;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--tr-surface);
+  border: 1px solid var(--tr-border);
+}
+
+.tr-deck-icon {
+  font-size: 26px;
+  line-height: 1;
+  color: var(--tr-accent);
+}
+
+#tr-shoe-count {
+  color: var(--tr-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 58px;
+  font-variant-numeric: tabular-nums;
+}
+
+#tr-card-source .tr-shoe-track {
+  min-width: 0;
+}
+
+#tr-feedback-panel {
+  flex: 1 1 0;
+  min-height: 0;
+  font-size: 12px;
+  overflow: hidden;
+  display: none;
+}
+
+#tr-center {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+#tr-roadmap-strip {
+  height: 80px;
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom: 1px solid var(--tr-border);
+}
+
+#tr-roadmap-strip canvas {
+  flex-shrink: 0;
+  height: auto;
+  width: auto;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--tr-border);
+}
+
+#tr-card-zones {
+  flex-shrink: 0;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding: 6px 8px;
+  min-height: 142px;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#tr-banker-area,
+#tr-player-area {
+  flex: 1;
+  max-width: 240px;
+}
+
+#tr-card-zones .tr-cards-row {
+  min-height: 86px;
+}
+
+#betZones {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+#tr-bet-matrix {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 2px;
+  padding: 4px 8px;
+  overflow: hidden;
+}
+
+#tr-bet-matrix [data-zone] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  user-select: none;
+  min-height: 0;
+  border: 1px solid var(--tr-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#tr-bet-matrix [data-zone]:hover {
+  border-color: var(--tr-accent);
+  background: var(--tr-accent-soft);
+}
+
+#tr-bet-matrix [data-seat]::before {
+  content: "S" attr(data-seat);
+  display: block;
+  color: var(--tr-text-faint);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+#tr-bet-matrix .tr-zone-bet-amt,
+#tr-bet-matrix .tr-zone-payout {
+  margin-top: 3px;
+}
+
+#tr-controls-bar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  justify-content: center;
+  flex-wrap: nowrap;
+  border-top: 1px solid var(--tr-border);
+  position: relative;
+  z-index: 150;
+  background: var(--tr-bg);
+}
+
+#tr-controls-bar .tr-btn {
+  padding: 9px 14px;
+  min-width: 0;
+}
+
+#tr-controls-bar .tr-btn--deal {
+  flex: 0 1 150px;
+}
+
+#tr-overlay-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 12px;
+  background: rgba(4, 1, 12, 0.92);
+}
+
+#tr-overlay-panel:has(#insurancePanel:not([hidden])),
+#tr-overlay-panel:has(#resultBox:not([hidden])),
+#tr-overlay-panel:has(#settlementBoard:not([hidden])) {
+  display: block;
+}
+
+#tr-overlay-panel .tr-result {
+  margin-bottom: 10px;
+}
+
+#tr-overlay-panel .tr-settlement-board {
+  max-width: 100%;
+  overflow: auto;
+}
+
+#tr-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+  border-left: 1px solid var(--tr-border);
+}
+
+#tr-right .tr-sidebar-section {
+  padding: 8px 0;
+}
+
+#tr-live-prob {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+
+#tr-card-counter {
+  flex-shrink: 0;
+}
+
+.tr-sidebar-section--log {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#tr-session-log {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.tr-seats--renderer-cache {
+  display: none !important;
+}
+
+.tr-drag-ghost {
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+}
+
+.tr-drop-zone--hovered {
+  outline: 2px solid rgba(200, 160, 74, 0.8);
+  outline-offset: 2px;
+}

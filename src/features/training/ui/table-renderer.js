@@ -131,16 +131,20 @@ export function renderChipTray(host, chips, selectedChip, balance) {
   }).join('');
 }
 
-export function renderBetZones(root, bets, payouts, totalBetEl) {
+function matrixCell(root, seatId, zone) {
+  return root ? root.querySelector('[data-seat="' + seatId + '"][data-zone="' + zone + '"]') : null;
+}
+
+export function renderBetZones(root, bets, payouts, totalBetEl, activeSeatId = 1) {
   if (totalBetEl) {
     const total = betTotal(bets);
     totalBetEl.textContent = total > 0 ? total.toLocaleString() : '-';
   }
 
   ZONES.forEach(function (zone) {
-    const zoneEl = root ? root.querySelector('[data-zone="' + zone + '"]') : null;
-    const betEl = document.getElementById('betAmt-' + zone);
-    const payEl = document.getElementById('payoutAmt-' + zone);
+    const zoneEl = matrixCell(root, activeSeatId, zone);
+    const betEl = zoneEl ? zoneEl.querySelector('.tr-zone-bet-amt') : null;
+    const payEl = zoneEl ? zoneEl.querySelector('.tr-zone-payout') : null;
     const betAmt = bets[zone] || 0;
 
     if (betEl) {
@@ -174,6 +178,36 @@ export function renderSeats(host, seats, activeSeatId, settlement) {
   const settledBySeat = new Map((settlement && settlement.seats ? settlement.seats : []).map(function (row) {
     return [row.seatId, row];
   }));
+
+  if (host.querySelector('[data-seat][data-zone]')) {
+    host.querySelectorAll('[data-seat][data-zone]').forEach(function (cell) {
+      cell.classList.remove('tr-seat--active', 'tr-seat--winner', 'tr-seat--loser', 'has-bet');
+      const betEl = cell.querySelector('.tr-zone-bet-amt');
+      if (betEl) {
+        betEl.textContent = '';
+        betEl.hidden = true;
+      }
+    });
+
+    seats.forEach(function (seat) {
+      const row = settledBySeat.get(seat.id);
+      ZONES.forEach(function (zone) {
+        const cell = matrixCell(host, seat.id, zone);
+        if (!cell) return;
+        const amt = seat.bets[zone] || 0;
+        const betEl = cell.querySelector('.tr-zone-bet-amt');
+        cell.classList.toggle('tr-seat--active', seat.id === activeSeatId);
+        cell.classList.toggle('tr-seat--winner', Boolean(row && row.net > 0));
+        cell.classList.toggle('tr-seat--loser', Boolean(row && row.net < 0));
+        cell.classList.toggle('has-bet', amt > 0);
+        if (betEl) {
+          betEl.textContent = amt > 0 ? amt.toLocaleString() : '';
+          betEl.hidden = amt === 0;
+        }
+      });
+    });
+    return;
+  }
 
   seats.forEach(function (seat) {
     const seatEl = host.querySelector('[data-seat="' + seat.id + '"]');
@@ -236,6 +270,7 @@ export function renderPayoutSummary(host, payouts) {
 export function renderShoe(elements, shoe) {
   if (!shoe) return;
   const rem = shoeRemaining(shoe);
+  if (elements.shoeCount) elements.shoeCount.textContent = rem + '/' + shoe.total;
   if (elements.shoeRem) elements.shoeRem.textContent = rem;
   if (elements.shoeTotal) elements.shoeTotal.textContent = shoe.total;
   if (elements.shoeFill) elements.shoeFill.style.width = shoePct(shoe) + '%';
