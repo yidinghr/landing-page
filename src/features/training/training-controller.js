@@ -14,12 +14,13 @@ import { renderFeedback } from './ui/card-counter-renderer.js';
 import { initCardDrag, initChipDrag } from './ui/drag-engine.js';
 import { createSettingsPanel } from './ui/settings-panel.js';
 import { renderNpcSpeechBubbles } from './ui/npc-speech-renderer.js';
+import { createCustomerRequestPanel } from './ui/customer-request-panel.js';
 
 const CHIPS = [[1000000, '1M', 'tr-chip--1m'], [500000, '500K', 'tr-chip--500k'], [100000, '100K', 'tr-chip--100k'], [50000, '50K', 'tr-chip--50k'], [10000, '10K', 'tr-chip--10k'], [5000, '5K', 'tr-chip--5k'], [1000, '1K', 'tr-chip--1k'], [500, '500', 'tr-chip--500'], [100, '100', 'tr-chip--100'], [25, '25', 'tr-chip--25'], [5, '5', 'tr-chip--5']].map(([value, label, cls]) => ({ value, label, cls }));
 const DEAL_LABELS = { idle: 'DEAL', betting: 'DEAL', 'deal-1': 'Deal P1', 'deal-2': 'Deal B1', 'deal-3': 'Deal P2', 'deal-4': 'Deal B2', 'draw-p3': 'Deal P3', 'draw-b3': 'Deal B3', reveal: 'Reveal Ready', settlement: 'SETTLED', 'round-end': 'SETTLED' };
 const DEAL_PHASES = new Set([PHASES.IDLE, PHASES.BETTING, PHASES.DEAL_1, PHASES.DEAL_2, PHASES.DEAL_3, PHASES.DEAL_4, PHASES.DRAW_P3, PHASES.DRAW_B3]);
 
-let _state = createState(), settingsPanel = null, burnTimer = 0;
+let _state = createState(), settingsPanel = null, customerPanel = null, burnTimer = 0;
 const getState = () => _state, setState = (next) => { _state = next; };
 
 const byId = (id) => document.getElementById(id);
@@ -225,6 +226,8 @@ function renderAll() {
   renderControls(state);
   // Phase10: NPC speech bubbles above seat columns in bet matrix
   renderNpcSpeechBubbles(el.betMatrix, state.npcRequestQueue);
+  // Phase11: customer request panel (visible only when role=customer)
+  if (customerPanel) customerPanel.update(state);
 }
 
 function attachEvents() {
@@ -345,6 +348,13 @@ export function init() {
     insurancePresets: INSURANCE_PRESETS,
     shoePresets: SHOE_PRESETS
   });
+  // Phase11: customer request panel mounts into the left aside
+  const leftPanel = document.getElementById('tr-left-panel');
+  if (leftPanel) {
+    customerPanel = createCustomerRequestPanel(leftPanel, function (requestType) {
+      orchestrator.customerRequest(requestType);
+    });
+  }
   orchestrator.newShoe({ confirm: false, promptForCut: false, notify: false });
   attachEvents();
   initInteractions();

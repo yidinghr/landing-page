@@ -5,6 +5,52 @@ Newest entries on top. Every handoff must add an entry.
 
 ---
 
+## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 11 customer request panel)
+
+### Changed
+- Added `handleCustomerRequest(requestType)` to [training-orchestrator.js](../../src/features/training/training-orchestrator.js):
+  - Valid in phases: `deal-4`, `insurance`, `reveal`.
+  - Pre-reveal: prepends customer request into `npcRequestQueue` (customer-first precedence).
+  - In-reveal: rebuilds `revealQueue` immediately via `buildRevealQueue`.
+  - Emits Vietnamese feedback on invalid phase.
+- Exposed `customerRequest: handleCustomerRequest` in orchestrator public API.
+- Created new file [ui/customer-request-panel.js](../../src/features/training/ui/customer-request-panel.js):
+  - `createCustomerRequestPanel(hostEl, onRequest)` factory — mounts panel into left aside.
+  - 8 buttons: Flip Player first, Flip Banker first, Flip All Together, Squeeze P1/P2/B1/B2, Wait.
+  - Panel shown only when `role=customer` AND phase ∈ {deal-4, insurance, reveal}.
+  - Panel hidden (removed from DOM) otherwise to keep UI clean.
+  - Self-contained styles in `<head>` injection — no training.css changes.
+- Wired panel in [training-controller.js](../../src/features/training/training-controller.js):
+  - `customerPanel` created in `init()`, mounted into `#tr-left-panel`.
+  - `customerPanel.update(state)` called in `renderAll()`.
+
+### Files touched
+- `src/features/training/training-orchestrator.js`
+- `src/features/training/training-controller.js`
+- `src/features/training/ui/customer-request-panel.js` (**new**)
+- `docs/operation-training-handoff/02-PHASE-CHECKLIST.md`
+- `docs/operation-training-handoff/03-CURRENT-STATUS.md`
+- `docs/operation-training-handoff/10-CHANGELOG.md`
+
+### Tests run
+- `npm run build` — **PASS** (62 modules transformed).
+- Deterministic Node.js logic tests — **15/15 PASS**:
+  - Customer request first in `buildRevealQueue` output.
+  - `flip-player-first` → `flip-p1` action.
+  - `flip-all-together` collapses queue to single `FLIP_ALL`.
+  - Non-existent card (squeeze-p3 without 3rd card) filtered out.
+  - All 8 panel button types have `REQUEST_LABELS` defined.
+  - Customer prepended to `npcRequestQueue` merge.
+
+### Honesty note
+- No browser runtime evidence (auth blocks headless agent).
+- Visual panel rendering deferred to human smoke test.
+
+### Next recommended phase
+**Phase 13 — QA pass** (Phases 1–12 are now wired).
+
+---
+
 ## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 10 NPC engine wiring)
 
 ### Changed

@@ -10,11 +10,11 @@ Snapshot of where the Operation Training module stands **as of 2026-04-24**.
 - **Phase 8 (reveal flow):** wired and automated-verified; human manual smoke still pending.
 - **Phase 9 (chip drag + payout):** wired and automated-verified on 2026-04-24.
 - **Phase 10 (NPC requests + speech bubbles):** wired and deterministic-verified on 2026-04-24.
-- **Phase 11:** not started.
+- **Phase 11 (customer request panel):** wired and deterministic-verified on 2026-04-24.
 - **Phase 12:** insurance core done; separate tray visual deferred.
 - **Phase 14:** still rectangular layout; no redesign work started.
 
-**Recommended next engineering phase to work on:** **Phase 11 — Customer request panel**.
+**Recommended next engineering phase to work on:** **Phase 13 — QA pass** (Phases 1–12 are now wired).
 
 ---
 

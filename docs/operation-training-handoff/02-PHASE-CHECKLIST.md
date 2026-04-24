@@ -189,18 +189,18 @@ Per-phase execution plan. Each phase is **atomic** — merge only when all its a
 
 ---
 
-## Phase 11 — Customer request panel ⬜
+## Phase 11 — Customer request panel ✅
 
 **Goal:** When role=customer, show a request panel during reveal phase with buttons: Squeeze P1 / Flip banker first / Flip all together / Wait.
 
-**Files:** New `ui/customer-request-panel.js`, HTML section in `index.html`, orchestrator `handleCustomerRequest`
+**Files:** New `ui/customer-request-panel.js`, orchestrator `handleCustomerRequest`, controller wiring
 
 **Acceptance:**
-- [ ] Panel visible only when `body[data-role=customer]` AND `phase ∈ {deal-4, insurance, reveal}`
-- [ ] Clicking a button pushes into `state.revealQueue` with `requestedBy: 'customer'`
-- [ ] Customer requests always take precedence over NPC requests (customer is human trainee)
+- [x] Panel visible only when `body[data-role=customer]` AND `phase ∈ {deal-4, insurance, reveal}`
+- [x] Clicking a button pushes into `state.npcRequestQueue` (pre-reveal) or `state.revealQueue` (in-reveal) with `requestedBy: 'customer'`
+- [x] Customer requests always take precedence over NPC requests (customer placed first in `buildRevealQueue` call)
 
-**Status:** Not started.
+**Status:** Wired and deterministic-verified (Node.js, 15/15 PASS) on 2026-04-24.
 
 ---
 
@@ -269,7 +269,7 @@ Per-phase execution plan. Each phase is **atomic** — merge only when all its a
 | 8 | Reveal flow | ✅ | ✅ | Human smoke check pending |
 | 9 | Chip drag + payout | ✅ | ✅ | — |
 | 10 | NPC requests | ✅ | ✅ | — |
-| 11 | Customer panel | ⬜ | ⬜ | Build panel |
+| 11 | Customer panel | ✅ | ✅ | — |
 | 12 | Insurance extensions | ✅ | ✅ | (optional) separate tray |
 | 13 | QA pass | ⬜ | ⬜ | After 6–11 done |
 | 14 | Curved table redesign | ⬜ | ⬜ | After 13 passes |

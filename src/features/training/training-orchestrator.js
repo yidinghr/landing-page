@@ -913,6 +913,44 @@ export function createOrchestrator({
     });
   }
 
+  // Phase11: customer submits a reveal request (Squeeze P1, Flip Banker first, etc.)
+  function handleCustomerRequest(requestType) {
+    const state = getState();
+    const CUSTOMER_PHASES = new Set([PHASES.DEAL_4, PHASES.INSURANCE, PHASES.REVEAL]);
+    if (!CUSTOMER_PHASES.has(state.phase)) {
+      emitFeedback('Yêu cầu của khách chỉ hợp lệ trong giai đoạn deal-4, insurance, hoặc reveal.', 'warning');
+      return;
+    }
+
+    const customerRequest = {
+      seatId: state.activeSeatId,
+      type: requestType,
+      label: requestType,  // label is set by panel; stored for debug
+      requestedBy: 'customer'
+    };
+
+    const cardKeys = existingCardKeys(state);
+    // Customer requests always take precedence — pass as first arg to buildRevealQueue
+    const newQueue = buildRevealQueue(
+      [customerRequest],       // customer request (precedence slot)
+      [],                       // extra customer requests (none additional)
+      cardKeys
+    );
+
+    let next = state;
+    if (state.phase !== PHASES.REVEAL) {
+      // Not yet in reveal — store the request and transition will happen normally
+      // We merge the customer request into npcRequestQueue so enterRevealState picks it up
+      // But with customer precedence: put customer request first, then npc
+      next = setNpcRequestQueue(state, [customerRequest, ...state.npcRequestQueue]);
+    } else {
+      // Already in reveal phase — rebuild revealQueue immediately with customer first
+      next = setRevealQueue(state, newQueue);
+    }
+    emitFeedback('Đã ghi nhận yêu cầu của khách.', 'info');
+    update(next);
+  }
+
   function handleNpcRequestsGenerated(requests) {
     if (!Array.isArray(requests)) return;
     const state = getState();
@@ -940,6 +978,7 @@ export function createOrchestrator({
     switchRole: handleRoleSwitch,
     applySettings: handleApplySettings,
     resetSettings: handleResetSettings,
-    npcRequests: handleNpcRequestsGenerated
+    npcRequests: handleNpcRequestsGenerated,
+    customerRequest: handleCustomerRequest
   };
 }
