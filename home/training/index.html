@@ -52,13 +52,6 @@
         <button type="button" id="btnClearBets" class="tr-btn tr-btn--ghost tr-btn--sm">Clear</button>
         <button type="button" id="btnSubmitBets" class="tr-btn tr-btn--customer tr-btn--sm">Submit</button>
       </div>
-
-      <div id="tr-card-source">
-        <div class="tr-deck-icon">🂠</div>
-        <span id="tr-shoe-count">—</span>
-        <div class="tr-shoe-track"><div id="shoeFill" class="tr-shoe-fill"></div></div>
-      </div>
-      <div id="burnNotice" class="tr-burn-notice" hidden></div>
       <div id="tr-feedback-panel"></div>
     </aside>
 
@@ -72,7 +65,30 @@
 
       <div id="tr-baccarat-table">
         <div class="tr-dealer-strip">
-          <span class="tr-dealer-label">◆ DEALER ◆</span>
+          <div class="tr-dealer-pocket tr-dealer-pocket--discard" aria-hidden="true">
+            <span class="tr-dealer-pocket__label">Discard Rack</span>
+            <div class="tr-dealer-pocket__well">
+              <span class="tr-dealer-pocket__hint">Discard</span>
+            </div>
+          </div>
+          <div class="tr-dealer-center">
+            <span class="tr-dealer-label">◆ DEALER ◆</span>
+            <div id="burnNotice" class="tr-burn-notice tr-burn-notice--rail" hidden></div>
+          </div>
+          <div id="tr-card-source" class="tr-dealer-pocket tr-dealer-pocket--shoe">
+            <span class="tr-dealer-pocket__label">Card Shoe</span>
+            <div class="tr-dealer-pocket__well tr-dealer-pocket__well--shoe">
+              <div class="tr-deck-icon">🂠</div>
+              <span id="tr-shoe-count">—</span>
+              <div class="tr-shoe-track"><div id="shoeFill" class="tr-shoe-fill"></div></div>
+            </div>
+          </div>
+          <div class="tr-dealer-pocket tr-dealer-pocket--commission" aria-hidden="true">
+            <span class="tr-dealer-pocket__label">Commission</span>
+            <div class="tr-dealer-pocket__well">
+              <span class="tr-dealer-pocket__hint">Tray</span>
+            </div>
+          </div>
         </div>
 
         <div id="tr-card-zones" class="tr-felt">
@@ -91,37 +107,57 @@
 
         <div id="betZones" class="tr-bet-zones">
           <div id="tr-bet-matrix">
-          <div class="tr-matrix-cell tr-zone--ppair" data-seat="1" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--ppair" data-seat="2" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--ppair" data-seat="3" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--ppair" data-seat="4" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--ppair" data-seat="5" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--player" data-seat="1" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--player" data-seat="2" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--player" data-seat="3" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--player" data-seat="4" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--player" data-seat="5" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--tie" data-seat="1" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--tie" data-seat="2" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--tie" data-seat="3" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--tie" data-seat="4" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--tie" data-seat="5" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--banker" data-seat="1" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--banker" data-seat="2" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--banker" data-seat="3" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--banker" data-seat="4" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--banker" data-seat="5" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--bpair" data-seat="1" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--bpair" data-seat="2" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--bpair" data-seat="3" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--bpair" data-seat="4" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--bpair" data-seat="5" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--lucky6" data-seat="1" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--lucky6" data-seat="2" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--lucky6" data-seat="3" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--lucky6" data-seat="4" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-          <div class="tr-matrix-cell tr-zone--lucky6" data-seat="5" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-        </div>
+            <div class="tr-seat-bay tr-seat-bay--1" data-seat-bay="1">
+              <div class="tr-seat-bay__zones">
+                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="1" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--ppair" data-seat="1" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--player" data-seat="1" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--tie" data-seat="1" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--banker" data-seat="1" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--bpair" data-seat="1" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+              </div>
+            </div>
+            <div class="tr-seat-bay tr-seat-bay--2" data-seat-bay="2">
+              <div class="tr-seat-bay__zones">
+                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="2" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--ppair" data-seat="2" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--player" data-seat="2" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--tie" data-seat="2" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--banker" data-seat="2" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--bpair" data-seat="2" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+              </div>
+            </div>
+            <div class="tr-seat-bay tr-seat-bay--3" data-seat-bay="3">
+              <div class="tr-seat-bay__zones">
+                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="3" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--ppair" data-seat="3" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--player" data-seat="3" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--tie" data-seat="3" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--banker" data-seat="3" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--bpair" data-seat="3" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+              </div>
+            </div>
+            <div class="tr-seat-bay tr-seat-bay--4" data-seat-bay="4">
+              <div class="tr-seat-bay__zones">
+                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="4" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--ppair" data-seat="4" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--player" data-seat="4" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--tie" data-seat="4" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--banker" data-seat="4" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--bpair" data-seat="4" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+              </div>
+            </div>
+            <div class="tr-seat-bay tr-seat-bay--5" data-seat-bay="5">
+              <div class="tr-seat-bay__zones">
+                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="5" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--ppair" data-seat="5" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--player" data-seat="5" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--tie" data-seat="5" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--banker" data-seat="5" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+                <div class="tr-matrix-cell tr-zone--bpair" data-seat="5" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="tr-seat-arc">
