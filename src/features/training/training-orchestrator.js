@@ -1,26 +1,34 @@
 // training-orchestrator.js — routes user/system actions to state + engine calls
 // Owns action handlers, phase transitions, and engine sequencing.
 
-import { PHASES, BETTING_PHASES, DEALING_PHASES, ROLE_SWITCH_PHASES } from './phase-machine.js';
+import { PHASES, BETTING_PHASES, DEALING_PHASES, ROLE_SWITCH_PHASES, canTransitionTo } from './phase-machine.js';
 import {
-  addLogEntry, addProcedureErrors, applyInsuranceConfig, applyRules, applyTablePrefs,
+  addChipCollected, addChipPaid, addLogEntry, addProcedureErrors, applyInsuranceConfig, applyRules, applyTablePrefs,
   clearInsuranceDraft, clearInsuranceDrafts, clearLog, clearNpcRequestQueue,
-  confirmSettlementProcedure, incrementCatches, incrementRound, markChangeAcknowledged,
+  confirmSettlementProcedure, dequeueRevealItem, incrementCatches, incrementRound, markChangeAcknowledged,
   markCommissionCollected, resetChipTracking, resetRound, resetSession,
   resetSettlementProcedure, setActiveSeatId, setAutoAfterInsurance, setBCards,
-  setInsuranceDraft, setNpcBetsApplied, setPCards, setPayouts, setPhase, setResult,
-  setRole, setSeats, setSelectedChip, setSettlement, setShoe, setWrongPayoutDrill,
+  setFaceState, setInsuranceDraft, setNpcBetsApplied, setPCards, setPayouts, setPhase, setResult,
+  setRevealQueue, setRole, setSeats, setSelectedChip, setSettlement, setShoe, setWrongPayoutDrill,
   updateLatestLogProcedure
 } from './training-state.js';
 
 import { bankerDraws, handTotal, isNatural, playerDraws, resolveRound } from './engines/baccarat-engine.js';
 import { cardValue, dealOne, initShoe } from './engines/shoe-engine.js';
+import { validateCardDrop } from './engines/dealing-validator.js';
+import {
+  allCardsRevealed, applyFlip, buildRevealQueue, createFaceState,
+  REVEAL_ACTIONS, validateFlipAction
+} from './ui/reveal-flow-manager.js';
 import {
   clampInsuranceAmount, getEligibleInsuranceSeats, insuranceBaseBet,
   insuranceMaxBet, shouldOfferInsurance
 } from './engines/insurance-engine.js';
 import { clearBets, createSeats, creditSeat, debitSeat, getSeat, setBet, setInsuranceDecision, ZONES } from './engines/seat-engine.js';
 import { settleRound } from './engines/settlement-engine.js';
+import {
+  isSettlementComplete, isValidDenomination, validateCollectedAmount, validatePaidAmount
+} from './engines/payout-validator.js';
 import { seedWrongPayout } from './scenarios/wrong-payout.js';
 import { applyShoePreset, SHOE_PRESETS } from './scenarios/shoe-presets.js';
 import { npcAutoBet, npcResolveInsuranceForSeats } from './npc/npc-behavior.js';
@@ -40,6 +48,8 @@ function clampCutPct(value) {
   if (!Number.isFinite(n)) return 50;
   return Math.min(80, Math.max(20, Math.round(n)));
 }
+
+const CHIP_DENOMINATIONS = Object.freeze([1000000, 500000, 100000, 50000, 10000, 5000, 1000, 500, 100, 25, 5]);
 
 function emptyBets() {
   return ZONES.reduce(function (bets, zone) {
@@ -81,6 +91,51 @@ export function createOrchestrator({
   const confirmAction = onConfirm || function () { return true; };
   const promptValue = onPrompt || function () { return null; };
 
+  function emitFeedback(message, severity = 'info', extra = {}) {
+    feedback(Object.assign({}, extra, { message, severity }));
+  }
+
+  function assertTransition(fromPhase, toPhase) {
+    if (fromPhase === toPhase) return;
+    if (!canTransitionTo(fromPhase, toPhase)) {
+      throw new Error('Invalid phase transition: ' + fromPhase + ' -> ' + toPhase);
+    }
+  }
+
+  function transitionFrom(state, toPhase) {
+    assertTransition(state.phase, toPhase);
+    return setPhase(state, toPhase);
+  }
+
+  function existingCardKeys(state) {
+    return []
+      .concat(state.pCards.map(function (_card, index) { return 'p' + (index + 1); }))
+      .concat(state.bCards.map(function (_card, index) { return 'b' + (index + 1); }));
+  }
+
+  function faceStateWithVisible(state, visibleKeys) {
+    const nextFaceState = createFaceState();
+    visibleKeys.forEach(function (key) {
+      if (Object.prototype.hasOwnProperty.call(nextFaceState, key)) nextFaceState[key] = true;
+    });
+    return nextFaceState;
+  }
+
+  function enterRevealState(state, customerRequests = []) {
+    const nextPhase = state.phase === PHASES.REVEAL ? state : transitionFrom(state, PHASES.REVEAL);
+    const cardKeys = existingCardKeys(nextPhase);
+    let next = setFaceState(nextPhase, createFaceState());
+    next = setRevealQueue(next, buildRevealQueue(next.npcRequestQueue, customerRequests, cardKeys));
+    return next;
+  }
+
+  function revealAllState(state) {
+    const cardKeys = existingCardKeys(state);
+    let next = setFaceState(state, faceStateWithVisible(state, cardKeys));
+    next = setRevealQueue(next, []);
+    return next;
+  }
+
   function update(next) {
     setState(next);
     onRender();
@@ -88,6 +143,47 @@ export function createOrchestrator({
 
   function activeSeat(state) {
     return getSeat(state.seats, state.activeSeatId);
+  }
+
+  function settlementRow(state, seatId) {
+    if (!state.settlement || !Array.isArray(state.settlement.seats)) return null;
+    return state.settlement.seats.find(function (row) {
+      return Number(row.seatId) === Number(seatId);
+    }) || null;
+  }
+
+  function settlementChipDirection(row) {
+    if (!row) return null;
+    if (Number(row.creditAmount || 0) > 0) return 'pay';
+    if (row.outcome === 'LOSE' && Number(row.totalBet || 0) > 0) return 'collect';
+    return null;
+  }
+
+  function settlementCompletion(state) {
+    if (!state.settlement || !Array.isArray(state.settlement.seats)) {
+      return { complete: true, pendingSeatIds: [] };
+    }
+    return isSettlementComplete(state.settlement.seats, state.chipsPaidBySeat, state.chipsCollectedBySeat);
+  }
+
+  function parseSettlementZone(zoneKey) {
+    const match = String(zoneKey || '').match(/^seat-(\d+)$/);
+    return match ? Number(match[1]) : null;
+  }
+
+  function parseChipDrop(zoneKey) {
+    const raw = String(zoneKey || '');
+    const payMatch = raw.match(/^pay:(seat-\d+)$/);
+    if (payMatch) {
+      return { direction: 'pay', seatId: parseSettlementZone(payMatch[1]) };
+    }
+
+    const collectMatch = raw.match(/^collect:(seat-\d+)$/);
+    if (collectMatch) {
+      return { direction: 'collect', seatId: parseSettlementZone(collectMatch[1]) };
+    }
+
+    return { direction: null, seatId: parseSettlementZone(raw) };
   }
 
   function createConfiguredShoe(state, options = {}) {
@@ -184,10 +280,10 @@ export function createOrchestrator({
   function routeDrawPhase(state) {
     const pTotal = handTotal(state.pCards);
     const bTotal = handTotal(state.bCards);
-    if (isNatural(pTotal) || isNatural(bTotal)) return setPhase(state, PHASES.REVEAL);
-    if (playerDraws(pTotal)) return setPhase(state, PHASES.DRAW_P3);
-    if (bankerDraws(bTotal, false, null)) return setPhase(state, PHASES.DRAW_B3);
-    return setPhase(state, PHASES.REVEAL);
+    if (isNatural(pTotal) || isNatural(bTotal)) return enterRevealState(state);
+    if (playerDraws(pTotal)) return transitionFrom(state, PHASES.DRAW_P3);
+    if (bankerDraws(bTotal, false, null)) return transitionFrom(state, PHASES.DRAW_B3);
+    return enterRevealState(state);
   }
 
   function continueAfterInsurance(state) {
@@ -213,7 +309,7 @@ export function createOrchestrator({
 
     let next = clearInsuranceDrafts(state);
     next = markInsuranceOffers(next, eligibleSeats);
-    next = setPhase(next, PHASES.INSURANCE);
+    next = transitionFrom(next, PHASES.INSURANCE);
     if (!humanPendingInsuranceSeats(next).length) {
       return continueAfterInsurance(next);
     }
@@ -223,7 +319,34 @@ export function createOrchestrator({
   function routeAfterP3(state) {
     const p3 = state.pCards[2];
     const p3Value = p3 ? cardValue(p3.rank) : null;
-    return setPhase(state, bankerDraws(handTotal(state.bCards), true, p3Value) ? PHASES.DRAW_B3 : PHASES.REVEAL);
+    return bankerDraws(handTotal(state.bCards), true, p3Value)
+      ? transitionFrom(state, PHASES.DRAW_B3)
+      : enterRevealState(state);
+  }
+
+  function advancePhaseAfterDeal(state) {
+    switch (state.phase) {
+      case PHASES.DEAL_1:
+        return transitionFrom(state, PHASES.DEAL_2);
+      case PHASES.DEAL_2:
+        return transitionFrom(state, PHASES.DEAL_3);
+      case PHASES.DEAL_3:
+        return transitionFrom(state, PHASES.DEAL_4);
+      case PHASES.DEAL_4: {
+        const next = maybeOfferInsurance(state);
+        assertTransition(state.phase, next.phase);
+        return next;
+      }
+      case PHASES.DRAW_P3: {
+        const next = routeAfterP3(state);
+        assertTransition(state.phase, next.phase);
+        return next;
+      }
+      case PHASES.DRAW_B3:
+        return enterRevealState(state);
+      default:
+        return state;
+    }
   }
 
   function dealOneForPhase(state) {
@@ -250,7 +373,7 @@ export function createOrchestrator({
         return routeAfterP3(next);
       case PHASES.DRAW_B3:
         next = setBCards(next, next.bCards.concat(dealt.card));
-        return setPhase(next, PHASES.REVEAL);
+        return enterRevealState(next);
       default:
         return state;
     }
@@ -281,7 +404,8 @@ export function createOrchestrator({
   }
 
   function resolveRevealState(state) {
-    let next = incrementRound(state);
+    let next = revealAllState(state);
+    next = incrementRound(next);
     const result = resolveRound(next.pCards, next.bCards);
     next = setResult(next, result);
 
@@ -330,7 +454,7 @@ export function createOrchestrator({
       net: activeRow ? activeRow.net : null
     });
     next = setWrongPayoutDrill(next, wrongPayoutRow || null);
-    return setPhase(next, PHASES.SETTLEMENT);
+    return transitionFrom(next, PHASES.SETTLEMENT);
   }
 
   function autoDrawToReveal(state) {
@@ -350,7 +474,7 @@ export function createOrchestrator({
         next = bDraw.state;
       }
     }
-    return resolveRevealState(setPhase(next, PHASES.REVEAL));
+    return resolveRevealState(transitionFrom(next, PHASES.REVEAL));
   }
 
   function settlementProcedureErrors(state) {
@@ -403,15 +527,27 @@ export function createOrchestrator({
   }
 
   function handleCardDrop(targetZone) {
-    void targetZone;
     const state = getState();
     if (!DEALING_PHASES.has(state.phase)) return;
-    const next = dealOneForPhase(state);
-    if (!next) {
-      feedback('Shoe exhausted. Please start a new shoe.', 'error');
+    const check = validateCardDrop(state.phase, targetZone, state.pCards, state.bCards, state.result);
+    if (!check.valid) {
+      update(addProcedureErrors(state, 1));
+      emitFeedback(check.message, 'error', { errorCode: check.errorCode });
       return;
     }
-    update(next);
+
+    if (!state.shoe) return;
+    const dealt = dealOne(state.shoe);
+    if (!dealt.card) {
+      emitFeedback('Shoe exhausted. Please start a new shoe.', 'error');
+      return;
+    }
+
+    let next = setShoe(state, dealt.shoe);
+    if (targetZone === 'player') next = setPCards(next, next.pCards.concat(dealt.card));
+    else next = setBCards(next, next.bCards.concat(dealt.card));
+
+    update(advancePhaseAfterDeal(next));
   }
 
   function handleDeal() {
@@ -423,7 +559,7 @@ export function createOrchestrator({
 
     const next = dealOneForPhase(state);
     if (!next) {
-      feedback('Shoe exhausted. Please start a new shoe.', 'error');
+      emitFeedback('Shoe exhausted. Please start a new shoe.', 'error');
       return;
     }
     update(next);
@@ -439,7 +575,7 @@ export function createOrchestrator({
     const opening = dealOpeningFour(state);
     if (!opening.ok) {
       update(setAutoAfterInsurance(opening.state, false));
-      feedback('Shoe exhausted. Please start a new shoe.', 'error');
+      emitFeedback('Shoe exhausted. Please start a new shoe.', 'error');
       return;
     }
 
@@ -499,7 +635,35 @@ export function createOrchestrator({
   }
 
   function handleFlipCard(cardKey) {
-    void cardKey;
+    const state = getState();
+    if (state.phase !== PHASES.REVEAL) return;
+
+    const cardKeys = existingCardKeys(state);
+    if (!cardKeys.includes(cardKey)) return;
+
+    if (state.revealQueue[0] && state.revealQueue[0].action === REVEAL_ACTIONS.FLIP_ALL) {
+      update(resolveRevealState(state));
+      return;
+    }
+
+    const check = validateFlipAction(state.revealQueue, cardKey);
+    if (!check.allowed) {
+      update(addProcedureErrors(state, 1));
+      emitFeedback(check.message || 'Sai thứ tự lật bài.', 'error', { expected: check.expected, cardKey });
+      return;
+    }
+
+    if (state.faceState && state.faceState[cardKey]) return;
+
+    let next = setFaceState(state, applyFlip(state.faceState || createFaceState(), cardKey));
+    if (state.revealQueue.length) next = dequeueRevealItem(next);
+
+    if (allCardsRevealed(next.faceState, cardKeys)) {
+      update(resolveRevealState(next));
+      return;
+    }
+
+    update(next);
   }
 
   function handleCollectCommission(seatId) {
@@ -536,13 +700,98 @@ export function createOrchestrator({
     update(next);
   }
 
-  function handleChipDrop(seatId, amount, direction) {
-    void seatId; void amount; void direction;
+  function handleChipDrop(zoneKey, denomination) {
+    const state = getState();
+    if (state.phase !== PHASES.SETTLEMENT || state.role !== 'dealer' || !state.settlement) return;
+
+    if (!isValidDenomination(denomination, CHIP_DENOMINATIONS)) {
+      update(addProcedureErrors(state, 1));
+      emitFeedback('Mệnh giá chip không hợp lệ cho bàn training hiện tại.', 'error');
+      return;
+    }
+
+    const drop = parseChipDrop(zoneKey);
+    const seatId = drop.seatId;
+    if (!seatId) return;
+
+    const row = settlementRow(state, seatId);
+    const expectedDirection = settlementChipDirection(row);
+    if (!row || !expectedDirection) {
+      update(addProcedureErrors(state, 1));
+      emitFeedback('Seat này hiện không có thao tác chip cần xử lý.', 'error');
+      return;
+    }
+
+    const direction = drop.direction || expectedDirection;
+    if (drop.direction && drop.direction !== expectedDirection) {
+      update(addProcedureErrors(state, 1));
+      emitFeedback(
+        expectedDirection === 'pay'
+          ? 'Seat ' + seatId + ' đang chờ trả chip từ tray vào seat.'
+          : 'Seat ' + seatId + ' đang chờ thu chip từ seat về tray.',
+        'error'
+      );
+      return;
+    }
+
+    if (direction === 'pay') {
+      const attemptedPaid = Number(state.chipsPaidBySeat[seatId] || 0) + Number(denomination || 0);
+      const check = validatePaidAmount(seatId, attemptedPaid, Number(row.creditAmount || 0));
+      if (check.overpaid > 0) {
+        update(addProcedureErrors(state, 1));
+        emitFeedback(check.message, 'error');
+        return;
+      }
+
+      const next = addChipPaid(state, seatId, denomination);
+      const paidSoFar = Number(next.chipsPaidBySeat[seatId] || 0);
+      const finalCheck = validatePaidAmount(seatId, paidSoFar, Number(row.creditAmount || 0));
+      const overall = settlementCompletion(next);
+      const message = finalCheck.correct
+        ? overall.complete
+          ? 'Đã hoàn tất chi trả/thu chip cho tất cả seat trong round này.'
+          : 'Seat ' + seatId + ': đã trả đủ ' + paidSoFar.toLocaleString() + '.'
+        : finalCheck.message;
+      update(next);
+      emitFeedback(message, finalCheck.correct ? 'info' : 'warning');
+      return;
+    }
+
+    const expectedDebt = Number(row.totalBet || 0);
+    const attemptedCollected = Number(state.chipsCollectedBySeat[seatId] || 0) + Number(denomination || 0);
+    if (attemptedCollected > expectedDebt) {
+      update(addProcedureErrors(state, 1));
+      emitFeedback('Seat ' + seatId + ': Thu thừa ' + (attemptedCollected - expectedDebt).toLocaleString() + ' — cần khớp đúng tổng bet.', 'error');
+      return;
+    }
+
+    const next = addChipCollected(state, seatId, denomination);
+    const collectedSoFar = Number(next.chipsCollectedBySeat[seatId] || 0);
+    const check = validateCollectedAmount(seatId, collectedSoFar, expectedDebt);
+    const overall = settlementCompletion(next);
+    const message = check.correct
+      ? overall.complete
+        ? 'Đã hoàn tất chi trả/thu chip cho tất cả seat trong round này.'
+        : 'Seat ' + seatId + ': đã thu đủ ' + collectedSoFar.toLocaleString() + ' về tray.'
+      : check.message;
+    update(next);
+    emitFeedback(message, check.correct ? 'info' : 'warning');
   }
 
   function handleNextRound() {
     let state = getState();
     if (state.phase !== PHASES.SETTLEMENT && state.phase !== PHASES.ROUND_END) return;
+
+    if (state.phase === PHASES.SETTLEMENT && state.settlement) {
+      const completion = settlementCompletion(state);
+      if (!completion.complete) {
+        emitFeedback(
+          'Chưa hoàn tất chip settlement. Còn seat: ' + completion.pendingSeatIds.join(', ') + '.',
+          'error'
+        );
+        return;
+      }
+    }
 
     if (state.role === 'dealer' && state.settlement) {
       const errors = settlementProcedureErrors(state);
@@ -560,7 +809,7 @@ export function createOrchestrator({
     let state = getState();
     if (state.role !== 'customer' || !BETTING_PHASES.has(state.phase) || ZONES.indexOf(zone) < 0) return;
     if (!state.selectedChip) {
-      feedback('chip-required', 'warning');
+      emitFeedback('Vui lòng chọn chip trước khi đặt cược.', 'warning', { code: 'chip-required' });
       return;
     }
     if (activeSeat(state).balance < state.selectedChip) return;
@@ -585,7 +834,9 @@ export function createOrchestrator({
 
   function handleSelectChip(value) {
     const state = getState();
-    if (state.role !== 'customer' || !BETTING_PHASES.has(state.phase)) return;
+    const customerBetting = state.role === 'customer' && BETTING_PHASES.has(state.phase);
+    const dealerSettlement = state.role === 'dealer' && state.phase === PHASES.SETTLEMENT;
+    if (!customerBetting && !dealerSettlement) return;
     update(setSelectedChip(state, state.selectedChip === value ? null : value));
   }
 

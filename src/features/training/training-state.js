@@ -6,6 +6,7 @@
 
 import { PHASES } from './phase-machine.js';
 import { DEFAULT_RULES, DEFAULT_INSURANCE, DEFAULT_TABLE_PREFS } from './config/config-manager.js';
+import { createFaceState } from './ui/reveal-flow-manager.js';
 
 // ---------------------------------------------------------------------------
 // State shape reference (do not mutate directly — use mutation functions below)
@@ -35,6 +36,7 @@ import { DEFAULT_RULES, DEFAULT_INSURANCE, DEFAULT_TABLE_PREFS } from './config/
 //   chipsPaidBySeat:  object      ({ [seatId]: number }) — Phase9
 //   chipsCollectedBySeat: object  ({ [seatId]: number }) — Phase9
 //   revealQueue:    object[]      — Phase8: ordered flip/squeeze actions
+//   faceState:      object        — Phase8: { p1,p2,p3,b1,b2,b3 }
 //   npcRequestQueue: object[]     — Phase10: NPC requests for current round
 //   wrongPayoutDrill: object | null — from wrong-payout.js
 // }
@@ -72,6 +74,7 @@ export function createState(overrides = {}) {
     chipsPaidBySeat:      {},
     chipsCollectedBySeat: {},
     revealQueue:     [],
+    faceState:       createFaceState(),
     npcRequestQueue: [],
     wrongPayoutDrill: null
   };
@@ -224,6 +227,10 @@ export function dequeueRevealItem(state) {
   return Object.assign({}, state, { revealQueue: rest });
 }
 
+export function setFaceState(state, faceState) {
+  return Object.assign({}, state, { faceState });
+}
+
 // Phase9: chip payment tracking
 export function addChipPaid(state, seatId, amount) {
   const current = state.chipsPaidBySeat[seatId] || 0;
@@ -300,6 +307,7 @@ export function resetSession(state, shoe, seats) {
     chipsPaidBySeat: {},
     chipsCollectedBySeat: {},
     revealQueue:     [],
+    faceState:       createFaceState(),
     npcRequestQueue: [],
     wrongPayoutDrill: null
   });
@@ -317,6 +325,7 @@ export function resetRound(state) {
     settlement:      null,
     insuranceDrafts: {},
     revealQueue:     [],
+    faceState:       createFaceState(),
     npcRequestQueue: [],
     wrongPayoutDrill: null,
     chipsPaidBySeat:      {},

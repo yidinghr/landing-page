@@ -10,6 +10,8 @@ import { PHASES } from './phase-machine.js';
 import { renderBalance, renderBetZones, renderChipTray, renderDetail, renderHands, renderLog, renderPayoutSummary, renderResult, renderSeats, renderShoe, renderStats } from './ui/table-renderer.js';
 import { renderSettlementBoard } from './ui/settlement-renderer.js';
 import { renderAllRoads } from './ui/result-boards-renderer.js';
+import { renderFeedback } from './ui/card-counter-renderer.js';
+import { initCardDrag, initChipDrag } from './ui/drag-engine.js';
 import { createSettingsPanel } from './ui/settings-panel.js';
 
 const CHIPS = [[1000000, '1M', 'tr-chip--1m'], [500000, '500K', 'tr-chip--500k'], [100000, '100K', 'tr-chip--100k'], [50000, '50K', 'tr-chip--50k'], [10000, '10K', 'tr-chip--10k'], [5000, '5K', 'tr-chip--5k'], [1000, '1K', 'tr-chip--1k'], [500, '500', 'tr-chip--500'], [100, '100', 'tr-chip--100'], [25, '25', 'tr-chip--25'], [5, '5', 'tr-chip--5']].map(([value, label, cls]) => ({ value, label, cls }));
@@ -73,12 +75,18 @@ function showBurnNotice(state = getState()) {
 }
 
 function showFeedback(msg, severity) {
-  if (msg === 'chip-required' && el.chipTray) {
+  const payload = typeof msg === 'object' && msg !== null
+    ? msg
+    : { message: msg, severity };
+
+  if (payload.code === 'chip-required' && el.chipTray) {
     el.chipTray.classList.add('chip-tray-nudge');
     setTimeout(function () { el.chipTray.classList.remove('chip-tray-nudge'); }, 600);
-    return;
   }
-  if (severity === 'error') window.alert(msg);
+
+  if (payload.message) {
+    renderFeedback(el.feedbackPanel, payload.message, payload.severity, 5000);
+  }
 }
 
 function renderRole(state) {
@@ -188,7 +196,12 @@ function renderAll() {
   const seat = activeSeat(state);
   if (el.overlayPanel) el.overlayPanel.style.display = (state.phase === PHASES.SETTLEMENT || state.phase === PHASES.INSURANCE) ? 'flex' : 'none';
   renderShoe(el, state.shoe);
-  renderHands(el, state.pCards, state.bCards, { role: state.role, phase: state.phase, squeezeEnabled: state.tablePrefs.squeezeEnabled });
+  renderHands(el, state.pCards, state.bCards, {
+    role: state.role,
+    phase: state.phase,
+    squeezeEnabled: state.tablePrefs.squeezeEnabled,
+    faceState: state.faceState
+  });
   renderResult(el.resultBox, state.result);
   renderDetail(el.roundDetail, { result: state.result, pCards: state.pCards, bCards: state.bCards, roundNum: state.roundNum, payouts: state.payouts });
   renderLog(el.sessionLog, state.log);
@@ -202,7 +215,9 @@ function renderAll() {
   renderSettlementBoard(el.settlementBoard, state.settlement, {
     canUseDealerActions: state.role === 'dealer' && state.phase === PHASES.SETTLEMENT,
     collectedCommissions: state.settlementProcedure.collectedCommissions,
-    acknowledgedChange: state.settlementProcedure.acknowledgedChange
+    acknowledgedChange: state.settlementProcedure.acknowledgedChange,
+    chipsPaidBySeat: state.chipsPaidBySeat,
+    chipsCollectedBySeat: state.chipsCollectedBySeat
   });
   renderInsurancePanel(state);
   renderRole(state);
@@ -232,11 +247,48 @@ function attachEvents() {
   if (el.btnInsConfirm) el.btnInsConfirm.addEventListener('click', () => orchestrator.insurance(getState().activeSeatId, 'confirm'));
   if (el.btnInsuranceNpcRound) el.btnInsuranceNpcRound.addEventListener('click', () => getState().phase === PHASES.SETTLEMENT ? orchestrator.nextRound() : orchestrator.autoDeal());
   if (el.insurancePanel) el.insurancePanel.addEventListener('click', onInsuranceActionClick);
+  if (el.playerArea) el.playerArea.addEventListener('click', onCardActionClick);
+  if (el.bankerArea) el.bankerArea.addEventListener('click', onCardActionClick);
   const roleSelector = document.querySelector('.tr-role-selector');
   if (roleSelector) roleSelector.addEventListener('click', (e) => {
     const btn = e.target.closest('.tr-role-btn');
     if (btn) orchestrator.switchRole(btn.getAttribute('data-role'));
   });
+}
+
+function initInteractions() {
+  if (el.cardSource && el.playerArea && el.bankerArea) {
+    initCardDrag({
+      sourceEl: el.cardSource,
+      dropZoneEls: [
+        { el: el.playerArea, zoneKey: 'player' },
+        { el: el.bankerArea, zoneKey: 'banker' }
+      ],
+      getPhase: () => getState().phase,
+      onCardDrop: (zoneKey) => orchestrator.cardDrop(zoneKey)
+    });
+  }
+
+  if (el.chipTray && el.settlementBoard) {
+    initChipDrag({
+      trayEl: el.chipTray,
+      seatZoneEls: () => Array.from(el.settlementBoard.querySelectorAll('[data-chip-zone]')).map(function (zoneEl) {
+        return {
+          el: zoneEl,
+          zoneKey: zoneEl.getAttribute('data-chip-zone')
+        };
+      }),
+      getPhase: () => getState().phase,
+      getSelectedChip: () => getState().selectedChip,
+      collectSourceRoot: el.settlementBoard,
+      onInvalidStart: () => showFeedback({
+        message: 'Vui lòng chọn chip trước khi thu chip về tray.',
+        severity: 'warning',
+        code: 'chip-required'
+      }),
+      onChipDrop: (zoneKey, denomination) => orchestrator.chipDrop(zoneKey, denomination)
+    });
+  }
 }
 
 function onInsuranceActionClick(e) {
@@ -258,6 +310,12 @@ function onSettlementActionClick(e) {
   if (action === 'collect-commission') orchestrator.collectCommission(seatId);
   else if (action === 'ack-change') orchestrator.acknowledgeChange(seatId);
   else if (action === 'correct-payout') orchestrator.correctWrongPayout(seatId);
+}
+
+function onCardActionClick(e) {
+  const cardEl = e.target.closest('[data-card-key]');
+  if (!cardEl) return;
+  orchestrator.flipCard(cardEl.getAttribute('data-card-key'));
 }
 
 export function init() {
@@ -286,4 +344,5 @@ export function init() {
   });
   orchestrator.newShoe({ confirm: false, promptForCut: false, notify: false });
   attachEvents();
+  initInteractions();
 }

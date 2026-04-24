@@ -1,9 +1,6 @@
 // drag-engine.js — manages all drag-and-drop interactions for cards and chips
 // Owns: mousedown/mousemove/mouseup events, ghost element, drop zone detection
 // Does NOT own: game state, baccarat rules, DOM outside drag context
-// TODO[Phase6]: implement initCardDrag
-// TODO[Phase9]: implement initChipDrag
-
 import { DEALING_PHASES } from '../phase-machine.js';
 
 // ---------------------------------------------------------------------------
@@ -96,6 +93,13 @@ function clearHighlights() {
   _drag.hoveredZone = null;
 }
 
+function resolveDropZones(dropZoneEls) {
+  const zones = typeof dropZoneEls === 'function' ? dropZoneEls() : dropZoneEls;
+  return Array.isArray(zones) ? zones.filter(function (item) {
+    return item && item.el && item.zoneKey;
+  }) : [];
+}
+
 // ---------------------------------------------------------------------------
 // Mouse event handlers
 // ---------------------------------------------------------------------------
@@ -126,13 +130,14 @@ function onMouseUp(e) {
 
 function startDrag(type, chipValue, originEl, dropZoneEls, onDrop, onCancel, startX, startY) {
   // TODO[Phase6]: initialize drag state, create ghost, attach global events
+  const zones = resolveDropZones(dropZoneEls);
   _drag.active      = true;
   _drag.type        = type;
   _drag.chipValue   = chipValue;
   _drag.originEl    = originEl;
   _drag.onDrop      = onDrop;
   _drag.onCancel    = onCancel;
-  _drag.dropZones   = dropZoneEls.map(function (item) {
+  _drag.dropZones   = zones.map(function (item) {
     return { el: item.el, zoneKey: item.zoneKey, rect: null };
   });
 
@@ -200,29 +205,24 @@ export function initCardDrag(options) {
  *
  * @param {object} options
  * @param {HTMLElement}   options.trayEl         - #tr-chip-tray container
- * @param {HTMLElement[]} options.seatZoneEls    - [{ el, zoneKey }] — 5 seat zones + tray return
+ * @param {HTMLElement[]} options.seatZoneEls    - [{ el, zoneKey }] — winning seat drop zones
  * @param {Function}      options.getPhase       - () => currentPhase string
  * @param {Function}      options.getSelectedChip - () => number | null
+ * @param {HTMLElement}   options.collectSourceRoot - settlement board root for losing-seat collection drags
+ * @param {Function}      options.onInvalidStart - () => void when collect drag cannot start
  * @param {Function}      options.onChipDrop     - (zoneKey, denomination) => void
  */
 export function initChipDrag(options) {
-  // TODO[Phase9]: implement
-  // Attach mousedown to each chip button inside trayEl
-  // Only active when phase === 'settlement'
-  // zoneKey for seat zones: 'seat-1' through 'seat-5'
-  // zoneKey for returning chips to tray: 'tray'
-  // On drop to seat zone: direction = 'pay'
-  // On drop to tray from seat: direction = 'collect' (requires origin tracking)
-  const { trayEl, seatZoneEls, getPhase, onChipDrop } = options;
+  const { trayEl, seatZoneEls, getPhase, getSelectedChip, collectSourceRoot, onInvalidStart, onChipDrop } = options;
 
   trayEl.addEventListener('mousedown', function (e) {
     if (e.button !== 0) return;
     if (getPhase() !== 'settlement') return;
 
-    const chipBtn = e.target.closest('[data-chip-value]');
+    const chipBtn = e.target.closest('[data-chip-value], [data-chip]');
     if (!chipBtn) return;
 
-    const denomination = parseInt(chipBtn.getAttribute('data-chip-value'), 10);
+    const denomination = parseInt(chipBtn.getAttribute('data-chip-value') || chipBtn.getAttribute('data-chip'), 10);
     if (!denomination) return;
 
     e.preventDefault();
@@ -232,7 +232,42 @@ export function initChipDrag(options) {
       denomination,
       chipBtn,
       seatZoneEls,
-      function (zoneKey) { onChipDrop(zoneKey, denomination); },
+      function (zoneKey) { onChipDrop('pay:' + zoneKey, denomination); },
+      function () { /* cancelled — no action */ },
+      e.clientX,
+      e.clientY
+    );
+  });
+
+  if (!collectSourceRoot) return;
+
+  collectSourceRoot.addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return;
+    if (getPhase() !== 'settlement') return;
+
+    const sourceEl = e.target.closest('[data-chip-source]');
+    if (!sourceEl || !collectSourceRoot.contains(sourceEl)) return;
+
+    const seatZoneKey = sourceEl.getAttribute('data-chip-source');
+    if (!seatZoneKey) return;
+
+    const denomination = Number(getSelectedChip && getSelectedChip());
+    if (!denomination) {
+      e.preventDefault();
+      if (typeof onInvalidStart === 'function') onInvalidStart();
+      return;
+    }
+
+    e.preventDefault();
+
+    startDrag(
+      'chip',
+      denomination,
+      sourceEl,
+      [{ el: trayEl, zoneKey: 'tray' }],
+      function (zoneKey) {
+        if (zoneKey === 'tray') onChipDrop('collect:' + seatZoneKey, denomination);
+      },
       function () { /* cancelled — no action */ },
       e.clientX,
       e.clientY

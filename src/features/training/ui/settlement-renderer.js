@@ -40,11 +40,37 @@ function actionButton(label, action, seatId, disabled) {
   ].join('');
 }
 
+function chipDirection(row) {
+  if (Number(row.creditAmount || 0) > 0) return 'pay';
+  if (row.outcome === 'LOSE' && Number(row.totalBet || 0) > 0) return 'collect';
+  return null;
+}
+
+function chipProgress(row, options) {
+  const direction = chipDirection(row);
+  if (!direction) return '';
+
+  if (direction === 'pay') {
+    const paid = Number(options.chipsPaidBySeat && options.chipsPaidBySeat[row.seatId] || 0);
+    const expected = Number(row.creditAmount || 0);
+    const cls = paid >= expected ? ' tr-procedure-pill--ok' : '';
+    return '<span class="tr-procedure-pill' + cls + '">Pay ' + fmtBalance(paid) + ' / ' + fmtBalance(expected) + '</span>';
+  }
+
+  const collected = Number(options.chipsCollectedBySeat && options.chipsCollectedBySeat[row.seatId] || 0);
+  const expected = Number(row.totalBet || 0);
+  const cls = collected >= expected ? ' tr-procedure-pill--ok' : '';
+  return '<span class="tr-procedure-pill' + cls + '" data-chip-source="seat-' + row.seatId + '" title="Select a chip, then drag from this pill back to the tray">Collect ' + fmtBalance(collected) + ' / ' + fmtBalance(expected) + '</span>';
+}
+
 function procedureCell(row, options) {
   const canAct = Boolean(options.canUseDealerActions);
   const collected = Boolean(options.collectedCommissions && options.collectedCommissions[row.seatId]);
   const changeAcked = Boolean(options.acknowledgedChange && options.acknowledgedChange[row.seatId]);
   const parts = [];
+  const progress = chipProgress(row, options);
+
+  if (progress) parts.push(progress);
 
   if (row.commission > 0) {
     parts.push(collected
@@ -79,6 +105,10 @@ export function renderSettlementBoard(host, settlement, options = {}) {
     const rowClass = row.net > 0
       ? ' tr-settle-row--win'
       : row.net < 0 ? ' tr-settle-row--lose' : '';
+    const direction = chipDirection(row);
+    const chipAttrs = direction === 'pay'
+      ? ' data-chip-zone="seat-' + row.seatId + '" data-chip-direction="pay" title="Drop chips here to pay this seat"'
+      : '';
     const displayPayout = row.wrongPayout && row.wrongPayout.seeded && !row.wrongPayout.caught
       ? row.wrongPayout.displayedPayout
       : row.payout;
@@ -90,7 +120,7 @@ export function renderSettlementBoard(host, settlement, options = {}) {
       : '';
 
     return [
-      '<div class="tr-settle-row' + rowClass + '">',
+      '<div class="tr-settle-row' + rowClass + '"' + chipAttrs + '>',
       '<span><strong>Seat ' + row.seatId + '</strong></span>',
       '<span>' + betsText(row) + '</span>',
       '<span>' + fmtBalance(row.totalBet) + '</span>',

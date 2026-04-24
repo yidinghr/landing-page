@@ -30,12 +30,48 @@ function detailPayRow(label, val) {
   return '<div class="detail-row"><span>' + label + '</span><span class="' + cls + '">' + fmtAmt(val) + '</span></div>';
 }
 
-function cardHTML(card, extraClass = '') {
+function cardLabel(cardKey) {
+  const labels = {
+    p1: 'Player lá 1',
+    p2: 'Player lá 2',
+    p3: 'Player lá 3',
+    b1: 'Banker lá 1',
+    b2: 'Banker lá 2',
+    b3: 'Banker lá 3'
+  };
+  return labels[cardKey] || cardKey || 'card';
+}
+
+function cardKeyForSide(side, index) {
+  return side + (index + 1);
+}
+
+function cardHTML(card, options = {}) {
+  const extraClass = options.extraClass || '';
+  const cardKey = options.cardKey || '';
+  const revealed = options.revealed !== false;
+  const attrs = [
+    cardKey ? ' data-card-key="' + cardKey + '"' : '',
+    cardKey ? ' title="' + cardLabel(cardKey) + '"' : ''
+  ].join('');
+
+  if (!revealed) {
+    return [
+      '<div class="bac-card bac-card--face-down' + extraClass + '"' + attrs + '>',
+      '<div class="bac-card__face">',
+      '<span class="bac-card__rank">?</span>',
+      '<span class="bac-card__suit">[]</span>',
+      '</div>',
+      '<div class="bac-card__val">?</div>',
+      '</div>'
+    ].join('');
+  }
+
   const sym = SUIT_SYMBOL[card.suit];
   const val = cardValue(card.rank);
   const red = card.suit === 'H' || card.suit === 'D';
   return [
-    '<div class="bac-card' + (red ? ' bac-card--red' : '') + extraClass + '">',
+    '<div class="bac-card' + (red ? ' bac-card--red' : '') + extraClass + '"' + attrs + '>',
     '<div class="bac-card__face">',
     '<span class="bac-card__rank">' + card.rank + '</span>',
     '<span class="bac-card__suit">' + sym + '</span>',
@@ -280,13 +316,24 @@ export function renderShoe(elements, shoe) {
 export function renderHands(elements, pCards, bCards, options = {}) {
   const useSqueeze = options.squeezeEnabled && options.role === 'dealer';
   const phase = options.phase || 'idle';
-  function renderCard(card, index) {
+  const faceState = options.faceState || {};
+
+  function renderCard(side, card, index) {
+    const cardKey = cardKeyForSide(side, index);
     const squeezeClass = useSqueeze && shouldSqueezeCard(index, phase) ? ' bac-card--squeeze' : '';
-    return cardHTML(card, squeezeClass);
+    return cardHTML(card, {
+      extraClass: squeezeClass,
+      cardKey,
+      revealed: Boolean(faceState[cardKey])
+    });
   }
 
-  if (elements.pCards) elements.pCards.innerHTML = pCards.map(renderCard).join('');
-  if (elements.bCards) elements.bCards.innerHTML = bCards.map(renderCard).join('');
+  if (elements.pCards) elements.pCards.innerHTML = pCards.map(function (card, index) {
+    return renderCard('p', card, index);
+  }).join('');
+  if (elements.bCards) elements.bCards.innerHTML = bCards.map(function (card, index) {
+    return renderCard('b', card, index);
+  }).join('');
 
   function applyScore(cards, scoreEl) {
     if (!scoreEl) return;
