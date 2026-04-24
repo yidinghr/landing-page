@@ -124,7 +124,7 @@ export function createOrchestrator({
   }
 
   function enterRevealState(state, customerRequests = []) {
-    const nextPhase = state.phase === PHASES.REVEAL ? state : transitionFrom(state, PHASES.REVEAL);
+    const nextPhase = state.phase === PHASES.REVEAL ? state : setPhase(state, PHASES.REVEAL);
     const cardKeys = existingCardKeys(nextPhase);
     let next = setFaceState(nextPhase, createFaceState());
     next = setRevealQueue(next, buildRevealQueue(next.npcRequestQueue, customerRequests, cardKeys));
@@ -418,6 +418,7 @@ export function createOrchestrator({
     }
     next = setPCards(next, [dealt[0], dealt[2]]);
     next = setBCards(next, [dealt[1], dealt[3]]);
+    next = setPhase(next, PHASES.DEAL_4);
     return { state: next, ok: true };
   }
 
@@ -491,6 +492,9 @@ export function createOrchestrator({
         if (!bDraw.ok) return next;
         next = bDraw.state;
       }
+    }
+    if (state.role === 'customer') {
+      return transitionFrom(next, PHASES.REVEAL);
     }
     return resolveRevealState(transitionFrom(next, PHASES.REVEAL));
   }
@@ -802,7 +806,7 @@ export function createOrchestrator({
     let state = getState();
     if (state.phase !== PHASES.SETTLEMENT && state.phase !== PHASES.ROUND_END) return;
 
-    if (state.phase === PHASES.SETTLEMENT && state.settlement) {
+    if (state.phase === PHASES.SETTLEMENT && state.settlement && state.role === 'dealer') {
       const completion = settlementCompletion(state);
       if (!completion.complete) {
         emitFeedback(
