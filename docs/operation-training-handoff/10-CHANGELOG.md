@@ -5,6 +5,40 @@ Newest entries on top. Every handoff must add an entry.
 
 ---
 
+## 2026-04-24 — AI: Claude Sonnet 4.6 (User-perspective UX testing + bug fixes)
+
+### What was done
+- Wrote 35 Playwright end-to-end UX tests covering all 3 roles (dealer, customer, insurance) in `tests/training-ux.spec.js`.
+- **4 real bugs found and fixed** during testing:
+
+#### Bug 1 — `#tr-live-prob` and `#tr-card-counter` empty after deal
+- Root cause: `renderLiveProb` and `renderCardCounter` were never imported or called in `renderAll()`.
+- Fix: added 2 imports + 2 calls in `training-controller.js` `renderAll()`.
+
+#### Bug 2 — `#btnNext` enabled before chip settlement is complete
+- Root cause: `renderControls()` did not check whether settlement was actually complete before enabling the button.
+- Fix: imported `isSettlementComplete` from `payout-validator.js`; reads `state.settlement?.seats`; calls `.complete` on the return value (returns `{ complete, pendingSeatIds }`, not a raw boolean).
+
+#### Bug 3 — Insurance role: `#betZones` and `#tr-controls-bar` remain visible
+- Root cause: CSS specificity — `#betZones { display: flex }` (1,0,0) beat `body[data-role="insurance"] .tr-bet-zones { display: none }` (0,2,1).
+- Fix: added explicit `body[data-role="insurance"] #betZones` and `body[data-role="insurance"] #tr-controls-bar` ID selectors to the hide block.
+
+#### Bug 4 — Insurance role: 1-column layout not applied
+- Root cause: CSS cascade — combined selector `.tr-main, body[data-role="insurance"] .tr-main { grid-template-columns: 200px 1fr 200px }` at line 1744 was later than the insurance-only `1fr` rule at line 457 with identical specificity, so the later rule won.
+- Fix: removed `body[data-role="insurance"] .tr-main` from the combined selector, restoring the earlier `1fr` rule.
+
+### Test results
+- `tests/training-ux.spec.js`: **35/36 PASS, 1 skipped** (natural hand scenario — random deck, non-deterministic, intentionally skipped)
+- `tests/training.spec.js`: **4/4 PASS** (no regressions)
+- `npm run build`: **PASS**
+
+### Files touched
+- `src/features/training/training-controller.js`
+- `assets/css/training.css`
+- `tests/training-ux.spec.js` (**new**)
+
+---
+
 ## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 14 casino table redesign)
 
 ### What was done
