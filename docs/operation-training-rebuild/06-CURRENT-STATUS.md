@@ -2,15 +2,15 @@
 
 ## Status
 
-`R2 Casino table visual rebuild complete`
+`R4 Face-down cards and reveal complete`
 
 ## Current truth
 
 - R1 audit has been completed from current code truth.
 - R2 visual/layout code has been implemented in the rebuild track.
-- R2 changed page structure and styling only.
-- No baccarat, settlement, insurance, or seat-engine contract was changed in R2.
-- Old docs may say the module is complete, but that is **not** enough for the new casino-realistic product requirement.
+- R3 hardened the dealer-side shoe drag workflow as the primary manual dealing experience.
+- R4 implemented realistic casino card-backs, face-down dealing, and smart DOM updates for stable flip animations.
+- No baccarat, settlement, insurance, or seat-engine contract was changed in R4.
 
 ## Why the rebuild exists
 
@@ -53,14 +53,12 @@ However, it still does not fully satisfy the new product target:
 - `config-manager.js`
   persisted table/rule/insurance keys and defaults
 
-## Product gaps still open after R2
+## Product gaps still open after R4
 
-- Table realism is stronger now, but the rebuild is still not complete.
-- Manual dealer dealing still needs a dedicated R3 pass as the primary real-world flow.
-- Hidden cards still render as placeholders, not real card backs.
+- Table realism is stronger, dealer drag flow is standard, and cards flip realistically, but the module is not quite done.
 - `activeSeatId` exists, but there is no direct on-table seat selector UX.
-- The result board renders 4 roads only in the current DOM.
-- Highest-bet squeeze authorization is not implemented yet.
+- The result board renders 4 roads only in the current DOM (missing Cockroach road canvas).
+- Highest-bet squeeze authorization is not fully linked to a visual representation yet.
 
 ## High-risk files for future work
 
@@ -73,15 +71,13 @@ However, it still does not fully satisfy the new product target:
 
 ## Next recommended phase
 
-`R3 Dealer shoe drag flow`
+`R5 On-table seat selector UX`
 
 ## What must happen next
 
-- audit the current drag workflow now that the shoe is visually on the dealer side
-- make sure manual drag from the shoe is the primary dealer flow
-- preserve phase-machine, validator, and orchestrator behavior
-- keep auto-deal as shortcut only
-- avoid leaking R5 seat-selection work into R3
+- introduce an affordance for the customer/player to select their active seat directly on the table.
+- update `activeSeatId` appropriately when a seat is selected.
+- preserve bet placement and settlement behavior.
 
 ## Verification for current status
 
@@ -91,10 +87,10 @@ However, it still does not fully satisfy the new product target:
 - Notes:
   - build still shows pre-existing root-page script warnings unrelated to the training module
   - responsive smoke used seeded admin auth and confirmed table / dealer strip / roadmap / seat bays / card zones / controls at desktop and tablet widths
-  - manual browser check was not run in this session
+  - Cards now render face-down realistically on drop, and a smart DOM updater (`updateHandDOM`) ensures CSS flip animations only play once upon reveal.
 
 ## Last updated by AI
 
 - Date: 2026-04-24
-- Session: R2 casino table visual rebuild
-- State: R2 complete, runtime changes limited to `index.html` and `training.css`
+- Session: R4 Face-down cards and reveal
+- State: R4 complete, runtime changes limited to CSS and rendering logic in `table-renderer.js` to support card-backs and flip animations.

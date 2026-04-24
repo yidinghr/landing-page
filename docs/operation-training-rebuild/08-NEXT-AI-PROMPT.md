@@ -11,11 +11,11 @@ Local path:
 
 ## Your mission
 
-Do **Phase R3 - Dealer shoe drag flow**.
+Do **Phase R5 - Customer seat selection**.
 
-R2 visual rebuild is already done.
+R4 Face-down cards and reveal is already done.
 
-This phase is about making the dealer-side shoe drag workflow the primary manual dealing experience without breaking current baccarat logic.
+This phase is about giving the customer/player an intuitive, on-table affordance to select which seat (1-5) they are actively controlling and placing bets for.
 
 ## Read first
 
@@ -60,8 +60,8 @@ Read-only protected reference for this phase:
 
 ## Facts you must respect
 
-- R2 already moved the visible shoe source onto the dealer side of the table and preserved `#tr-card-source`.
-- Current code already has manual card drag and wrong-order validation.
+- R4 implemented realistic casino card-backs and a smart DOM updater for flip animations.
+- The state currently tracks `activeSeatId` (`1-5`), and logic exists to handle bets for this seat.
 - Current code already has customer request panel and NPC speech bubbles.
 - Current code already has bead / big / big eye / small road rendering.
 - Current code has `buildCockroachRoadData()` but no cockroach canvas in the current page DOM.
@@ -76,27 +76,19 @@ Read-only protected reference for this phase:
 - One customer controls one active seat at a time, but may switch seat `1-5`.
 - Insurance is treated as a side workflow in the same table scene.
 
-## What to deliver in Phase R3
+## What to deliver in Phase R5
 
-- Confirm and harden the dealer-side shoe as the main source of manual dealing.
-- Make the real dealing order explicit and enforced:
-  - Player card 1
-  - Banker card 1
-  - Player card 2
-  - Banker card 2
-  - optional Player third card
-  - optional Banker third card
-- Keep wrong target / wrong order blocked with clear feedback.
-- Keep auto-deal available as shortcut for test/demo only.
-- Preserve reveal, settlement, insurance, and customer-request downstream flow.
+- Create a visual selector or affordance on the table (likely near the seat markers in the arc) that allows the player to click and switch seats.
+- Update `activeSeatId` in the state when the seat is switched.
+- Highlight the currently active seat distinctly from inactive seats.
+- Keep the `betZones` logic functional for the new active seat without wiping out bets already placed on other seats.
+- Do not break the dealer workflow.
 
 ## Preferred edit scope
 
-- `src/features/training/ui/drag-engine.js`
-- `src/features/training/training-controller.js`
-- `src/features/training/training-orchestrator.js`
-- `src/features/training/phase-machine.js` only if a verified integration adjustment is needed
-- `src/features/training/engines/dealing-validator.js` only if there is proof the current contract is insufficient
+- `src/features/training/ui/table-renderer.js`
+- `assets/css/training.css`
+- `src/features/training/training-controller.js` (for click event bindings)
 
 ## What not to change in this phase
 
@@ -104,27 +96,22 @@ Read-only protected reference for this phase:
 - no settlement contract changes
 - no insurance contract changes
 - no localStorage key changes
-- no customer squeeze-rights logic changes yet
-- no seat-selection UX implementation yet
 - no major controller refactor
-- no hidden-card visual redesign yet unless a tiny hook fix is unavoidable
 
 ## Verification required
 
 - `npm run build`
-- targeted drag-flow verification for `/home/training/`
+- `npx playwright test tests/training.spec.js tests/training-ux.spec.js`
+- targeted seat-selection verification
 - confirm all of these still work:
-  - wrong-order drag rejection
-  - correct manual deal progression
-  - reveal phase entry after the fourth card
-  - optional third-card flow when required
-  - auto-deal fallback
-  - downstream settlement still appears
+  - switching seats updates the active state visually
+  - bets can be placed on multiple seats independently
+  - settlement correctly processes multi-seat bets
 
 ## Expected outcome
 
-- Dealer dealing should now feel anchored to the dealer-side shoe, not to a generic button-first flow.
-- Existing engine contracts should stay stable enough for R4 to add real face-down card visuals without reworking deal order again.
+- The player can effortlessly switch between 5 seats directly on the casino table interface.
+- Existing bet tracking accurately retains independent data for all seats.
 
 ## After finishing
 

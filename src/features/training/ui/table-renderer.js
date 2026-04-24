@@ -58,11 +58,7 @@ function cardHTML(card, options = {}) {
   if (!revealed) {
     return [
       '<div class="bac-card bac-card--face-down' + extraClass + '"' + attrs + '>',
-      '<div class="bac-card__face">',
-      '<span class="bac-card__rank">?</span>',
-      '<span class="bac-card__suit">[]</span>',
-      '</div>',
-      '<div class="bac-card__val">?</div>',
+      '<div class="bac-card__face-down-pattern"></div>',
       '</div>'
     ].join('');
   }
@@ -318,22 +314,49 @@ export function renderHands(elements, pCards, bCards, options = {}) {
   const phase = options.phase || 'idle';
   const faceState = options.faceState || {};
 
-  function renderCard(side, card, index) {
+  function renderCard(side, card, index, extraClass) {
     const cardKey = cardKeyForSide(side, index);
     const squeezeClass = useSqueeze && shouldSqueezeCard(index, phase) ? ' bac-card--squeeze' : '';
     return cardHTML(card, {
-      extraClass: squeezeClass,
+      extraClass: squeezeClass + (extraClass || ''),
       cardKey,
       revealed: Boolean(faceState[cardKey])
     });
   }
 
-  if (elements.pCards) elements.pCards.innerHTML = pCards.map(function (card, index) {
-    return renderCard('p', card, index);
-  }).join('');
-  if (elements.bCards) elements.bCards.innerHTML = bCards.map(function (card, index) {
-    return renderCard('b', card, index);
-  }).join('');
+  function updateHandDOM(container, cards, side) {
+    if (!container) return;
+    // Remove extra cards (e.g. when round resets)
+    while (container.children.length > cards.length) {
+      container.removeChild(container.lastChild);
+    }
+    // Update or add cards
+    cards.forEach(function (card, index) {
+      const isRevealed = Boolean(faceState[cardKeyForSide(side, index)]);
+      // Add a specific class if revealed to trigger flip animation
+      const extra = isRevealed && !useSqueeze ? ' bac-card--revealed' : '';
+      const html = renderCard(side, card, index, extra);
+      const cardEl = container.children[index];
+      
+      if (!cardEl) {
+        // New card
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        container.appendChild(temp.firstChild);
+      } else {
+        // Existing card — only replace if the HTML structure actually changed
+        // This prevents re-triggering animations on cards that haven't changed state.
+        if (cardEl.outerHTML !== html) {
+          const temp = document.createElement('div');
+          temp.innerHTML = html;
+          container.replaceChild(temp.firstChild, cardEl);
+        }
+      }
+    });
+  }
+
+  updateHandDOM(elements.pCards, pCards, 'p');
+  updateHandDOM(elements.bCards, bCards, 'b');
 
   function applyScore(cards, scoreEl) {
     if (!scoreEl) return;

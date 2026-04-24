@@ -4,6 +4,36 @@
 import { DEALING_PHASES } from '../phase-machine.js';
 
 // ---------------------------------------------------------------------------
+// R3.2 — Expected zone helper
+// Maps the current dealing phase to the correct drop-target zone key.
+// Used to pre-highlight the expected drop zone before the drag gesture starts.
+// Does NOT duplicate validateCardDrop logic — it only informs UX, validation
+// still runs through the orchestrator.
+// ---------------------------------------------------------------------------
+
+function expectedZoneForPhase(phase) {
+  switch (phase) {
+    case 'deal-1':   return 'player';
+    case 'deal-2':   return 'banker';
+    case 'deal-3':   return 'player';
+    case 'deal-4':   return 'banker';
+    case 'draw-p3':  return 'player';
+    case 'draw-b3':  return 'banker';
+    default:         return null;
+  }
+}
+
+// R3.3 — Deal-order hint labels shown in the CSS ::before badge on the shoe
+const DEAL_HINT_LABELS = {
+  'deal-1':  '→ Player',
+  'deal-2':  '→ Banker',
+  'deal-3':  '→ Player',
+  'deal-4':  '→ Banker',
+  'draw-p3': '→ Player (P3)',
+  'draw-b3': '→ Banker (B3)'
+};
+
+// ---------------------------------------------------------------------------
 // Internal drag state (module-level, reset on each drag start)
 // ---------------------------------------------------------------------------
 
@@ -89,8 +119,16 @@ function highlightZone(zoneKey) {
 function clearHighlights() {
   _drag.dropZones.forEach(function (zone) {
     zone.el.classList.remove('tr-drop-zone--hovered');
+    zone.el.classList.remove('tr-drop-zone--expected');  // R3.2
   });
   _drag.hoveredZone = null;
+}
+
+// R3.2 — Apply expected-zone pre-highlight before cursor moves
+function applyExpectedZoneHighlight(expectedKey) {
+  _drag.dropZones.forEach(function (zone) {
+    zone.el.classList.toggle('tr-drop-zone--expected', zone.zoneKey === expectedKey);
+  });
 }
 
 function resolveDropZones(dropZoneEls) {
@@ -174,6 +212,10 @@ export function initCardDrag(options) {
     e.preventDefault();
     sourceEl.style.cursor = 'grabbing';
 
+    // R3.3 — update the deal-order hint badge on the shoe element
+    const hint = DEAL_HINT_LABELS[phase] || '';
+    sourceEl.setAttribute('data-deal-hint', hint);
+
     startDrag(
       'card',
       null,
@@ -181,19 +223,41 @@ export function initCardDrag(options) {
       dropZoneEls,
       function (zoneKey) {
         sourceEl.style.cursor = 'grab';
+        clearHighlights();  // removes both --hovered and --expected
         onCardDrop(zoneKey);
       },
       function () {
         sourceEl.style.cursor = 'grab';
-        // No action on cancel — card stays in source
+        clearHighlights();  // removes both --hovered and --expected on cancel
       },
       e.clientX,
       e.clientY
     );
+
+    // R3.2 — pre-highlight the expected drop zone immediately after drag starts
+    const expectedKey = expectedZoneForPhase(phase);
+    if (expectedKey) applyExpectedZoneHighlight(expectedKey);
   });
 
   sourceEl.style.cursor = 'grab';
   sourceEl.title = 'Kéo thả lá bài vào vùng Banker hoặc Player';
+}
+
+// ---------------------------------------------------------------------------
+// R3.4 — Shake the shoe on wrong card drop
+// Called by training-controller after orchestrator rejects a drop.
+// Adds/removes a CSS class; animation is defined in training.css.
+// ---------------------------------------------------------------------------
+
+export function triggerShoeShake(sourceEl) {
+  if (!sourceEl) return;
+  sourceEl.classList.remove('tr-card-source--shake');
+  // Force reflow so re-adding the class restarts the animation
+  void sourceEl.offsetWidth;
+  sourceEl.classList.add('tr-card-source--shake');
+  setTimeout(function () {
+    sourceEl.classList.remove('tr-card-source--shake');
+  }, 500);
 }
 
 // ---------------------------------------------------------------------------

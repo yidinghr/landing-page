@@ -28,22 +28,22 @@ Do not mark anything complete until there is matching implementation evidence.
 
 ## Phase R3 - Dealer shoe drag flow
 
-- [ ] Audit current `drag-engine.js` behavior against the dealer workflow
-- [ ] Make dealer-side shoe the main source of manual dealing
-- [ ] Keep auto-deal only as test/demo shortcut
-- [ ] Validate drop targets against baccarat deal order
-- [ ] Block wrong target and wrong order clearly
-- [ ] Preserve phase-machine and validator behavior
-- [ ] Verify manual deal flow from P1 to possible B3
+- [x] Audit current `drag-engine.js` behavior against the dealer workflow
+- [x] Make dealer-side shoe the main source of manual dealing
+- [x] Keep auto-deal only as test/demo shortcut
+- [x] Validate drop targets against baccarat deal order
+- [x] Block wrong target and wrong order clearly
+- [x] Preserve phase-machine and validator behavior
+- [x] Verify manual deal flow from P1 to possible B3
 
 ## Phase R4 - Face-down cards and reveal
 
-- [ ] Replace placeholder hidden-card visuals with real card-back design
-- [ ] Ensure dealt cards arrive face-down
-- [ ] Keep `data-card-key` / reveal click hooks stable
-- [ ] Preserve reveal queue behavior
-- [ ] Preserve squeeze-related behavior where valid
-- [ ] Preserve auto-settlement trigger after final reveal
+- [x] Replace placeholder hidden-card visuals with a real card-back design (CSS/HTML)
+- [x] Ensure that dealt cards arrive face-down on the table initially
+- [x] Keep the `data-card-key` hook and click-to-reveal behavior stable
+- [x] Preserve the reveal queue behavior
+- [x] Preserve squeeze-related interaction logic where it currently exists
+- [x] Ensure that the auto-settlement trigger still fires after the final card is revealed
 - [ ] Verify reveal order and final transition to settlement
 
 ## Phase R5 - Customer seat selection

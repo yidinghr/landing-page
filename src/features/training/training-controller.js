@@ -13,7 +13,7 @@ import { renderAllRoads } from './ui/result-boards-renderer.js';
 import { renderCardCounter, renderFeedback, renderLiveProb } from './ui/card-counter-renderer.js';
 import { probFromShoe } from './engines/prob-engine.js';
 import { isSettlementComplete } from './engines/payout-validator.js';
-import { initCardDrag, initChipDrag } from './ui/drag-engine.js';
+import { initCardDrag, initChipDrag, triggerShoeShake } from './ui/drag-engine.js';
 import { createSettingsPanel } from './ui/settings-panel.js';
 import { renderNpcSpeechBubbles } from './ui/npc-speech-renderer.js';
 import { createCustomerRequestPanel } from './ui/customer-request-panel.js';
@@ -117,6 +117,15 @@ function renderControls(state) {
   if (el.btnDeal) {
     el.btnDeal.textContent = rem < 6 && idle ? 'Shoe Empty' : (DEAL_LABELS[state.phase] || 'DEAL');
     el.btnDeal.disabled = !isDealer || !dealAllowed || (idle && rem < 6);
+  }
+  // R3.3 — keep data-deal-hint attribute in sync so CSS badge is always correct
+  if (el.cardSource) {
+    const DEAL_HINTS = {
+      'deal-1': '\u2192 Player', 'deal-2': '\u2192 Banker',
+      'deal-3': '\u2192 Player', 'deal-4': '\u2192 Banker',
+      'draw-p3': '\u2192 Player (P3)', 'draw-b3': '\u2192 Banker (B3)'
+    };
+    el.cardSource.setAttribute('data-deal-hint', DEAL_HINTS[state.phase] || '');
   }
   if (el.btnCloseBets) el.btnCloseBets.disabled = !isDealer || !idle;
   if (el.btnAutoDeal) {
@@ -279,7 +288,23 @@ function initInteractions() {
         { el: el.bankerArea, zoneKey: 'banker' }
       ],
       getPhase: () => getState().phase,
-      onCardDrop: (zoneKey) => orchestrator.cardDrop(zoneKey)
+      onCardDrop: (zoneKey) => {
+        // R3.4 — capture phase state BEFORE the orchestrator mutates it,
+        // so we can shake the shoe if the drop is rejected.
+        const phaseBefore = getState().phase;
+        const pCardsBefore = getState().pCards.length;
+        const bCardsBefore = getState().bCards.length;
+        orchestrator.cardDrop(zoneKey);
+        // If card count didn't change, the drop was rejected — shake the shoe
+        const phaseAfter = getState().phase;
+        const pCardsAfter = getState().pCards.length;
+        const bCardsAfter = getState().bCards.length;
+        const wasRejected =
+          phaseBefore === phaseAfter &&
+          pCardsBefore === pCardsAfter &&
+          bCardsBefore === bCardsAfter;
+        if (wasRejected) triggerShoeShake(el.cardSource);
+      }
     });
   }
 

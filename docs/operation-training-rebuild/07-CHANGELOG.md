@@ -93,26 +93,68 @@ Use the template below for every future entry.
 
 ---
 
-## YYYY-MM-DD - AI/model/session
+## 2026-04-24 - Gemini 3.1 Pro (High) / R3 Dealer shoe drag flow
 
 ### Files changed
 
-- path
+- `assets/css/training.css`
+- `src/features/training/ui/drag-engine.js`
+- `src/features/training/training-controller.js`
+- `docs/operation-training-rebuild/03-REBUILD-MASTER-CHECKLIST.md`
+- `docs/operation-training-rebuild/06-CURRENT-STATUS.md`
+- `docs/operation-training-rebuild/07-CHANGELOG.md`
+- `docs/operation-training-rebuild/08-NEXT-AI-PROMPT.md`
 
 ### What changed
 
-- short behavior summary
+- Updated the drag-engine and controller to treat the dealer shoe (`#tr-card-source`) as the primary visual and functional affordance for manual dealing.
+- Added UX hardening: the shoe visually pulses during dealing phases (R3.1).
+- Expected drop zones pre-highlight visually before the dealer moves the cursor, mapped directly to the phase machine's deal order (R3.2).
+- Added a `data-deal-hint` attribute and CSS badge indicating the current required deal target above the shoe (R3.3).
+- Implemented a shoe shake animation rejecting out-of-order or wrong-zone drag-and-drops without crashing the pipeline (R3.4).
+- Kept the orchestrator and dealing validators fully protected and unchanged.
 
 ### Verification
 
-- `npm run build` - PASS/FAIL/NOT RUN
-- manual check - PASS/FAIL/NOT RUN
-- other targeted checks
+- `npm run build` - PASS
+- `npx playwright test tests/training.spec.js tests/training-ux.spec.js` - PASS
+- Drag pipeline behavior is validated: wrong zones correctly reject with shake animation and localized feedback, correct sequence gracefully advances the phase machine.
 
 ### Remaining risks
 
-- short risk note
+- Visuals for the cards themselves are still placeholders, which belongs to R4.
+
+---
+
+## 2026-04-24 - Gemini 3.1 Pro (High) / R4 Face-down cards and reveal
+
+### Files changed
+
+- `assets/css/training.css`
+- `src/features/training/ui/table-renderer.js`
+- `docs/operation-training-rebuild/03-REBUILD-MASTER-CHECKLIST.md`
+- `docs/operation-training-rebuild/06-CURRENT-STATUS.md`
+- `docs/operation-training-rebuild/07-CHANGELOG.md`
+- `docs/operation-training-rebuild/08-NEXT-AI-PROMPT.md`
+
+### What changed
+
+- Added `.bac-card--face-down` and `.bac-card__face-down-pattern` CSS for realistic casino card-backs.
+- Added `@keyframes card-flip` and `.bac-card--revealed` for a 3D flip animation when cards are clicked/revealed.
+- Re-wrote `renderHands` in `table-renderer.js` into `updateHandDOM`, which targets specific DOM nodes for replacement instead of destroying and recreating the entire hand wrapper. This strictly ensures that `card-flip` and `card-in` animations only play once per state change.
+- Removed text placeholders `?` and `[]` from unrevealed cards in `cardHTML`.
+
+### Verification
+
+- `npm run build` - PASS
+- `npx playwright test tests/training.spec.js tests/training-ux.spec.js` - PASS
+- Playwright visually verified that cards flip correctly and drag flow logic remains perfectly intact.
+
+### Remaining risks
+
+- Cockroach road UI is still missing from the DOM.
+- No direct visual integration for seat selection on the arc table yet.
 
 ### Next recommended action
 
-- next concrete phase or task
+- Start `R5 On-table seat selector UX` to connect the `activeSeatId` with an intuitive on-table affordance.
