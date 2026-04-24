@@ -10,7 +10,9 @@ import { PHASES } from './phase-machine.js';
 import { renderBalance, renderBetZones, renderChipTray, renderDetail, renderHands, renderLog, renderPayoutSummary, renderResult, renderSeats, renderShoe, renderStats } from './ui/table-renderer.js';
 import { renderSettlementBoard } from './ui/settlement-renderer.js';
 import { renderAllRoads } from './ui/result-boards-renderer.js';
-import { renderFeedback } from './ui/card-counter-renderer.js';
+import { renderCardCounter, renderFeedback, renderLiveProb } from './ui/card-counter-renderer.js';
+import { probFromShoe } from './engines/prob-engine.js';
+import { isSettlementComplete } from './engines/payout-validator.js';
 import { initCardDrag, initChipDrag } from './ui/drag-engine.js';
 import { createSettingsPanel } from './ui/settings-panel.js';
 import { renderNpcSpeechBubbles } from './ui/npc-speech-renderer.js';
@@ -124,7 +126,11 @@ function renderControls(state) {
   if (el.btnReveal) el.btnReveal.disabled = !isDealer || state.phase !== PHASES.REVEAL;
   if (el.btnNext) {
     el.btnNext.textContent = state.phase === PHASES.SETTLEMENT ? 'Confirm Round' : 'Next Round';
-    el.btnNext.disabled = !isDealer || (state.phase !== PHASES.SETTLEMENT && state.phase !== PHASES.ROUND_END);
+    const settlementSeats = state.settlement?.seats;
+    const settlementDone = state.phase !== PHASES.SETTLEMENT ||
+      !settlementSeats || !settlementSeats.length ||
+      isSettlementComplete(settlementSeats, state.chipsPaidBySeat, state.chipsCollectedBySeat).complete;
+    el.btnNext.disabled = !isDealer || (state.phase !== PHASES.SETTLEMENT && state.phase !== PHASES.ROUND_END) || !settlementDone;
   }
   if (el.btnClearBets) el.btnClearBets.disabled = !isCustomer || !idle;
   if (el.btnSubmitBets) {
@@ -221,6 +227,8 @@ function renderAll() {
     chipsPaidBySeat: state.chipsPaidBySeat,
     chipsCollectedBySeat: state.chipsCollectedBySeat
   });
+  renderCardCounter(el.cardCounter, state.shoe);
+  renderLiveProb(el.liveProb, probFromShoe(state.shoe));
   renderInsurancePanel(state);
   renderRole(state);
   renderControls(state);
