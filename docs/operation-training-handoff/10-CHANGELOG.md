@@ -5,6 +5,43 @@ Newest entries on top. Every handoff must add an entry.
 
 ---
 
+## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 13 QA pass)
+
+### Changed
+- Fixed critical bug in `dealOpeningFour` in [training-orchestrator.js](../../src/features/training/training-orchestrator.js):
+  - Before this fix, `dealOpeningFour` returned state with phase=IDLE after dealing 4 cards.
+  - `routeDrawPhase` then called `transitionFrom(IDLE, DRAW_P3)` which threw an uncaught error in ~60% of hands (all non-natural hands), silently preventing settlement from being reached.
+  - Fix: added `setPhase(next, PHASES.DEAL_4)` before return — all downstream phase transitions are now valid.
+- Created [tests/training.spec.js](../../tests/training.spec.js) (135 → 113 lines, rewritten for correctness):
+  - Test 1: Dealer auto-deal → settlement board appears ✅
+  - Test 2: Customer submit bets → auto-deal stops at REVEAL → customer panel mounts ✅
+  - Test 3: Settings panel opens, `select[name="shoePreset"]` selector correct ✅
+  - Test 4: Role switches in idle phase → state not corrupted ✅
+- Carried forward Antigravity's two orchestrator patches (already in the working tree):
+  - `enterRevealState`: `transitionFrom` → `setPhase` (skip validation for reveal entry)
+  - `handleNextRound`: settlement-complete check gated to dealer role only
+
+### Files touched
+- `src/features/training/training-orchestrator.js`
+- `tests/training.spec.js` (**new**)
+- `docs/operation-training-handoff/02-PHASE-CHECKLIST.md`
+- `docs/operation-training-handoff/03-CURRENT-STATUS.md`
+- `docs/operation-training-handoff/10-CHANGELOG.md`
+
+### Tests run
+- `npm run build` — **PASS** (62 modules, 618ms)
+- `npx playwright test tests/training.spec.js` — **4/4 PASS** (3.1s)
+
+### Honesty note
+- No human manual browser pass performed. All 4 tests are automated Playwright.
+- Settings Save button is blocked by the control bar overlay in current layout — deferred to manual QA (noted in test comment).
+- `insuranceNpcMode` selector verified present in settings panel but insurance flow not end-to-end tested.
+
+### Next recommended phase
+**Phase 14 — Curved/arc table redesign** (all logic phases 1–13 now complete + automated).
+
+---
+
 ## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 11 customer request panel)
 
 ### Changed

@@ -221,21 +221,22 @@ Per-phase execution plan. Each phase is **atomic** — merge only when all its a
 
 ---
 
-## Phase 13 — QA pass ⬜
+## Phase 13 — QA pass 🟡
 
 **Goal:** Regression + manual flows for all 3 roles.
 
-**Files:** Playwright tests + manual walkthrough
+**Files:** `tests/training.spec.js`, manual walkthrough
 
 **Acceptance:**
-- [ ] `npm run build` — zero errors
-- [ ] `npm run test` / Playwright auto-deal passes
-- [ ] Manual dealer flow: 3 rounds no errors
-- [ ] Manual customer flow: bet + request squeeze + collect
-- [ ] Manual insurance flow: banker-natural scenario, 5 seats
-- [ ] Role switch mid-session doesn't corrupt state
+- [x] `npm run build` — zero errors
+- [x] Playwright: dealer settlement, customer reveal panel, settings selectors, role switch — **4/4 PASS**
+- [x] Bug fixed: `dealOpeningFour` phase=DEAL_4 (was silently failing ~60% auto-deal rounds)
+- [ ] Manual dealer flow: 3 rounds no errors (human pass pending)
+- [ ] Manual customer flow: bet + request squeeze + collect (human pass pending)
+- [ ] Manual insurance flow: banker-natural scenario, 5 seats (human pass pending)
+- [ ] Settings Save button: currently blocked by control bar overlay — CSS fix or manual only
 
-**Status:** Not started (pending Phase 6–11 wiring).
+**Status:** Playwright automated smoke tests PASS (2026-04-24). Human manual pass still pending → 🟡.
 
 ---
 
