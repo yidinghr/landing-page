@@ -169,21 +169,23 @@ Per-phase execution plan. Each phase is **atomic** — merge only when all its a
 
 ---
 
-## Phase 10 — NPC request engine 🟡
+## Phase 10 — NPC request engine ✅
 
 **Goal:** NPC seats emit contextual squeeze/flip requests after deal-4.
 
-**Files:** `npc/npc-request-engine.js`, orchestrator `handleNpcRequestsGenerated`
+**Files:** `npc/npc-request-engine.js`, orchestrator `handleNpcRequestsGenerated`, new `ui/npc-speech-renderer.js`
 
 **Acceptance:**
 - [x] `generateSeatPersonalities()` — 5 profiles per shoe
 - [x] `generateRoundRequests(seats, phase, round, difficulty, history, personalities)`
 - [x] `isBlockedByAntiRepetition` — dedup rules
 - [x] `DIFFICULTY_PROFILES` for easy / medium / hard / expert
-- [ ] Orchestrator generates + pushes requests into `state.npcRequestQueue` after deal-4 — **stubbed**
-- [ ] Speech-bubble UI renders queue above each seat — **NOT BUILT**
+- [x] Orchestrator seeds personalities on `newShoe` — **wired**
+- [x] Orchestrator generates + pushes requests into `state.npcRequestQueue` after deal-4 — **wired in `maybeOfferInsurance`**
+- [x] `handleNpcRequestsGenerated(requests)` updates state — **wired**
+- [x] Speech-bubble UI renders queue above seat columns in bet matrix — **`npc-speech-renderer.js` wired from `renderAll()`**
 
-**Status:** Engine done. UI + orchestrator integration **pending**.
+**Status:** Wired and deterministic-verified (Node.js, 9/9 PASS) on 2026-04-24.
 
 ---
 
@@ -266,7 +268,7 @@ Per-phase execution plan. Each phase is **atomic** — merge only when all its a
 | 7 | Dealing validator | ✅ | ✅ | — |
 | 8 | Reveal flow | ✅ | ✅ | Human smoke check pending |
 | 9 | Chip drag + payout | ✅ | ✅ | — |
-| 10 | NPC requests | ✅ | ⬜ | Wire generator + speech UI |
+| 10 | NPC requests | ✅ | ✅ | — |
 | 11 | Customer panel | ⬜ | ⬜ | Build panel |
 | 12 | Insurance extensions | ✅ | ✅ | (optional) separate tray |
 | 13 | QA pass | ⬜ | ⬜ | After 6–11 done |

@@ -9,12 +9,12 @@ Snapshot of where the Operation Training module stands **as of 2026-04-24**.
 - **Phases 1–7:** implemented, wired, and runtime-verified.
 - **Phase 8 (reveal flow):** wired and automated-verified; human manual smoke still pending.
 - **Phase 9 (chip drag + payout):** wired and automated-verified on 2026-04-24.
-- **Phase 10:** NPC engine exists, orchestrator stub only, no speech-bubble UI.
+- **Phase 10 (NPC requests + speech bubbles):** wired and deterministic-verified on 2026-04-24.
 - **Phase 11:** not started.
 - **Phase 12:** insurance core done; separate tray visual deferred.
 - **Phase 14:** still rectangular layout; no redesign work started.
 
-**Recommended next engineering phase to work on:** **Phase 10 — NPC request engine wiring**.
+**Recommended next engineering phase to work on:** **Phase 11 — Customer request panel**.
 
 ---
 
@@ -113,11 +113,14 @@ Snapshot of where the Operation Training module stands **as of 2026-04-24**.
 - ✅ `state.chipsPaidBySeat` / `state.chipsCollectedBySeat` updated on each valid drop.
 - ✅ `isSettlementComplete` gates `nextRound` — premature advance shows Vietnamese error.
 
-### Phase 10 — NPC request engine
-- ✅ [npc/npc-request-engine.js](../../src/features/training/npc/npc-request-engine.js) `generateRoundRequests`.
-- ⬜ `orchestrator.handleNpcRequestsGenerated` is still a stub.
-- ⬜ No speech-bubble UI renders above seats when NPC requests exist.
-- ⬜ Seat personalities are not yet seeded on `newShoe`.
+### Phase 10 — NPC request engine ✅
+- ✅ [npc/npc-request-engine.js](../../src/features/training/npc/npc-request-engine.js) — `generateRoundRequests`, `generateSeatPersonalities`, `isBlockedByAntiRepetition` all implemented.
+- ✅ `generateSeatPersonalities()` called in `handleNewShoe` → stored in `state.seatPersonalities`.
+- ✅ `generateRoundRequests()` called in `maybeOfferInsurance` at deal-4 boundary → stored in `state.npcRequestQueue`.
+- ✅ `buildRevealQueue` consumes `npcRequestQueue` to determine card flip order.
+- ✅ `handleNpcRequestsGenerated(requests)` wired — updates `npcRequestQueue` in state.
+- ✅ `renderNpcSpeechBubbles(matrixEl, npcRequestQueue)` — new file `ui/npc-speech-renderer.js`, called from `renderAll()` in controller.
+- ✅ `state.seatPersonalities` and `state.npcRequestQueue` added to `createState()` and `resetSession()`.
 
 ---
 

@@ -5,6 +5,51 @@ Newest entries on top. Every handoff must add an entry.
 
 ---
 
+## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 10 NPC engine wiring)
+
+### Changed
+- Added `seatPersonalities` field to `createState()` defaults and `resetSession()` in [training-state.js](../../src/features/training/training-state.js).
+- Added `setSeatPersonalities` mutator to `training-state.js`.
+- Imported `generateSeatPersonalities` and `generateRoundRequests` from `npc/npc-request-engine.js` into [training-orchestrator.js](../../src/features/training/training-orchestrator.js).
+- Wired `generateSeatPersonalities()` call in `handleNewShoe` — personalities now seeded per shoe.
+- Wired `generateRoundRequests()` call in `maybeOfferInsurance` at the deal-4 boundary — NPC requests generated before `enterRevealState` so `buildRevealQueue` can consume them.
+- Implemented `handleNpcRequestsGenerated(requests)` — replaces void stub with `setNpcRequestQueue` update.
+- Created new file [ui/npc-speech-renderer.js](../../src/features/training/ui/npc-speech-renderer.js):
+  - Self-contained styles injected once into `<head>` (no training.css changes).
+  - `renderNpcSpeechBubbles(matrixEl, npcRequestQueue)` — one bubble per seat anchored to top-most `.tr-matrix-cell[data-seat="N"]`.
+- Wired `renderNpcSpeechBubbles` call in `renderAll()` in [training-controller.js](../../src/features/training/training-controller.js).
+
+### Files touched
+- `src/features/training/training-state.js`
+- `src/features/training/training-orchestrator.js`
+- `src/features/training/training-controller.js`
+- `src/features/training/ui/npc-speech-renderer.js` (**new**)
+- `docs/operation-training-handoff/02-PHASE-CHECKLIST.md`
+- `docs/operation-training-handoff/03-CURRENT-STATUS.md`
+- `docs/operation-training-handoff/05-NEXT-AI-PROMPT.md`
+- `docs/operation-training-handoff/10-CHANGELOG.md`
+
+### Tests run
+- `npm run build` — **PASS** (61 modules transformed, built in 669ms).
+- Deterministic Node.js state tests — **9/9 PASS**:
+  - `generateSeatPersonalities()` returns 5 entries, seat 1 frequency = 0.8.
+  - `createState()` has `seatPersonalities: []` default.
+  - No bets → 0 requests.
+  - Hard difficulty + bets → 82 requests over 50 runs.
+  - Medium difficulty respects `maxRequests <= 2`.
+  - Request shape: `{ seatId, type, label, requestedBy: 'npc' }` correct.
+- Browser runtime: blocked by auth; covered by deterministic tests above.
+
+### Honesty note
+- No browser runtime evidence for speech-bubble rendering (auth blocked headless agent).
+- Build + deterministic logic tests confirm core wiring is correct.
+- Speech-bubble visual verification deferred to human manual smoke test.
+
+### Next recommended phase
+**Phase 11 — Customer request panel.**
+
+---
+
 ## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 9 chip drag verification + handoff docs)
 
 ### Findings

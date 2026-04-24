@@ -38,6 +38,7 @@ import { createFaceState } from './ui/reveal-flow-manager.js';
 //   revealQueue:    object[]      — Phase8: ordered flip/squeeze actions
 //   faceState:      object        — Phase8: { p1,p2,p3,b1,b2,b3 }
 //   npcRequestQueue: object[]     — Phase10: NPC requests for current round
+//   seatPersonalities: object[]   — Phase10: per-shoe personality profiles for 5 seats
 //   wrongPayoutDrill: object | null — from wrong-payout.js
 // }
 
@@ -76,6 +77,7 @@ export function createState(overrides = {}) {
     revealQueue:     [],
     faceState:       createFaceState(),
     npcRequestQueue: [],
+    seatPersonalities: [],
     wrongPayoutDrill: null
   };
 
@@ -265,6 +267,10 @@ export function clearNpcRequestQueue(state) {
   return Object.assign({}, state, { npcRequestQueue: [] });
 }
 
+export function setSeatPersonalities(state, personalities) {
+  return Object.assign({}, state, { seatPersonalities: personalities || [] });
+}
+
 export function applyRules(state, rules) {
   return Object.assign({}, state, { rules });
 }
@@ -309,6 +315,7 @@ export function resetSession(state, shoe, seats) {
     revealQueue:     [],
     faceState:       createFaceState(),
     npcRequestQueue: [],
+    seatPersonalities: [],  // re-seeded by orchestrator after resetSession
     wrongPayoutDrill: null
   });
 }

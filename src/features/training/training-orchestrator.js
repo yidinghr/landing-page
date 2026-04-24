@@ -10,6 +10,7 @@ import {
   resetSettlementProcedure, setActiveSeatId, setAutoAfterInsurance, setBCards,
   setFaceState, setInsuranceDraft, setNpcBetsApplied, setPCards, setPayouts, setPhase, setResult,
   setRevealQueue, setRole, setSeats, setSelectedChip, setSettlement, setShoe, setWrongPayoutDrill,
+  setSeatPersonalities, setNpcRequestQueue,
   updateLatestLogProcedure
 } from './training-state.js';
 
@@ -32,6 +33,7 @@ import {
 import { seedWrongPayout } from './scenarios/wrong-payout.js';
 import { applyShoePreset, SHOE_PRESETS } from './scenarios/shoe-presets.js';
 import { npcAutoBet, npcResolveInsuranceForSeats } from './npc/npc-behavior.js';
+import { generateRoundRequests, generateSeatPersonalities } from './npc/npc-request-engine.js';
 import {
   DEFAULT_INSURANCE, DEFAULT_RULES, DEFAULT_TABLE_PREFS,
   saveInsuranceConfig, saveRules, saveTablePrefs
@@ -297,23 +299,39 @@ export function createOrchestrator({
   }
 
   function maybeOfferInsurance(state) {
-    const bankerTotal = handTotal(state.bCards);
-    const eligibleSeats = getEligibleInsuranceSeats(state.seats, state.insuranceConfig);
+    // Phase10: generate NPC requests at deal-4 boundary, before entering reveal.
+    // Must run before enterRevealState so buildRevealQueue can consume the queue.
+    let next = state;
+    if (state.phase === PHASES.DEAL_4) {
+      const difficulty = (state.tablePrefs && state.tablePrefs.difficulty) || 'medium';
+      const requests = generateRoundRequests(
+        state.seats,
+        state.phase,
+        state.roundNum,
+        difficulty,
+        [], // previousRequests history — not yet tracked per-round in log; Phase10+ can wire
+        state.seatPersonalities
+      );
+      next = setNpcRequestQueue(state, requests);
+    }
+
+    const bankerTotal = handTotal(next.bCards);
+    const eligibleSeats = getEligibleInsuranceSeats(next.seats, next.insuranceConfig);
     const totalEligibleBase = eligibleSeats.reduce(function (sum, seat) {
-      return sum + insuranceBaseBet(seat, state.insuranceConfig);
+      return sum + insuranceBaseBet(seat, next.insuranceConfig);
     }, 0);
 
-    if (!shouldOfferInsurance(bankerTotal, totalEligibleBase, state.insuranceConfig)) {
-      return routeDrawPhase(state);
+    if (!shouldOfferInsurance(bankerTotal, totalEligibleBase, next.insuranceConfig)) {
+      return routeDrawPhase(next);
     }
 
-    let next = clearInsuranceDrafts(state);
-    next = markInsuranceOffers(next, eligibleSeats);
-    next = transitionFrom(next, PHASES.INSURANCE);
-    if (!humanPendingInsuranceSeats(next).length) {
-      return continueAfterInsurance(next);
+    let ins = clearInsuranceDrafts(next);
+    ins = markInsuranceOffers(ins, eligibleSeats);
+    ins = transitionFrom(ins, PHASES.INSURANCE);
+    if (!humanPendingInsuranceSeats(ins).length) {
+      return continueAfterInsurance(ins);
     }
-    return next;
+    return ins;
   }
 
   function routeAfterP3(state) {
@@ -516,6 +534,8 @@ export function createOrchestrator({
     next = setActiveSeatId(next, configured.tablePrefs.activeSeatId);
     next = setRole(next, configured.tablePrefs.role || next.role);
     next = resetSession(next, configured.shoe, createSeats());
+    // Phase10: seed fresh seat personalities for the new shoe
+    next = setSeatPersonalities(next, generateSeatPersonalities());
     update(next);
     if (options.notify !== false && onNewShoe) onNewShoe(next);
   }
@@ -894,7 +914,9 @@ export function createOrchestrator({
   }
 
   function handleNpcRequestsGenerated(requests) {
-    void requests;
+    if (!Array.isArray(requests)) return;
+    const state = getState();
+    update(setNpcRequestQueue(state, requests));
   }
 
   return {
