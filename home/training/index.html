@@ -70,22 +70,27 @@
         <canvas id="tr-road-small"></canvas>
       </div>
 
-      <div id="tr-card-zones" class="tr-felt">
-        <div id="tr-banker-area" class="tr-hand tr-hand--banker">
-          <div class="tr-hand-label">BANKER</div>
-          <div id="bCards" class="tr-cards-row tr-cards-row--banker"></div>
-          <div id="bScore" class="bac-score">—</div>
+      <div id="tr-baccarat-table">
+        <div class="tr-dealer-strip">
+          <span class="tr-dealer-label">◆ DEALER ◆</span>
         </div>
-        <div class="tr-vs">VS</div>
-        <div id="tr-player-area" class="tr-hand tr-hand--player">
-          <div class="tr-hand-label">PLAYER</div>
-          <div id="pCards" class="tr-cards-row tr-cards-row--player"></div>
-          <div id="pScore" class="bac-score">—</div>
-        </div>
-      </div>
 
-      <div id="betZones" class="tr-bet-zones">
-        <div id="tr-bet-matrix">
+        <div id="tr-card-zones" class="tr-felt">
+          <div id="tr-banker-area" class="tr-hand tr-hand--banker">
+            <div class="tr-hand-label">BANKER</div>
+            <div id="bCards" class="tr-cards-row tr-cards-row--banker"></div>
+            <div id="bScore" class="bac-score">—</div>
+          </div>
+          <div class="tr-vs">VS</div>
+          <div id="tr-player-area" class="tr-hand tr-hand--player">
+            <div class="tr-hand-label">PLAYER</div>
+            <div id="pCards" class="tr-cards-row tr-cards-row--player"></div>
+            <div id="pScore" class="bac-score">—</div>
+          </div>
+        </div>
+
+        <div id="betZones" class="tr-bet-zones">
+          <div id="tr-bet-matrix">
           <div class="tr-matrix-cell tr-zone--ppair" data-seat="1" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
           <div class="tr-matrix-cell tr-zone--ppair" data-seat="2" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
           <div class="tr-matrix-cell tr-zone--ppair" data-seat="3" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
@@ -116,6 +121,15 @@
           <div class="tr-matrix-cell tr-zone--lucky6" data-seat="3" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
           <div class="tr-matrix-cell tr-zone--lucky6" data-seat="4" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
           <div class="tr-matrix-cell tr-zone--lucky6" data-seat="5" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
+        </div>
+        </div>
+
+        <div id="tr-seat-arc">
+          <div class="tr-arc-seat">①<span>Seat 1</span></div>
+          <div class="tr-arc-seat">②<span>Seat 2</span></div>
+          <div class="tr-arc-seat">③<span>Seat 3</span></div>
+          <div class="tr-arc-seat">④<span>Seat 4</span></div>
+          <div class="tr-arc-seat">⑤<span>Seat 5</span></div>
         </div>
       </div>
 

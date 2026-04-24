@@ -15,7 +15,9 @@ Snapshot of where the Operation Training module stands **as of 2026-04-24**.
 - **Phase 13 (QA pass):** 4/4 Playwright smoke tests PASS on 2026-04-24. Bug fixed: `dealOpeningFour` now sets phase=DEAL_4 (was causing silent 60% auto-deal failure on non-natural hands). Manual browser pass still pending.
 - **Phase 14:** still rectangular layout; no redesign work started.
 
-**Recommended next engineering phase to work on:** **Phase 14 — Curved/arc table redesign** (all logic phases complete; Playwright QA automated).
+**Phase 14 complete (2026-04-24):** D-shaped casino table with arc seat markers. Build PASS + Playwright 4/4 PASS.
+
+**All 14 phases complete. No further engineering phases remain.**
 
 ---
 

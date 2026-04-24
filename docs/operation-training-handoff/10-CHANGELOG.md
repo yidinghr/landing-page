@@ -5,6 +5,26 @@ Newest entries on top. Every handoff must add an entry.
 
 ---
 
+## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 14 casino table redesign)
+
+### What was done
+- **Phase 14 complete**: Replaced rectangular layout with a D-shaped casino baccarat table arc design.
+- `home/training/index.html`: Wrapped `#tr-card-zones` and `#betZones` in new `#tr-baccarat-table` container; added `.tr-dealer-strip` (◆ DEALER ◆ label at top) and `#tr-seat-arc` (5 seat markers at bottom following arc curve).
+- `assets/css/training.css`: Added `#tr-baccarat-table` styles — D-shaped via `border-radius: 10px 10px 100px 100px / 10px 10px 30px 30px` + `overflow: hidden`; green felt with radial gradients; gold border; deep shadow. Added `.tr-dealer-strip`, `.tr-dealer-label`, `#tr-seat-arc`, `.tr-arc-seat` styles. Arc offset applied via `margin-bottom` graduated from seat 3 (center, lowest) to seats 1 & 5 (outer, highest) matching real table curve shape.
+- No JS changes — pure CSS/HTML layout.
+- `npm run build`: **PASS** (712ms, zero errors).
+- Playwright 4/4: **PASS** — Phase 14 layout has no regressions.
+
+### Acceptance criteria status
+- [x] Curved felt with seats arranged in an arc
+- [x] Betting zones painted per-seat on the felt (existing 5×5 grid preserved, now inside arc table)
+- [x] Dealer position visually distinct at top (◆ DEALER ◆ strip)
+- [x] No JS / state changes — pure layout
+
+### Phase 14 status: ✅ Complete
+
+---
+
 ## 2026-04-24 — AI: Claude Sonnet 4.6 (Phase 13 QA pass)
 
 ### Changed

@@ -240,19 +240,19 @@ Per-phase execution plan. Each phase is **atomic** — merge only when all its a
 
 ---
 
-## Phase 14 — Realistic curved/arc table redesign ⬜
+## Phase 14 — Realistic curved/arc table redesign ✅
 
 **Goal:** Replace rectangular 5-seat row with curved felt matching a real 5-seat baccarat table.
 
 **Files:** `assets/css/training.css`, `home/training/index.html` (layout only — no JS)
 
 **Acceptance:**
-- [ ] Curved felt with seats arranged in an arc
-- [ ] Betting zones painted per-seat on the felt
-- [ ] Dealer position visually distinct at top
-- [ ] No JS / state changes — pure layout
+- [x] Curved felt with seats arranged in an arc
+- [x] Betting zones painted per-seat on the felt
+- [x] Dealer position visually distinct at top
+- [x] No JS / state changes — pure layout
 
-**Status:** Not started. **Do this AFTER Phase 13 QA passes** — don't merge redesign into logic phase.
+**Status:** Complete. D-shaped casino table with `border-radius: 10px 10px 100px 100px / 10px 10px 30px 30px`, dealer strip at top, 5 arc-offset seat markers at bottom. Build PASS + Playwright 4/4 PASS on 2026-04-24.
 
 ---
 
@@ -273,4 +273,4 @@ Per-phase execution plan. Each phase is **atomic** — merge only when all its a
 | 11 | Customer panel | ✅ | ✅ | — |
 | 12 | Insurance extensions | ✅ | ✅ | (optional) separate tray |
 | 13 | QA pass | ⬜ | ⬜ | After 6–11 done |
-| 14 | Curved table redesign | ⬜ | ⬜ | After 13 passes |
+| 14 | Curved table redesign | ✅ | ✅ | — |
