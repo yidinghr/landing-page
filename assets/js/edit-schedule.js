@@ -3,6 +3,7 @@
   const employeesDataApi = window.YiDingEmployeesData || null;
   const STORAGE_KEY = "yiding_schedule_module_v3";
   const LEGEND_REMARKS_KEY = "yiding_schedule_legend_remarks_v1";
+  const LEGEND_CODE_LABELS_KEY = "yiding_schedule_legend_code_labels_v1";
   const EMPLOYEES_KEY = employeesDataApi && employeesDataApi.STORAGE_KEY
     ? employeesDataApi.STORAGE_KEY
     : "yiding_employees_module_state_v3_airtable_import";
@@ -36,7 +37,7 @@
     summary: 58
   });
   const WEEKDAY_LABELS = {
-    "zh-Hant": ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
+    "zh-Hant": ["日", "一", "二", "三", "四", "五", "六"],
     vi: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
     en: ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
   };
@@ -157,11 +158,13 @@
     frozenSyncFrame: 0,
     codeDropdownOpen: false,
     codeDropdownIndex: -1,
+    legendCodesEditable: false,
     lockedScrollY: null,
     stickyMetricsObserver: null
   };
   const state = loadState();
   let legendRemarks = loadLegendRemarks();
+  let legendCodeLabels = loadLegendCodeLabels();
 
   buildShiftCodeDatalist();
   populatePeriodOptions();
@@ -352,6 +355,19 @@
     localStorage.setItem(LEGEND_REMARKS_KEY, JSON.stringify(legendRemarks));
   }
 
+  function loadLegendCodeLabels() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(LEGEND_CODE_LABELS_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveLegendCodeLabels() {
+    localStorage.setItem(LEGEND_CODE_LABELS_KEY, JSON.stringify(legendCodeLabels));
+  }
+
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
@@ -499,6 +515,7 @@
     if (dom.legendTitle) {
       dom.legendTitle.textContent = i18n.t("schedule.legend");
     }
+    renderLegendCodeEditToggle();
     renderCodeDropdown();
   }
 
@@ -561,6 +578,42 @@
     return definition ? String(definition.remark || "") : "";
   }
 
+  function getLegendCodeLabel(code) {
+    if (Object.prototype.hasOwnProperty.call(legendCodeLabels, code)) {
+      return String(legendCodeLabels[code] || code);
+    }
+    return code;
+  }
+
+  function getLegendCodeEditLabel() {
+    if (i18n.getLocale() === "zh-Hant") {
+      return uiState.legendCodesEditable ? "鎖定班碼" : "編輯班碼";
+    }
+    if (i18n.getLocale() === "vi") {
+      return uiState.legendCodesEditable ? "Khóa mã" : "Sửa mã";
+    }
+    return uiState.legendCodesEditable ? "Lock codes" : "Edit codes";
+  }
+
+  function renderLegendCodeEditToggle() {
+    if (!dom.legendPanel || !dom.legendTitle || !dom.legendTitle.parentElement) {
+      return;
+    }
+    let button = dom.legendPanel.querySelector("[data-legend-code-edit-toggle]");
+    if (!button) {
+      button = document.createElement("button");
+      button.type = "button";
+      button.className = "schedule-legend__code-edit-toggle";
+      button.setAttribute("data-legend-code-edit-toggle", "true");
+      dom.legendTitle.parentElement.appendChild(button);
+    }
+    const label = getLegendCodeEditLabel();
+    button.textContent = label;
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-pressed", String(Boolean(uiState.legendCodesEditable)));
+    dom.legendPanel.classList.toggle("is-code-editing", Boolean(uiState.legendCodesEditable));
+  }
+
   function buildLegendTable() {
     if (!dom.legendTable || !dom.legendBody) {
       return;
@@ -580,9 +633,13 @@
       }
     });
     dom.legendBody.innerHTML = SHIFT_CODE_DEFINITIONS.map(function (item) {
+      const label = getLegendCodeLabel(item.code);
+      const codeMarkup = uiState.legendCodesEditable
+        ? '<input class="schedule-legend-table__code-input" data-legend-code-label="' + escapeHtml(item.code) + '" type="text" value="' + escapeHtml(label) + '" aria-label="' + escapeHtml(i18n.t("schedule.legend.shiftCode") + " " + item.code) + '">'
+        : escapeHtml(label);
       return [
         "<tr>",
-        '<td class="schedule-legend-table__cell schedule-legend-table__cell--code" data-code-group="' + getCodeGroup(item.code) + '" title="' + escapeHtml(item.code) + '">' + escapeHtml(item.code) + "</td>",
+        '<td class="schedule-legend-table__cell schedule-legend-table__cell--code" data-code-group="' + getCodeGroup(item.code) + '" title="' + escapeHtml(item.code) + '">' + codeMarkup + "</td>",
         '<td class="schedule-legend-table__cell schedule-legend-table__cell--in" title="' + escapeHtml(item.checkIn) + '">' + escapeHtml(item.checkIn) + "</td>",
         '<td class="schedule-legend-table__cell schedule-legend-table__cell--out" title="' + escapeHtml(item.checkOut) + '">' + escapeHtml(item.checkOut) + "</td>",
         '<td class="schedule-legend-table__cell schedule-legend-table__cell--pay" title="' + escapeHtml(item.hoursPay) + '">' + escapeHtml(item.hoursPay) + "</td>",
@@ -812,12 +869,36 @@
     });
     if (dom.legendBody) {
       dom.legendBody.addEventListener("input", function (event) {
+        const codeInput = event.target.closest("[data-legend-code-label]");
+        if (codeInput) {
+          const code = codeInput.getAttribute("data-legend-code-label");
+          const value = String(codeInput.value || "").trim();
+          if (value && value !== code) {
+            legendCodeLabels[code] = value;
+          } else {
+            delete legendCodeLabels[code];
+          }
+          saveLegendCodeLabels();
+          return;
+        }
         const input = event.target.closest("[data-legend-remark]");
         if (!input) {
           return;
         }
         legendRemarks[input.getAttribute("data-legend-remark")] = input.value;
         saveLegendRemarks();
+      });
+    }
+    if (dom.legendPanel) {
+      dom.legendPanel.addEventListener("click", function (event) {
+        const toggle = event.target.closest("[data-legend-code-edit-toggle]");
+        if (!toggle) {
+          return;
+        }
+        event.preventDefault();
+        uiState.legendCodesEditable = !uiState.legendCodesEditable;
+        renderLegendCodeEditToggle();
+        buildLegendTable();
       });
     }
     dom.localeMount.addEventListener("click", function (event) {

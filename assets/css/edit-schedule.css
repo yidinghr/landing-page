@@ -1045,6 +1045,7 @@
 .schedule-legend__head {
   display: flex;
   align-items: center;
+  gap: 10px;
   min-height: 44px;
   padding: 0 16px;
   border-bottom: 1px solid rgba(244, 213, 31, 0.16);
@@ -1053,12 +1054,31 @@
 
 .schedule-legend__title {
   margin: 0;
+  flex: 1 1 auto;
   color: var(--color-text);
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 0.03em;
   line-height: 1;
   white-space: nowrap;
+}
+
+.schedule-legend__code-edit-toggle {
+  flex: 0 0 auto;
+  min-width: 58px;
+  height: 24px;
+  border: 1px solid rgba(154, 134, 232, 0.34);
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 249, 236, 0.96);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.schedule-legend__code-edit-toggle[aria-pressed="true"] {
+  border-color: rgba(255, 221, 64, 0.62);
+  color: #fff9e8;
 }
 
 .schedule-legend-table th,
@@ -2133,6 +2153,24 @@ body.edit-page {
   position: relative;
 }
 
+.schedule-legend-table__code-input {
+  width: 100%;
+  min-height: 22px;
+  border: 1px solid rgba(154, 134, 232, 0.34);
+  border-radius: 3px;
+  background: transparent;
+  color: rgba(255, 249, 236, 0.98);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 2px 4px;
+  outline: none;
+}
+
+.schedule-legend-table__code-input:focus {
+  border-color: rgba(255, 221, 64, 0.72);
+}
+
 /* Keep the frozen employee-info columns visually transparent; JS hides day cells underneath. */
 .schedule-sheet-main::before,
 .schedule-frozen-main::before,
@@ -2232,8 +2270,8 @@ body.edit-page {
 .schedule-sheet-scroll::-webkit-scrollbar,
 .schedule-legend__content::-webkit-scrollbar,
 .schedule-code-dropdown::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 2px;
+  height: 2px;
 }
 
 .schedule-sheet-scroll::-webkit-scrollbar-track,
@@ -2275,4 +2313,12 @@ body.edit-page {
 
 .schedule-legend-table__remark-input {
   color: rgba(255, 249, 236, 0.98) !important;
+}
+
+.schedule-legend-table__code-input {
+  background: transparent !important;
+}
+
+.schedule-legend {
+  z-index: 80 !important;
 }

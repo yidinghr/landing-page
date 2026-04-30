@@ -4,6 +4,8 @@ const ACCOUNTS_KEY = "yiding_accounts_v1";
 const SESSION_KEY = "yiding_auth_session_v1";
 const EMPLOYEES_KEY = "yiding_employees_module_state_v3_airtable_import";
 const SCHEDULE_KEY = "yiding_schedule_module_v3";
+const LOCALE_KEY = "yiding_ui_locale_v2";
+const LOCALE_SOURCE_KEY = "yiding_ui_locale_source_v3";
 
 async function freezeTime(page, isoString) {
   await page.addInitScript(
@@ -104,6 +106,16 @@ async function seedAdminAuth(page) {
       }));
     },
     { accountsKey: ACCOUNTS_KEY, sessionKey: SESSION_KEY }
+  );
+}
+
+async function seedLocale(page, locale) {
+  await page.addInitScript(
+    ({ storageKey, sourceKey, nextLocale }) => {
+      window.localStorage.setItem(storageKey, nextLocale);
+      window.localStorage.setItem(sourceKey, "manual");
+    },
+    { storageKey: LOCALE_KEY, sourceKey: LOCALE_SOURCE_KEY, nextLocale: locale }
   );
 }
 
@@ -326,6 +338,20 @@ test.describe("Schedule module", () => {
 
     await page.selectOption("#scheduleYear", "2027");
     await expect(page.locator("#scheduleFrozenTableHead .schedule-table__day-head")).toHaveCount(28);
+  });
+
+  test("Chinese locale uses Chinese weekday labels on the schedule grid", async ({ page }) => {
+    await seedLocale(page, "zh-Hant");
+    await prepareSchedulePage(page);
+
+    await page.selectOption("#scheduleYear", "2026");
+    await page.selectOption("#scheduleMonth", "7");
+
+    const weekdays = await page.locator("#scheduleFrozenTableHead .schedule-table__weekday-head").evaluateAll((nodes) =>
+      nodes.slice(0, 7).map((node) => node.textContent.trim())
+    );
+
+    expect(weekdays).toEqual(["三", "四", "五", "六", "日", "一", "二"]);
   });
 
   test("switching between months keeps each month's edited schedule data", async ({ page }) => {
@@ -864,11 +890,34 @@ test.describe("Schedule module", () => {
     expect(styles.sheetScrollbarColor).not.toContain("244, 213, 31");
     expect(styles.legendScrollbarColor).not.toContain("244, 213, 31");
     expect(styles.sheetThumb).not.toContain("244, 213, 31");
-    expect(styles.sheetScrollbarHeight).toBe("4px");
-    expect(styles.legendScrollbarWidth).toBe("4px");
+    expect(styles.sheetScrollbarHeight).toBe("2px");
+    expect(styles.legendScrollbarWidth).toBe("2px");
     expect(styles.legendPanelBackground).toBe("rgba(0, 0, 0, 0)");
     expect(styles.legendCodeBackground).toBe("rgba(0, 0, 0, 0)");
     expect(styles.legendInputBackground).toBe("rgba(0, 0, 0, 0)");
+  });
+
+  test("legend code column can be unlocked edited locked and persists", async ({ page }) => {
+    await prepareSchedulePage(page);
+
+    await page.locator("#scheduleLegendToggle").click();
+    await expect(page.locator("[data-legend-code-edit-toggle]")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("[data-legend-code-label]")).toHaveCount(0);
+
+    await page.locator("[data-legend-code-edit-toggle]").click();
+    await expect(page.locator("[data-legend-code-edit-toggle]")).toHaveAttribute("aria-pressed", "true");
+    await page.locator("[data-legend-code-label='A']").fill("早");
+
+    await page.locator("[data-legend-code-edit-toggle]").click();
+    await expect(page.locator("[data-legend-code-edit-toggle]")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("[data-legend-code-label]")).toHaveCount(0);
+    await expect(page.locator("#scheduleLegendBody .schedule-legend-table__cell--code").first()).toHaveText("早");
+
+    await page.reload();
+    if (!(await page.locator("#scheduleLegendPanel").isVisible())) {
+      await page.locator("#scheduleLegendToggle").click();
+    }
+    await expect(page.locator("#scheduleLegendBody .schedule-legend-table__cell--code").first()).toHaveText("早");
   });
 
   test("wheel over the legend panel scrolls only the panel content", async ({ page }) => {
