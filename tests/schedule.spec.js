@@ -461,6 +461,50 @@ test.describe("Schedule module", () => {
     await expect(page.locator("[data-grid-cell][data-row-index='0'][data-col-index='3']")).toHaveText("");
   });
 
+  test("employee info columns stay transparent and selected cells are highlighted", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("visual", {
+          ydiId: "YDI8111",
+          department: "Operation",
+          vieName: "LE THI A",
+          engName: "ANNA",
+          position: "Staff"
+        }, { "1": "A" })
+      ])
+    });
+
+    const leftColumnStyle = await page.locator("#scheduleSheetZoom > .schedule-sheet-stage > .schedule-sheet-main").evaluate((node) => {
+      const before = getComputedStyle(node, "::before");
+      const metaCell = document.querySelector(".schedule-table__meta.schedule-table__sticky");
+      const beforeBackdropFilter = before.backdropFilter || before.webkitBackdropFilter || "";
+      return {
+        beforeBackground: before.backgroundColor,
+        beforeBackdropFilter,
+        metaBackground: metaCell ? getComputedStyle(metaCell).backgroundColor : ""
+      };
+    });
+
+    expect(leftColumnStyle.beforeBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(leftColumnStyle.beforeBackdropFilter).toBe("none");
+    expect(leftColumnStyle.metaBackground).toBe("rgba(0, 0, 0, 0)");
+
+    await selectCell(page, 0, 1);
+
+    const selectedStyle = await page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']").evaluate((node) => {
+      const style = getComputedStyle(node);
+      return {
+        isSelected: node.classList.contains("is-selected"),
+        background: style.backgroundColor,
+        boxShadow: style.boxShadow
+      };
+    });
+
+    expect(selectedStyle.isSelected).toBe(true);
+    expect(selectedStyle.background).not.toBe("rgba(0, 0, 0, 0)");
+    expect(selectedStyle.boxShadow).not.toBe("none");
+  });
+
   test("copy and paste shift codes across the schedule grid", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState([
