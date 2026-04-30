@@ -485,8 +485,9 @@ test.describe("Schedule module", () => {
       };
     });
 
-    expect(leftColumnStyle.beforeBackground).toBe("rgba(0, 0, 0, 0)");
-    expect(leftColumnStyle.beforeBackdropFilter).toBe("none");
+    expect(leftColumnStyle.beforeBackground).toMatch(/^rgba\(/);
+    expect(leftColumnStyle.beforeBackground).not.toBe("rgb(0, 0, 0)");
+    expect(leftColumnStyle.beforeBackdropFilter).not.toBe("none");
     expect(leftColumnStyle.metaBackground).toBe("rgba(0, 0, 0, 0)");
 
     await selectCell(page, 0, 1);
@@ -596,7 +597,7 @@ test.describe("Schedule module", () => {
     await expect(page.locator("[data-daily-code='A'][data-daily-day='1']")).toHaveText("1");
   });
 
-  test("daily summary code column scrolls with the sheet horizontally", async ({ page }) => {
+  test("daily summary code column stays fixed while horizontally scrolling", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState([
         createScheduleRow("a", {}, { "1": "A", "2": "B1", "3": "C" }),
@@ -632,7 +633,7 @@ test.describe("Schedule module", () => {
     expect(before).not.toBeNull();
     expect(before.headY).toBeGreaterThan(0);
     expect(after).not.toBeNull();
-    expect(after).toBeLessThan(before.codeX - 100);
+    expect(Math.abs(after - before.codeX)).toBeLessThanOrEqual(1);
   });
 
   test("right legend panel opens and closes from the header button", async ({ page }) => {
@@ -1040,7 +1041,7 @@ test.describe("Schedule module", () => {
     expect(Math.abs(positions.summaryY - positions.mainWeekY)).toBeLessThanOrEqual(2);
   });
 
-  test("employee info columns scroll with the sheet horizontally", async ({ page }) => {
+  test("employee info columns stay fixed while horizontally scrolling", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState(Array.from({ length: 8 }, (_, index) =>
         createScheduleRow("row-" + index, {
@@ -1070,7 +1071,7 @@ test.describe("Schedule module", () => {
 
     expect(before).not.toBeNull();
     expect(after).not.toBeNull();
-    expect(after).toBeLessThan(before - 100);
+    expect(Math.abs(after - before)).toBeLessThanOrEqual(1);
   });
 
   test("summary rows and daily day columns line up with the main grid", async ({ page }) => {
