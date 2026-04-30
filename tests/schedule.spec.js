@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("fs/promises");
 
 const ACCOUNTS_KEY = "yiding_accounts_v1";
 const SESSION_KEY = "yiding_auth_session_v1";
@@ -1420,6 +1421,12 @@ test.describe("Schedule module", () => {
     await page.locator("#scheduleExportButton").click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("schedule_2026_07.xls");
+    const exportedPath = await download.path();
+    const exported = await fs.readFile(exportedPath, "utf8");
+    expect(exported).toContain("excel-title");
+    expect(exported).toContain("excel-code-A");
+    expect(exported).toContain("excel-daily-count");
+    expect(exported).toContain("YDI777");
   });
 
   test("schedule page can scroll vertically with mouse wheel over the sheet", async ({ page }) => {

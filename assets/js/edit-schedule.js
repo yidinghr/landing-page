@@ -1181,31 +1181,207 @@
     const monthState = ensureCurrentMonthState();
     const metaLabels = META_HEADERS[i18n.getLocale()] || META_HEADERS["zh-Hant"];
     const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
-    const headers = metaLabels.concat(Array.from({ length: days }, function (_, index) {
-      const day = index + 1;
-      return String(day) + " " + getWeekdayLabel(state.selectedYear, state.selectedMonth, day);
-    })).concat(SUMMARY_FIELDS.map(getFixedFieldLabel));
-    const rows = monthState.rows.map(function (row) {
-      const summary = getRowSummary(row, days);
-      return META_COLUMNS.map(function (column) {
-        return row.employeeSnapshot[column.key] || "";
-      }).concat(Array.from({ length: days }, function (_, index) {
-        return getLegendCodeLabel(normalizeCellValue(row.shifts[String(index + 1)]));
-      })).concat(SUMMARY_FIELDS.map(function (field) {
-        return summary[field.id];
-      }));
+    const summaryCodes = MAJOR_SHIFT_CODES.filter(function (code) {
+      return monthState.rows.some(function (row) {
+        return Object.keys(row.shifts).some(function (day) {
+          return normalizeCellValue(row.shifts[day]) === code;
+        });
+      });
     });
+    const totalColumns = META_COLUMNS.length + days + 2 + summaryCodes.length + SUMMARY_FIELDS.length;
 
     return [
-      '<html><head><meta charset="UTF-8"></head><body>',
-      '<table border="1">',
-      '<thead><tr>' + headers.map(function (header) { return "<th>" + escapeHtml(header) + "</th>"; }).join("") + '</tr></thead>',
-      '<tbody>' + rows.map(function (row) {
-        return "<tr>" + row.map(function (cell) { return "<td>" + escapeHtml(cell) + "</td>"; }).join("") + "</tr>";
-      }).join("") + '</tbody>',
+      '<html><head><meta charset="UTF-8">',
+      '<style>',
+      'body{margin:0;background:#fff;font-family:Arial,sans-serif;}',
+      'table{border-collapse:collapse;table-layout:fixed;}',
+      'td,th{border:1px solid #000;padding:0 4px;height:18px;font-size:10px;font-weight:700;text-align:center;vertical-align:middle;white-space:nowrap;}',
+      '.excel-title{background:#fff2cc;font-size:14px;}',
+      '.excel-label{background:#ddebf7;font-size:14px;}',
+      '.excel-gap{border:0;background:#fff;}',
+      '.excel-day{background:#9fd0ff;}',
+      '.excel-weekend{background:#ff1f1f;color:#000;}',
+      '.excel-meta{background:#fff;}',
+      '.excel-summary-head{font-size:9px;background:#fff;}',
+      '.excel-summary-total{background:#ddebf7;}',
+      '.excel-daily-count{background:#93d18b;}',
+      '.excel-code-A{background:#fff36d;}',
+      '.excel-code-B{background:#f4b6cb;}',
+      '.excel-code-C{background:#c9b6e8;}',
+      '.excel-code-leave{background:#ff5a5a;color:#fff;}',
+      '.excel-code-off{background:#ff1f1f;color:#fff;}',
+      '.excel-code-other{background:#f7d7a7;}',
+      '.excel-thick-right{border-right:3px solid #000;}',
+      '.excel-thick-left{border-left:3px solid #000;}',
+      '.excel-thick-top{border-top:3px solid #000;}',
+      '.excel-thick-bottom{border-bottom:3px solid #000;}',
+      '</style>',
+      '</head><body>',
+      '<table>',
+      buildExcelColGroup(days, summaryCodes.length),
+      buildExcelTitleRows(days, totalColumns),
+      buildExcelHeaderRows(days, metaLabels, summaryCodes),
+      buildExcelEmployeeRows(monthState.rows, days, summaryCodes),
+      buildExcelBlankRows(days, summaryCodes.length),
+      buildExcelDailySummaryRows(monthState.rows, days, summaryCodes),
       '</table>',
       '</body></html>'
     ].join("");
+  }
+
+  function buildExcelColGroup(days, summaryCodeCount) {
+    const widths = [70, 132, 160, 74, 74];
+    let html = "<colgroup>";
+    widths.forEach(function (width) {
+      html += '<col style="width:' + width + 'px">';
+    });
+    for (let day = 1; day <= days; day += 1) {
+      html += '<col style="width:28px">';
+    }
+    html += '<col style="width:44px">';
+    html += '<col style="width:44px">';
+    for (let index = 0; index < summaryCodeCount; index += 1) {
+      html += '<col style="width:30px">';
+    }
+    SUMMARY_FIELDS.forEach(function () {
+      html += '<col style="width:52px">';
+    });
+    return html + "</colgroup>";
+  }
+
+  function buildExcelTitleRows(days, totalColumns) {
+    const blanksBeforeDays = META_COLUMNS.length;
+    return [
+      "<tr>",
+      '<td class="excel-gap"></td>',
+      '<td class="excel-label">Year</td>',
+      '<td class="excel-title">' + escapeHtml(state.selectedYear) + "</td>",
+      '<td class="excel-label">Month</td>',
+      '<td class="excel-title">' + escapeHtml(state.selectedMonth) + "</td>",
+      repeatExcelCells(totalColumns - 5, "excel-gap", ""),
+      "</tr>",
+      '<tr>' + repeatExcelCells(totalColumns, "excel-gap", "") + '</tr>',
+      '<tr>' + repeatExcelCells(blanksBeforeDays, "excel-gap", "") + buildExcelDayCells(days, true) + repeatExcelCells(totalColumns - blanksBeforeDays - days, "excel-gap", "") + '</tr>'
+    ].join("");
+  }
+
+  function buildExcelHeaderRows(days, metaLabels, summaryCodes) {
+    const dayHeaders = [];
+    const weekdayHeaders = [];
+    for (let day = 1; day <= days; day += 1) {
+      dayHeaders.push(excelCell(day, getExcelDayClass(day)));
+      weekdayHeaders.push(excelCell(getWeekdayLabel(state.selectedYear, state.selectedMonth, day), getExcelDayClass(day)));
+    }
+    return [
+      "<tr>",
+      metaLabels.map(function (label, index) {
+        return excelCell(label, "excel-meta" + (index === metaLabels.length - 1 ? " excel-thick-right" : ""));
+      }).join(""),
+      dayHeaders.join(""),
+      '<td class="excel-gap"></td><td class="excel-gap"></td>',
+      summaryCodes.map(function (code) {
+        return excelCell(getLegendCodeLabel(code), "excel-summary-head");
+      }).join(""),
+      SUMMARY_FIELDS.map(function (field) {
+        return excelCell(getFixedFieldLabel(field), "excel-summary-head excel-summary-total");
+      }).join(""),
+      "</tr>",
+      "<tr>",
+      repeatExcelCells(META_COLUMNS.length, "excel-meta", ""),
+      weekdayHeaders.join(""),
+      '<td class="excel-gap"></td><td class="excel-gap"></td>',
+      repeatExcelCells(summaryCodes.length + SUMMARY_FIELDS.length, "excel-summary-head", ""),
+      "</tr>"
+    ].join("");
+  }
+
+  function buildExcelEmployeeRows(rows, days, summaryCodes) {
+    return rows.map(function (row) {
+      const summary = getRowSummary(row);
+      return [
+        "<tr>",
+        META_COLUMNS.map(function (column, index) {
+          return excelCell(row.employeeSnapshot[column.key] || "", "excel-meta" + (index === META_COLUMNS.length - 1 ? " excel-thick-right" : ""));
+        }).join(""),
+        Array.from({ length: days }, function (_, index) {
+          const code = normalizeCellValue(row.shifts[String(index + 1)]);
+          return excelCell(getLegendCodeLabel(code), getExcelCodeClass(code));
+        }).join(""),
+        '<td class="excel-gap"></td><td class="excel-gap"></td>',
+        summaryCodes.map(function (code) {
+          return excelCell(countRowCode(row, code), "excel-summary-head");
+        }).join(""),
+        SUMMARY_FIELDS.map(function (field) {
+          return excelCell(summary[field.id], "excel-summary-head excel-summary-total");
+        }).join(""),
+        "</tr>"
+      ].join("");
+    }).join("");
+  }
+
+  function buildExcelBlankRows(days, summaryCodeCount) {
+    const totalColumns = META_COLUMNS.length + days + 2 + summaryCodeCount + SUMMARY_FIELDS.length;
+    let html = "";
+    for (let index = 0; index < 7; index += 1) {
+      html += "<tr>" + repeatExcelCells(META_COLUMNS.length + days, "", "") + repeatExcelCells(totalColumns - META_COLUMNS.length - days, "excel-gap", "") + "</tr>";
+    }
+    return html;
+  }
+
+  function buildExcelDailySummaryRows(rows, days, summaryCodes) {
+    if (!summaryCodes.length) {
+      return "";
+    }
+    return summaryCodes.map(function (code) {
+      return [
+        "<tr>",
+        repeatExcelCells(META_COLUMNS.length - 1, "excel-gap", ""),
+        excelCell(getLegendCodeLabel(code), getExcelCodeClass(code) + " excel-thick-left"),
+        Array.from({ length: days }, function (_, index) {
+          return excelCell(getDailyCount(rows, code, index + 1), "excel-daily-count");
+        }).join(""),
+        repeatExcelCells(2 + summaryCodes.length + SUMMARY_FIELDS.length, "excel-gap", ""),
+        "</tr>"
+      ].join("");
+    }).join("");
+  }
+
+  function countRowCode(row, code) {
+    return Object.keys(row.shifts).reduce(function (total, day) {
+      return total + (normalizeCellValue(row.shifts[day]) === code ? 1 : 0);
+    }, 0);
+  }
+
+  function buildExcelDayCells(days) {
+    let html = "";
+    for (let day = 1; day <= days; day += 1) {
+      html += excelCell(day, getExcelDayClass(day));
+    }
+    return html;
+  }
+
+  function getExcelDayClass(day) {
+    const weekday = new Date(state.selectedYear, state.selectedMonth - 1, day).getDay();
+    return (weekday === 0 || weekday === 6) ? "excel-day excel-weekend" : "excel-day";
+  }
+
+  function getExcelCodeClass(code) {
+    if (!code) {
+      return "";
+    }
+    return "excel-code-" + getCodeGroup(code);
+  }
+
+  function excelCell(value, className) {
+    return '<td class="' + escapeHtml(className || "") + '">' + escapeHtml(value) + "</td>";
+  }
+
+  function repeatExcelCells(count, className, value) {
+    let html = "";
+    for (let index = 0; index < count; index += 1) {
+      html += excelCell(value || "", className || "");
+    }
+    return html;
   }
 
   function handleCellPointerStart(event) {
