@@ -805,6 +805,7 @@ test.describe("Schedule module", () => {
       const panel = document.querySelector("#scheduleLegendPanel");
       const content = document.querySelector("#scheduleLegendContent");
       const title = document.querySelector("#scheduleLegendPanel .schedule-legend__title");
+      const firstDayHead = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
       const headers = Array.from(document.querySelectorAll("#scheduleLegendTable .schedule-legend-table__label-row th")).map((node) => node.textContent.trim());
       const headerWidths = Array.from(document.querySelectorAll("#scheduleLegendTable .schedule-legend-table__label-row th")).map((node) => Math.round(node.getBoundingClientRect().width));
       if (!panel || !content || !title) {
@@ -812,6 +813,8 @@ test.describe("Schedule module", () => {
       }
       return {
         panelWidth: Math.round(panel.getBoundingClientRect().width),
+        panelTop: Math.round(panel.getBoundingClientRect().top),
+        firstDayTop: firstDayHead ? Math.round(firstDayHead.getBoundingClientRect().top) : null,
         scrollable: content.scrollHeight > content.clientHeight,
         titleText: title.textContent.trim(),
         headers,
@@ -824,6 +827,8 @@ test.describe("Schedule module", () => {
     expect(metrics.titleText).toBe("班碼參照");
     expect(metrics.headers).toEqual(["班碼", "上班", "下班", "計薪", "夜班", "備註"]);
     expect(metrics.headerWidths[5]).toBeGreaterThan(metrics.headerWidths[0] * 3);
+    expect(metrics.firstDayTop).not.toBeNull();
+    expect(Math.abs(metrics.panelTop - metrics.firstDayTop)).toBeLessThanOrEqual(2);
   });
 
   test("scrollbars use space tones and legend code colors are removed", async ({ page }) => {
@@ -848,6 +853,8 @@ test.describe("Schedule module", () => {
         sheetScrollbarColor: sheet ? getComputedStyle(sheet).scrollbarColor : "",
         legendScrollbarColor: legendContent ? getComputedStyle(legendContent).scrollbarColor : "",
         sheetThumb,
+        sheetScrollbarHeight: sheet ? getComputedStyle(sheet, "::-webkit-scrollbar").height : "",
+        legendScrollbarWidth: legendContent ? getComputedStyle(legendContent, "::-webkit-scrollbar").width : "",
         legendPanelBackground: legendPanel ? getComputedStyle(legendPanel).backgroundColor : "",
         legendCodeBackground: legendCode ? getComputedStyle(legendCode).backgroundColor : "",
         legendInputBackground: legendInput ? getComputedStyle(legendInput).backgroundColor : ""
@@ -857,6 +864,8 @@ test.describe("Schedule module", () => {
     expect(styles.sheetScrollbarColor).not.toContain("244, 213, 31");
     expect(styles.legendScrollbarColor).not.toContain("244, 213, 31");
     expect(styles.sheetThumb).not.toContain("244, 213, 31");
+    expect(styles.sheetScrollbarHeight).toBe("6px");
+    expect(styles.legendScrollbarWidth).toBe("6px");
     expect(styles.legendPanelBackground).toBe("rgba(0, 0, 0, 0)");
     expect(styles.legendCodeBackground).toBe("rgba(0, 0, 0, 0)");
     expect(styles.legendInputBackground).toBe("rgba(0, 0, 0, 0)");
