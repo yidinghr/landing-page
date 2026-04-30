@@ -898,15 +898,21 @@ test.describe("Schedule module", () => {
   });
 
   test("legend code column can be unlocked edited locked and persists", async ({ page }) => {
-    await prepareSchedulePage(page);
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("linked-code", {}, { "1": "A" })
+      ])
+    });
 
     await page.locator("#scheduleLegendToggle").click();
     await expect(page.locator("[data-legend-code-edit-toggle]")).toHaveAttribute("aria-pressed", "false");
     await expect(page.locator("[data-legend-code-label]")).toHaveCount(0);
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("A");
 
     await page.locator("[data-legend-code-edit-toggle]").click();
     await expect(page.locator("[data-legend-code-edit-toggle]")).toHaveAttribute("aria-pressed", "true");
     await page.locator("[data-legend-code-label='A']").fill("早");
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("早");
 
     await page.locator("[data-legend-code-edit-toggle]").click();
     await expect(page.locator("[data-legend-code-edit-toggle]")).toHaveAttribute("aria-pressed", "false");
@@ -918,6 +924,7 @@ test.describe("Schedule module", () => {
       await page.locator("#scheduleLegendToggle").click();
     }
     await expect(page.locator("#scheduleLegendBody .schedule-legend-table__cell--code").first()).toHaveText("早");
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveText("早");
   });
 
   test("wheel over the legend panel scrolls only the panel content", async ({ page }) => {

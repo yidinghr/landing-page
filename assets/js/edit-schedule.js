@@ -585,6 +585,14 @@
     return code;
   }
 
+  function refreshScheduleCodeLabels() {
+    const monthState = ensureCurrentMonthState();
+    renderTableBody(monthState);
+    renderDailySummary(monthState);
+    renderSelectionState();
+    requestFrozenHeaderSync();
+  }
+
   function getLegendCodeEditLabel() {
     if (i18n.getLocale() === "zh-Hant") {
       return uiState.legendCodesEditable ? "鎖定班碼" : "編輯班碼";
@@ -790,7 +798,7 @@
       row += '<td class="schedule-daily-table__blank schedule-daily-table__spacer--department schedule-daily-table__sticky schedule-daily-table__sticky--department"></td>';
       row += '<td class="schedule-daily-table__blank schedule-daily-table__spacer--vie schedule-daily-table__sticky schedule-daily-table__sticky--vie"></td>';
       row += '<td class="schedule-daily-table__blank schedule-daily-table__spacer--eng schedule-daily-table__sticky schedule-daily-table__sticky--eng"></td>';
-      row += '<td class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position">' + escapeHtml(code) + "</td>";
+      row += '<td class="schedule-daily-table__spacer--position schedule-daily-table__sticky schedule-daily-table__sticky--position">' + escapeHtml(getLegendCodeLabel(code)) + "</td>";
       for (let day = 1; day <= days; day += 1) {
         row += '<td data-daily-code="' + escapeHtml(code) + '" data-daily-day="' + day + '">' + getDailyCount(monthState.rows, code, day) + "</td>";
       }
@@ -879,6 +887,7 @@
             delete legendCodeLabels[code];
           }
           saveLegendCodeLabels();
+          refreshScheduleCodeLabels();
           return;
         }
         const input = event.target.closest("[data-legend-remark]");
@@ -1964,7 +1973,7 @@
   }
 
   function renderCellValue(code) {
-    return code ? escapeHtml(code) : '<span class="schedule-cell__placeholder">·</span>';
+    return code ? escapeHtml(getLegendCodeLabel(code)) : '<span class="schedule-cell__placeholder">·</span>';
   }
 
   function getCodeGroup(code) {
