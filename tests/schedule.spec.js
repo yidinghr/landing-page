@@ -826,6 +826,42 @@ test.describe("Schedule module", () => {
     expect(metrics.headerWidths[5]).toBeGreaterThan(metrics.headerWidths[0] * 3);
   });
 
+  test("scrollbars use space tones and legend code colors are removed", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("a", {}, { "1": "A", "2": "B1", "3": "C" })
+      ])
+    });
+
+    await page.locator("#scheduleLegendToggle").click();
+
+    const styles = await page.evaluate(() => {
+      const sheet = document.querySelector("#scheduleSheetScroll");
+      const legendContent = document.querySelector("#scheduleLegendContent");
+      const legendPanel = document.querySelector("#scheduleLegendPanel");
+      const legendCode = document.querySelector("#scheduleLegendTable td[data-code-group='A']");
+      const legendInput = document.querySelector("#scheduleLegendTable .schedule-legend-table__remark-input");
+      const sheetThumb = sheet
+        ? getComputedStyle(sheet, "::-webkit-scrollbar-thumb").backgroundImage || getComputedStyle(sheet, "::-webkit-scrollbar-thumb").backgroundColor
+        : "";
+      return {
+        sheetScrollbarColor: sheet ? getComputedStyle(sheet).scrollbarColor : "",
+        legendScrollbarColor: legendContent ? getComputedStyle(legendContent).scrollbarColor : "",
+        sheetThumb,
+        legendPanelBackground: legendPanel ? getComputedStyle(legendPanel).backgroundColor : "",
+        legendCodeBackground: legendCode ? getComputedStyle(legendCode).backgroundColor : "",
+        legendInputBackground: legendInput ? getComputedStyle(legendInput).backgroundColor : ""
+      };
+    });
+
+    expect(styles.sheetScrollbarColor).not.toContain("244, 213, 31");
+    expect(styles.legendScrollbarColor).not.toContain("244, 213, 31");
+    expect(styles.sheetThumb).not.toContain("244, 213, 31");
+    expect(styles.legendPanelBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(styles.legendCodeBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(styles.legendInputBackground).toBe("rgba(0, 0, 0, 0)");
+  });
+
   test("wheel over the legend panel scrolls only the panel content", async ({ page }) => {
     await prepareSchedulePage(page);
     await addRows(page, 40);
