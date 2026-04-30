@@ -2133,14 +2133,13 @@ body.edit-page {
   position: relative;
 }
 
-/* Keep the frozen employee-info columns readable while still showing the galaxy backdrop. */
+/* Keep the frozen employee-info columns visually transparent; JS hides day cells underneath. */
 .schedule-sheet-main::before,
 .schedule-frozen-main::before,
 .schedule-daily-stage__main::before {
-  background:
-    linear-gradient(180deg, rgba(6, 5, 16, 0.58) 0%, rgba(4, 3, 12, 0.4) 100%) !important;
-  backdrop-filter: blur(9px) brightness(0.72) saturate(1.04) !important;
-  -webkit-backdrop-filter: blur(9px) brightness(0.72) saturate(1.04) !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .schedule-table__meta,
@@ -2202,6 +2201,10 @@ body.edit-page {
 .schedule-table__meta-subhead.schedule-table__sticky,
 .schedule-daily-table thead .schedule-daily-table__sticky {
   z-index: 38 !important;
+}
+
+.schedule-grid-cell--under-frozen {
+  visibility: hidden !important;
 }
 
 .schedule-meta-cell.is-selected,

@@ -485,9 +485,8 @@ test.describe("Schedule module", () => {
       };
     });
 
-    expect(leftColumnStyle.beforeBackground).toMatch(/^rgba\(/);
-    expect(leftColumnStyle.beforeBackground).not.toBe("rgb(0, 0, 0)");
-    expect(leftColumnStyle.beforeBackdropFilter).not.toBe("none");
+    expect(leftColumnStyle.beforeBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(leftColumnStyle.beforeBackdropFilter).toBe("none");
     expect(leftColumnStyle.metaBackground).toBe("rgba(0, 0, 0, 0)");
 
     await selectCell(page, 0, 1);
@@ -1068,10 +1067,24 @@ test.describe("Schedule module", () => {
       const stickyCell = document.querySelector(".schedule-table__body-row [data-col-index='0']");
       return stickyCell ? Math.round(stickyCell.getBoundingClientRect().x) : null;
     });
+    const occlusion = await page.evaluate(() => {
+      const firstDayHead = document.querySelector("#scheduleFrozenTableHead [data-day-head='1']");
+      const firstDayCell = document.querySelector("#scheduleTableBody .schedule-table__cell");
+      return {
+        headHidden: firstDayHead ? firstDayHead.classList.contains("schedule-grid-cell--under-frozen") : false,
+        cellHidden: firstDayCell ? firstDayCell.classList.contains("schedule-grid-cell--under-frozen") : false,
+        headVisibility: firstDayHead ? getComputedStyle(firstDayHead).visibility : "",
+        cellVisibility: firstDayCell ? getComputedStyle(firstDayCell).visibility : ""
+      };
+    });
 
     expect(before).not.toBeNull();
     expect(after).not.toBeNull();
     expect(Math.abs(after - before)).toBeLessThanOrEqual(1);
+    expect(occlusion.headHidden).toBe(true);
+    expect(occlusion.cellHidden).toBe(true);
+    expect(occlusion.headVisibility).toBe("hidden");
+    expect(occlusion.cellVisibility).toBe("hidden");
   });
 
   test("summary rows and daily day columns line up with the main grid", async ({ page }) => {

@@ -606,6 +606,7 @@
     syncSummarySpacerWidth();
     updateStickyMetrics();
     updateSheetOverflowState();
+    requestFrozenHeaderSync();
     renderSelectionState();
     renderSelectionMeta();
   }
@@ -1738,11 +1739,43 @@
       return;
     }
     dom.frozenScroll.scrollLeft = dom.sheetScroll.scrollLeft;
+    updateFrozenColumnOcclusion();
     [dom.workspace, dom.app].forEach(function (target) {
       if (!target) {
         return;
       }
       target.classList.toggle("schedule-sheet--x-shifted", dom.sheetScroll.scrollLeft > 1);
+    });
+  }
+
+  function updateFrozenColumnOcclusion() {
+    if (!dom.sheetScroll) {
+      return;
+    }
+    const frozenEdgeSource =
+      document.querySelector("#scheduleFrozenTableHead .schedule-table__sticky--position") ||
+      document.querySelector("#scheduleTableHead .schedule-table__sticky--position") ||
+      document.querySelector(".schedule-table__body-row .schedule-table__sticky--position");
+    const scrollRect = dom.sheetScroll.getBoundingClientRect();
+    const frozenEdge = frozenEdgeSource
+      ? Math.round(frozenEdgeSource.getBoundingClientRect().right)
+      : Math.round(scrollRect.left);
+    const isShifted = dom.sheetScroll.scrollLeft > 1;
+    const candidates = document.querySelectorAll([
+      "#scheduleFrozenTableHead .schedule-table__day-head",
+      "#scheduleFrozenTableHead .schedule-table__weekday-head",
+      "#scheduleTableBody .schedule-table__cell",
+      "#scheduleSummaryHead th:not(.schedule-summary-table__blank)",
+      "#scheduleFrozenSummaryHead th:not(.schedule-summary-table__blank)",
+      "#scheduleSummaryBody td",
+      "#dailySummaryHead th:not(.schedule-daily-table__sticky)",
+      "#dailySummaryBody td:not(.schedule-daily-table__sticky)"
+    ].join(", "));
+
+    candidates.forEach(function (cell) {
+      const rect = cell.getBoundingClientRect();
+      const isUnderFrozenColumns = isShifted && rect.left < frozenEdge - 1;
+      cell.classList.toggle("schedule-grid-cell--under-frozen", isUnderFrozenColumns);
     });
   }
 
