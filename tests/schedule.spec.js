@@ -864,8 +864,8 @@ test.describe("Schedule module", () => {
     expect(styles.sheetScrollbarColor).not.toContain("244, 213, 31");
     expect(styles.legendScrollbarColor).not.toContain("244, 213, 31");
     expect(styles.sheetThumb).not.toContain("244, 213, 31");
-    expect(styles.sheetScrollbarHeight).toBe("6px");
-    expect(styles.legendScrollbarWidth).toBe("6px");
+    expect(styles.sheetScrollbarHeight).toBe("4px");
+    expect(styles.legendScrollbarWidth).toBe("4px");
     expect(styles.legendPanelBackground).toBe("rgba(0, 0, 0, 0)");
     expect(styles.legendCodeBackground).toBe("rgba(0, 0, 0, 0)");
     expect(styles.legendInputBackground).toBe("rgba(0, 0, 0, 0)");

@@ -1671,10 +1671,15 @@
       const tableRect = dom.table ? dom.table.getBoundingClientRect() : null;
       const frameRect = dom.sheetFrame ? dom.sheetFrame.getBoundingClientRect() : null;
       const frozenHeadRect = dom.frozenTableHead ? dom.frozenTableHead.getBoundingClientRect() : null;
+      const frozenDayHeadRect = dom.frozenTableHead && dom.frozenTableHead.querySelector("[data-day-head]")
+        ? dom.frozenTableHead.querySelector("[data-day-head]").getBoundingClientRect()
+        : null;
       const periodGridRect = dom.periodGrid ? dom.periodGrid.getBoundingClientRect() : null;
       const minimumTop = headerHeight + periodHeight;
       const minimumLegendHeight = 320;
-      const legendTop = frozenHeadRect && frozenHeadRect.height > 0
+      const legendTop = frozenDayHeadRect && frozenDayHeadRect.height > 0
+        ? Math.max(minimumTop, Math.round(frozenDayHeadRect.top))
+        : frozenHeadRect && frozenHeadRect.height > 0
         ? Math.max(minimumTop, Math.round(frozenHeadRect.top))
         : frameRect
         ? Math.max(minimumTop, Math.round(frameRect.top))
