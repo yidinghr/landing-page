@@ -2322,3 +2322,56 @@ body.edit-page {
 .schedule-legend {
   z-index: 80 !important;
 }
+
+.schedule-corner-actions {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 72;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(116, 98, 196, 0.28);
+  background: rgba(8, 7, 22, 0.36);
+  box-shadow: 0 0 22px rgba(83, 64, 180, 0.18);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+}
+
+.schedule-corner-actions__button {
+  min-width: 58px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(171, 151, 255, 0.34);
+  background: rgba(7, 6, 20, 0.52);
+  color: rgba(255, 249, 236, 0.96);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-align: center;
+  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+.schedule-corner-actions__button:hover,
+.schedule-corner-actions__button:focus-visible {
+  border-color: rgba(222, 209, 255, 0.72);
+  background: rgba(40, 31, 86, 0.66);
+  outline: none;
+}
+
+.schedule-corner-actions__button.is-active {
+  border-color: rgba(255, 221, 64, 0.7);
+  background: rgba(83, 62, 18, 0.44);
+  color: #fff6c7;
+}
+
+.schedule-corner-actions__button[hidden] {
+  display: none;
+}
+
+.schedule-app--schedule-locked .schedule-cell,
+.schedule-app--schedule-locked .schedule-meta-cell,
+.schedule-app--schedule-locked .schedule-row-handle {
+  cursor: not-allowed;
+}

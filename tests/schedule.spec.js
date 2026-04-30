@@ -1387,6 +1387,41 @@ test.describe("Schedule module", () => {
     await expect(page.locator("#scheduleSheetScroll")).toHaveClass(/schedule-sheet-scroll--fit/);
   });
 
+  test("corner lock button blocks schedule grid selection until unlocked", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("lock-row", {}, { "1": "A" })
+      ])
+    });
+
+    await page.locator("#scheduleLockButton").click();
+    await expect(page.locator("#scheduleLockButton")).toHaveAttribute("aria-pressed", "true");
+    await selectCell(page, 0, 1);
+    await expect(page.locator("[data-schedule-cell].is-selected")).toHaveCount(0);
+
+    await page.locator("#scheduleLockButton").click();
+    await expect(page.locator("#scheduleLockButton")).toHaveAttribute("aria-pressed", "false");
+    await selectCell(page, 0, 1);
+    await expect(page.locator("[data-schedule-cell][data-row-index='0'][data-day='1']")).toHaveClass(/is-selected/);
+  });
+
+  test("save button reveals Excel export and exports the current schedule", async ({ page }) => {
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("export-row", { ydiId: "YDI777", department: "Ops", vieName: "Tran A", engName: "ALEX", position: "Lead" }, { "1": "A" })
+      ])
+    });
+
+    await expect(page.locator("#scheduleExportButton")).toBeHidden();
+    await page.locator("#scheduleSaveButton").click();
+    await expect(page.locator("#scheduleExportButton")).toBeVisible();
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.locator("#scheduleExportButton").click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe("schedule_2026_07.xls");
+  });
+
   test("schedule page can scroll vertically with mouse wheel over the sheet", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState(Array.from({ length: 40 }, (_, index) => createScheduleRow("row-" + index)))

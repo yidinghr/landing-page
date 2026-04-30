@@ -137,6 +137,9 @@
     dailySpacerTable: document.getElementById("dailySummarySpacerTable"),
     dailySpacerHead: document.getElementById("dailySummarySpacerHead"),
     dailySpacerBody: document.getElementById("dailySummarySpacerBody"),
+    lockButton: document.getElementById("scheduleLockButton"),
+    saveButton: document.getElementById("scheduleSaveButton"),
+    exportButton: document.getElementById("scheduleExportButton"),
     legendTitle: document.querySelector(".schedule-legend__title")
   };
 
@@ -159,6 +162,8 @@
     codeDropdownOpen: false,
     codeDropdownIndex: -1,
     legendCodesEditable: false,
+    scheduleLocked: false,
+    exportReady: false,
     lockedScrollY: null,
     stickyMetricsObserver: null
   };
@@ -516,6 +521,7 @@
       dom.legendTitle.textContent = i18n.t("schedule.legend");
     }
     renderLegendCodeEditToggle();
+    renderCornerActions();
     renderCodeDropdown();
   }
 
@@ -620,6 +626,26 @@
     button.setAttribute("aria-label", label);
     button.setAttribute("aria-pressed", String(Boolean(uiState.legendCodesEditable)));
     dom.legendPanel.classList.toggle("is-code-editing", Boolean(uiState.legendCodesEditable));
+  }
+
+  function renderCornerActions() {
+    dom.app.classList.toggle("schedule-app--schedule-locked", Boolean(uiState.scheduleLocked));
+    if (dom.lockButton) {
+      const label = uiState.scheduleLocked ? "UNLOCK" : "LOCK";
+      dom.lockButton.textContent = label;
+      dom.lockButton.setAttribute("aria-label", label);
+      dom.lockButton.setAttribute("aria-pressed", String(Boolean(uiState.scheduleLocked)));
+      dom.lockButton.classList.toggle("is-active", Boolean(uiState.scheduleLocked));
+    }
+    if (dom.saveButton) {
+      dom.saveButton.textContent = "SAVE";
+      dom.saveButton.setAttribute("aria-label", "SAVE");
+    }
+    if (dom.exportButton) {
+      dom.exportButton.textContent = "EXCEL";
+      dom.exportButton.setAttribute("aria-label", "Export Excel");
+      dom.exportButton.hidden = !uiState.exportReady;
+    }
   }
 
   function buildLegendTable() {
@@ -853,6 +879,15 @@
     }
     if (dom.deleteRowsButton) {
       dom.deleteRowsButton.addEventListener("click", handleDeleteRows);
+    }
+    if (dom.lockButton) {
+      dom.lockButton.addEventListener("click", toggleScheduleLock);
+    }
+    if (dom.saveButton) {
+      dom.saveButton.addEventListener("click", handleManualSave);
+    }
+    if (dom.exportButton) {
+      dom.exportButton.addEventListener("click", exportCurrentMonthExcel);
     }
     if (dom.addRowsCount) {
       dom.addRowsCount.addEventListener("keydown", function (event) {
@@ -1095,7 +1130,90 @@
     renderAll();
   }
 
+  function getLockedFeedback() {
+    if (i18n.getLocale() === "vi") {
+      return "Bang lich dang khoa.";
+    }
+    if (i18n.getLocale() === "zh-Hant") {
+      return "Schedule locked.";
+    }
+    return "Schedule locked.";
+  }
+
+  function toggleScheduleLock() {
+    uiState.scheduleLocked = !uiState.scheduleLocked;
+    if (uiState.scheduleLocked) {
+      clearSelection(true);
+    }
+    renderCornerActions();
+    showFeedback(uiState.scheduleLocked ? getLockedFeedback() : "Schedule unlocked.", uiState.scheduleLocked ? "error" : "success");
+  }
+
+  function handleManualSave() {
+    saveState();
+    saveLegendRemarks();
+    saveLegendCodeLabels();
+    uiState.exportReady = true;
+    renderCornerActions();
+    showFeedback("Saved. Excel export is ready.", "success");
+  }
+
+  function exportCurrentMonthExcel() {
+    if (!uiState.exportReady) {
+      return;
+    }
+    const html = buildCurrentMonthExcelHtml();
+    const blob = new Blob(["\ufeff", html], { type: "application/vnd.ms-excel;charset=utf-8" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = "schedule_" + state.selectedYear + "_" + String(state.selectedMonth).padStart(2, "0") + ".xls";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 1000);
+    showFeedback("Excel file exported.", "success");
+  }
+
+  function buildCurrentMonthExcelHtml() {
+    const monthState = ensureCurrentMonthState();
+    const metaLabels = META_HEADERS[i18n.getLocale()] || META_HEADERS["zh-Hant"];
+    const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
+    const headers = metaLabels.concat(Array.from({ length: days }, function (_, index) {
+      const day = index + 1;
+      return String(day) + " " + getWeekdayLabel(state.selectedYear, state.selectedMonth, day);
+    })).concat(SUMMARY_FIELDS.map(getFixedFieldLabel));
+    const rows = monthState.rows.map(function (row) {
+      const summary = getRowSummary(row, days);
+      return META_COLUMNS.map(function (column) {
+        return row.employeeSnapshot[column.key] || "";
+      }).concat(Array.from({ length: days }, function (_, index) {
+        return getLegendCodeLabel(normalizeCellValue(row.shifts[String(index + 1)]));
+      })).concat(SUMMARY_FIELDS.map(function (field) {
+        return summary[field.id];
+      }));
+    });
+
+    return [
+      '<html><head><meta charset="UTF-8"></head><body>',
+      '<table border="1">',
+      '<thead><tr>' + headers.map(function (header) { return "<th>" + escapeHtml(header) + "</th>"; }).join("") + '</tr></thead>',
+      '<tbody>' + rows.map(function (row) {
+        return "<tr>" + row.map(function (cell) { return "<td>" + escapeHtml(cell) + "</td>"; }).join("") + "</tr>";
+      }).join("") + '</tbody>',
+      '</table>',
+      '</body></html>'
+    ].join("");
+  }
+
   function handleCellPointerStart(event) {
+    if (uiState.scheduleLocked) {
+      event.preventDefault();
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     if (event.target.closest("[data-row-handle]")) {
       return;
     }
@@ -1114,6 +1232,9 @@
   }
 
   function handleCellPointerMove(event) {
+    if (uiState.scheduleLocked) {
+      return;
+    }
     if (!uiState.isSelecting || !uiState.anchor) {
       return;
     }
@@ -1209,6 +1330,11 @@
   }
 
   function handleDragStart(event) {
+    if (uiState.scheduleLocked) {
+      event.preventDefault();
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     const handle = event.target.closest("[data-row-handle]");
     if (!handle) {
       return;
@@ -1351,10 +1477,18 @@
   }
 
   function applySelectionInput() {
+    if (uiState.scheduleLocked) {
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     applyCodeToSelection(normalizeCellValue(dom.selectionInput.value));
   }
 
   function clearSelectedCells() {
+    if (uiState.scheduleLocked) {
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     if (!uiState.selection) {
       showFeedback(i18n.t("schedule.feedback.selectClear"), "error");
       return;
@@ -1363,6 +1497,10 @@
   }
 
   function applyCodeToSelection(code, clearing) {
+    if (uiState.scheduleLocked) {
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     if (!uiState.selection) {
       showFeedback(i18n.t(clearing ? "schedule.feedback.selectClear" : "schedule.feedback.selectCell"), "error");
       return;
@@ -1472,6 +1610,9 @@
   }
 
   function handlePaste(event) {
+    if (uiState.scheduleLocked) {
+      return;
+    }
     if (!uiState.selection) {
       return;
     }
@@ -1511,6 +1652,10 @@
   }
 
   function applyPasteMatrix(matrix, clearingOnly) {
+    if (uiState.scheduleLocked) {
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     if (!uiState.selection || !matrix.length || !matrix[0].length) {
       return;
     }
