@@ -42,8 +42,6 @@
   };
   const SUMMARY_FIELDS = [
     { id: "overtimeCount", labels: { "zh-Hant": "加班", vi: "Tăng ca", en: "Overtime" } },
-    { id: "requiredHours", labels: { "zh-Hant": "应上时数", vi: "Giờ phải làm", en: "Required Hours" } },
-    { id: "actualHours", labels: { "zh-Hant": "实际时数", vi: "Giờ thực tế", en: "Actual Hours" } },
     { id: "nightHours", labels: { "zh-Hant": "夜班补贴(时数)", vi: "Giờ ca đêm", en: "Night Hours" } }
   ];
   const META_HEADERS = {

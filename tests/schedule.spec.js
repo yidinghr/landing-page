@@ -883,8 +883,8 @@ test.describe("Schedule module", () => {
     await typeShiftCode(page, "C");
 
     await expect(page.locator("[data-summary-row-index='0'][data-summary-field='overtimeCount']")).toHaveText("0");
-    await expect(page.locator("[data-summary-row-index='0'][data-summary-field='requiredHours']")).toHaveText("216");
-    await expect(page.locator("[data-summary-row-index='0'][data-summary-field='actualHours']")).toHaveText("24");
+    await expect(page.locator("[data-summary-row-index='0'][data-summary-field='requiredHours']")).toHaveCount(0);
+    await expect(page.locator("[data-summary-row-index='0'][data-summary-field='actualHours']")).toHaveCount(0);
     await expect(page.locator("[data-summary-row-index='0'][data-summary-field='nightHours']")).toHaveText("15");
     await expect(page.locator("[data-daily-code='A'][data-daily-day='1']")).toHaveText("1");
     await expect(page.locator("[data-daily-code='B7'][data-daily-day='2']")).toHaveText("1");
