@@ -2150,6 +2150,25 @@ body.edit-page {
   background: transparent !important;
 }
 
+.schedule-table__meta.schedule-table__sticky,
+.schedule-table__meta-head.schedule-table__sticky,
+.schedule-table__meta-subhead.schedule-table__sticky,
+.schedule-daily-table__sticky,
+.schedule-table__sticky--id,
+.schedule-table__sticky--department,
+.schedule-table__sticky--vie,
+.schedule-table__sticky--eng,
+.schedule-table__sticky--position,
+.schedule-daily-table__sticky--id,
+.schedule-daily-table__sticky--department,
+.schedule-daily-table__sticky--vie,
+.schedule-daily-table__sticky--eng,
+.schedule-daily-table__sticky--position {
+  position: relative !important;
+  left: auto !important;
+  z-index: auto !important;
+}
+
 .schedule-meta-cell.is-selected,
 .schedule-cell.is-selected,
 .schedule-cell.is-selected[data-code-group],
