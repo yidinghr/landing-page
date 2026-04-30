@@ -93,6 +93,9 @@
   let sceneBuffer = null;
   let sceneContext = null;
   let twinkleStars = [];
+  let meteors = [];
+  let nextMeteorAt = 0;
+  let lastMeteorFrameAt = 0;
   let visible = document.visibilityState !== "hidden";
 
   function clamp(value, min, max) {
@@ -372,6 +375,97 @@
     context.restore();
   }
 
+  function resetMeteors() {
+    meteors = [];
+    nextMeteorAt = 0;
+    lastMeteorFrameAt = 0;
+  }
+
+  function queueNextMeteor(timestamp, quickFollow) {
+    const delay = quickFollow
+      ? randomBetween(480, 1100, Math.random)
+      : randomBetween(isSchedulePage ? 5200 : 7000, isSchedulePage ? 12800 : 16000, Math.random);
+    nextMeteorAt = timestamp + delay;
+  }
+
+  function spawnMeteor() {
+    const angle = randomBetween(0.5, 0.72, Math.random);
+    const speed = randomBetween(520, 760, Math.random);
+    const startFromTop = Math.random() < 0.72;
+
+    meteors.push({
+      x: startFromTop ? randomBetween(width * -0.08, width * 0.82, Math.random) : randomBetween(width * -0.18, width * 0.08, Math.random),
+      y: startFromTop ? randomBetween(height * -0.16, height * 0.16, Math.random) : randomBetween(height * 0.04, height * 0.38, Math.random),
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      length: randomBetween(86, 168, Math.random),
+      radius: randomBetween(0.8, 1.6, Math.random),
+      alpha: randomBetween(0.48, 0.82, Math.random),
+      life: 0,
+      maxLife: randomBetween(1.15, 1.85, Math.random)
+    });
+  }
+
+  function updateMeteors(timestamp) {
+    if (!nextMeteorAt) {
+      queueNextMeteor(timestamp, false);
+    }
+
+    if (timestamp >= nextMeteorAt && meteors.length < 2) {
+      spawnMeteor();
+      queueNextMeteor(timestamp, meteors.length < 2 && Math.random() < 0.28);
+    }
+
+    const delta = lastMeteorFrameAt ? Math.min(0.05, (timestamp - lastMeteorFrameAt) / 1000) : 0;
+    lastMeteorFrameAt = timestamp;
+
+    meteors.forEach(function (meteor) {
+      meteor.x += meteor.vx * delta;
+      meteor.y += meteor.vy * delta;
+      meteor.life += delta;
+    });
+
+    meteors = meteors.filter(function (meteor) {
+      return meteor.life < meteor.maxLife &&
+        meteor.x < width + meteor.length + 40 &&
+        meteor.y < height + meteor.length + 40;
+    });
+  }
+
+  function drawMeteorLayer() {
+    if (!meteors.length) {
+      return;
+    }
+
+    context.save();
+    context.globalCompositeOperation = "screen";
+    context.lineCap = "round";
+
+    meteors.forEach(function (meteor) {
+      const progress = clamp(meteor.life / meteor.maxLife, 0, 1);
+      const fade = Math.sin(progress * Math.PI);
+      const alpha = meteor.alpha * fade;
+      const magnitude = Math.sqrt(meteor.vx * meteor.vx + meteor.vy * meteor.vy) || 1;
+      const tailX = meteor.x - (meteor.vx / magnitude) * meteor.length;
+      const tailY = meteor.y - (meteor.vy / magnitude) * meteor.length;
+      const trail = context.createLinearGradient(tailX, tailY, meteor.x, meteor.y);
+
+      trail.addColorStop(0, "rgba(132, 154, 255, 0)");
+      trail.addColorStop(0.58, rgba(COLORS.cool, alpha * 0.18));
+      trail.addColorStop(1, rgba(COLORS.white, alpha));
+
+      context.strokeStyle = trail;
+      context.lineWidth = meteor.radius;
+      context.beginPath();
+      context.moveTo(tailX, tailY);
+      context.lineTo(meteor.x, meteor.y);
+      context.stroke();
+      drawGlow(context, meteor.x, meteor.y, meteor.radius * 7.5, COLORS.white, alpha * 0.28);
+    });
+
+    context.restore();
+  }
+
   function drawFrame(timestamp) {
     if (!sceneBuffer || !width || !height) {
       return;
@@ -382,6 +476,8 @@
 
     if (!prefersReducedMotion.matches) {
       drawTwinkleLayer(timestamp * 0.001);
+      updateMeteors(timestamp);
+      drawMeteorLayer();
     }
   }
 
@@ -423,6 +519,7 @@
       canvas.style.height = height + "px";
 
       drawBaseScene();
+      resetMeteors();
       startAnimation();
     });
   }
