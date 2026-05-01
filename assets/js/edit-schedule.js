@@ -137,7 +137,7 @@
     dailySpacerTable: document.getElementById("dailySummarySpacerTable"),
     dailySpacerHead: document.getElementById("dailySummarySpacerHead"),
     dailySpacerBody: document.getElementById("dailySummarySpacerBody"),
-    lockButton: document.getElementById("scheduleLockButton"),
+    editButton: document.getElementById("scheduleEditButton"),
     saveButton: document.getElementById("scheduleSaveButton"),
     exportButton: document.getElementById("scheduleExportButton"),
     legendTitle: document.querySelector(".schedule-legend__title")
@@ -164,6 +164,7 @@
     legendCodesEditable: false,
     scheduleLocked: false,
     exportReady: false,
+    hasSavedSchedule: false,
     lockedScrollY: null,
     stickyMetricsObserver: null
   };
@@ -630,21 +631,35 @@
 
   function renderCornerActions() {
     dom.app.classList.toggle("schedule-app--schedule-locked", Boolean(uiState.scheduleLocked));
-    if (dom.lockButton) {
-      const label = uiState.scheduleLocked ? "UNLOCK" : "LOCK";
-      dom.lockButton.textContent = label;
-      dom.lockButton.setAttribute("aria-label", label);
-      dom.lockButton.setAttribute("aria-pressed", String(Boolean(uiState.scheduleLocked)));
-      dom.lockButton.classList.toggle("is-active", Boolean(uiState.scheduleLocked));
+    if (dom.editButton) {
+      dom.editButton.textContent = "EDIT";
+      dom.editButton.setAttribute("aria-label", "EDIT");
+      dom.editButton.hidden = !uiState.hasSavedSchedule;
+      dom.editButton.disabled = !uiState.scheduleLocked;
+      dom.editButton.classList.toggle("is-active", !uiState.scheduleLocked && uiState.hasSavedSchedule);
     }
     if (dom.saveButton) {
       dom.saveButton.textContent = "SAVE";
       dom.saveButton.setAttribute("aria-label", "SAVE");
+      dom.saveButton.disabled = Boolean(uiState.scheduleLocked);
+      dom.saveButton.classList.toggle("is-locked", Boolean(uiState.scheduleLocked));
     }
     if (dom.exportButton) {
       dom.exportButton.textContent = "EXCEL";
       dom.exportButton.setAttribute("aria-label", "Export Excel");
-      dom.exportButton.hidden = !uiState.exportReady;
+      dom.exportButton.hidden = !uiState.exportReady || uiState.scheduleLocked;
+    }
+    if (dom.selectionInput) {
+      dom.selectionInput.disabled = Boolean(uiState.scheduleLocked);
+    }
+    if (dom.addRowsButton) {
+      dom.addRowsButton.disabled = Boolean(uiState.scheduleLocked);
+    }
+    if (dom.deleteRowsButton) {
+      dom.deleteRowsButton.disabled = Boolean(uiState.scheduleLocked);
+    }
+    if (dom.addRowsCount) {
+      dom.addRowsCount.disabled = Boolean(uiState.scheduleLocked);
     }
   }
 
@@ -880,8 +895,8 @@
     if (dom.deleteRowsButton) {
       dom.deleteRowsButton.addEventListener("click", handleDeleteRows);
     }
-    if (dom.lockButton) {
-      dom.lockButton.addEventListener("click", toggleScheduleLock);
+    if (dom.editButton) {
+      dom.editButton.addEventListener("click", handleEditSchedule);
     }
     if (dom.saveButton) {
       dom.saveButton.addEventListener("click", handleManualSave);
@@ -1140,22 +1155,29 @@
     return "Schedule locked.";
   }
 
-  function toggleScheduleLock() {
-    uiState.scheduleLocked = !uiState.scheduleLocked;
-    if (uiState.scheduleLocked) {
-      clearSelection(true);
-    }
+  function lockScheduleAfterSave() {
+    uiState.scheduleLocked = true;
+    uiState.hasSavedSchedule = true;
     renderCornerActions();
-    showFeedback(uiState.scheduleLocked ? getLockedFeedback() : "Schedule unlocked.", uiState.scheduleLocked ? "error" : "success");
+    clearSelection(true);
+  }
+
+  function handleEditSchedule() {
+    uiState.scheduleLocked = false;
+    uiState.exportReady = true;
+    renderCornerActions();
+    showFeedback("Edit mode enabled. Excel export is ready.", "success");
   }
 
   function handleManualSave() {
+    if (uiState.scheduleLocked) {
+      return;
+    }
     saveState();
     saveLegendRemarks();
     saveLegendCodeLabels();
-    uiState.exportReady = true;
-    renderCornerActions();
-    showFeedback("Saved. Excel export is ready.", "success");
+    lockScheduleAfterSave();
+    showFeedback("Saved. Schedule is locked.", "success");
   }
 
   function exportCurrentMonthExcel() {
@@ -1423,6 +1445,19 @@
 
   function handleGlobalKeydown(event) {
     const key = event.key;
+    if (uiState.scheduleLocked) {
+      const target = event.target;
+      const isTypingField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (!isTypingField || target === dom.selectionInput) {
+        if (["Escape", "Tab"].indexOf(key) < 0) {
+          event.preventDefault();
+        }
+        if (target === dom.selectionInput) {
+          dom.selectionInput.blur();
+        }
+        return;
+      }
+    }
     if ((event.ctrlKey || event.metaKey) && key.toLowerCase() === "z") {
       event.preventDefault();
       undoLatest();
@@ -2320,6 +2355,10 @@
   }
 
   function handleAddRows() {
+    if (uiState.scheduleLocked) {
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     const count = Math.max(1, Math.min(100, Number(dom.addRowsCount && dom.addRowsCount.value || 1) || 1));
     const monthState = ensureCurrentMonthState();
     for (let index = 0; index < count; index += 1) {
@@ -2335,6 +2374,10 @@
   }
 
   function handleDeleteRows() {
+    if (uiState.scheduleLocked) {
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     const count = Math.max(1, Math.min(100, Number(dom.addRowsCount && dom.addRowsCount.value || 1) || 1));
     const monthState = ensureCurrentMonthState();
     if (!monthState.rows.length) {
@@ -2354,6 +2397,11 @@
   }
 
   function handleResizePointerStart(event) {
+    if (uiState.scheduleLocked) {
+      event.preventDefault();
+      showFeedback(getLockedFeedback(), "error");
+      return;
+    }
     const handle = event.target.closest("[data-resize-key]");
     if (!handle || event.button !== 0) {
       return;
