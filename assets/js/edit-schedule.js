@@ -1185,8 +1185,8 @@
     if (!uiState.exportReady) {
       return;
     }
-    const html = buildCurrentMonthExcelHtml();
-    const blob = new Blob(["\ufeff", html], { type: "application/vnd.ms-excel;charset=utf-8" });
+    const workbookXml = buildCurrentMonthExcelWorkbookXml();
+    const blob = new Blob(["\ufeff", workbookXml], { type: "application/vnd.ms-excel;charset=utf-8" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.href = url;
@@ -1200,211 +1200,347 @@
     showFeedback("Excel file exported.", "success");
   }
 
-  function buildCurrentMonthExcelHtml() {
+  function buildCurrentMonthExcelWorkbookXml() {
     const monthState = ensureCurrentMonthState();
-    const metaLabels = META_HEADERS[i18n.getLocale()] || META_HEADERS["zh-Hant"];
+    const scheduleLastRow = Math.max(60, 4 + monthState.rows.length);
+    const bottomStartRow = scheduleLastRow + 2;
+    const bottomLastRow = bottomStartRow + SHIFT_CODE_DEFINITIONS.length - 1;
+    return [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<?mso-application progid="Excel.Sheet"?>',
+      '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ',
+      'xmlns:o="urn:schemas-microsoft-com:office:office" ',
+      'xmlns:x="urn:schemas-microsoft-com:office:excel" ',
+      'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" ',
+      'xmlns:html="http://www.w3.org/TR/REC-html40">',
+      '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Author>YiDing</Author></DocumentProperties>',
+      buildExcelXmlStyles(),
+      buildScheduleWorksheetXml(monthState.rows, scheduleLastRow, bottomStartRow, bottomLastRow),
+      buildShiftDefinitionsWorksheetXml(),
+      '</Workbook>'
+    ].join("");
+  }
+
+  function buildExcelXmlStyles() {
+    return [
+      '<Styles>',
+      '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="10"/></Style>',
+      buildExcelXmlStyle("sGrid", null, null),
+      buildExcelXmlStyle("sLabel", "#DDEBF7", null),
+      buildExcelXmlStyle("sTitle", "#FFF2CC", null),
+      buildExcelXmlStyle("sDay", "#9FD0FF", 'd'),
+      buildExcelXmlStyle("sWeekend", "#FF1F1F", 'd'),
+      buildExcelXmlStyle("sWeekday", "#9FD0FF", null),
+      buildExcelXmlStyle("sWeekendText", "#FF1F1F", null),
+      buildExcelXmlStyle("sCodeA", "#FFF36D", null),
+      buildExcelXmlStyle("sCodeB", "#F4B6CB", null),
+      buildExcelXmlStyle("sCodeC", "#C9B6E8", null),
+      buildExcelXmlStyle("sCodeLeave", "#FF5A5A", null),
+      buildExcelXmlStyle("sCodeOff", "#FF1F1F", null),
+      buildExcelXmlStyle("sCodeOther", "#F7D7A7", null),
+      buildExcelXmlStyle("sSummary", null, null),
+      buildExcelXmlStyle("sDaily", "#93D18B", null),
+      buildExcelXmlStyle("sHidden", null, null),
+      '</Styles>'
+    ].join("");
+  }
+
+  function buildExcelXmlStyle(id, fillColor, numberFormat) {
+    return [
+      '<Style ss:ID="' + id + '">',
+      '<Alignment ss:Horizontal="Center" ss:Vertical="Center"/>',
+      '<Font ss:FontName="Arial" ss:Size="10" ss:Bold="1"/>',
+      '<Borders>',
+      '<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>',
+      '<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>',
+      '<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>',
+      '<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>',
+      '</Borders>',
+      fillColor ? '<Interior ss:Color="' + fillColor + '" ss:Pattern="Solid"/>' : '',
+      numberFormat ? '<NumberFormat ss:Format="' + numberFormat + '"/>' : '',
+      '</Style>'
+    ].join("");
+  }
+
+  function buildScheduleWorksheetXml(rows, scheduleLastRow, bottomStartRow, bottomLastRow) {
+    const rowXml = [];
+    for (let rowIndex = 1; rowIndex <= bottomLastRow; rowIndex += 1) {
+      const cells = buildScheduleWorksheetRowCells(rowIndex, rows, scheduleLastRow, bottomStartRow);
+      if (cells.length) {
+        rowXml.push(excelXmlRow(rowIndex, cells));
+      }
+    }
+    return [
+      '<Worksheet ss:Name="Sheet1">',
+      '<Table ss:ExpandedColumnCount="84" ss:ExpandedRowCount="' + bottomLastRow + '" x:FullColumns="1" x:FullRows="1">',
+      buildScheduleWorksheetColumnsXml(),
+      rowXml.join(""),
+      '</Table>',
+      buildScheduleWorksheetOptionsXml(),
+      '</Worksheet>'
+    ].join("");
+  }
+
+  function buildScheduleWorksheetColumnsXml() {
+    return [
+      '<Column ss:AutoFitWidth="0" ss:Width="73"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="180"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="218"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="94"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="113"/>',
+      '<Column ss:Index="6" ss:AutoFitWidth="0" ss:Span="30" ss:Width="41"/>',
+      '<Column ss:Index="37" ss:AutoFitWidth="0" ss:Width="20"/>',
+      '<Column ss:Index="38" ss:AutoFitWidth="0" ss:Span="34" ss:Width="42"/>',
+      '<Column ss:Index="73" ss:AutoFitWidth="0" ss:Width="14"/>',
+      '<Column ss:Index="74" ss:Hidden="1" ss:AutoFitWidth="0" ss:Span="10" ss:Width="0"/>'
+    ].join("");
+  }
+
+  function buildScheduleWorksheetOptionsXml() {
+    return [
+      '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">',
+      '<FreezePanes/>',
+      '<FrozenNoSplit/>',
+      '<SplitHorizontal>3</SplitHorizontal>',
+      '<TopRowBottomPane>3</TopRowBottomPane>',
+      '<SplitVertical>5</SplitVertical>',
+      '<LeftColumnRightPane>5</LeftColumnRightPane>',
+      '<ActivePane>0</ActivePane>',
+      '<ProtectObjects>False</ProtectObjects>',
+      '<ProtectScenarios>False</ProtectScenarios>',
+      '</WorksheetOptions>'
+    ].join("");
+  }
+
+  function buildScheduleWorksheetRowCells(rowIndex, rows, scheduleLastRow, bottomStartRow) {
+    const cells = [];
     const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
-    const summaryCodes = MAJOR_SHIFT_CODES.filter(function (code) {
-      return monthState.rows.some(function (row) {
-        return Object.keys(row.shifts).some(function (day) {
-          return normalizeCellValue(row.shifts[day]) === code;
-        });
+    if (rowIndex === 1) {
+      cells.push(excelXmlCell(2, "Year", "sLabel"));
+      cells.push(excelXmlCell(3, state.selectedYear, "sTitle", "Number"));
+      cells.push(excelXmlCell(4, "Month", "sLabel"));
+      cells.push(excelXmlCell(5, state.selectedMonth, "sTitle", "Number"));
+      cells.push(excelXmlCell(84, "", "sHidden", "Number", '=DAY(EOMONTH(DATE($C$1,$E$1,1),0))'));
+    }
+    if (rowIndex === 3) {
+      for (let colIndex = 6; colIndex <= 36; colIndex += 1) {
+        const style = isExcelWeekendColumn(colIndex) ? "sWeekend" : "sDay";
+        cells.push(excelXmlCell(colIndex, "", style, "DateTime", '=IF(COLUMN()-COLUMN($F$3)+1<=$CF$1,DATE($C$1,$E$1,COLUMN()-COLUMN($F$3)+1),"")'));
+      }
+      addRightSummaryTimeCells(cells);
+    }
+    if (rowIndex === 4) {
+      const metaLabels = META_HEADERS[i18n.getLocale()] || META_HEADERS.en;
+      metaLabels.forEach(function (label, index) {
+        cells.push(excelXmlCell(index + 1, label, "sGrid"));
       });
+      for (let colIndex = 6; colIndex <= 36; colIndex += 1) {
+        const colName = excelColName(colIndex);
+        const style = isExcelWeekendColumn(colIndex) ? "sWeekendText" : "sWeekday";
+        cells.push(excelXmlCell(colIndex, "", style, "String", buildWeekdayFormula(colName)));
+      }
+      addRightSummaryHeaderCells(cells);
+      cells.push(excelXmlCell(80, "\u52a0\u73ed", "sHidden"));
+      cells.push(excelXmlCell(81, "\u5e94\u4e0a\u65f6\u6570", "sHidden"));
+      cells.push(excelXmlCell(82, "\u5b9e\u9645\u65f6\u6570", "sHidden"));
+      cells.push(excelXmlCell(83, "\u591c\u73ed\u8865\u8d34(\u65f6\u6570)", "sHidden"));
+    }
+    if (rowIndex >= 5 && rowIndex <= scheduleLastRow) {
+      addScheduleDataCells(cells, rows[rowIndex - 5], rowIndex, days);
+      addRightSummaryFormulaCells(cells, rowIndex);
+      addEmployeeSummaryHelperCells(cells, rowIndex);
+    }
+    if (rowIndex >= bottomStartRow && rowIndex < bottomStartRow + SHIFT_CODE_DEFINITIONS.length) {
+      addDailySummaryFormulaCells(cells, rowIndex, scheduleLastRow, bottomStartRow);
+    }
+    addShiftOrderHelperCells(cells, rowIndex, scheduleLastRow);
+    return cells.sort(function (a, b) {
+      return a.index - b.index;
     });
-    const totalColumns = META_COLUMNS.length + days + 2 + summaryCodes.length + SUMMARY_FIELDS.length;
+  }
 
+  function addScheduleDataCells(cells, row, rowIndex, days) {
+    META_COLUMNS.forEach(function (column, index) {
+      const value = row && row.employeeSnapshot ? row.employeeSnapshot[column.key] : "";
+      cells.push(excelXmlCell(index + 1, value || "", "sGrid"));
+    });
+    for (let day = 1; day <= 31; day += 1) {
+      const colIndex = day + 5;
+      const code = row && day <= days ? normalizeCellValue(row.shifts[String(day)]) : "";
+      cells.push(excelXmlCell(colIndex, code, getExcelXmlCodeStyle(code)));
+    }
+  }
+
+  function addRightSummaryTimeCells(cells) {
+    for (let colIndex = 38; colIndex <= 72; colIndex += 1) {
+      const colName = excelColName(colIndex);
+      cells.push(excelXmlCell(colIndex, "", "sSummary", "String", '=IFERROR(IF(ISNUMBER(INDEX(Sheet2!$B$2:$B$32,MATCH(' + colName + '4,Sheet2!$A$2:$A$32,0))),TEXT(INDEX(Sheet2!$B$2:$B$32,MATCH(' + colName + '4,Sheet2!$A$2:$A$32,0)),"0")&"-"&TEXT(INDEX(Sheet2!$C$2:$C$32,MATCH(' + colName + '4,Sheet2!$A$2:$A$32,0)),"0"),""),"")'));
+    }
+  }
+
+  function addRightSummaryHeaderCells(cells) {
+    for (let colIndex = 38; colIndex <= 72; colIndex += 1) {
+      const colName = excelColName(colIndex);
+      const columnsFormula = 'COLUMNS($AL$4:' + colName + '4)';
+      const formula = '=IF(' + columnsFormula + '<=COUNT($CA$2:$CA$32),IFERROR(INDEX($BY$2:$BY$32,MATCH(' + columnsFormula + ',$CA$2:$CA$32,0)),""),IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+1,$CB$4,IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+2,$CC$4,IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+3,$CD$4,IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+4,$CE$4,"")))))';
+      cells.push(excelXmlCell(colIndex, "", "sSummary", "String", formula));
+    }
+  }
+
+  function addRightSummaryFormulaCells(cells, rowIndex) {
+    for (let colIndex = 38; colIndex <= 72; colIndex += 1) {
+      const colName = excelColName(colIndex);
+      const columnsFormula = 'COLUMNS($AL' + rowIndex + ':' + colName + rowIndex + ')';
+      const rowRange = '$F' + rowIndex + ':INDEX($F' + rowIndex + ':$AJ' + rowIndex + ',$CF$1)';
+      const formula = '=IF(' + columnsFormula + '<=COUNT($CA$2:$CA$32),IF(OR(' + colName + '$4="",COUNTA(' + rowRange + ')=0),"",COUNTIF(' + rowRange + ',' + colName + '$4)),IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+1,$CB' + rowIndex + ',IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+2,$CC' + rowIndex + ',IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+3,$CD' + rowIndex + ',IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+4,$CE' + rowIndex + ',"")))))';
+      cells.push(excelXmlCell(colIndex, "", "sSummary", "String", formula));
+    }
+  }
+
+  function addEmployeeSummaryHelperCells(cells, rowIndex) {
+    const rowRange = '$F' + rowIndex + ':INDEX($F' + rowIndex + ':$AJ' + rowIndex + ',$CF$1)';
+    cells.push(excelXmlCell(80, "", "sHidden", "Number", '=IF(COUNTA(' + rowRange + ')=0,"",COUNTIF(' + rowRange + ',"\u52a0"))'));
+    cells.push(excelXmlCell(81, "", "sHidden", "Number", '=IF(COUNTA(' + rowRange + ')=0,"",($CF$1-4)*8)'));
+    cells.push(excelXmlCell(82, "", "sHidden", "Number", '=IF(COUNTA(' + rowRange + ')=0,"",SUMPRODUCT(COUNTIF(' + rowRange + ',Sheet2!$A$2:$A$32),Sheet2!$D$2:$D$32))'));
+    cells.push(excelXmlCell(83, "", "sHidden", "Number", '=IF(COUNTA(' + rowRange + ')=0,"",SUMPRODUCT(COUNTIF(' + rowRange + ',Sheet2!$A$2:$A$32),Sheet2!$E$2:$E$32))'));
+  }
+
+  function addDailySummaryFormulaCells(cells, rowIndex, scheduleLastRow, bottomStartRow) {
+    cells.push(excelXmlCell(5, "", "sSummary", "String", '=IFERROR(INDEX($BV$2:$BV$32,MATCH(ROWS($E$' + bottomStartRow + ':E' + rowIndex + '),$BX$2:$BX$32,0)),"")'));
+    for (let colIndex = 6; colIndex <= 36; colIndex += 1) {
+      const colName = excelColName(colIndex);
+      cells.push(excelXmlCell(colIndex, "", "sDaily", "Number", '=IF(OR($E' + rowIndex + '="",' + colName + '$3=""),"",COUNTIF(' + colName + '$5:' + colName + '$' + scheduleLastRow + ',$E' + rowIndex + '))'));
+    }
+  }
+
+  function addShiftOrderHelperCells(cells, rowIndex, scheduleLastRow) {
+    if (rowIndex < 2 || rowIndex > 32) {
+      return;
+    }
+    const sheet2Row = getExcelShiftOrderSheet2Row(rowIndex);
+    cells.push(excelXmlCell(74, "", "sHidden", "String", '=Sheet2!A' + sheet2Row));
+    cells.push(excelXmlCell(75, "", "sHidden", "Number", '=COUNTIF($F$5:INDEX($F$5:$AJ$' + scheduleLastRow + ',ROWS($F$5:$AJ$' + scheduleLastRow + '),$CF$1),BV' + rowIndex + ')'));
+    cells.push(excelXmlCell(76, "", "sHidden", "Number", '=IF(BW' + rowIndex + '>0,COUNTIF($BW$2:BW' + rowIndex + ',">0"),"")'));
+    cells.push(excelXmlCell(77, "", "sHidden", "String", '=Sheet2!A' + sheet2Row));
+    cells.push(excelXmlCell(78, "", "sHidden", "Number", '=COUNTIF($F$5:INDEX($F$5:$AJ$' + scheduleLastRow + ',ROWS($F$5:$AJ$' + scheduleLastRow + '),$CF$1),BY' + rowIndex + ')'));
+    cells.push(excelXmlCell(79, "", "sHidden", "Number", '=IF(BZ' + rowIndex + '>0,COUNTIF($BZ$2:BZ' + rowIndex + ',">0"),"")'));
+  }
+
+  function getExcelShiftOrderSheet2Row(rowIndex) {
+    const order = [2, 10, 18, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
+    return order[rowIndex - 2] || rowIndex;
+  }
+
+  function buildShiftDefinitionsWorksheetXml() {
+    const rows = [
+      excelXmlRow(1, [
+        excelXmlCell(1, "SHIFT CODE", "sLabel"),
+        excelXmlCell(2, "CHECK IN TIME", "sLabel"),
+        excelXmlCell(3, "CHECK OUT TIME", "sLabel"),
+        excelXmlCell(4, "PAY HOURS", "sLabel"),
+        excelXmlCell(5, "NIGHT SHIFT HOURS", "sLabel"),
+        excelXmlCell(6, "REMARK", "sLabel")
+      ])
+    ];
+    SHIFT_CODE_DEFINITIONS.forEach(function (item, index) {
+      rows.push(excelXmlRow(index + 2, [
+        excelXmlCell(1, item.code, "sGrid"),
+        excelXmlCell(2, item.checkIn, "sGrid", getExcelXmlCellType(item.checkIn)),
+        excelXmlCell(3, item.checkOut, "sGrid", getExcelXmlCellType(item.checkOut)),
+        excelXmlCell(4, item.hoursPay, "sGrid", "Number"),
+        excelXmlCell(5, item.nightHours, "sGrid", "Number"),
+        excelXmlCell(6, getLegendRemark(item.code), "sGrid")
+      ]));
+    });
     return [
-      '<html><head><meta charset="UTF-8">',
-      '<style>',
-      'body{margin:0;background:#fff;font-family:Arial,sans-serif;}',
-      'table{border-collapse:collapse;table-layout:fixed;}',
-      'td,th{border:1px solid #000;padding:0 4px;height:18px;font-size:10px;font-weight:700;text-align:center;vertical-align:middle;white-space:nowrap;}',
-      '.excel-title{background:#fff2cc;font-size:14px;}',
-      '.excel-label{background:#ddebf7;font-size:14px;}',
-      '.excel-gap{border:0;background:#fff;}',
-      '.excel-day{background:#9fd0ff;}',
-      '.excel-weekend{background:#ff1f1f;color:#000;}',
-      '.excel-meta{background:#fff;}',
-      '.excel-summary-head{font-size:9px;background:#fff;}',
-      '.excel-summary-total{background:#ddebf7;}',
-      '.excel-daily-count{background:#93d18b;}',
-      '.excel-code-A{background:#fff36d;}',
-      '.excel-code-B{background:#f4b6cb;}',
-      '.excel-code-C{background:#c9b6e8;}',
-      '.excel-code-leave{background:#ff5a5a;color:#fff;}',
-      '.excel-code-off{background:#ff1f1f;color:#fff;}',
-      '.excel-code-other{background:#f7d7a7;}',
-      '.excel-thick-right{border-right:3px solid #000;}',
-      '.excel-thick-left{border-left:3px solid #000;}',
-      '.excel-thick-top{border-top:3px solid #000;}',
-      '.excel-thick-bottom{border-bottom:3px solid #000;}',
-      '</style>',
-      '</head><body>',
-      '<table>',
-      buildExcelColGroup(days, summaryCodes.length),
-      buildExcelTitleRows(days, totalColumns),
-      buildExcelHeaderRows(days, metaLabels, summaryCodes),
-      buildExcelEmployeeRows(monthState.rows, days, summaryCodes),
-      buildExcelBlankRows(days, summaryCodes.length),
-      buildExcelDailySummaryRows(monthState.rows, days, summaryCodes),
-      '</table>',
-      '</body></html>'
+      '<Worksheet ss:Name="Sheet2">',
+      '<Table ss:ExpandedColumnCount="6" ss:ExpandedRowCount="' + (SHIFT_CODE_DEFINITIONS.length + 1) + '" x:FullColumns="1" x:FullRows="1">',
+      '<Column ss:AutoFitWidth="0" ss:Width="90"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="110"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="120"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="90"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="130"/>',
+      '<Column ss:AutoFitWidth="0" ss:Width="220"/>',
+      rows.join(""),
+      '</Table>',
+      '</Worksheet>'
     ].join("");
   }
 
-  function buildExcelColGroup(days, summaryCodeCount) {
-    const widths = [70, 132, 160, 74, 74];
-    let html = "<colgroup>";
-    widths.forEach(function (width) {
-      html += '<col style="width:' + width + 'px">';
-    });
-    for (let day = 1; day <= days; day += 1) {
-      html += '<col style="width:28px">';
-    }
-    html += '<col style="width:44px">';
-    html += '<col style="width:44px">';
-    for (let index = 0; index < summaryCodeCount; index += 1) {
-      html += '<col style="width:30px">';
-    }
-    SUMMARY_FIELDS.forEach(function () {
-      html += '<col style="width:52px">';
-    });
-    return html + "</colgroup>";
+  function buildWeekdayFormula(colName) {
+    return '=IF(' + colName + '$3="","",CHOOSE(WEEKDAY(' + colName + '$3),"SUN","MON","TUE","WED","THU","FRI","SAT"))';
   }
 
-  function buildExcelTitleRows(days, totalColumns) {
-    const blanksBeforeDays = META_COLUMNS.length;
-    return [
-      "<tr>",
-      '<td class="excel-gap"></td>',
-      '<td class="excel-label">Year</td>',
-      '<td class="excel-title">' + escapeHtml(state.selectedYear) + "</td>",
-      '<td class="excel-label">Month</td>',
-      '<td class="excel-title">' + escapeHtml(state.selectedMonth) + "</td>",
-      repeatExcelCells(totalColumns - 5, "excel-gap", ""),
-      "</tr>",
-      '<tr>' + repeatExcelCells(totalColumns, "excel-gap", "") + '</tr>',
-      '<tr>' + repeatExcelCells(blanksBeforeDays, "excel-gap", "") + buildExcelDayCells(days, true) + repeatExcelCells(totalColumns - blanksBeforeDays - days, "excel-gap", "") + '</tr>'
-    ].join("");
-  }
-
-  function buildExcelHeaderRows(days, metaLabels, summaryCodes) {
-    const dayHeaders = [];
-    const weekdayHeaders = [];
-    for (let day = 1; day <= days; day += 1) {
-      dayHeaders.push(excelCell(day, getExcelDayClass(day)));
-      weekdayHeaders.push(excelCell(getWeekdayLabel(state.selectedYear, state.selectedMonth, day), getExcelDayClass(day)));
-    }
-    return [
-      "<tr>",
-      metaLabels.map(function (label, index) {
-        return excelCell(label, "excel-meta" + (index === metaLabels.length - 1 ? " excel-thick-right" : ""));
-      }).join(""),
-      dayHeaders.join(""),
-      '<td class="excel-gap"></td><td class="excel-gap"></td>',
-      summaryCodes.map(function (code) {
-        return excelCell(getLegendCodeLabel(code), "excel-summary-head");
-      }).join(""),
-      SUMMARY_FIELDS.map(function (field) {
-        return excelCell(getFixedFieldLabel(field), "excel-summary-head excel-summary-total");
-      }).join(""),
-      "</tr>",
-      "<tr>",
-      repeatExcelCells(META_COLUMNS.length, "excel-meta", ""),
-      weekdayHeaders.join(""),
-      '<td class="excel-gap"></td><td class="excel-gap"></td>',
-      repeatExcelCells(summaryCodes.length + SUMMARY_FIELDS.length, "excel-summary-head", ""),
-      "</tr>"
-    ].join("");
-  }
-
-  function buildExcelEmployeeRows(rows, days, summaryCodes) {
-    return rows.map(function (row) {
-      const summary = getRowSummary(row);
-      return [
-        "<tr>",
-        META_COLUMNS.map(function (column, index) {
-          return excelCell(row.employeeSnapshot[column.key] || "", "excel-meta" + (index === META_COLUMNS.length - 1 ? " excel-thick-right" : ""));
-        }).join(""),
-        Array.from({ length: days }, function (_, index) {
-          const code = normalizeCellValue(row.shifts[String(index + 1)]);
-          return excelCell(getLegendCodeLabel(code), getExcelCodeClass(code));
-        }).join(""),
-        '<td class="excel-gap"></td><td class="excel-gap"></td>',
-        summaryCodes.map(function (code) {
-          return excelCell(countRowCode(row, code), "excel-summary-head");
-        }).join(""),
-        SUMMARY_FIELDS.map(function (field) {
-          return excelCell(summary[field.id], "excel-summary-head excel-summary-total");
-        }).join(""),
-        "</tr>"
-      ].join("");
-    }).join("");
-  }
-
-  function buildExcelBlankRows(days, summaryCodeCount) {
-    const totalColumns = META_COLUMNS.length + days + 2 + summaryCodeCount + SUMMARY_FIELDS.length;
-    let html = "";
-    for (let index = 0; index < 7; index += 1) {
-      html += "<tr>" + repeatExcelCells(META_COLUMNS.length + days, "", "") + repeatExcelCells(totalColumns - META_COLUMNS.length - days, "excel-gap", "") + "</tr>";
-    }
-    return html;
-  }
-
-  function buildExcelDailySummaryRows(rows, days, summaryCodes) {
-    if (!summaryCodes.length) {
-      return "";
-    }
-    return summaryCodes.map(function (code) {
-      return [
-        "<tr>",
-        repeatExcelCells(META_COLUMNS.length - 1, "excel-gap", ""),
-        excelCell(getLegendCodeLabel(code), getExcelCodeClass(code) + " excel-thick-left"),
-        Array.from({ length: days }, function (_, index) {
-          return excelCell(getDailyCount(rows, code, index + 1), "excel-daily-count");
-        }).join(""),
-        repeatExcelCells(2 + summaryCodes.length + SUMMARY_FIELDS.length, "excel-gap", ""),
-        "</tr>"
-      ].join("");
-    }).join("");
-  }
-
-  function countRowCode(row, code) {
-    return Object.keys(row.shifts).reduce(function (total, day) {
-      return total + (normalizeCellValue(row.shifts[day]) === code ? 1 : 0);
-    }, 0);
-  }
-
-  function buildExcelDayCells(days) {
-    let html = "";
-    for (let day = 1; day <= days; day += 1) {
-      html += excelCell(day, getExcelDayClass(day));
-    }
-    return html;
-  }
-
-  function getExcelDayClass(day) {
+  function isExcelWeekendColumn(colIndex) {
+    const day = colIndex - 5;
     const weekday = new Date(state.selectedYear, state.selectedMonth - 1, day).getDay();
-    return (weekday === 0 || weekday === 6) ? "excel-day excel-weekend" : "excel-day";
+    return weekday === 0 || weekday === 6;
   }
 
-  function getExcelCodeClass(code) {
+  function getExcelXmlCodeStyle(code) {
     if (!code) {
-      return "";
+      return "sGrid";
     }
-    return "excel-code-" + getCodeGroup(code);
+    const group = getCodeGroup(code);
+    if (group === "A") {
+      return "sCodeA";
+    }
+    if (group === "B") {
+      return "sCodeB";
+    }
+    if (group === "C") {
+      return "sCodeC";
+    }
+    if (group === "leave") {
+      return "sCodeLeave";
+    }
+    if (group === "off") {
+      return "sCodeOff";
+    }
+    return "sCodeOther";
   }
 
-  function excelCell(value, className) {
-    return '<td class="' + escapeHtml(className || "") + '">' + escapeHtml(value) + "</td>";
+  function excelXmlRow(index, cells) {
+    return '<Row ss:Index="' + index + '" ss:AutoFitHeight="0" ss:Height="18">' + cells.map(function (cell) {
+      return cell.xml;
+    }).join("") + '</Row>';
   }
 
-  function repeatExcelCells(count, className, value) {
-    let html = "";
-    for (let index = 0; index < count; index += 1) {
-      html += excelCell(value || "", className || "");
+  function excelXmlCell(index, value, styleId, type, formula) {
+    const cellType = type || getExcelXmlCellType(value);
+    const attributes = [
+      'ss:Index="' + index + '"',
+      styleId ? 'ss:StyleID="' + styleId + '"' : '',
+      formula ? 'ss:Formula="' + escapeXml(formula) + '"' : ''
+    ].filter(Boolean).join(" ");
+    const data = value !== "" && value !== undefined && value !== null
+      ? '<Data ss:Type="' + cellType + '">' + escapeXml(value === undefined || value === null ? "" : value) + '</Data>'
+      : '';
+    return {
+      index: index,
+      xml: '<Cell ' + attributes + '>' + data + '</Cell>'
+    };
+  }
+
+  function getExcelXmlCellType(value) {
+    if (typeof value === "number") {
+      return "Number";
     }
-    return html;
+    if (typeof value === "string" && value !== "" && /^-?\d+(?:\.\d+)?$/.test(value)) {
+      return "Number";
+    }
+    return "String";
+  }
+
+  function excelColName(index) {
+    let colName = "";
+    let value = index;
+    while (value > 0) {
+      const remainder = (value - 1) % 26;
+      colName = String.fromCharCode(65 + remainder) + colName;
+      value = Math.floor((value - 1) / 26);
+    }
+    return colName;
   }
 
   function handleCellPointerStart(event) {
@@ -2508,5 +2644,14 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function escapeXml(value) {
+    return String(value === undefined || value === null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
   }
 })();

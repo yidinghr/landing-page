@@ -1414,6 +1414,7 @@ test.describe("Schedule module", () => {
     });
 
     await expect(page.locator("#scheduleExportButton")).toBeHidden();
+    await page.locator("#scheduleEditButton").click();
     await page.locator("#scheduleSaveButton").click();
     await expect(page.locator("#scheduleExportButton")).toBeVisible();
 
@@ -1423,9 +1424,11 @@ test.describe("Schedule module", () => {
     expect(download.suggestedFilename()).toBe("schedule_2026_07.xls");
     const exportedPath = await download.path();
     const exported = await fs.readFile(exportedPath, "utf8");
-    expect(exported).toContain("excel-title");
-    expect(exported).toContain("excel-code-A");
-    expect(exported).toContain("excel-daily-count");
+    expect(exported).toContain('<Worksheet ss:Name="Sheet1">');
+    expect(exported).toContain('<Worksheet ss:Name="Sheet2">');
+    expect(exported).toContain("<FreezePanes/>");
+    expect(exported).toContain("COUNTIF($F$5:INDEX($F$5:$AJ$60");
+    expect(exported).toContain("Sheet2!$A$2:$A$32");
     expect(exported).toContain("YDI777");
   });
 
