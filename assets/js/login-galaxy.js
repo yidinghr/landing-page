@@ -24,10 +24,10 @@
   const pageProfile = isSchedulePage
     ? {
         dprCap: 1.22,
-        baseDensity: 0.00048,
-        baseMaxCount: 1960,
-        twinkleDensity: 0.00027,
-        twinkleMaxCount: 860,
+        baseDensity: 0.00068,
+        baseMaxCount: 2780,
+        twinkleDensity: 0.00038,
+        twinkleMaxCount: 1240,
         constellationCount: 16,
         glowCount: 16
       }
@@ -93,7 +93,9 @@
   let sceneBuffer = null;
   let sceneContext = null;
   let twinkleStars = [];
+  let flareStars = [];
   let meteors = [];
+  let nextFlareAt = 0;
   let nextMeteorAt = 0;
   let lastMeteorFrameAt = 0;
   let visible = document.visibilityState !== "hidden";
@@ -375,6 +377,77 @@
     context.restore();
   }
 
+  function resetFlares() {
+    flareStars = [];
+    nextFlareAt = 0;
+  }
+
+  function queueNextFlare(timestamp) {
+    nextFlareAt = timestamp + randomBetween(isSchedulePage ? 520 : 880, isSchedulePage ? 1800 : 2600, Math.random);
+  }
+
+  function spawnFlares(timestamp) {
+    if (!twinkleStars.length) {
+      return;
+    }
+
+    const count = Math.random() < 0.68 ? 1 : 2;
+    for (let index = 0; index < count; index += 1) {
+      const source = twinkleStars[Math.floor(Math.random() * twinkleStars.length)];
+      flareStars.push({
+        x: source.x,
+        y: source.y,
+        radius: source.radius * randomBetween(1.4, 2.4, Math.random),
+        color: source.color,
+        start: timestamp,
+        duration: randomBetween(620, 1180, Math.random),
+        alpha: randomBetween(0.62, 0.95, Math.random)
+      });
+    }
+  }
+
+  function updateFlares(timestamp) {
+    if (!nextFlareAt) {
+      queueNextFlare(timestamp);
+    }
+
+    if (timestamp >= nextFlareAt) {
+      spawnFlares(timestamp);
+      queueNextFlare(timestamp);
+    }
+
+    flareStars = flareStars.filter(function (star) {
+      return timestamp - star.start < star.duration;
+    });
+  }
+
+  function drawFlareLayer(timestamp) {
+    if (!flareStars.length) {
+      return;
+    }
+
+    context.save();
+    context.globalCompositeOperation = "screen";
+
+    flareStars.forEach(function (star) {
+      const progress = clamp((timestamp - star.start) / star.duration, 0, 1);
+      const fade = Math.sin(progress * Math.PI);
+      const alpha = star.alpha * fade;
+      const glowRadius = star.radius * 8.8;
+
+      drawGlow(context, star.x, star.y, glowRadius, star.color, alpha * 0.42);
+
+      context.fillStyle = rgba(COLORS.white, alpha);
+      context.fillRect(star.x - star.radius * 2.4, star.y - 0.55, star.radius * 4.8, 1.1);
+      context.fillRect(star.x - 0.55, star.y - star.radius * 2.4, 1.1, star.radius * 4.8);
+      context.beginPath();
+      context.arc(star.x, star.y, Math.max(1.2, star.radius), 0, Math.PI * 2);
+      context.fill();
+    });
+
+    context.restore();
+  }
+
   function resetMeteors() {
     meteors = [];
     nextMeteorAt = 0;
@@ -383,14 +456,14 @@
 
   function queueNextMeteor(timestamp, quickFollow) {
     const delay = quickFollow
-      ? randomBetween(480, 1100, Math.random)
-      : randomBetween(isSchedulePage ? 5200 : 7000, isSchedulePage ? 12800 : 16000, Math.random);
+      ? randomBetween(340, 920, Math.random)
+      : randomBetween(isSchedulePage ? 4200 : 7000, isSchedulePage ? 9800 : 16000, Math.random);
     nextMeteorAt = timestamp + delay;
   }
 
   function spawnMeteor() {
-    const angle = randomBetween(0.5, 0.72, Math.random);
-    const speed = randomBetween(520, 760, Math.random);
+    const angle = randomBetween(0.58, 0.82, Math.random);
+    const speed = randomBetween(isSchedulePage ? 620 : 520, isSchedulePage ? 920 : 760, Math.random);
     const startFromTop = Math.random() < 0.72;
 
     meteors.push({
@@ -398,12 +471,24 @@
       y: startFromTop ? randomBetween(height * -0.16, height * 0.16, Math.random) : randomBetween(height * 0.04, height * 0.38, Math.random),
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      length: randomBetween(86, 168, Math.random),
-      radius: randomBetween(0.8, 1.6, Math.random),
-      alpha: randomBetween(0.48, 0.82, Math.random),
+      length: randomBetween(isSchedulePage ? 118 : 86, isSchedulePage ? 230 : 168, Math.random),
+      radius: randomBetween(0.9, isSchedulePage ? 1.9 : 1.6, Math.random),
+      alpha: randomBetween(0.52, 0.88, Math.random),
       life: 0,
-      maxLife: randomBetween(1.15, 1.85, Math.random)
+      maxLife: randomBetween(1.05, 1.7, Math.random)
     });
+  }
+
+  function spawnMeteorBurst() {
+    const count = isSchedulePage
+      ? Math.floor(randomBetween(1, 4, Math.random))
+      : 1;
+    for (let index = 0; index < count; index += 1) {
+      if (meteors.length >= (isSchedulePage ? 3 : 2)) {
+        break;
+      }
+      spawnMeteor();
+    }
   }
 
   function updateMeteors(timestamp) {
@@ -411,9 +496,10 @@
       queueNextMeteor(timestamp, false);
     }
 
-    if (timestamp >= nextMeteorAt && meteors.length < 2) {
-      spawnMeteor();
-      queueNextMeteor(timestamp, meteors.length < 2 && Math.random() < 0.28);
+    const maxMeteors = isSchedulePage ? 3 : 2;
+    if (timestamp >= nextMeteorAt && meteors.length < maxMeteors) {
+      spawnMeteorBurst();
+      queueNextMeteor(timestamp, meteors.length < maxMeteors && Math.random() < 0.32);
     }
 
     const delta = lastMeteorFrameAt ? Math.min(0.05, (timestamp - lastMeteorFrameAt) / 1000) : 0;
@@ -476,6 +562,8 @@
 
     if (!prefersReducedMotion.matches) {
       drawTwinkleLayer(timestamp * 0.001);
+      updateFlares(timestamp);
+      drawFlareLayer(timestamp);
       updateMeteors(timestamp);
       drawMeteorLayer();
     }
@@ -519,6 +607,7 @@
       canvas.style.height = height + "px";
 
       drawBaseScene();
+      resetFlares();
       resetMeteors();
       startAnimation();
     });

@@ -162,9 +162,9 @@
     codeDropdownOpen: false,
     codeDropdownIndex: -1,
     legendCodesEditable: false,
-    scheduleLocked: false,
+    scheduleLocked: true,
     exportReady: false,
-    hasSavedSchedule: false,
+    hasSavedSchedule: true,
     lockedScrollY: null,
     stickyMetricsObserver: null
   };
@@ -634,7 +634,7 @@
     if (dom.editButton) {
       dom.editButton.textContent = "EDIT";
       dom.editButton.setAttribute("aria-label", "EDIT");
-      dom.editButton.hidden = !uiState.hasSavedSchedule;
+      dom.editButton.hidden = false;
       dom.editButton.disabled = !uiState.scheduleLocked;
       dom.editButton.classList.toggle("is-active", !uiState.scheduleLocked && uiState.hasSavedSchedule);
     }
@@ -647,7 +647,7 @@
     if (dom.exportButton) {
       dom.exportButton.textContent = "EXCEL";
       dom.exportButton.setAttribute("aria-label", "Export Excel");
-      dom.exportButton.hidden = !uiState.exportReady || uiState.scheduleLocked;
+      dom.exportButton.hidden = !uiState.exportReady;
     }
     if (dom.selectionInput) {
       dom.selectionInput.disabled = Boolean(uiState.scheduleLocked);
@@ -1158,15 +1158,16 @@
   function lockScheduleAfterSave() {
     uiState.scheduleLocked = true;
     uiState.hasSavedSchedule = true;
+    uiState.exportReady = true;
     renderCornerActions();
     clearSelection(true);
   }
 
   function handleEditSchedule() {
     uiState.scheduleLocked = false;
-    uiState.exportReady = true;
+    uiState.exportReady = false;
     renderCornerActions();
-    showFeedback("Edit mode enabled. Excel export is ready.", "success");
+    showFeedback("Edit mode enabled.", "success");
   }
 
   function handleManualSave() {

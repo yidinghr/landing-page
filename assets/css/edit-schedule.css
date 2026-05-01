@@ -57,7 +57,7 @@
   top: 0;
   z-index: 36;
   min-height: var(--schedule-header-height);
-  border-bottom: 1px solid rgba(244, 213, 31, 0.2);
+  border-bottom: 1px solid rgba(130, 112, 214, 0.2);
   display: grid;
   grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr);
   align-items: center;
@@ -93,7 +93,7 @@
   min-width: 42px;
   min-height: 32px;
   padding: 0 8px;
-  border: 1px solid rgba(244, 213, 31, 0.26);
+  border: 1px solid rgba(130, 112, 214, 0.26);
   border-radius: 8px;
   background: rgba(10, 10, 10, 0.98);
   color: var(--color-text);
@@ -106,7 +106,7 @@
 .schedule-header__tool:focus-visible,
 .schedule-locale-slot .yd-locale-button:hover,
 .schedule-locale-slot .yd-locale-button:focus-visible {
-  border-color: rgba(244, 213, 31, 0.72);
+  border-color: rgba(130, 112, 214, 0.72);
   background: rgba(20, 20, 20, 0.98);
   transform: none;
 }
@@ -138,7 +138,7 @@
   top: var(--schedule-header-height);
   z-index: 35;
   min-height: var(--schedule-period-height);
-  border-bottom: 1px solid rgba(244, 213, 31, 0.14);
+  border-bottom: 1px solid rgba(130, 112, 214, 0.14);
   padding: 5px 18px;
   background: rgba(3, 3, 3, 0.98);
   overscroll-behavior: none;
@@ -176,13 +176,13 @@
   gap: 0;
   min-height: 34px;
   padding: 0;
-  border: 1px solid rgba(244, 213, 31, 0.26);
+  border: 1px solid rgba(130, 112, 214, 0.26);
   background: rgba(8, 8, 8, 0.98);
   position: relative;
 }
 
 .schedule-code-entry__label {
-  color: rgba(255, 243, 160, 0.9);
+  color: rgba(206, 198, 255, 0.9);
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
@@ -202,7 +202,7 @@
   width: 58px;
   min-height: 34px;
   border: 0;
-  border-left: 1px solid rgba(244, 213, 31, 0.18);
+  border-left: 1px solid rgba(130, 112, 214, 0.18);
   background: transparent;
   color: var(--color-text);
   font-size: 14px;
@@ -214,13 +214,13 @@
 }
 
 .schedule-code-entry__input::placeholder {
-  color: rgba(255, 243, 160, 0.52);
+  color: rgba(206, 198, 255, 0.52);
   opacity: 1;
 }
 
 .schedule-code-entry__input.is-active,
 .schedule-code-entry:focus-within {
-  border-color: rgba(244, 213, 31, 0.72);
+  border-color: rgba(130, 112, 214, 0.72);
 }
 
 .schedule-code-dropdown {
@@ -230,12 +230,12 @@
   width: 78px;
   max-height: 236px;
   overflow: auto;
-  border: 1px solid rgba(244, 213, 31, 0.36);
+  border: 1px solid rgba(130, 112, 214, 0.36);
   background: rgba(6, 6, 6, 0.98);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
   z-index: 42;
   scrollbar-width: thin;
-  scrollbar-color: rgba(244, 213, 31, 0.6) transparent;
+  scrollbar-color: rgba(130, 112, 214, 0.6) transparent;
 }
 
 .schedule-code-dropdown::-webkit-scrollbar {
@@ -243,7 +243,7 @@
 }
 
 .schedule-code-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(244, 213, 31, 0.52);
+  background: rgba(130, 112, 214, 0.52);
   border-radius: 999px;
 }
 
@@ -252,7 +252,7 @@
   min-height: 34px;
   padding: 0 10px;
   border: 0;
-  border-bottom: 1px solid rgba(244, 213, 31, 0.12);
+  border-bottom: 1px solid rgba(130, 112, 214, 0.12);
   background: rgba(6, 6, 6, 0.98);
   color: var(--color-text);
   font-size: 13px;
@@ -268,7 +268,7 @@
 .schedule-code-dropdown__option:hover,
 .schedule-code-dropdown__option:focus-visible,
 .schedule-code-dropdown__option.is-active {
-  background: rgba(244, 213, 31, 0.12);
+  background: rgba(130, 112, 214, 0.12);
   color: var(--color-text);
 }
 
@@ -278,12 +278,12 @@
   gap: 0;
   min-height: 34px;
   padding: 0;
-  border: 1px solid rgba(244, 213, 31, 0.26);
+  border: 1px solid rgba(130, 112, 214, 0.26);
   background: rgba(8, 8, 8, 0.98);
 }
 
 .schedule-add-rows__label {
-  color: rgba(255, 243, 160, 0.9);
+  color: rgba(206, 198, 255, 0.9);
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
@@ -312,7 +312,7 @@
   min-width: 36px;
   min-height: 34px;
   padding: 0;
-  border: 1px solid rgba(244, 213, 31, 0.26);
+  border: 1px solid rgba(130, 112, 214, 0.26);
   background: rgba(8, 8, 8, 0.98);
   color: var(--color-text);
   font-size: 18px;
@@ -321,7 +321,7 @@
 
 .schedule-add-rows__button:hover,
 .schedule-add-rows__button:focus-visible {
-  border-color: rgba(244, 213, 31, 0.72);
+  border-color: rgba(130, 112, 214, 0.72);
   background: rgba(18, 18, 18, 0.98);
 }
 
@@ -329,7 +329,7 @@
   display: grid;
   grid-template-columns: auto auto;
   align-items: stretch;
-  border: 1px solid rgba(244, 213, 31, 0.26);
+  border: 1px solid rgba(130, 112, 214, 0.26);
   background: rgba(8, 8, 8, 0.98);
 }
 
@@ -344,7 +344,7 @@
   min-width: 34px;
   justify-content: center;
   padding: 0 10px;
-  border-right: 1px solid rgba(244, 213, 31, 0.2);
+  border-right: 1px solid rgba(130, 112, 214, 0.2);
   color: var(--color-text);
   font-size: 14px;
   font-weight: 800;
@@ -388,7 +388,7 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(244, 213, 31, 0.68);
+  color: rgba(130, 112, 214, 0.68);
   font-size: 10px;
   pointer-events: none;
 }
@@ -475,7 +475,7 @@
   padding: 0 0 6px;
   scroll-padding-left: var(--sticky-offset-left);
   scrollbar-width: thin;
-  scrollbar-color: rgba(244, 213, 31, 0.6) transparent;
+  scrollbar-color: rgba(130, 112, 214, 0.6) transparent;
 }
 
 .schedule-sheet-scroll--fit {
@@ -494,7 +494,7 @@
 
 .schedule-sheet-scroll::-webkit-scrollbar-thumb,
 .schedule-legend__content::-webkit-scrollbar-thumb {
-  background: rgba(244, 213, 31, 0.6);
+  background: rgba(130, 112, 214, 0.6);
   border-radius: 999px;
 }
 
@@ -562,7 +562,7 @@
 .schedule-daily-spacer-table td,
 .schedule-legend-table th,
 .schedule-legend-table td {
-  border: 1px solid rgba(244, 213, 31, 0.22);
+  border: 1px solid rgba(130, 112, 214, 0.22);
   padding: 0;
   background: #050505;
   text-align: center;
@@ -645,7 +645,7 @@
 .schedule-table__weekday-head {
   height: 22px;
   font-size: 9px;
-  color: rgba(255, 243, 160, 0.72);
+  color: rgba(206, 198, 255, 0.72);
 }
 
 .schedule-table__body-row,
@@ -687,7 +687,7 @@
 }
 
 .schedule-table__body-row.is-drop-target td {
-  box-shadow: inset 0 2px 0 rgba(244, 213, 31, 0.9);
+  box-shadow: inset 0 2px 0 rgba(130, 112, 214, 0.9);
 }
 
 .schedule-table__body-row.is-dragging {
@@ -719,7 +719,7 @@
   min-height: calc(var(--schedule-row-height) - 2px);
   border: 0;
   background: transparent;
-  color: rgba(255, 243, 160, 0.96);
+  color: rgba(206, 198, 255, 0.96);
   font-size: 11px;
   font-weight: 800;
   text-align: center;
@@ -746,7 +746,7 @@
   height: 20px;
   border: 0;
   background: transparent;
-  color: rgba(244, 213, 31, 0.72);
+  color: rgba(130, 112, 214, 0.72);
   font-size: 10px;
   cursor: grab;
   opacity: 0;
@@ -760,7 +760,7 @@
 
 .schedule-row-handle:hover,
 .schedule-row-handle:focus-visible {
-  color: rgba(244, 213, 31, 0.98);
+  color: rgba(130, 112, 214, 0.98);
 }
 
 .schedule-row-handle:active {
@@ -769,7 +769,7 @@
 
 .schedule-meta-cell:hover,
 .schedule-cell:hover {
-  background: rgba(244, 213, 31, 0.08);
+  background: rgba(130, 112, 214, 0.08);
 }
 
 .schedule-meta-cell.is-selected,
@@ -812,7 +812,7 @@
 .schedule-summary-table thead th:last-child,
 .schedule-summary-table tbody td:last-child,
 .schedule-daily-table .schedule-daily-table__sticky--position {
-  box-shadow: 1px 0 0 rgba(244, 213, 31, 0.22);
+  box-shadow: 1px 0 0 rgba(130, 112, 214, 0.22);
 }
 
 .schedule-cell[data-code-group="A"] {
@@ -867,7 +867,7 @@
 
 .schedule-summary-table thead .schedule-summary-table__spacer th {
   height: 22px;
-  border: 1px solid rgba(244, 213, 31, 0.22);
+  border: 1px solid rgba(130, 112, 214, 0.22);
   background: rgba(18, 18, 18, 0.98);
 }
 
@@ -886,7 +886,7 @@
 .schedule-legend-table td {
   min-width: var(--summary-col);
   height: var(--schedule-row-height);
-  color: rgba(255, 243, 160, 0.94);
+  color: rgba(206, 198, 255, 0.94);
   font-size: 11px;
   box-sizing: border-box;
   line-height: calc(var(--schedule-row-height) - 2px);
@@ -1015,8 +1015,8 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  border-left: 1px solid rgba(244, 213, 31, 0.28);
-  border-top: 1px solid rgba(244, 213, 31, 0.16);
+  border-left: 1px solid rgba(130, 112, 214, 0.28);
+  border-top: 1px solid rgba(130, 112, 214, 0.16);
   border-top-left-radius: 12px;
   border-bottom-left-radius: 12px;
   background: rgba(8, 8, 8, 0.995);
@@ -1048,7 +1048,7 @@
   gap: 10px;
   min-height: 44px;
   padding: 0 16px;
-  border-bottom: 1px solid rgba(244, 213, 31, 0.16);
+  border-bottom: 1px solid rgba(130, 112, 214, 0.16);
   background: linear-gradient(180deg, rgba(14, 14, 14, 0.99) 0%, rgba(8, 8, 8, 0.99) 100%);
 }
 
@@ -1077,7 +1077,7 @@
 }
 
 .schedule-legend__code-edit-toggle[aria-pressed="true"] {
-  border-color: rgba(255, 221, 64, 0.62);
+  border-color: rgba(160, 145, 238, 0.62);
   color: #fff9e8;
 }
 
@@ -1174,7 +1174,7 @@
   min-height: 29px;
   border: 0;
   background: transparent;
-  color: rgba(255, 243, 160, 0.94);
+  color: rgba(206, 198, 255, 0.94);
   font-size: 11px;
   line-height: 1.28;
   padding: 4px 8px;
@@ -1187,7 +1187,7 @@
 }
 
 .schedule-legend-table__remark-input:focus::placeholder {
-  color: rgba(255, 243, 160, 0.18);
+  color: rgba(206, 198, 255, 0.18);
 }
 
 .schedule-assistive,
@@ -1208,9 +1208,9 @@
   min-width: 0;
   max-width: min(360px, calc(100vw - 36px));
   padding: 8px 10px;
-  border: 1px solid rgba(244, 213, 31, 0.28);
+  border: 1px solid rgba(130, 112, 214, 0.28);
   background: rgba(8, 8, 8, 0.96);
-  color: rgba(255, 243, 160, 0.94);
+  color: rgba(206, 198, 255, 0.94);
   font-size: 12px;
   line-height: 1.45;
   opacity: 0;
@@ -1430,13 +1430,13 @@
 
 .schedule-meta-cell:hover,
 .schedule-cell:hover {
-  background: rgba(255, 244, 214, 0.08);
+  background: rgba(130, 112, 214, 0.08);
 }
 
 .schedule-meta-cell.is-selected,
 .schedule-cell.is-selected {
-  background: rgba(255, 244, 214, 0.14);
-  box-shadow: inset 0 0 0 2px rgba(244, 215, 159, 0.56);
+  background: rgba(130, 112, 214, 0.14);
+  box-shadow: inset 0 0 0 2px rgba(160, 145, 238, 0.56);
 }
 
 .schedule-table__meta-head,
@@ -2114,13 +2114,13 @@ body.edit-page {
 
 .schedule-meta-cell:hover,
 .schedule-cell:hover {
-  background: rgba(255, 243, 202, 0.06) !important;
+  background: rgba(130, 112, 214, 0.06) !important;
 }
 
 .schedule-meta-cell.is-selected,
 .schedule-cell.is-selected {
-  background: rgba(255, 244, 210, 0.1) !important;
-  box-shadow: inset 0 0 0 1px rgba(244, 213, 31, 0.72) !important;
+  background: rgba(130, 112, 214, 0.1) !important;
+  box-shadow: inset 0 0 0 1px rgba(130, 112, 214, 0.72) !important;
 }
 
 .schedule-cell[data-code-group],
@@ -2168,7 +2168,7 @@ body.edit-page {
 }
 
 .schedule-legend-table__code-input:focus {
-  border-color: rgba(255, 221, 64, 0.72);
+  border-color: rgba(160, 145, 238, 0.72);
 }
 
 /* Keep the frozen employee-info columns visually transparent; JS hides day cells underneath. */
