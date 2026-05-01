@@ -15,10 +15,10 @@
 .yd-locale-button {
   width: 46px;
   height: 46px;
-  border: 1px solid rgba(244, 213, 31, 0.48);
+  border: 1px solid rgba(130, 112, 214, 0.48);
   border-radius: 14px;
   background: rgba(4, 4, 4, 0.94);
-  color: var(--color-text, #f4d51f);
+  color: var(--color-text, #8270d6);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -30,7 +30,7 @@
 .yd-locale-button:hover,
 .yd-locale-button:focus-visible {
   background: rgba(18, 18, 18, 0.98);
-  border-color: rgba(244, 213, 31, 0.82);
+  border-color: rgba(130, 112, 214, 0.82);
   transform: translateY(-1px);
 }
 
@@ -45,7 +45,7 @@
   right: 0;
   z-index: 80;
   min-width: 170px;
-  border: 1px solid rgba(244, 213, 31, 0.34);
+  border: 1px solid rgba(130, 112, 214, 0.34);
   border-radius: 16px;
   background: rgba(6, 6, 6, 0.98);
   box-shadow: 0 18px 34px rgba(0, 0, 0, 0.28);
@@ -61,7 +61,7 @@
 
 .yd-locale-popover__title {
   margin: 0 0 2px;
-  color: rgba(255, 243, 160, 0.86);
+  color: rgba(206, 198, 255, 0.86);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -73,7 +73,7 @@
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
-  color: var(--color-text, #f4d51f);
+  color: var(--color-text, #8270d6);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -85,18 +85,18 @@
 
 .yd-locale-option:hover,
 .yd-locale-option:focus-visible {
-  background: rgba(244, 213, 31, 0.08);
-  border-color: rgba(244, 213, 31, 0.22);
+  background: rgba(130, 112, 214, 0.08);
+  border-color: rgba(130, 112, 214, 0.22);
   transform: translateY(-1px);
 }
 
 .yd-locale-option.is-active {
-  border-color: rgba(244, 213, 31, 0.44);
-  background: rgba(244, 213, 31, 0.08);
+  border-color: rgba(130, 112, 214, 0.44);
+  background: rgba(130, 112, 214, 0.08);
 }
 
 .yd-locale-option__check {
-  color: rgba(255, 243, 160, 0.9);
+  color: rgba(206, 198, 255, 0.9);
   font-size: 12px;
   opacity: 0;
 }

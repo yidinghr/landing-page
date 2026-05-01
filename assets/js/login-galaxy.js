@@ -78,10 +78,11 @@
   const COLORS = Object.freeze({
     spaceTop: "#090313",
     spaceBottom: "#020108",
-    warm: [246, 224, 178],
+    warm: isSchedulePage ? [174, 162, 255] : [246, 224, 178],
     violet: [194, 130, 255],
-    amber: [236, 194, 102],
+    amber: isSchedulePage ? [112, 134, 235] : [236, 194, 102],
     cool: [132, 154, 255],
+    electric: [176, 164, 255],
     white: [250, 245, 235]
   });
 
@@ -161,7 +162,9 @@
         y: randomBetween(height * -0.08, height * 1.04, rng),
         radius: randomBetween(width * 0.14, width * 0.34, rng),
         alpha: randomBetween(0.04, 0.1, rng),
-        color: index % 3 === 0 ? COLORS.cool : index % 2 === 0 ? COLORS.amber : COLORS.violet
+        color: isSchedulePage
+          ? (index % 3 === 0 ? COLORS.electric : index % 2 === 0 ? COLORS.cool : COLORS.violet)
+          : (index % 3 === 0 ? COLORS.cool : index % 2 === 0 ? COLORS.amber : COLORS.violet)
       });
     }
 
@@ -261,9 +264,11 @@
     for (let index = 0; index < count; index += 1) {
       const x = rng() * width;
       const y = rng() * height;
-      const radius = randomBetween(0.22, 1.62, rng);
-      const alpha = randomBetween(0.2, 0.86, rng);
-      const color = rng() < 0.14 ? COLORS.cool : rng() < 0.36 ? COLORS.violet : COLORS.warm;
+      const radius = randomBetween(isSchedulePage ? 0.28 : 0.22, isSchedulePage ? 1.9 : 1.62, rng);
+      const alpha = randomBetween(isSchedulePage ? 0.24 : 0.2, isSchedulePage ? 0.94 : 0.86, rng);
+      const color = isSchedulePage
+        ? (rng() < 0.34 ? COLORS.cool : rng() < 0.68 ? COLORS.violet : COLORS.electric)
+        : (rng() < 0.14 ? COLORS.cool : rng() < 0.36 ? COLORS.violet : COLORS.warm);
 
       if (radius < 0.7) {
         targetContext.fillStyle = rgba(color, alpha);
@@ -289,18 +294,20 @@
     twinkleStars = [];
 
     for (let index = 0; index < count; index += 1) {
-      const sparkle = rng() < 0.24;
+      const sparkle = rng() < (isSchedulePage ? 0.38 : 0.24);
       twinkleStars.push({
         x: rng() * width,
         y: rng() * height,
-        radius: randomBetween(0.5, sparkle ? 1.8 : 1.2, rng),
-        baseAlpha: randomBetween(0.18, 0.92, rng),
-        pulseMin: randomBetween(0.3, 0.7, rng),
-        pulseMax: randomBetween(0.9, 1.35, rng),
-        speed: randomBetween(0.32, 1.24, rng),
+        radius: randomBetween(isSchedulePage ? 0.64 : 0.5, sparkle ? (isSchedulePage ? 2.4 : 1.8) : (isSchedulePage ? 1.55 : 1.2), rng),
+        baseAlpha: randomBetween(isSchedulePage ? 0.24 : 0.18, isSchedulePage ? 0.98 : 0.92, rng),
+        pulseMin: randomBetween(isSchedulePage ? 0.18 : 0.3, 0.7, rng),
+        pulseMax: randomBetween(0.9, isSchedulePage ? 1.8 : 1.35, rng),
+        speed: randomBetween(isSchedulePage ? 0.58 : 0.32, isSchedulePage ? 2.15 : 1.24, rng),
         phase: rng() * Math.PI * 2,
         sparkle: sparkle,
-        color: rng() < 0.18 ? COLORS.cool : rng() < 0.4 ? COLORS.violet : COLORS.white
+        color: isSchedulePage
+          ? (rng() < 0.42 ? COLORS.cool : rng() < 0.82 ? COLORS.electric : COLORS.violet)
+          : (rng() < 0.18 ? COLORS.cool : rng() < 0.4 ? COLORS.violet : COLORS.white)
       });
     }
   }
@@ -383,7 +390,7 @@
   }
 
   function queueNextFlare(timestamp) {
-    nextFlareAt = timestamp + randomBetween(isSchedulePage ? 520 : 880, isSchedulePage ? 1800 : 2600, Math.random);
+    nextFlareAt = timestamp + randomBetween(isSchedulePage ? 260 : 880, isSchedulePage ? 980 : 2600, Math.random);
   }
 
   function spawnFlares(timestamp) {
@@ -391,17 +398,19 @@
       return;
     }
 
-    const count = Math.random() < 0.68 ? 1 : 2;
+    const count = isSchedulePage
+      ? (Math.random() < 0.58 ? 1 : 2)
+      : (Math.random() < 0.68 ? 1 : 2);
     for (let index = 0; index < count; index += 1) {
       const source = twinkleStars[Math.floor(Math.random() * twinkleStars.length)];
       flareStars.push({
         x: source.x,
         y: source.y,
-        radius: source.radius * randomBetween(1.4, 2.4, Math.random),
+        radius: source.radius * randomBetween(isSchedulePage ? 2.1 : 1.4, isSchedulePage ? 3.4 : 2.4, Math.random),
         color: source.color,
         start: timestamp,
-        duration: randomBetween(620, 1180, Math.random),
-        alpha: randomBetween(0.62, 0.95, Math.random)
+        duration: randomBetween(isSchedulePage ? 780 : 620, isSchedulePage ? 1480 : 1180, Math.random),
+        alpha: randomBetween(isSchedulePage ? 0.78 : 0.62, isSchedulePage ? 1 : 0.95, Math.random)
       });
     }
   }
@@ -433,7 +442,7 @@
       const progress = clamp((timestamp - star.start) / star.duration, 0, 1);
       const fade = Math.sin(progress * Math.PI);
       const alpha = star.alpha * fade;
-      const glowRadius = star.radius * 8.8;
+      const glowRadius = star.radius * (isSchedulePage ? 12.5 : 8.8);
 
       drawGlow(context, star.x, star.y, glowRadius, star.color, alpha * 0.42);
 
@@ -450,14 +459,14 @@
 
   function resetMeteors() {
     meteors = [];
-    nextMeteorAt = 0;
+    nextMeteorAt = isSchedulePage ? performance.now() + randomBetween(700, 1500, Math.random) : 0;
     lastMeteorFrameAt = 0;
   }
 
   function queueNextMeteor(timestamp, quickFollow) {
     const delay = quickFollow
       ? randomBetween(340, 920, Math.random)
-      : randomBetween(isSchedulePage ? 4200 : 7000, isSchedulePage ? 9800 : 16000, Math.random);
+      : randomBetween(isSchedulePage ? 1600 : 7000, isSchedulePage ? 5200 : 16000, Math.random);
     nextMeteorAt = timestamp + delay;
   }
 
