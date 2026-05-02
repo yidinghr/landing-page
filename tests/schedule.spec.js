@@ -1429,6 +1429,10 @@ test.describe("Schedule module", () => {
     expect(exported).toContain("<FreezePanes/>");
     expect(exported).toContain("COUNTIF($F$5:INDEX($F$5:$AJ$60");
     expect(exported).toContain("Sheet2!$A$2:$A$32");
+    expect(exported).toContain('<Data ss:Type="DateTime">2026-07-01T00:00:00.000</Data>');
+    expect(exported).toContain('<Data ss:Type="String">WED</Data>');
+    expect(exported).toContain('<Data ss:Type="String">A</Data>');
+    expect(exported).toContain('<Data ss:Type="String">7-15</Data>');
     expect(exported).toContain("YDI777");
   });
 

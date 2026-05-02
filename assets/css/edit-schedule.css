@@ -24,6 +24,9 @@
 }
 
 .schedule-workspace {
+  --schedule-scroll-accent: rgba(130, 112, 214, 0.68);
+  --schedule-scroll-accent-strong: rgba(130, 112, 214, 0.9);
+  --schedule-scroll-accent-fill: linear-gradient(180deg, rgba(130, 112, 214, 0.46), rgba(55, 76, 145, 0.28));
   --schedule-header-height: 74px;
   --schedule-period-height: 52px;
   --schedule-sheet-sticky-top: calc(var(--schedule-header-height) + var(--schedule-period-height));
@@ -93,10 +96,10 @@
   min-width: 42px;
   min-height: 32px;
   padding: 0 8px;
-  border: 1px solid rgba(130, 112, 214, 0.26);
+  border: 1px solid var(--schedule-scroll-accent);
   border-radius: 8px;
-  background: rgba(10, 10, 10, 0.98);
-  color: var(--color-text);
+  background: var(--schedule-scroll-accent-fill);
+  color: #f2eeff;
   font-size: 15px;
   font-weight: 800;
   transition: border-color 0.14s ease, background 0.14s ease;
@@ -106,8 +109,8 @@
 .schedule-header__tool:focus-visible,
 .schedule-locale-slot .yd-locale-button:hover,
 .schedule-locale-slot .yd-locale-button:focus-visible {
-  border-color: rgba(130, 112, 214, 0.72);
-  background: rgba(20, 20, 20, 0.98);
+  border-color: var(--schedule-scroll-accent-strong);
+  background: linear-gradient(180deg, rgba(130, 112, 214, 0.62), rgba(55, 76, 145, 0.42));
   transform: none;
 }
 
@@ -336,17 +339,17 @@
   min-width: 36px;
   min-height: 34px;
   padding: 0;
-  border: 1px solid rgba(130, 112, 214, 0.26);
-  background: rgba(8, 8, 8, 0.98);
-  color: var(--color-text);
+  border: 1px solid var(--schedule-scroll-accent);
+  background: var(--schedule-scroll-accent-fill);
+  color: #f2eeff;
   font-size: 18px;
   font-weight: 800;
 }
 
 .schedule-add-rows__button:hover,
 .schedule-add-rows__button:focus-visible {
-  border-color: rgba(130, 112, 214, 0.72);
-  background: rgba(18, 18, 18, 0.98);
+  border-color: var(--schedule-scroll-accent-strong);
+  background: linear-gradient(180deg, rgba(130, 112, 214, 0.62), rgba(55, 76, 145, 0.42));
 }
 
 .schedule-period-pair {
@@ -412,7 +415,7 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(130, 112, 214, 0.68);
+  color: var(--schedule-scroll-accent-strong);
   font-size: 10px;
   pointer-events: none;
 }
@@ -2317,6 +2320,27 @@ body.edit-page {
 .schedule-sheet-scroll::-webkit-scrollbar-corner,
 .schedule-legend__content::-webkit-scrollbar-corner {
   background: transparent !important;
+}
+
+.schedule-add-rows__button,
+.schedule-header__tool,
+.schedule-period-pair__arrow {
+  border-color: var(--schedule-scroll-accent) !important;
+  background: var(--schedule-scroll-accent-fill) !important;
+  color: #f2eeff !important;
+}
+
+.schedule-period-pair__arrow {
+  background: none !important;
+  border-color: transparent !important;
+}
+
+.schedule-add-rows__button:hover,
+.schedule-add-rows__button:focus-visible,
+.schedule-header__tool:hover,
+.schedule-header__tool:focus-visible {
+  border-color: var(--schedule-scroll-accent-strong) !important;
+  background: linear-gradient(180deg, rgba(130, 112, 214, 0.62), rgba(55, 76, 145, 0.42)) !important;
 }
 
 .schedule-legend,
