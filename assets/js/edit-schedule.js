@@ -340,7 +340,7 @@
       return {
         selectedYear: sanitizeYear(parsed.selectedYear),
         selectedMonth: sanitizeMonth(parsed.selectedMonth),
-        legendOpen: Boolean(parsed.legendOpen),
+        legendOpen: false,
         zoomLevel: sanitizeZoom(parsed.zoomLevel),
         columnWidths: sanitizeColumnWidths(parsed.columnWidths),
         months: parsed.months && typeof parsed.months === "object" ? parsed.months : {}
