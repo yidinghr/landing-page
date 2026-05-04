@@ -2466,3 +2466,125 @@ body.edit-page {
 .schedule-app--schedule-locked .schedule-add-rows__button {
   opacity: 0.48;
 }
+
+/* ── Legend panel: flex layout so calendar section stacks below ──────── */
+.schedule-legend {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.schedule-legend__content {
+  flex: 1 1 0;
+}
+
+/* ── Bảng lịch section header ─────────────────────────────────────────── */
+.schedule-legend__head--section {
+  border-top: 1px solid rgba(130, 112, 214, 0.14);
+  flex-shrink: 0;
+}
+
+/* ── Calendar content area ────────────────────────────────────────────── */
+.schedule-legend__calendar {
+  flex: 0 0 auto;
+  overflow-y: auto;
+  max-height: 240px;
+  padding: 10px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(130, 112, 214, 0.34) transparent;
+}
+
+.schedule-cal__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.schedule-cal__select {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid rgba(130, 112, 214, 0.28);
+  background: transparent;
+  color: rgba(255, 249, 236, 0.96);
+  font-size: 12px;
+  font-weight: 700;
+  appearance: none;
+  outline: none;
+  color-scheme: dark;
+}
+
+.schedule-cal__save {
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid rgba(130, 112, 214, 0.38);
+  background: rgba(130, 112, 214, 0.1);
+  color: rgba(255, 249, 236, 0.96);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.schedule-cal__save:hover,
+.schedule-cal__save:focus-visible {
+  border-color: rgba(130, 112, 214, 0.68);
+  background: rgba(130, 112, 214, 0.22);
+  outline: none;
+}
+
+.schedule-cal__weekdays,
+.schedule-cal__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.schedule-cal__weekdays {
+  margin-bottom: 2px;
+}
+
+.schedule-cal__weekday-label {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: rgba(206, 198, 255, 0.66);
+  padding: 2px 0;
+}
+
+.schedule-cal__day {
+  height: 22px;
+  border: 1px solid rgba(130, 112, 214, 0.16);
+  background: transparent;
+  color: rgba(255, 249, 236, 0.86);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.schedule-cal__day:hover {
+  background: rgba(130, 112, 214, 0.14);
+  border-color: rgba(130, 112, 214, 0.38);
+}
+
+.schedule-cal__day.is-selected {
+  background: rgba(130, 112, 214, 0.3);
+  border-color: rgba(130, 112, 214, 0.7);
+  color: #fff9e8;
+}
+
+.schedule-cal__day--empty {
+  background: transparent !important;
+  border-color: transparent !important;
+  pointer-events: none;
+}
+
+/* ── Day-column highlight in schedule table ───────────────────────────── */
+.is-cal-day-highlighted {
+  background: rgba(130, 112, 214, 0.22) !important;
+  box-shadow: inset 0 0 0 1px rgba(130, 112, 214, 0.32) !important;
+}

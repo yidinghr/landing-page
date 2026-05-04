@@ -141,7 +141,13 @@
     saveButton: document.getElementById("scheduleSaveButton"),
     exportButton: document.getElementById("scheduleExportButton"),
     legendTitle: document.querySelector(".schedule-legend__title"),
-    legendListToggle: document.getElementById("scheduleLegendListToggle")
+    legendListToggle: document.getElementById("scheduleLegendListToggle"),
+    calendarToggle: document.getElementById("scheduleCalendarToggle"),
+    calendarContent: document.getElementById("scheduleCalendarContent"),
+    calYear: document.getElementById("scheduleCalYear"),
+    calMonth: document.getElementById("scheduleCalMonth"),
+    calGrid: document.getElementById("scheduleCalGrid"),
+    calSave: document.getElementById("scheduleCalSave")
   };
 
   if (!i18n || !dom.app || !dom.yearSelect || !dom.monthSelect || !dom.tableHead || !dom.tableBody) {
@@ -168,7 +174,9 @@
     exportReady: false,
     hasSavedSchedule: true,
     lockedScrollY: null,
-    stickyMetricsObserver: null
+    stickyMetricsObserver: null,
+    calendarOpen: false,
+    calHighlightedDays: []
   };
   const state = loadState();
   let legendRemarks = loadLegendRemarks();
@@ -177,6 +185,7 @@
   buildShiftCodeDatalist();
   populatePeriodOptions();
   bindEvents();
+  initCalendar();
   observeStickyMetrics();
   ensureCurrentMonthState();
   renderStaticText();
@@ -638,6 +647,89 @@
     dom.legendListToggle.setAttribute("aria-expanded", String(Boolean(uiState.legendListOpen)));
   }
 
+  function renderCalendarState() {
+    if (!dom.calendarToggle || !dom.calendarContent) { return; }
+    dom.calendarContent.hidden = !uiState.calendarOpen;
+    dom.calendarToggle.textContent = uiState.calendarOpen ? "▲" : "▼";
+    dom.calendarToggle.setAttribute("aria-expanded", String(Boolean(uiState.calendarOpen)));
+    if (uiState.calendarOpen) {
+      buildCalendarGrid();
+    }
+  }
+
+  function buildCalendarGrid() {
+    if (!dom.calGrid || !dom.calYear || !dom.calMonth) { return; }
+    const year = Number(dom.calYear.value);
+    const month = Number(dom.calMonth.value);
+    const days = getDaysInMonth(year, month);
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+    const weekdayLabels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+    let html = '<div class="schedule-cal__weekdays">';
+    weekdayLabels.forEach(function (label) {
+      html += '<span class="schedule-cal__weekday-label">' + escapeHtml(label) + '</span>';
+    });
+    html += '</div><div class="schedule-cal__days">';
+    for (let i = 0; i < startOffset; i += 1) {
+      html += '<span class="schedule-cal__day schedule-cal__day--empty"></span>';
+    }
+    for (let day = 1; day <= days; day += 1) {
+      const isSelected = uiState.calHighlightedDays.indexOf(day) !== -1;
+      html += '<button type="button" class="schedule-cal__day' + (isSelected ? ' is-selected' : '') + '" data-cal-day="' + day + '">' + day + '</button>';
+    }
+    html += '</div>';
+    dom.calGrid.innerHTML = html;
+  }
+
+  function applyCalendarHighlights() {
+    const days = uiState.calHighlightedDays;
+    const cls = "is-cal-day-highlighted";
+    [dom.tableHead, dom.frozenTableHead].forEach(function (head) {
+      if (!head) { return; }
+      head.querySelectorAll("[data-day-head]").forEach(function (th) {
+        th.classList.remove(cls);
+      });
+    });
+    if (dom.tableBody) {
+      dom.tableBody.querySelectorAll("td.schedule-table__cell").forEach(function (td) {
+        td.classList.remove(cls);
+      });
+    }
+    days.forEach(function (day) {
+      [dom.tableHead, dom.frozenTableHead].forEach(function (head) {
+        if (!head) { return; }
+        const th = head.querySelector('[data-day-head="' + day + '"]');
+        if (th) { th.classList.add(cls); }
+      });
+      if (dom.tableBody) {
+        dom.tableBody.querySelectorAll('[data-day="' + day + '"]').forEach(function (btn) {
+          if (btn.parentElement) { btn.parentElement.classList.add(cls); }
+        });
+      }
+    });
+  }
+
+  function initCalendar() {
+    if (!dom.calYear || !dom.calMonth) { return; }
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    for (let y = currentYear - 2; y <= currentYear + 3; y += 1) {
+      const opt = document.createElement("option");
+      opt.value = String(y);
+      opt.textContent = String(y);
+      if (y === currentYear) { opt.selected = true; }
+      dom.calYear.appendChild(opt);
+    }
+    for (let m = 1; m <= 12; m += 1) {
+      const opt = document.createElement("option");
+      opt.value = String(m);
+      opt.textContent = String(m);
+      if (m === currentMonth) { opt.selected = true; }
+      dom.calMonth.appendChild(opt);
+    }
+  }
+
   function renderCornerActions() {
     dom.app.classList.toggle("schedule-app--schedule-locked", Boolean(uiState.scheduleLocked));
     if (dom.editButton) {
@@ -725,6 +817,7 @@
     renderSelectionState();
     renderSelectionMeta();
     renderLegendListState();
+    applyCalendarHighlights();
   }
 
   function renderTableHead() {
@@ -939,6 +1032,43 @@
       dom.legendListToggle.addEventListener("click", function () {
         uiState.legendListOpen = !uiState.legendListOpen;
         renderLegendListState();
+      });
+    }
+    if (dom.calendarToggle) {
+      dom.calendarToggle.addEventListener("click", function () {
+        uiState.calendarOpen = !uiState.calendarOpen;
+        renderCalendarState();
+      });
+    }
+    if (dom.calYear) {
+      dom.calYear.addEventListener("change", function () {
+        buildCalendarGrid();
+      });
+    }
+    if (dom.calMonth) {
+      dom.calMonth.addEventListener("change", function () {
+        buildCalendarGrid();
+      });
+    }
+    if (dom.calGrid) {
+      dom.calGrid.addEventListener("click", function (event) {
+        const dayBtn = event.target.closest("[data-cal-day]");
+        if (!dayBtn) { return; }
+        const day = Number(dayBtn.getAttribute("data-cal-day"));
+        if (!day) { return; }
+        const idx = uiState.calHighlightedDays.indexOf(day);
+        if (idx === -1) {
+          uiState.calHighlightedDays.push(day);
+        } else {
+          uiState.calHighlightedDays.splice(idx, 1);
+        }
+        buildCalendarGrid();
+      });
+    }
+    if (dom.calSave) {
+      dom.calSave.addEventListener("click", function () {
+        applyCalendarHighlights();
+        showFeedback(i18n.getLocale() === "vi" ? "Đã lưu bảng lịch." : "Calendar saved.", "success");
       });
     }
     if (dom.legendBody) {

@@ -163,6 +163,18 @@
 <tbody id="scheduleLegendBody"></tbody>
 </table>
 </div>
+<div class="schedule-legend__head schedule-legend__head--section">
+<span class="schedule-legend__title">Bảng lịch</span>
+<button id="scheduleCalendarToggle" type="button" class="schedule-legend__list-toggle" aria-expanded="false" aria-label="Toggle calendar">▼</button>
+</div>
+<div id="scheduleCalendarContent" class="schedule-legend__calendar" hidden>
+<div class="schedule-cal__bar">
+<select id="scheduleCalYear" class="schedule-cal__select" aria-label="Year"></select>
+<select id="scheduleCalMonth" class="schedule-cal__select" aria-label="Month"></select>
+<button id="scheduleCalSave" type="button" class="schedule-cal__save">Save</button>
+</div>
+<div id="scheduleCalGrid" class="schedule-cal__grid"></div>
+</div>
 </aside>
 </div>
 
