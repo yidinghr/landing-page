@@ -1094,7 +1094,7 @@
   flex: 0 0 auto;
   background: transparent;
   border: none;
-  color: inherit;
+  color: rgba(130, 112, 214, 0.82);
   cursor: pointer;
   font-size: 14px;
   padding: 0 2px;
@@ -2501,22 +2501,34 @@ body.edit-page {
 }
 
 .schedule-cal__select {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 0 0 auto;
   height: 26px;
   padding: 0 6px;
   border: 1px solid rgba(130, 112, 214, 0.28);
-  background: transparent;
+  background: #0a091a;
   color: rgba(255, 249, 236, 0.96);
   font-size: 12px;
   font-weight: 700;
-  appearance: none;
   outline: none;
   color-scheme: dark;
 }
 
+#scheduleCalYear {
+  width: 62px;
+}
+
+#scheduleCalMonth {
+  width: 46px;
+}
+
+.schedule-cal__select option {
+  background-color: #0a091a;
+  color: rgba(255, 249, 236, 0.96);
+}
+
 .schedule-cal__save {
   flex: 0 0 auto;
+  margin-left: auto;
   height: 26px;
   padding: 0 10px;
   border: 1px solid rgba(130, 112, 214, 0.38);
