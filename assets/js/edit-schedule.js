@@ -1289,9 +1289,15 @@
       '<Column ss:AutoFitWidth="0" ss:Width="94"/>',
       '<Column ss:AutoFitWidth="0" ss:Width="113"/>',
       '<Column ss:Index="6" ss:AutoFitWidth="0" ss:Span="30" ss:Width="41"/>',
-      '<Column ss:Index="37" ss:AutoFitWidth="0" ss:Width="20"/>',
-      '<Column ss:Index="38" ss:AutoFitWidth="0" ss:Span="34" ss:Width="42"/>',
-      '<Column ss:Index="73" ss:AutoFitWidth="0" ss:Width="14"/>',
+      '<Column ss:Index="37" ss:AutoFitWidth="0" ss:Width="42"/>',
+      '<Column ss:Index="38" ss:AutoFitWidth="0" ss:Span="8" ss:Width="41"/>',
+      '<Column ss:Index="47" ss:AutoFitWidth="0" ss:Span="4" ss:Width="41"/>',
+      '<Column ss:Index="52" ss:AutoFitWidth="0" ss:Width="42"/>',
+      '<Column ss:Index="53" ss:AutoFitWidth="0" ss:Width="70"/>',
+      '<Column ss:Index="54" ss:AutoFitWidth="0" ss:Width="70"/>',
+      '<Column ss:Index="55" ss:AutoFitWidth="0" ss:Width="90"/>',
+      '<Column ss:Index="56" ss:AutoFitWidth="0" ss:Width="80"/>',
+      '<Column ss:Index="57" ss:AutoFitWidth="0" ss:Width="90"/>',
       '<Column ss:Index="74" ss:Hidden="1" ss:AutoFitWidth="0" ss:Span="10" ss:Width="0"/>'
     ].join("");
   }
@@ -1317,9 +1323,9 @@
     const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
     const summaryColumns = getExcelSummaryColumns(rows);
     if (rowIndex === 1) {
-      cells.push(excelXmlCell(2, "Year", "sLabel"));
+      cells.push(excelXmlCell(2, "\u5e74", "sLabel"));
       cells.push(excelXmlCell(3, state.selectedYear, "sTitle", "Number"));
-      cells.push(excelXmlCell(4, "Month", "sLabel"));
+      cells.push(excelXmlCell(4, "\u6708", "sLabel"));
       cells.push(excelXmlCell(5, state.selectedMonth, "sTitle", "Number"));
       cells.push(excelXmlCell(84, days, "sHidden", "Number", '=DAY(EOMONTH(DATE($C$1,$E$1,1),0))'));
     }
@@ -1330,7 +1336,7 @@
         const value = day <= days ? excelXmlDateValue(state.selectedYear, state.selectedMonth, day) : "";
         cells.push(excelXmlCell(colIndex, value, style, "DateTime", '=IF(COLUMN()-COLUMN($F$3)+1<=$CF$1,DATE($C$1,$E$1,COLUMN()-COLUMN($F$3)+1),"")'));
       }
-      addRightSummaryTimeCells(cells, summaryColumns);
+      addFixedSummaryTimeCells(cells);
     }
     if (rowIndex === 4) {
       const metaLabels = META_HEADERS[i18n.getLocale()] || META_HEADERS.en;
@@ -1344,16 +1350,11 @@
         const value = day <= days ? getExcelWeekdayLabel(day) : "";
         cells.push(excelXmlCell(colIndex, value, style, "String", buildWeekdayFormula(colName)));
       }
-      addRightSummaryHeaderCells(cells, summaryColumns);
-      cells.push(excelXmlCell(80, "\u52a0\u73ed", "sHidden"));
-      cells.push(excelXmlCell(81, "\u5e94\u4e0a\u65f6\u6570", "sHidden"));
-      cells.push(excelXmlCell(82, "\u5b9e\u9645\u65f6\u6570", "sHidden"));
-      cells.push(excelXmlCell(83, "\u591c\u73ed\u8865\u8d34(\u65f6\u6570)", "sHidden"));
+      addFixedSummaryHeaderCells(cells);
     }
     if (rowIndex >= 5 && rowIndex <= scheduleLastRow) {
       addScheduleDataCells(cells, rows[rowIndex - 5], rowIndex, days);
-      addRightSummaryFormulaCells(cells, rows[rowIndex - 5], rowIndex, summaryColumns);
-      addEmployeeSummaryHelperCells(cells, rows[rowIndex - 5], rowIndex);
+      addFixedSummaryFormulaCells(cells, rows[rowIndex - 5], rowIndex);
     }
     if (rowIndex >= bottomStartRow && rowIndex < bottomStartRow + SHIFT_CODE_DEFINITIONS.length) {
       addDailySummaryFormulaCells(cells, rows, rowIndex, scheduleLastRow, bottomStartRow);
@@ -1376,40 +1377,80 @@
     }
   }
 
-  function addRightSummaryTimeCells(cells, summaryColumns) {
-    for (let colIndex = 38; colIndex <= 72; colIndex += 1) {
-      const colName = excelColName(colIndex);
-      cells.push(excelXmlCell(colIndex, getExcelSummaryTimeValue(summaryColumns[colIndex - 38]), "sSummary", "String", '=IFERROR(IF(ISNUMBER(INDEX(Sheet2!$B$2:$B$32,MATCH(' + colName + '4,Sheet2!$A$2:$A$32,0))),TEXT(INDEX(Sheet2!$B$2:$B$32,MATCH(' + colName + '4,Sheet2!$A$2:$A$32,0)),"0")&"-"&TEXT(INDEX(Sheet2!$C$2:$C$32,MATCH(' + colName + '4,Sheet2!$A$2:$A$32,0)),"0"),""),"")'));
-    }
+  // Fixed summary columns matching real Excel (col 37-57)
+  var FIXED_SUMMARY_COLS = [
+    { col: 37, code: "_TOTAL",      label: "TL",              time: null },
+    { col: 38, code: "A",           label: "A",               time: "7-15" },
+    { col: 39, code: "B",           label: "B",               time: "15-23" },
+    { col: 40, code: "C",           label: "C",               time: "23-7" },
+    { col: 41, code: "A3",          label: "A3",              time: "10-18" },
+    { col: 42, code: "A4",          label: "A4",              time: "11-19" },
+    { col: 43, code: "A5",          label: "A5",              time: "12-20" },
+    { col: 44, code: "B2",          label: "B2",              time: "17-1" },
+    { col: 45, code: "B4",          label: "B4",              time: "19-3" },
+    { col: 46, code: "B6",          label: "B6",              time: "21-5" },
+    { col: 47, code: "OFF",         label: "OFF",             time: null },
+    { col: 48, code: "PH",          label: "PH",              time: null },
+    { col: 49, code: "TL",          label: "TL",              time: null },
+    { col: 50, code: "AL",          label: "AL",              time: null },
+    { col: 51, code: "BL",          label: "BL",              time: null },
+    { col: 52, code: "_OT",         label: "\u52a0\u73ed",              time: null },
+    { col: 53, code: "_REQ",        label: "\u5e94\u4e0a\u65f6\u6570",       time: null },
+    { col: 54, code: "_ACT",        label: "\u5b9e\u9645\u65f6\u6570",       time: null },
+    { col: 55, code: "_NIGHT",      label: "\u591c\u73ed\u8865\u8d34(\u65f6\u6570)", time: null },
+    { col: 56, code: "_NIGHTOT",    label: "\u591c\u73edOT\u8865\u8d34",     time: null },
+    { col: 57, code: "_NIGHTTOTAL", label: "\u591c\u73ed\u8865\u8d34\u5408\u8ba1",   time: null }
+  ];
+
+  function addFixedSummaryTimeCells(cells) {
+    FIXED_SUMMARY_COLS.forEach(function (col) {
+      if (col.time) {
+        cells.push(excelXmlCell(col.col, col.time, "sSummary", "String"));
+      }
+    });
   }
 
-  function addRightSummaryHeaderCells(cells, summaryColumns) {
-    for (let colIndex = 38; colIndex <= 72; colIndex += 1) {
-      const colName = excelColName(colIndex);
-      const columnsFormula = 'COLUMNS($AL$4:' + colName + '4)';
-      const formula = '=IF(' + columnsFormula + '<=COUNT($CA$2:$CA$32),IFERROR(INDEX($BY$2:$BY$32,MATCH(' + columnsFormula + ',$CA$2:$CA$32,0)),""),IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+1,$CB$4,IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+2,$CC$4,IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+3,$CD$4,IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+4,$CE$4,"")))))';
-      cells.push(excelXmlCell(colIndex, summaryColumns[colIndex - 38] || "", "sSummary", "String", formula));
-    }
+  function addFixedSummaryHeaderCells(cells) {
+    FIXED_SUMMARY_COLS.forEach(function (col) {
+      cells.push(excelXmlCell(col.col, col.label, "sSummary", "String"));
+    });
   }
 
-  function addRightSummaryFormulaCells(cells, row, rowIndex, summaryColumns) {
-    const rowSummary = getExcelRowSummaryValue(row);
-    for (let colIndex = 38; colIndex <= 72; colIndex += 1) {
-      const colName = excelColName(colIndex);
-      const columnsFormula = 'COLUMNS($AL' + rowIndex + ':' + colName + rowIndex + ')';
-      const rowRange = '$F' + rowIndex + ':INDEX($F' + rowIndex + ':$AJ' + rowIndex + ',$CF$1)';
-      const formula = '=IF(' + columnsFormula + '<=COUNT($CA$2:$CA$32),IF(OR(' + colName + '$4="",COUNTA(' + rowRange + ')=0),"",COUNTIF(' + rowRange + ',' + colName + '$4)),IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+1,$CB' + rowIndex + ',IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+2,$CC' + rowIndex + ',IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+3,$CD' + rowIndex + ',IF(' + columnsFormula + '=COUNT($CA$2:$CA$32)+4,$CE' + rowIndex + ',"")))))';
-      cells.push(excelXmlCell(colIndex, getExcelSummaryCellValue(row, summaryColumns[colIndex - 38], rowSummary), "sSummary", "String", formula));
-    }
-  }
-
-  function addEmployeeSummaryHelperCells(cells, row, rowIndex) {
-    const rowRange = '$F' + rowIndex + ':INDEX($F' + rowIndex + ':$AJ' + rowIndex + ',$CF$1)';
-    const summary = getExcelRowSummaryValue(row);
-    cells.push(excelXmlCell(80, summary.overtimeCount, "sHidden", "Number", '=IF(COUNTA(' + rowRange + ')=0,"",COUNTIF(' + rowRange + ',"\u52a0"))'));
-    cells.push(excelXmlCell(81, summary.requiredHours, "sHidden", "Number", '=IF(COUNTA(' + rowRange + ')=0,"",($CF$1-4)*8)'));
-    cells.push(excelXmlCell(82, summary.actualHours, "sHidden", "Number", '=IF(COUNTA(' + rowRange + ')=0,"",SUMPRODUCT(COUNTIF(' + rowRange + ',Sheet2!$A$2:$A$32),Sheet2!$D$2:$D$32))'));
-    cells.push(excelXmlCell(83, summary.nightHours, "sHidden", "Number", '=IF(COUNTA(' + rowRange + ')=0,"",SUMPRODUCT(COUNTIF(' + rowRange + ',Sheet2!$A$2:$A$32),Sheet2!$E$2:$E$32))'));
+  function addFixedSummaryFormulaCells(cells, row, rowIndex) {
+    var rowRange = '$F' + rowIndex + ':INDEX($F' + rowIndex + ':$AJ' + rowIndex + ',$CF$1)';
+    var summary = getExcelRowSummaryValue(row);
+    FIXED_SUMMARY_COLS.forEach(function (col) {
+      var formula, value;
+      if (col.code === "_TOTAL") {
+        value = (row && hasExcelShiftValue(row)) ? getExcelRowTotalCount(row) : "";
+        formula = '=IF(COUNTA(' + rowRange + ')=0,"",COUNTA(' + rowRange + '))';
+      } else if (col.code === "_OT") {
+        value = summary.overtimeCount;
+        formula = '=IF(COUNTA(' + rowRange + ')=0,"",COUNTIF(' + rowRange + ',"\u52a0"))';
+      } else if (col.code === "_REQ") {
+        value = summary.requiredHours;
+        formula = '=IF(COUNTA(' + rowRange + ')=0,"",($CF$1-4)*8)';
+      } else if (col.code === "_ACT") {
+        value = summary.actualHours;
+        formula = '=IF(COUNTA(' + rowRange + ')=0,"",SUMPRODUCT(COUNTIF(' + rowRange + ',Sheet2!$A$2:$A$32),Sheet2!$D$2:$D$32))';
+      } else if (col.code === "_NIGHT") {
+        value = summary.nightHours;
+        formula = '=IF(COUNTA(' + rowRange + ')=0,"",SUMPRODUCT(COUNTIF(' + rowRange + ',Sheet2!$A$2:$A$32),Sheet2!$E$2:$E$32))';
+      } else if (col.code === "_NIGHTOT") {
+        value = "";
+        formula = '=IF(COUNTA(' + rowRange + ')=0,"",0)';
+      } else if (col.code === "_NIGHTTOTAL") {
+        value = summary.nightHours;
+        var nightCol = excelColName(55);
+        var nightOtCol = excelColName(56);
+        formula = '=IF(COUNTA(' + rowRange + ')=0,"",' + nightCol + rowIndex + '+' + nightOtCol + rowIndex + ')';
+      } else {
+        // Regular shift code COUNTIF
+        value = (row && hasExcelShiftValue(row)) ? getExcelRowShiftCount(row, col.code) : "";
+        formula = '=IF(COUNTA(' + rowRange + ')=0,"",COUNTIF(' + rowRange + ',"' + col.code + '"))';
+      }
+      cells.push(excelXmlCell(col.col, value, "sSummary", typeof value === "number" ? "Number" : "String", formula));
+    });
   }
 
   function addDailySummaryFormulaCells(cells, rows, rowIndex, scheduleLastRow, bottomStartRow) {
@@ -1565,6 +1606,16 @@
       }
     }
     return false;
+  }
+
+  function getExcelRowTotalCount(row) {
+    if (!row || !row.shifts) { return ""; }
+    const days = getDaysInMonth(state.selectedYear, state.selectedMonth);
+    let count = 0;
+    for (let day = 1; day <= days; day += 1) {
+      if (normalizeCellValue(row.shifts[String(day)])) { count += 1; }
+    }
+    return count || "";
   }
 
   function getExcelWeekdayLabel(day) {
