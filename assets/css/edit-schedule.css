@@ -2401,15 +2401,15 @@ body.edit-page {
 }
 
 .schedule-corner-actions__button {
-  min-width: 58px;
-  min-height: 30px;
-  padding: 0 12px;
+  min-width: 72px;
+  min-height: 38px;
+  padding: 0 18px;
   border: 1px solid rgba(171, 151, 255, 0.34);
   background: rgba(7, 6, 20, 0.52);
   color: rgba(255, 249, 236, 0.96);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0;
+  letter-spacing: 0.04em;
   text-align: center;
   transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
 }
@@ -2496,8 +2496,10 @@ body.edit-page {
 .schedule-cal__bar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   margin-bottom: 8px;
+  position: relative;
 }
 
 .schedule-cal__select {
@@ -2527,8 +2529,8 @@ body.edit-page {
 }
 
 .schedule-cal__save {
-  flex: 0 0 auto;
-  margin-left: auto;
+  position: absolute;
+  right: 0;
   height: 26px;
   padding: 0 10px;
   border: 1px solid rgba(130, 112, 214, 0.38);
