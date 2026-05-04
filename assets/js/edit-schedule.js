@@ -1028,14 +1028,17 @@
         updateSheetOverflowState();
       }, 220);
     });
-    if (dom.legendListToggle) {
-      dom.legendListToggle.addEventListener("click", function () {
+    const legendListHead = dom.legendListToggle ? dom.legendListToggle.closest(".schedule-legend__head") : null;
+    if (legendListHead) {
+      legendListHead.addEventListener("click", function (event) {
+        if (event.target.closest("[data-legend-code-edit-toggle]")) { return; }
         uiState.legendListOpen = !uiState.legendListOpen;
         renderLegendListState();
       });
     }
-    if (dom.calendarToggle) {
-      dom.calendarToggle.addEventListener("click", function () {
+    const calendarHead = dom.calendarToggle ? dom.calendarToggle.closest(".schedule-legend__head") : null;
+    if (calendarHead) {
+      calendarHead.addEventListener("click", function () {
         uiState.calendarOpen = !uiState.calendarOpen;
         renderCalendarState();
       });
