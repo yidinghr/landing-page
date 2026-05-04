@@ -1379,12 +1379,21 @@
       });
       for (let colIndex = 6; colIndex <= 36; colIndex += 1) {
         const day = colIndex - 5;
-        const colName = excelColName(colIndex);
         const style = isExcelWeekendColumn(colIndex) ? "sWeekendText" : "sWeekday";
         const value = day <= days ? getExcelWeekdayLabel(day) : "";
-        cells.push(excelXmlCell(colIndex, value, style, "String", buildWeekdayFormula(colName)));
+        cells.push(excelXmlCell(colIndex, value, style, "String"));
       }
       addFixedSummaryHeaderCells(cells);
+    }
+    if (rowIndex === bottomStartRow - 1) {
+      cells.push(excelXmlCell(5, i18n.t("schedule.dailyCode"), "sGrid"));
+      for (let colIndex = 6; colIndex <= 36; colIndex += 1) {
+        const day = colIndex - 5;
+        if (day <= days) {
+          const style = isExcelWeekendColumn(colIndex) ? "sWeekend" : "sDay";
+          cells.push(excelXmlCell(colIndex, day, style, "Number"));
+        }
+      }
     }
     if (rowIndex >= 5 && rowIndex <= scheduleLastRow) {
       addScheduleDataCells(cells, rows[rowIndex - 5], rowIndex, days);
@@ -1490,7 +1499,7 @@
   function addDailySummaryFormulaCells(cells, rows, rowIndex, scheduleLastRow, bottomStartRow) {
     const activeCodes = getExcelActiveSummaryCodes(rows);
     const code = activeCodes[rowIndex - bottomStartRow] || "";
-    cells.push(excelXmlCell(5, code, "sSummary", "String", '=IFERROR(INDEX($BV$2:$BV$32,MATCH(ROWS($E$' + bottomStartRow + ':E' + rowIndex + '),$BX$2:$BX$32,0)),"")'));
+    cells.push(excelXmlCell(5, code, "sSummary", "String"));
     for (let colIndex = 6; colIndex <= 36; colIndex += 1) {
       const day = colIndex - 5;
       const colName = excelColName(colIndex);
