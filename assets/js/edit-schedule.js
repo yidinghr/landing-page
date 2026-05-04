@@ -140,7 +140,8 @@
     editButton: document.getElementById("scheduleEditButton"),
     saveButton: document.getElementById("scheduleSaveButton"),
     exportButton: document.getElementById("scheduleExportButton"),
-    legendTitle: document.querySelector(".schedule-legend__title")
+    legendTitle: document.querySelector(".schedule-legend__title"),
+    legendListToggle: document.getElementById("scheduleLegendListToggle")
   };
 
   if (!i18n || !dom.app || !dom.yearSelect || !dom.monthSelect || !dom.tableHead || !dom.tableBody) {
@@ -162,6 +163,7 @@
     codeDropdownOpen: false,
     codeDropdownIndex: -1,
     legendCodesEditable: false,
+    legendListOpen: false,
     scheduleLocked: true,
     exportReady: false,
     hasSavedSchedule: true,
@@ -629,6 +631,13 @@
     dom.legendPanel.classList.toggle("is-code-editing", Boolean(uiState.legendCodesEditable));
   }
 
+  function renderLegendListState() {
+    if (!dom.legendContent || !dom.legendListToggle) { return; }
+    dom.legendContent.hidden = !uiState.legendListOpen;
+    dom.legendListToggle.textContent = uiState.legendListOpen ? "▲" : "▼";
+    dom.legendListToggle.setAttribute("aria-expanded", String(Boolean(uiState.legendListOpen)));
+  }
+
   function renderCornerActions() {
     dom.app.classList.toggle("schedule-app--schedule-locked", Boolean(uiState.scheduleLocked));
     if (dom.editButton) {
@@ -715,6 +724,7 @@
     requestFrozenHeaderSync();
     renderSelectionState();
     renderSelectionMeta();
+    renderLegendListState();
   }
 
   function renderTableHead() {
@@ -925,21 +935,45 @@
         updateSheetOverflowState();
       }, 220);
     });
+    if (dom.legendListToggle) {
+      dom.legendListToggle.addEventListener("click", function () {
+        uiState.legendListOpen = !uiState.legendListOpen;
+        renderLegendListState();
+      });
+    }
     if (dom.legendBody) {
-      dom.legendBody.addEventListener("input", function (event) {
+      dom.legendBody.addEventListener("change", function (event) {
         const codeInput = event.target.closest("[data-legend-code-label]");
         if (codeInput) {
           const code = codeInput.getAttribute("data-legend-code-label");
           const value = String(codeInput.value || "").trim();
+          
+          // Duplicate check
+          if (value) {
+            const isDuplicate = VALID_SHIFT_CODES.some(function(c) {
+              return c !== code && (legendCodeLabels[c] === value || (c === value && !legendCodeLabels[c]));
+            });
+            
+            if (isDuplicate) {
+              const prevValue = legendCodeLabels[code] || code;
+              codeInput.value = prevValue;
+              showFeedback(i18n.getLocale() === "vi" ? "Mã ca này đã tồn tại, vui lòng nhập mã khác." : "This shift code already exists.", "error");
+              return;
+            }
+          }
+
           if (value && value !== code) {
             legendCodeLabels[code] = value;
           } else {
             delete legendCodeLabels[code];
+            codeInput.value = code; // restore default
           }
           saveLegendCodeLabels();
           refreshScheduleCodeLabels();
           return;
         }
+      });
+      dom.legendBody.addEventListener("input", function (event) {
         const input = event.target.closest("[data-legend-remark]");
         if (!input) {
           return;
