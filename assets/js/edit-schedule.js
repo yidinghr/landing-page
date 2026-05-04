@@ -633,6 +633,7 @@
       button.setAttribute("data-legend-code-edit-toggle", "true");
       dom.legendTitle.parentElement.appendChild(button);
     }
+    button.hidden = !uiState.legendListOpen;
     const label = getLegendCodeEditLabel();
     button.textContent = label;
     button.setAttribute("aria-label", label);
@@ -643,8 +644,8 @@
   function renderLegendListState() {
     if (!dom.legendContent || !dom.legendListToggle) { return; }
     dom.legendContent.hidden = !uiState.legendListOpen;
-    dom.legendListToggle.textContent = uiState.legendListOpen ? "▲" : "▼";
     dom.legendListToggle.setAttribute("aria-expanded", String(Boolean(uiState.legendListOpen)));
+    renderLegendCodeEditToggle();
   }
 
   function renderCalendarState() {
