@@ -2622,12 +2622,16 @@ body.edit-page {
 
 /* ── Legend panel: fully transparent so galaxy stars show through ────── */
 .schedule-legend {
-  background: rgba(4, 3, 12, 0.06) !important;
+  background:
+    radial-gradient(ellipse at 50% 22%, rgba(210, 70, 100, 0.14) 0%, transparent 54%),
+    radial-gradient(ellipse at 28% 72%, rgba(160, 40, 200, 0.10) 0%, transparent 48%),
+    radial-gradient(ellipse at 78% 58%, rgba(220, 100, 40, 0.07) 0%, transparent 42%),
+    rgba(10, 3, 16, 0.06) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow:
     -2px 0 18px rgba(0, 0, 0, 0.28),
-    inset 0 0 0 1px rgba(130, 112, 214, 0.16) !important;
+    inset 0 0 0 1px rgba(200, 80, 120, 0.18) !important;
 }
 
 .schedule-legend__head,

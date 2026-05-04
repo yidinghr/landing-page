@@ -1152,6 +1152,15 @@
       if (uiState.codeDropdownOpen && dom.codeDropdown && !dom.codeDropdown.contains(event.target) && event.target !== dom.selectionInput) {
         hideCodeDropdown();
       }
+      if (state.legendOpen && dom.legendPanel && !dom.legendPanel.contains(event.target) && !dom.legendToggle.contains(event.target)) {
+        state.legendOpen = false;
+        saveState();
+        renderStaticText();
+        window.requestAnimationFrame(function () {
+          updateStickyMetrics();
+          updateSheetOverflowState();
+        });
+      }
     });
     dom.selectionInput.addEventListener("input", function () {
       dom.selectionInput.value = normalizeCellValue(dom.selectionInput.value);
