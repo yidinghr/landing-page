@@ -1,19 +1,28 @@
 /**
- * svg-bet-layout.js - SVG baccarat table layout.
+ * svg-bet-layout.js - vector baccarat table layout.
  *
- * The game renderer talks to elements through data-seat/data-zone and the
- * .tr-zone-bet-amt/.tr-zone-payout text nodes, so this file owns only the
- * casino table drawing and hit zones.
+ * Each betting cell is an SVG path with data-seat/data-zone attributes. The
+ * game renderer updates those nodes directly, while this module owns only the
+ * table geometry and visuals.
  */
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 const VIEW = { w: 1000, h: 560 };
-const TABLE = { cx: 500, cy: 300, rx: 486, ry: 250 };
-const ZONE_TOP = 190;
-const ZONE_LEFT = 170;
-const SEAT_W = 132;
-const SEAT_GAP = 8;
+const CX = 500;
+const CY = 132;
+const Y_SCALE = 0.58;
+const SEAT_COUNT = 5;
+const FAN_HALF_SPAN = 66;
+const SEAT_GAP = 1.4;
+
+const BANDS = {
+  pairIn: 118,
+  pairOut: 190,
+  mainOut: 318,
+  luckyOut: 370,
+  seat: 420
+};
 
 const ZONE_KEY = {
   playerPair: "ppair",
@@ -27,25 +36,52 @@ const ZONE_KEY = {
 function el(tag, attrs, text) {
   const node = document.createElementNS(SVG_NS, tag);
   if (attrs) {
-    for (const k in attrs) {
-      if (attrs[k] === null || attrs[k] === undefined) continue;
-      node.setAttribute(k, attrs[k]);
+    for (const key in attrs) {
+      if (attrs[key] === null || attrs[key] === undefined) continue;
+      node.setAttribute(key, attrs[key]);
     }
   }
   if (text !== undefined) node.textContent = text;
   return node;
 }
 
-function polygon(points) {
-  return points.map(function (p) {
-    return p[0].toFixed(1) + "," + p[1].toFixed(1);
-  }).join(" ");
+function point(angleDeg, radius) {
+  const a = angleDeg * Math.PI / 180;
+  return {
+    x: CX + radius * Math.sin(a),
+    y: CY + radius * Math.cos(a) * Y_SCALE
+  };
 }
 
-function makeZone(seatId, zone, points, label, labelPos, labelClass) {
-  const cls = "tr-matrix-cell tr-svg-zone tr-zone--" + ZONE_KEY[zone] + (labelClass ? " " + labelClass : "");
+function pathFromPoints(points) {
+  return points.map(function (p, index) {
+    return (index ? "L" : "M") + p.x.toFixed(1) + "," + p.y.toFixed(1);
+  }).join(" ") + " Z";
+}
+
+function arcPoints(radius, aStart, aEnd, steps) {
+  const out = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    out.push(point(aStart + (aEnd - aStart) * t, radius));
+  }
+  return out;
+}
+
+function bandPath(rIn, rOut, aStart, aEnd) {
+  const outer = arcPoints(rOut, aStart, aEnd, 8);
+  const inner = arcPoints(rIn, aEnd, aStart, 8);
+  return pathFromPoints(outer.concat(inner));
+}
+
+function midPoint(rIn, rOut, aStart, aEnd) {
+  return point((aStart + aEnd) / 2, (rIn + rOut) / 2);
+}
+
+function makeZone(seatId, zone, d, label, labelPos, extraClass) {
+  const cls = "tr-matrix-cell tr-svg-zone tr-zone--" + ZONE_KEY[zone] + (extraClass ? " " + extraClass : "");
   const g = el("g", { class: cls, "data-seat": String(seatId), "data-zone": zone });
-  g.appendChild(el("polygon", { points: polygon(points), class: "tr-svg-zone__shape" }));
+  g.appendChild(el("path", { d, class: "tr-svg-zone__shape" }));
   g.appendChild(el("text", {
     class: "tr-svg-zone__label",
     x: labelPos.x.toFixed(1),
@@ -75,75 +111,86 @@ function makeZone(seatId, zone, points, label, labelPos, labelClass) {
 function buildDefs() {
   const defs = el("defs");
 
-  const felt = el("radialGradient", { id: "tr-felt-blue", cx: "50%", cy: "46%", r: "78%" });
-  felt.appendChild(el("stop", { offset: "0%", "stop-color": "#2bb4e5" }));
-  felt.appendChild(el("stop", { offset: "54%", "stop-color": "#1689c8" }));
-  felt.appendChild(el("stop", { offset: "100%", "stop-color": "#096094" }));
+  const felt = el("radialGradient", { id: "tr-felt-casino", cx: "50%", cy: "36%", r: "78%" });
+  felt.appendChild(el("stop", { offset: "0%", "stop-color": "#2ac1e8" }));
+  felt.appendChild(el("stop", { offset: "56%", "stop-color": "#1293cc" }));
+  felt.appendChild(el("stop", { offset: "100%", "stop-color": "#0b5b84" }));
   defs.appendChild(felt);
 
   const wood = el("linearGradient", { id: "tr-wood-rail", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
-  wood.appendChild(el("stop", { offset: "0%", "stop-color": "#b66b25" }));
-  wood.appendChild(el("stop", { offset: "45%", "stop-color": "#6a3615" }));
-  wood.appendChild(el("stop", { offset: "100%", "stop-color": "#2d1609" }));
+  wood.appendChild(el("stop", { offset: "0%", "stop-color": "#b86d27" }));
+  wood.appendChild(el("stop", { offset: "44%", "stop-color": "#713812" }));
+  wood.appendChild(el("stop", { offset: "100%", "stop-color": "#2c1406" }));
   defs.appendChild(wood);
 
   const leather = el("linearGradient", { id: "tr-black-leather", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
-  leather.appendChild(el("stop", { offset: "0%", "stop-color": "#2a2b31" }));
-  leather.appendChild(el("stop", { offset: "52%", "stop-color": "#111217" }));
-  leather.appendChild(el("stop", { offset: "100%", "stop-color": "#050507" }));
+  leather.appendChild(el("stop", { offset: "0%", "stop-color": "#313238" }));
+  leather.appendChild(el("stop", { offset: "50%", "stop-color": "#111218" }));
+  leather.appendChild(el("stop", { offset: "100%", "stop-color": "#030305" }));
   defs.appendChild(leather);
 
   const tray = el("linearGradient", { id: "tr-chip-tray-dark", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
-  tray.appendChild(el("stop", { offset: "0%", "stop-color": "#2f2018" }));
+  tray.appendChild(el("stop", { offset: "0%", "stop-color": "#302018" }));
   tray.appendChild(el("stop", { offset: "100%", "stop-color": "#0b0705" }));
   defs.appendChild(tray);
 
   return defs;
 }
 
+function ellipsePath(cx, cy, rx, ry) {
+  return [
+    "M", cx - rx, cy,
+    "A", rx, ry, "0 1 0", cx + rx, cy,
+    "A", rx, ry, "0 1 0", cx - rx, cy,
+    "Z"
+  ].join(" ");
+}
+
 function buildTableShell(svg) {
-  svg.appendChild(el("ellipse", {
+  svg.appendChild(el("path", {
     class: "tr-svg-leather",
-    cx: TABLE.cx, cy: TABLE.cy, rx: TABLE.rx, ry: TABLE.ry,
+    d: ellipsePath(500, 318, 492, 250),
     fill: "url(#tr-black-leather)"
   }));
-  svg.appendChild(el("ellipse", {
+  svg.appendChild(el("path", {
     class: "tr-svg-wood",
-    cx: TABLE.cx, cy: TABLE.cy - 4, rx: 452, ry: 218,
+    d: ellipsePath(500, 310, 452, 214),
     fill: "url(#tr-wood-rail)"
   }));
-  svg.appendChild(el("ellipse", {
+  svg.appendChild(el("path", {
     class: "tr-svg-felt",
-    cx: TABLE.cx, cy: TABLE.cy - 8, rx: 405, ry: 174,
-    fill: "url(#tr-felt-blue)"
+    d: ellipsePath(500, 302, 398, 172),
+    fill: "url(#tr-felt-casino)"
   }));
 
-  const slotY = [168, 392];
-  slotY.forEach(function (y) {
+  [
+    { y: 214, bend: -46 },
+    { y: 404, bend: 42 }
+  ].forEach(function (slot) {
     svg.appendChild(el("path", {
       class: "tr-svg-rail-slot",
-      d: "M 116 " + y + " Q 500 " + (y + (y < 280 ? -58 : 58)) + " 884 " + y,
+      d: "M 108 " + slot.y + " Q 500 " + (slot.y + slot.bend) + " 892 " + slot.y,
       fill: "none",
-      stroke: "rgba(14, 10, 6, 0.82)",
+      stroke: "rgba(15, 8, 4, 0.84)",
       "stroke-width": 20,
       "stroke-linecap": "round"
     }));
     svg.appendChild(el("path", {
       class: "tr-svg-rail-slot-hi",
-      d: "M 124 " + y + " Q 500 " + (y + (y < 280 ? -50 : 50)) + " 876 " + y,
+      d: "M 116 " + slot.y + " Q 500 " + (slot.y + slot.bend * 0.86) + " 884 " + slot.y,
       fill: "none",
-      stroke: "rgba(224, 141, 49, 0.48)",
+      stroke: "rgba(230, 145, 45, 0.5)",
       "stroke-width": 3,
       "stroke-linecap": "round"
     }));
   });
 
-  [104, 210, 790, 896].forEach(function (x) {
+  [92, 208, 792, 908].forEach(function (x) {
     svg.appendChild(el("circle", {
       class: "tr-svg-rail-light",
-      cx: x, cy: x < 500 ? 308 : 308, r: 18,
-      fill: "#f2b532",
-      stroke: "rgba(0,0,0,0.6)",
+      cx: x, cy: 334, r: 18,
+      fill: "#f4b530",
+      stroke: "rgba(0,0,0,0.62)",
       "stroke-width": 4
     }));
   });
@@ -152,97 +199,121 @@ function buildTableShell(svg) {
 function buildDealerArea(svg) {
   svg.appendChild(el("text", {
     class: "tr-svg-brand",
-    x: 500, y: 118,
+    x: 500, y: 144,
     "text-anchor": "middle",
     "dominant-baseline": "middle"
   }, "BACCARIST"));
 
-  svg.appendChild(el("rect", {
+  svg.appendChild(el("path", {
     class: "tr-svg-chip-tray",
-    x: 368, y: 128, width: 264, height: 30, rx: 10,
+    d: "M 360,158 Q 500,144 640,158 L 635,182 Q 500,168 365,182 Z",
     fill: "url(#tr-chip-tray-dark)",
-    stroke: "rgba(242, 212, 134, 0.42)"
+    stroke: "rgba(242, 212, 134, 0.48)"
   }));
 
-  const colors = ["#e93c55", "#28bd64", "#2a83d8", "#f4a53a", "#8d44d8", "#e93c55", "#28bd64", "#2a83d8"];
-  colors.forEach(function (color, i) {
-    const x = 390 + i * 31;
-    svg.appendChild(el("circle", { cx: x, cy: 144, r: 11, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
-    svg.appendChild(el("circle", { cx: x, cy: 144, r: 5, fill: "rgba(255,255,255,0.22)" }));
+  ["#e93c55", "#28bd64", "#2a83d8", "#f4a53a", "#8d44d8", "#e93c55", "#28bd64", "#2a83d8"].forEach(function (color, i) {
+    const x = 384 + i * 33;
+    svg.appendChild(el("circle", { cx: x, cy: 166, r: 11, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
+    svg.appendChild(el("circle", { cx: x, cy: 166, r: 5, fill: "rgba(255,255,255,0.22)" }));
   });
 
-  svg.appendChild(el("g", { class: "tr-svg-shoe-drawn" }));
-  const shoe = svg.lastChild;
+  const shoe = el("g", { class: "tr-svg-shoe-drawn" });
   shoe.appendChild(el("polygon", {
-    points: polygon([[730, 106], [835, 130], [808, 205], [704, 178]]),
+    points: "735,122 856,158 816,236 696,202",
     fill: "#dfe5e7",
     stroke: "rgba(0,0,0,0.65)",
     "stroke-width": 3
   }));
   shoe.appendChild(el("polygon", {
-    points: polygon([[750, 124], [813, 138], [798, 176], [735, 162]]),
+    points: "758,146 826,166 805,210 738,190",
     fill: "#e34040",
-    opacity: 0.8
+    opacity: 0.82
   }));
+  svg.appendChild(shoe);
 }
 
-function buildBetHeader(svg) {
-  svg.appendChild(el("text", {
-    class: "tr-svg-header-player",
-    x: 382, y: 178,
-    "text-anchor": "middle"
-  }, "PLAYER"));
-  svg.appendChild(el("text", {
-    class: "tr-svg-header-banker",
-    x: 618, y: 178,
-    "text-anchor": "middle"
-  }, "BANKER"));
-  svg.appendChild(el("text", {
-    class: "tr-svg-header-tie",
-    x: 500, y: 222,
-    "text-anchor": "middle"
-  }, "TIE"));
+function buildBetHeaders(svg) {
+  [
+    ["tr-svg-header-player", 382, 198, "PLAYER"],
+    ["tr-svg-header-banker", 618, 198, "BANKER"],
+    ["tr-svg-header-tie", 500, 228, "TIE"],
+    ["tr-svg-header-small", 452, 244, "SMALL"],
+    ["tr-svg-header-big", 548, 244, "BIG"]
+  ].forEach(function (row) {
+    svg.appendChild(el("text", {
+      class: row[0],
+      x: row[1],
+      y: row[2],
+      "text-anchor": "middle",
+      "dominant-baseline": "middle"
+    }, row[3]));
+  });
 }
 
-function buildSeatGrid(svg) {
-  for (let i = 0; i < 5; i++) {
+function buildSeatFan(svg) {
+  const total = FAN_HALF_SPAN * 2;
+  const seatSpan = (total - SEAT_GAP * (SEAT_COUNT - 1)) / SEAT_COUNT;
+
+  for (let i = 0; i < SEAT_COUNT; i++) {
     const seatId = i + 1;
-    const x = ZONE_LEFT + i * (SEAT_W + SEAT_GAP);
-    const skew = (i - 2) * 11;
-    const topL = x + skew;
-    const topR = x + SEAT_W + skew;
-    const botL = x - skew * 0.42;
-    const botR = x + SEAT_W - skew * 0.42;
-    const midX = (topL + topR + botL + botR) / 4;
+    const aStart = -FAN_HALF_SPAN + i * (seatSpan + SEAT_GAP);
+    const aEnd = aStart + seatSpan;
+    const aMid = (aStart + aEnd) / 2;
+    const aPairMid = aStart + seatSpan * 0.5;
+    const aMain1 = aStart + seatSpan * 0.36;
+    const aMain2 = aEnd - seatSpan * 0.36;
 
-    svg.appendChild(makeZone(seatId, "playerPair", [
-      [topL, ZONE_TOP], [midX, ZONE_TOP + 10], [midX - 4, ZONE_TOP + 76], [topL - 10, ZONE_TOP + 68]
-    ], "P PAIR", { x: (topL + midX) / 2 - 4, y: ZONE_TOP + 38 }));
+    svg.appendChild(makeZone(
+      seatId,
+      "playerPair",
+      bandPath(BANDS.pairIn, BANDS.pairOut, aStart, aPairMid),
+      "P.PAIR",
+      midPoint(BANDS.pairIn, BANDS.pairOut, aStart, aPairMid)
+    ));
+    svg.appendChild(makeZone(
+      seatId,
+      "bankerPair",
+      bandPath(BANDS.pairIn, BANDS.pairOut, aPairMid, aEnd),
+      "B.PAIR",
+      midPoint(BANDS.pairIn, BANDS.pairOut, aPairMid, aEnd)
+    ));
+    svg.appendChild(makeZone(
+      seatId,
+      "player",
+      bandPath(BANDS.pairOut, BANDS.mainOut, aStart, aMain1),
+      "P",
+      midPoint(BANDS.pairOut, BANDS.mainOut, aStart, aMain1),
+      "tr-svg-zone--main"
+    ));
+    svg.appendChild(makeZone(
+      seatId,
+      "tie",
+      bandPath(BANDS.pairOut, BANDS.mainOut, aMain1, aMain2),
+      "T",
+      midPoint(BANDS.pairOut, BANDS.mainOut, aMain1, aMain2),
+      "tr-svg-zone--tie-main"
+    ));
+    svg.appendChild(makeZone(
+      seatId,
+      "banker",
+      bandPath(BANDS.pairOut, BANDS.mainOut, aMain2, aEnd),
+      "B",
+      midPoint(BANDS.pairOut, BANDS.mainOut, aMain2, aEnd),
+      "tr-svg-zone--main"
+    ));
+    svg.appendChild(makeZone(
+      seatId,
+      "luckySix",
+      bandPath(BANDS.mainOut, BANDS.luckyOut, aStart, aEnd),
+      "LUCKY 6",
+      midPoint(BANDS.mainOut, BANDS.luckyOut, aStart, aEnd)
+    ));
 
-    svg.appendChild(makeZone(seatId, "bankerPair", [
-      [midX, ZONE_TOP + 10], [topR, ZONE_TOP], [topR + 10, ZONE_TOP + 68], [midX + 4, ZONE_TOP + 76]
-    ], "B PAIR", { x: (topR + midX) / 2 + 4, y: ZONE_TOP + 38 }));
-
-    svg.appendChild(makeZone(seatId, "player", [
-      [topL - 10, ZONE_TOP + 68], [midX - 4, ZONE_TOP + 76], [midX - 16, ZONE_TOP + 182], [botL, ZONE_TOP + 162]
-    ], "P", { x: (topL + botL + midX) / 3 - 10, y: ZONE_TOP + 124 }, "tr-svg-zone--main"));
-
-    svg.appendChild(makeZone(seatId, "tie", [
-      [midX - 4, ZONE_TOP + 76], [midX + 4, ZONE_TOP + 76], [midX + 16, ZONE_TOP + 182], [midX - 16, ZONE_TOP + 182]
-    ], "TIE", { x: midX, y: ZONE_TOP + 126 }, "tr-svg-zone--tie-main"));
-
-    svg.appendChild(makeZone(seatId, "banker", [
-      [midX + 4, ZONE_TOP + 76], [topR + 10, ZONE_TOP + 68], [botR, ZONE_TOP + 162], [midX + 16, ZONE_TOP + 182]
-    ], "B", { x: (topR + botR + midX) / 3 + 10, y: ZONE_TOP + 124 }, "tr-svg-zone--main"));
-
-    svg.appendChild(makeZone(seatId, "luckySix", [
-      [botL, ZONE_TOP + 162], [midX - 16, ZONE_TOP + 182], [midX + 16, ZONE_TOP + 182], [botR, ZONE_TOP + 162],
-      [botR - 10, ZONE_TOP + 204], [botL + 10, ZONE_TOP + 204]
-    ], "LUCKY 6", { x: midX, y: ZONE_TOP + 191 }));
-
+    const seatPos = point(aMid, BANDS.seat);
     svg.appendChild(el("text", {
       class: "tr-svg-seat-num",
-      x: midX.toFixed(1), y: 444,
+      x: seatPos.x.toFixed(1),
+      y: seatPos.y.toFixed(1),
       "text-anchor": "middle",
       "dominant-baseline": "middle"
     }, "Seat " + seatId));
@@ -250,13 +321,13 @@ function buildSeatGrid(svg) {
 }
 
 function buildFrontRail(svg) {
-  const colors = ["#e93c55", "#28bd64", "#2a83d8", "#f4a53a", "#8d44d8"];
-  colors.forEach(function (color, i) {
-    const x = 330 + i * 85;
-    svg.appendChild(el("circle", { class: "tr-svg-front-chip", cx: x, cy: 456, r: 14, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
+  ["#e93c55", "#28bd64", "#2a83d8", "#f4a53a", "#8d44d8"].forEach(function (color, i) {
+    const p = point(-30 + i * 15, 420);
+    svg.appendChild(el("circle", { class: "tr-svg-front-chip", cx: p.x, cy: p.y - 14, r: 14, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
     svg.appendChild(el("text", {
       class: "tr-svg-front-chip-label",
-      x: x, y: 460,
+      x: p.x,
+      y: p.y - 10,
       "text-anchor": "middle"
     }, i === 0 ? "1K" : i === 1 ? "5K" : i === 2 ? "10K" : i === 3 ? "50K" : "100K"));
   });
@@ -276,8 +347,8 @@ export function buildSvgBetLayout(host) {
   svg.appendChild(buildDefs());
   buildTableShell(svg);
   buildDealerArea(svg);
-  buildBetHeader(svg);
-  buildSeatGrid(svg);
+  buildBetHeaders(svg);
+  buildSeatFan(svg);
   buildFrontRail(svg);
 
   host.appendChild(svg);
