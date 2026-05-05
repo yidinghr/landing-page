@@ -10,18 +10,18 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 const VIEW = { w: 1000, h: 560 };
 const CX = 500;
-const CY = 132;
-const Y_SCALE = 0.58;
+const CY = 120;
+const Y_SCALE = 0.7;
 const SEAT_COUNT = 5;
-const FAN_HALF_SPAN = 66;
+const FAN_HALF_SPAN = 61;
 const SEAT_GAP = 1.4;
 
 const BANDS = {
   pairIn: 118,
-  pairOut: 190,
-  mainOut: 318,
-  luckyOut: 370,
-  seat: 420
+  pairOut: 184,
+  mainOut: 304,
+  luckyOut: 352,
+  seat: 382
 };
 
 const ZONE_KEY = {
@@ -117,6 +117,12 @@ function buildDefs() {
   felt.appendChild(el("stop", { offset: "100%", "stop-color": "#0b5b84" }));
   defs.appendChild(felt);
 
+  const feltDark = el("linearGradient", { id: "tr-felt-depth", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
+  feltDark.appendChild(el("stop", { offset: "0%", "stop-color": "rgba(255,255,255,0.16)" }));
+  feltDark.appendChild(el("stop", { offset: "60%", "stop-color": "rgba(255,255,255,0)" }));
+  feltDark.appendChild(el("stop", { offset: "100%", "stop-color": "rgba(0,0,0,0.22)" }));
+  defs.appendChild(feltDark);
+
   const wood = el("linearGradient", { id: "tr-wood-rail", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
   wood.appendChild(el("stop", { offset: "0%", "stop-color": "#b86d27" }));
   wood.appendChild(el("stop", { offset: "44%", "stop-color": "#713812" }));
@@ -141,11 +147,12 @@ function buildTableShell(svg) {
   svg.appendChild(el("path", {
     class: "tr-svg-leather",
     d: [
-      "M 38,118",
-      "C 138,28 862,28 962,118",
-      "C 942,230 880,410 650,485",
-      "C 572,512 428,512 350,485",
-      "C 120,410 58,230 38,118",
+      "M 78,102",
+      "C 160,42 840,42 922,102",
+      "L 960,160",
+      "C 936,302 840,452 650,514",
+      "C 558,544 442,544 350,514",
+      "C 160,452 64,302 40,160",
       "Z"
     ].join(" "),
     fill: "url(#tr-black-leather)"
@@ -153,11 +160,12 @@ function buildTableShell(svg) {
   svg.appendChild(el("path", {
     class: "tr-svg-wood",
     d: [
-      "M 86,128",
-      "C 188,62 812,62 914,128",
-      "C 892,232 812,350 640,426",
-      "C 558,462 442,462 360,426",
-      "C 188,350 108,232 86,128",
+      "M 120,122",
+      "C 210,72 790,72 880,122",
+      "L 904,164",
+      "C 874,292 790,408 632,464",
+      "C 552,492 448,492 368,464",
+      "C 210,408 126,292 96,164",
       "Z"
     ].join(" "),
     fill: "url(#tr-wood-rail)"
@@ -165,26 +173,40 @@ function buildTableShell(svg) {
   svg.appendChild(el("path", {
     class: "tr-svg-felt",
     d: [
-      "M 138,146",
-      "C 238,100 762,100 862,146",
-      "C 838,236 750,312 620,372",
-      "C 548,404 452,404 380,372",
-      "C 250,312 162,236 138,146",
+      "M 154,142",
+      "C 248,108 752,108 846,142",
+      "L 850,164",
+      "C 824,268 744,356 610,412",
+      "C 540,440 460,440 390,412",
+      "C 256,356 176,268 150,164",
       "Z"
     ].join(" "),
     fill: "url(#tr-felt-casino)"
   }));
+  svg.appendChild(el("path", {
+    class: "tr-svg-felt-sheen",
+    d: [
+      "M 154,142",
+      "C 248,108 752,108 846,142",
+      "L 850,164",
+      "C 824,268 744,356 610,412",
+      "C 540,440 460,440 390,412",
+      "C 256,356 176,268 150,164",
+      "Z"
+    ].join(" "),
+    fill: "url(#tr-felt-depth)"
+  }));
 
   [
-    { y: 205, bend: -34, start: 110, end: 890 },
-    { y: 420, bend: 58, start: 128, end: 872 }
+    { y: 228, bend: -30, start: 102, end: 898, width: 18 },
+    { y: 462, bend: 56, start: 150, end: 850, width: 22 }
   ].forEach(function (slot) {
     svg.appendChild(el("path", {
       class: "tr-svg-rail-slot",
       d: "M " + slot.start + " " + slot.y + " Q 500 " + (slot.y + slot.bend) + " " + slot.end + " " + slot.y,
       fill: "none",
       stroke: "rgba(15, 8, 4, 0.84)",
-      "stroke-width": 20,
+      "stroke-width": slot.width,
       "stroke-linecap": "round"
     }));
     svg.appendChild(el("path", {
@@ -198,10 +220,10 @@ function buildTableShell(svg) {
   });
 
   [
-    [88, 318],
-    [198, 370],
-    [802, 370],
-    [912, 318]
+    [96, 330],
+    [210, 426],
+    [790, 426],
+    [904, 330]
   ].forEach(function (pos) {
     svg.appendChild(el("circle", {
       class: "tr-svg-rail-light",
@@ -217,47 +239,68 @@ function buildDealerNpc(svg) {
   const npc = el("g", { class: "tr-svg-npc-dealer" });
 
   npc.appendChild(el("path", {
-    d: "M 424,18 C 448,4 552,4 576,18 L 606,132 C 562,150 438,150 394,132 Z",
-    fill: "#2f343a",
+    d: "M 382,-20 C 428,-56 572,-56 618,-20 L 650,170 C 590,192 410,192 350,170 Z",
+    fill: "#23272d",
     stroke: "rgba(0,0,0,0.45)",
     "stroke-width": 2
   }));
   npc.appendChild(el("path", {
-    d: "M 438,24 L 478,132 L 522,132 L 562,24 C 532,14 468,14 438,24 Z",
-    fill: "#d8dde3",
+    d: "M 414,-10 L 470,166 L 530,166 L 586,-10 C 548,-28 452,-28 414,-10 Z",
+    fill: "#e6ebf0",
     opacity: 0.92
   }));
   npc.appendChild(el("path", {
-    d: "M 468,48 L 492,132 L 508,132 L 532,48 C 512,56 488,56 468,48 Z",
-    fill: "#1c2026",
+    d: "M 462,36 L 492,166 L 508,166 L 538,36 C 518,48 482,48 462,36 Z",
+    fill: "#15191f",
     opacity: 0.9
   }));
   npc.appendChild(el("circle", {
-    cx: 500, cy: 38, r: 28,
-    fill: "#d8a57d",
+    cx: 500, cy: 18, r: 34,
+    fill: "#d7a178",
     stroke: "rgba(0,0,0,0.45)",
     "stroke-width": 2
   }));
+  npc.appendChild(el("ellipse", { cx: 488, cy: 22, rx: 3.5, ry: 2.4, fill: "#221b18" }));
+  npc.appendChild(el("ellipse", { cx: 512, cy: 22, rx: 3.5, ry: 2.4, fill: "#221b18" }));
+  npc.appendChild(el("path", { d: "M 492,38 Q 500,44 508,38", fill: "none", stroke: "#7a3d35", "stroke-width": 2, "stroke-linecap": "round" }));
   npc.appendChild(el("path", {
-    d: "M 470,34 C 474,6 526,6 532,34 C 520,22 488,22 470,34 Z",
+    d: "M 466,16 C 468,-20 532,-20 536,16 C 520,2 486,2 466,16 Z",
     fill: "#191717"
   }));
   npc.appendChild(el("path", {
-    d: "M 384,106 C 324,112 286,132 254,168",
+    d: "M 388,124 C 324,128 282,152 236,198",
     fill: "none",
-    stroke: "#d8a57d",
-    "stroke-width": 18,
+    stroke: "#e8edf2",
+    "stroke-width": 34,
     "stroke-linecap": "round"
   }));
   npc.appendChild(el("path", {
-    d: "M 616,106 C 676,112 714,132 746,168",
+    d: "M 612,124 C 676,128 718,152 764,198",
     fill: "none",
-    stroke: "#d8a57d",
-    "stroke-width": 18,
+    stroke: "#e8edf2",
+    "stroke-width": 34,
     "stroke-linecap": "round"
   }));
-  npc.appendChild(el("ellipse", { cx: 246, cy: 172, rx: 20, ry: 11, fill: "#e2b08a" }));
-  npc.appendChild(el("ellipse", { cx: 754, cy: 172, rx: 20, ry: 11, fill: "#e2b08a" }));
+  npc.appendChild(el("path", {
+    d: "M 382,136 C 316,144 276,164 232,202",
+    fill: "none",
+    stroke: "#d8a57d",
+    "stroke-width": 14,
+    "stroke-linecap": "round"
+  }));
+  npc.appendChild(el("path", {
+    d: "M 618,136 C 684,144 724,164 768,202",
+    fill: "none",
+    stroke: "#d8a57d",
+    "stroke-width": 14,
+    "stroke-linecap": "round"
+  }));
+  npc.appendChild(el("path", { d: "M 420,36 C 446,62 470,116 482,166", fill: "none", stroke: "rgba(255,255,255,0.22)", "stroke-width": 2 }));
+  npc.appendChild(el("path", { d: "M 580,36 C 554,62 530,116 518,166", fill: "none", stroke: "rgba(255,255,255,0.22)", "stroke-width": 2 }));
+  npc.appendChild(el("circle", { cx: 474, cy: 104, r: 3, fill: "#0d1015" }));
+  npc.appendChild(el("circle", { cx: 526, cy: 104, r: 3, fill: "#0d1015" }));
+  npc.appendChild(el("ellipse", { cx: 224, cy: 206, rx: 22, ry: 11, fill: "#e2b08a" }));
+  npc.appendChild(el("ellipse", { cx: 776, cy: 206, rx: 22, ry: 11, fill: "#e2b08a" }));
 
   svg.appendChild(npc);
 }
@@ -265,33 +308,34 @@ function buildDealerNpc(svg) {
 function buildDealerArea(svg) {
   svg.appendChild(el("text", {
     class: "tr-svg-brand",
-    x: 500, y: 144,
+    x: 500, y: 150,
     "text-anchor": "middle",
     "dominant-baseline": "middle"
   }, "BACCARIST"));
 
   svg.appendChild(el("path", {
     class: "tr-svg-chip-tray",
-    d: "M 360,158 Q 500,144 640,158 L 635,182 Q 500,168 365,182 Z",
+    d: "M 340,166 Q 500,146 660,166 L 654,194 Q 500,176 346,194 Z",
     fill: "url(#tr-chip-tray-dark)",
     stroke: "rgba(242, 212, 134, 0.48)"
   }));
 
   ["#e93c55", "#28bd64", "#2a83d8", "#f4a53a", "#8d44d8", "#e93c55", "#28bd64", "#2a83d8"].forEach(function (color, i) {
-    const x = 384 + i * 33;
-    svg.appendChild(el("circle", { cx: x, cy: 166, r: 11, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
-    svg.appendChild(el("circle", { cx: x, cy: 166, r: 5, fill: "rgba(255,255,255,0.22)" }));
+    const x = 372 + i * 36.5;
+    const y = 176 - Math.sin((i + 1) / 9 * Math.PI) * 8;
+    svg.appendChild(el("circle", { cx: x, cy: y, r: 11, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
+    svg.appendChild(el("circle", { cx: x, cy: y, r: 5, fill: "rgba(255,255,255,0.22)" }));
   });
 
   const shoe = el("g", { class: "tr-svg-shoe-drawn" });
   shoe.appendChild(el("polygon", {
-    points: "735,122 856,158 816,236 696,202",
+    points: "742,112 870,150 828,242 700,204",
     fill: "#dfe5e7",
     stroke: "rgba(0,0,0,0.65)",
     "stroke-width": 3
   }));
   shoe.appendChild(el("polygon", {
-    points: "758,146 826,166 805,210 738,190",
+    points: "766,140 838,162 812,218 740,196",
     fill: "#e34040",
     opacity: 0.82
   }));
