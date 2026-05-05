@@ -85,6 +85,63 @@
       <!-- Static baccarat table photo (system rebuild pending). -->
       <div id="tr-baccarat-table" class="tr-table-svg tr-table-photo-mode">
         <img class="tr-table-photo" src="/image/baccarat-table.png" alt="Baccarat table">
+
+        <!-- Photo overlay: drag-and-drop bet zones, hand zones, shoe source -->
+        <div class="tr-photo-overlay" id="trPhotoOverlay">
+          <!-- Bet zones (drop targets for chips). Edit left/top/width/height % to fine-tune position over the photo. -->
+          <div class="tr-photo-zone" data-bet="player"      style="left:30%;top:46%;width:20%;height:20%">
+            <span class="tr-zone-tag">PLAYER</span>
+            <div class="tr-zone-stack"></div>
+            <span class="tr-zone-amount" data-zone-amount></span>
+          </div>
+          <div class="tr-photo-zone" data-bet="banker"      style="left:50%;top:46%;width:20%;height:20%">
+            <span class="tr-zone-tag">BANKER</span>
+            <div class="tr-zone-stack"></div>
+            <span class="tr-zone-amount" data-zone-amount></span>
+          </div>
+          <div class="tr-photo-zone" data-bet="tie"         style="left:43%;top:34%;width:14%;height:11%">
+            <span class="tr-zone-tag">TIE</span>
+            <div class="tr-zone-stack"></div>
+            <span class="tr-zone-amount" data-zone-amount></span>
+          </div>
+          <div class="tr-photo-zone" data-bet="playerPair"  style="left:30%;top:34%;width:13%;height:11%">
+            <span class="tr-zone-tag">P. PAIR</span>
+            <div class="tr-zone-stack"></div>
+            <span class="tr-zone-amount" data-zone-amount></span>
+          </div>
+          <div class="tr-photo-zone" data-bet="bankerPair"  style="left:57%;top:34%;width:13%;height:11%">
+            <span class="tr-zone-tag">B. PAIR</span>
+            <div class="tr-zone-stack"></div>
+            <span class="tr-zone-amount" data-zone-amount></span>
+          </div>
+          <div class="tr-photo-zone" data-bet="lucky6"      style="left:70%;top:34%;width:11%;height:11%">
+            <span class="tr-zone-tag">LUCKY 6</span>
+            <div class="tr-zone-stack"></div>
+            <span class="tr-zone-amount" data-zone-amount></span>
+          </div>
+
+          <!-- Hand zones (drop targets for cards) -->
+          <div class="tr-photo-hand" data-hand="player" style="left:30%;top:67%;width:20%;height:14%">
+            <span class="tr-hand-tag">PLAYER HAND</span>
+            <div class="tr-hand-cards"></div>
+          </div>
+          <div class="tr-photo-hand" data-hand="banker" style="left:50%;top:67%;width:20%;height:14%">
+            <span class="tr-hand-tag">BANKER HAND</span>
+            <div class="tr-hand-cards"></div>
+          </div>
+
+          <!-- Card source — drag from here to a hand zone -->
+          <div class="tr-photo-shoe" id="trPhotoShoe" style="left:78%;top:60%;width:14%;height:24%" title="Kéo lá bài vào ô PLAYER hoặc BANKER">
+            <span class="tr-shoe-tag">SHOE</span>
+          </div>
+
+          <!-- Toolbar: clear bets, clear cards -->
+          <div class="tr-photo-tools">
+            <button type="button" class="tr-photo-tool" id="trPhotoClearBets">Clear Bets</button>
+            <button type="button" class="tr-photo-tool" id="trPhotoClearCards">Clear Cards</button>
+          </div>
+        </div>
+
         <div id="tr-bet-matrix" class="tr-svg-host"></div>
         <div class="tr-dealer-strip tr-compat-marker">DEALER</div>
         <div id="tr-seat-arc" class="tr-compat-marker">
@@ -202,6 +259,7 @@
 <div id="settingsRoot" class="tr-settings-root" hidden></div>
 
 <script type="module" src="../../src/app/entries/training.js"></script>
+<script src="../../assets/js/photo-table-system.js" defer></script>
 
 </body>
 </html>
