@@ -146,6 +146,7 @@ export function renderLiveProb(host, probs) {
 // ---------------------------------------------------------------------------
 
 let _feedbackTimer = null;
+const FEEDBACK_LIMIT = 6;
 
 /**
  * Renders a procedural feedback message in the training feedback panel.
@@ -163,12 +164,16 @@ export function renderFeedback(host, message, severity, timeoutMs) {
 
   const ms = timeoutMs || 5000;
   host.className = 'tr-feedback-panel tr-feedback--' + (severity || 'info');
-  host.textContent = message;
+  const item = document.createElement('div');
+  item.className = 'tr-feedback-item tr-feedback-item--' + (severity || 'info');
+  item.textContent = message;
+  host.prepend(item);
+  Array.from(host.querySelectorAll('.tr-feedback-item')).slice(FEEDBACK_LIMIT).forEach(function (node) {
+    node.remove();
+  });
   host.style.display = 'block';
 
   _feedbackTimer = setTimeout(function () {
-    host.style.display = 'none';
-    host.textContent = '';
     _feedbackTimer = null;
   }, ms);
 }
@@ -177,5 +182,5 @@ export function clearFeedback(host) {
   if (!host) return;
   if (_feedbackTimer) { clearTimeout(_feedbackTimer); _feedbackTimer = null; }
   host.style.display = 'none';
-  host.textContent = '';
+  host.innerHTML = '';
 }

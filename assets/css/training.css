@@ -4433,3 +4433,178 @@ body[data-role="dealer"] #tr-baccarat-table.tr-table-svg {
     grid-template-columns: minmax(150px, 14%) minmax(0, 61%) minmax(290px, 25%);
   }
 }
+
+/* ============================================================
+   R11 - 25% left table picker + persistent action feedback
+   ============================================================ */
+.tr-main {
+  grid-template-columns: minmax(260px, 25%) minmax(0, 50%) minmax(300px, 25%);
+}
+
+#tr-left-panel.tr-side-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  overflow: auto;
+  border-right: 1px solid rgba(212, 175, 85, 0.18);
+}
+
+#tr-left-panel.tr-side-strip .tr-balance-bar,
+#tr-left-panel.tr-side-strip .tr-chip-section,
+#tr-left-panel.tr-side-strip .tr-table-picker {
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid rgba(212, 175, 85, 0.16);
+  border-radius: 8px;
+  background: rgba(8, 6, 19, 0.72);
+}
+
+.tr-table-picker {
+  display: grid;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.tr-table-picker__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tr-table-picker__head strong {
+  color: #f2d486;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.tr-table-picker__grid,
+.tr-table-picker__salons {
+  display: grid;
+  gap: 8px;
+}
+
+.tr-table-picker__grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.tr-table-picker__salons {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tr-table-option {
+  min-width: 0;
+  min-height: 34px;
+  padding: 7px 6px;
+  border: 1px solid rgba(212, 175, 85, 0.2);
+  border-radius: 7px;
+  color: rgba(247, 234, 204, 0.74);
+  background: rgba(255, 255, 255, 0.045);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.tr-table-option:hover,
+.tr-table-option.is-active {
+  border-color: rgba(242, 212, 134, 0.68);
+  color: #f2d486;
+  background: rgba(242, 212, 134, 0.12);
+}
+
+.tr-table-option--salon {
+  color: rgba(220, 236, 255, 0.76);
+  border-color: rgba(110, 165, 230, 0.24);
+}
+
+#tr-left-panel.tr-side-strip .tr-chip-section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+#tr-left-panel.tr-side-strip #tr-chip-tray {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+  gap: 8px;
+}
+
+#tr-feedback-panel {
+  order: 100;
+  flex: 1 1 auto;
+  min-height: 132px;
+  margin-top: auto;
+  padding: 12px;
+  border: 1px solid rgba(255, 90, 90, 0.24);
+  border-radius: 8px;
+  background: rgba(26, 7, 12, 0.72);
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+#tr-feedback-panel:empty {
+  display: block;
+  border-color: rgba(212, 175, 85, 0.14);
+  background: rgba(8, 6, 19, 0.42);
+}
+
+#tr-feedback-panel:empty::before {
+  content: "LOI THAO TAC";
+  display: block;
+  color: rgba(247, 234, 204, 0.34);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.tr-feedback-item {
+  padding: 9px 10px;
+  border-radius: 7px;
+  color: rgba(255, 235, 235, 0.92);
+  background: rgba(255, 90, 90, 0.1);
+  border: 1px solid rgba(255, 90, 90, 0.2);
+}
+
+.tr-feedback-item + .tr-feedback-item {
+  margin-top: 8px;
+}
+
+.tr-feedback-item--warning {
+  color: rgba(255, 239, 198, 0.95);
+  background: rgba(242, 172, 72, 0.1);
+  border-color: rgba(242, 172, 72, 0.22);
+}
+
+.tr-feedback-item--info {
+  color: rgba(220, 236, 255, 0.92);
+  background: rgba(74, 158, 255, 0.1);
+  border-color: rgba(74, 158, 255, 0.2);
+}
+
+body[data-role="insurance"] #tr-left-panel.tr-side-strip {
+  display: none !important;
+}
+
+@media (max-width: 1280px) {
+  .tr-main {
+    grid-template-columns: minmax(230px, 25%) minmax(0, 50%) minmax(280px, 25%);
+  }
+}
+
+@media (max-width: 1120px) {
+  .tr-main {
+    grid-template-columns: 1fr;
+  }
+
+  #tr-left-panel.tr-side-strip {
+    order: 2;
+    max-height: none;
+    border-right: 0;
+    border-top: 1px solid rgba(212, 175, 85, 0.16);
+  }
+}

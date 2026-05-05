@@ -24,6 +24,7 @@ const DEAL_LABELS = { idle: 'DEAL', betting: 'DEAL', 'deal-1': 'Deal P1', 'deal-
 const DEAL_PHASES = new Set([PHASES.IDLE, PHASES.BETTING, PHASES.DEAL_1, PHASES.DEAL_2, PHASES.DEAL_3, PHASES.DEAL_4, PHASES.DRAW_P3, PHASES.DRAW_B3]);
 
 let _state = createState(), settingsPanel = null, customerPanel = null, burnTimer = 0;
+let selectedTableName = 'Ban 1';
 const getState = () => _state, setState = (next) => { _state = next; };
 
 const byId = (id) => document.getElementById(id);
@@ -129,6 +130,14 @@ function renderRole(state) {
   document.body.setAttribute('data-squeeze', state.tablePrefs.squeezeEnabled ? 'enabled' : 'disabled');
   const roleSelector = document.querySelector('.tr-role-selector');
   if (roleSelector) roleSelector.classList.toggle('is-locked', !isIdlePhase(state.phase));
+}
+
+function renderTablePicker() {
+  const activeName = document.getElementById('tr-active-table-name');
+  if (activeName) activeName.textContent = selectedTableName;
+  document.querySelectorAll('[data-table-option]').forEach(function (btn) {
+    btn.classList.toggle('is-active', btn.getAttribute('data-table-option') === selectedTableName);
+  });
 }
 
 function renderControls(state) {
@@ -266,6 +275,7 @@ function renderAll() {
   renderLiveProb(el.liveProb, exactProbs);
   renderNpcChat(el.npcChat, state);
   renderInsurancePanel(state);
+  renderTablePicker();
   renderRole(state);
   renderControls(state);
   // Phase10: NPC speech bubbles above seat columns in bet matrix
@@ -304,6 +314,13 @@ function attachEvents() {
   if (roleSelector) roleSelector.addEventListener('click', (e) => {
     const btn = e.target.closest('.tr-role-btn');
     if (btn) orchestrator.switchRole(btn.getAttribute('data-role'));
+  });
+  const tablePicker = document.querySelector('.tr-table-picker');
+  if (tablePicker) tablePicker.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-table-option]');
+    if (!btn) return;
+    selectedTableName = btn.getAttribute('data-table-option') || 'Ban 1';
+    renderTablePicker();
   });
 }
 
