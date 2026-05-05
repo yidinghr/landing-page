@@ -4674,9 +4674,9 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
   position: absolute;
   pointer-events: auto;
   z-index: 2;
-  border: 1px solid rgba(242, 212, 134, 0.28);
+  border: 1px solid transparent;
   border-radius: 6px;
-  background: rgba(242, 212, 134, 0.05);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4684,25 +4684,25 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 .tr-photo-zone:hover {
-  border-color: rgba(242, 212, 134, 0.6);
-  background: rgba(242, 212, 134, 0.14);
-  box-shadow: 0 0 14px rgba(242, 212, 134, 0.28);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 .tr-photo-zone.is-drag-over {
-  border-color: #f2d486;
+  border-color: transparent;
   border-style: solid;
-  background: rgba(242, 212, 134, 0.22);
-  box-shadow: 0 0 0 2px rgba(242, 212, 134, 0.55), 0 0 24px rgba(242, 212, 134, 0.45);
+  background: transparent;
+  box-shadow: none;
 }
 /* Pulse all zones when a chip is selected — shows where to click */
 body.has-selected-chip .tr-photo-zone {
-  border-color: rgba(242, 212, 134, 0.55);
-  animation: tr-zone-pulse 1.6s ease-in-out infinite;
+  border-color: transparent;
+  animation: none;
 }
 body.has-selected-chip .tr-photo-zone:hover {
-  border-color: #f2d486;
-  background: rgba(242, 212, 134, 0.22);
-  box-shadow: 0 0 0 2px rgba(242, 212, 134, 0.6), 0 0 22px rgba(242, 212, 134, 0.5);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   animation: none;
 }
 body.is-photo-drag-card .tr-photo-zone {
@@ -4715,6 +4715,7 @@ body.is-photo-drag-card .tr-photo-zone {
 
 /* Zone label — visible centered text so player knows what each zone is */
 .tr-zone-tag {
+  display: none;
   position: absolute;
   top: 50%;
   left: 50%;
