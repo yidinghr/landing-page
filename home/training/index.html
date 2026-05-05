@@ -135,8 +135,9 @@
             <span class="tr-shoe-tag">SHOE</span>
           </div>
 
-          <!-- Toolbar: clear bets, clear cards -->
+          <!-- Toolbar: settle round, clear bets, clear cards -->
           <div class="tr-photo-tools">
+            <button type="button" class="tr-photo-tool" id="trPhotoSettle">Settle</button>
             <button type="button" class="tr-photo-tool" id="trPhotoClearBets">Clear Bets</button>
             <button type="button" class="tr-photo-tool" id="trPhotoClearCards">Clear Cards</button>
           </div>
@@ -257,6 +258,18 @@
 </div>
 
 <div id="settingsRoot" class="tr-settings-root" hidden></div>
+
+<!-- Squeeze modal: enlarged card the player drags upward to slowly reveal -->
+<div id="trSqueezeModal" class="tr-squeeze-modal" hidden>
+  <div class="tr-squeeze-hint">Kéo bài từ dưới lên để nặn bài</div>
+  <div class="tr-squeeze-stage">
+    <div class="tr-squeeze-card" id="trSqueezeCard">
+      <div class="tr-squeeze-back">🂠</div>
+      <div class="tr-squeeze-face" id="trSqueezeFace"></div>
+    </div>
+  </div>
+  <button type="button" class="tr-squeeze-modal__close" id="trSqueezeClose">Đóng</button>
+</div>
 
 <script type="module" src="../../src/app/entries/training.js"></script>
 <script src="../../assets/js/photo-table-system.js" defer></script>

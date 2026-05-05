@@ -4667,13 +4667,15 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
   pointer-events: none;       /* zones individually opt-in */
 }
 
-/* --- Bet zones (drop targets for chips) --- */
+/* --- Bet zones (drop targets for chips) ---
+   Invisible by default — they sit transparently over the photo's printed
+   bet labels. Only highlight on hover (or while a chip drag is active). */
 .tr-photo-zone {
   position: absolute;
   pointer-events: auto;
-  border: 1px dashed rgba(242, 212, 134, 0.30);
+  border: 1px solid transparent;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.0);
+  background: transparent;
   transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
   display: flex;
   flex-direction: column;
@@ -4681,9 +4683,10 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
   justify-content: center;
   cursor: copy;
 }
+body.is-photo-drag .tr-photo-zone,
 .tr-photo-zone:hover {
-  border-color: rgba(242, 212, 134, 0.85);
-  background: rgba(242, 212, 134, 0.08);
+  border-color: rgba(242, 212, 134, 0.55);
+  background: rgba(242, 212, 134, 0.06);
 }
 .tr-photo-zone.is-drag-over {
   border-color: #f2d486;
@@ -4691,16 +4694,18 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
   background: rgba(242, 212, 134, 0.18);
   box-shadow: 0 0 0 2px rgba(242, 212, 134, 0.45), 0 0 22px rgba(242, 212, 134, 0.4);
 }
-.tr-zone-tag {
+/* Inner tag labels would clash with the photo's printed labels — keep them
+   in the DOM for accessibility but hide visually. */
+.tr-zone-tag,
+.tr-hand-tag,
+.tr-shoe-tag {
   position: absolute;
-  top: 4px;
-  left: 6px;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: rgba(247, 234, 204, 0.55);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 .tr-zone-stack {
   position: relative;
@@ -4740,13 +4745,13 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
   pointer-events: none;
 }
 
-/* --- Hand zones (drop targets for cards) --- */
+/* --- Hand zones (drop targets for cards) — also invisible by default --- */
 .tr-photo-hand {
   position: absolute;
   pointer-events: auto;
-  border: 1px dashed rgba(74, 158, 255, 0.35);
+  border: 1px solid transparent;
   border-radius: 8px;
-  background: rgba(74, 158, 255, 0.04);
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4754,13 +4759,10 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
   transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
   cursor: copy;
 }
-.tr-photo-hand[data-hand="banker"] {
-  border-color: rgba(255, 90, 90, 0.35);
-  background: rgba(255, 90, 90, 0.04);
-}
+body.is-photo-drag-card .tr-photo-hand,
 .tr-photo-hand:hover {
-  border-color: rgba(242, 212, 134, 0.7);
-  background: rgba(242, 212, 134, 0.08);
+  border-color: rgba(242, 212, 134, 0.55);
+  background: rgba(242, 212, 134, 0.06);
 }
 .tr-photo-hand.is-drag-over {
   border-color: #f2d486;
@@ -4788,6 +4790,8 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
   height: 100%;
   pointer-events: none;
 }
+/* Re-enable clicks on cards themselves so the squeeze modal opens */
+.tr-hand-cards .tr-photo-card { pointer-events: auto; }
 .tr-photo-card {
   width: 26px;
   height: 38px;
@@ -4806,19 +4810,19 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
 }
 .tr-photo-card.is-red { color: #c1272d; }
 
-/* --- Card source (shoe overlay) --- */
+/* --- Card source (shoe overlay) — sits over the red shoe in the photo --- */
 .tr-photo-shoe {
   position: absolute;
   pointer-events: auto;
-  border: 1px dashed rgba(242, 212, 134, 0.35);
+  border: 1px solid transparent;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.0);
+  background: transparent;
   cursor: grab;
   transition: background 0.12s, border-color 0.12s;
 }
 .tr-photo-shoe:hover {
-  border-color: rgba(242, 212, 134, 0.85);
-  background: rgba(242, 212, 134, 0.08);
+  border-color: rgba(242, 212, 134, 0.7);
+  background: rgba(242, 212, 134, 0.10);
 }
 .tr-photo-shoe:active { cursor: grabbing; }
 .tr-shoe-tag {
@@ -4898,18 +4902,193 @@ body[data-role="dealer"] .tr-chip-tray { pointer-events: auto !important; }
 body[data-role="dealer"] .tr-chip { pointer-events: auto !important; cursor: grab !important; opacity: 1 !important; }
 body[data-role="dealer"] .tr-chip:active { cursor: grabbing !important; }
 
+/* === Card faces / backs (in-hand) ===================================== */
+.tr-photo-card {
+  position: relative;
+  overflow: hidden;
+}
+.tr-photo-card.is-face-down {
+  background: repeating-linear-gradient(
+    45deg,
+    #2a1a4a 0 6px,
+    #1a0e30 6px 12px
+  );
+  border: 2px solid #c8a04a;
+  cursor: pointer;
+}
+.tr-photo-card.is-face-down::before {
+  content: '🂠';
+  font-size: 22px;
+  color: rgba(242, 212, 134, 0.85);
+  display: block;
+  text-align: center;
+  line-height: 38px;
+}
+.tr-photo-card.is-face-down:hover {
+  outline: 2px solid #f2d486;
+  outline-offset: 1px;
+}
+
+/* --- Deal slide-in animation --- */
+@keyframes tr-photo-card-deal {
+  from { transform: translateY(80px) rotate(-6deg); opacity: 0; }
+  to   { transform: translateY(0) rotate(0deg); opacity: 1; }
+}
+.tr-photo-card.is-dealing {
+  animation: tr-photo-card-deal 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) backwards;
+}
+
+/* === Hand score badge (shown after settle) ============================ */
+.tr-photo-hand .tr-hand-score {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 16px;
+  font-weight: 900;
+  color: #f2d486;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+}
+.tr-photo-hand .tr-hand-score:empty { display: none; }
+
+/* === Settle / round-result banner ====================================== */
+.tr-photo-result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 14px 28px;
+  border-radius: 14px;
+  background: rgba(8, 5, 20, 0.92);
+  border: 2px solid #f2d486;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 60px rgba(242, 212, 134, 0.35);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #f2d486;
+  text-align: center;
+  z-index: 20;
+  pointer-events: none;
+  animation: tr-photo-result-pop 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.tr-photo-result .tr-result-payout {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+@keyframes tr-photo-result-pop {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* === Squeeze modal (drag-from-bottom-up to reveal a card) ============== */
+.tr-squeeze-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 22px;
+}
+.tr-squeeze-modal[hidden] { display: none; }
+.tr-squeeze-hint {
+  color: rgba(247, 234, 204, 0.82);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tr-squeeze-stage {
+  position: relative;
+  width: 240px;
+  height: 340px;
+}
+.tr-squeeze-card {
+  --reveal: 0;
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+.tr-squeeze-card:active { cursor: grabbing; }
+.tr-squeeze-card .tr-squeeze-back,
+.tr-squeeze-card .tr-squeeze-face {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: serif;
+  font-weight: 800;
+}
+.tr-squeeze-card .tr-squeeze-back {
+  background:
+    repeating-linear-gradient(45deg, #2a1a4a 0 12px, #1a0e30 12px 24px);
+  border: 4px solid #c8a04a;
+  color: rgba(242, 212, 134, 0.8);
+  font-size: 110px;
+}
+.tr-squeeze-card .tr-squeeze-face {
+  background: linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%);
+  border: 4px solid #888;
+  color: #111;
+  font-size: 110px;
+  /* Reveal from BOTTOM upward — bottom strip reveals first as the player
+     slowly drags the card up. At --reveal=1 the entire face is visible. */
+  clip-path: polygon(
+    0 calc(100% - var(--reveal) * 100%),
+    100% calc(100% - var(--reveal) * 100%),
+    100% 100%,
+    0 100%
+  );
+}
+.tr-squeeze-card.is-red .tr-squeeze-face { color: #c1272d; }
+.tr-squeeze-modal__close {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 8px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 212, 134, 0.55);
+  background: transparent;
+  color: var(--tr-accent);
+  cursor: pointer;
+}
+.tr-squeeze-modal__close:hover { background: rgba(242, 212, 134, 0.16); }
+
+/* === Balance flash (when chips are placed or won) ===================== */
+.tr-balance-amount.is-flashing,
+.tr-balance-bet.is-flashing {
+  animation: tr-balance-flash 0.5s ease;
+}
+@keyframes tr-balance-flash {
+  0%   { transform: scale(1); color: var(--tr-accent); }
+  40%  { transform: scale(1.18); color: #fff; text-shadow: 0 0 14px var(--tr-accent); }
+  100% { transform: scale(1); color: var(--tr-accent); }
+}
+
 /* --- Dealer view: rotate the table 180° so chip rail/hands sit at the bottom (dealer POV) --- */
 body[data-role="dealer"] #tr-baccarat-table.tr-table-photo-mode {
   transform: rotate(180deg) !important;
   transform-origin: 50% 50%;
 }
-/* Keep chip pile, amount text, cards, and tags right-side-up for the dealer */
-body[data-role="dealer"] .tr-zone-tag,
+/* Keep chip pile, amount text, cards, and tools right-side-up for the dealer */
 body[data-role="dealer"] .tr-zone-amount,
-body[data-role="dealer"] .tr-hand-tag,
-body[data-role="dealer"] .tr-shoe-tag,
 body[data-role="dealer"] .tr-photo-card,
 body[data-role="dealer"] .tr-zone-chip,
-body[data-role="dealer"] .tr-photo-tool {
+body[data-role="dealer"] .tr-photo-tool,
+body[data-role="dealer"] .tr-hand-score,
+body[data-role="dealer"] .tr-photo-result {
   transform: rotate(180deg);
+}
+body[data-role="dealer"] .tr-photo-result {
+  transform: translate(-50%, -50%) rotate(180deg);
 }
