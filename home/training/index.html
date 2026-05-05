@@ -33,6 +33,28 @@
   </header>
 
   <main class="tr-main">
+    <aside id="tr-left-panel" class="tr-side-strip">
+      <div class="tr-balance-bar">
+        <div class="tr-balance-item">
+          <span class="tr-balance-label">BALANCE</span>
+          <span id="balanceAmt" class="tr-balance-amount">1,000,000</span>
+        </div>
+        <div class="tr-balance-item">
+          <span class="tr-balance-label">TOTAL BET</span>
+          <span id="totalBetAmt" class="tr-balance-bet">—</span>
+        </div>
+        <div id="payoutSummary" class="tr-payout-summary" hidden></div>
+      </div>
+
+      <div class="tr-chip-section">
+        <span class="tr-chip-label">CHIPS</span>
+        <div id="tr-chip-tray" class="tr-chip-tray"></div>
+        <button type="button" id="btnClearBets" class="tr-btn tr-btn--ghost tr-btn--sm">Clear</button>
+        <button type="button" id="btnSubmitBets" class="tr-btn tr-btn--customer tr-btn--sm">Submit</button>
+      </div>
+      <div id="tr-feedback-panel"></div>
+    </aside>
+
     <section id="tr-center">
       <div id="tr-roadmap-strip">
         <canvas id="tr-road-bead"></canvas>
@@ -46,6 +68,14 @@
            of specific SVG regions for drag/drop and live card rendering. -->
       <div id="tr-baccarat-table" class="tr-table-svg">
         <div id="tr-bet-matrix" class="tr-svg-host"></div>
+        <div class="tr-dealer-strip tr-compat-marker">DEALER</div>
+        <div id="tr-seat-arc" class="tr-compat-marker">
+          <span class="tr-arc-seat">Seat 1</span>
+          <span class="tr-arc-seat">Seat 2</span>
+          <span class="tr-arc-seat">Seat 3</span>
+          <span class="tr-arc-seat">Seat 4</span>
+          <span class="tr-arc-seat">Seat 5</span>
+        </div>
 
         <div class="tr-svg-overlay tr-svg-overlay--cards" id="tr-card-zones">
           <div id="tr-banker-area" class="tr-hand tr-hand--banker">
@@ -68,28 +98,6 @@
 
         <div id="burnNotice" class="tr-svg-overlay tr-svg-overlay--burn" hidden></div>
       </div>
-
-      <aside id="tr-left-panel" class="tr-side-strip">
-        <div class="tr-balance-bar">
-          <div class="tr-balance-item">
-            <span class="tr-balance-label">BALANCE</span>
-            <span id="balanceAmt" class="tr-balance-amount">1,000,000</span>
-          </div>
-          <div class="tr-balance-item">
-            <span class="tr-balance-label">TOTAL BET</span>
-            <span id="totalBetAmt" class="tr-balance-bet">—</span>
-          </div>
-          <div id="payoutSummary" class="tr-payout-summary" hidden></div>
-        </div>
-
-        <div class="tr-chip-section">
-          <span class="tr-chip-label">CHIPS</span>
-          <div id="tr-chip-tray" class="tr-chip-tray"></div>
-          <button type="button" id="btnClearBets" class="tr-btn tr-btn--ghost tr-btn--sm">Clear</button>
-          <button type="button" id="btnSubmitBets" class="tr-btn tr-btn--customer tr-btn--sm">Submit</button>
-        </div>
-        <div id="tr-feedback-panel"></div>
-      </aside>
 
       <div id="seatsRow" class="tr-seats tr-seats--renderer-cache" aria-hidden="true">
         <div class="tr-seat tr-seat--active" data-seat="1"><div class="tr-seat__head"><span class="tr-seat__label">Seat 1</span><span class="tr-seat__badge">active</span></div><div class="tr-seat__bets"><span class="tr-seat__bet" data-seat-bet="playerPair" hidden>P.Pair <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="player" hidden>Player <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="tie" hidden>Tie <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="banker" hidden>Banker <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="bankerPair" hidden>B.Pair <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="luckySix" hidden>Lucky 6 <strong>0</strong></span></div><div class="tr-seat__balance">Balance <strong>1,000,000</strong></div></div>
@@ -139,12 +147,6 @@
       </div>
     </aside>
 
-    <div id="tr-spare" class="tr-spare-column" aria-hidden="true">
-      <div class="tr-spare-card">
-        <span class="tr-spare-card__label">Reserved</span>
-        <p class="tr-spare-card__hint">Future panel — leave 25% column for upcoming widgets.</p>
-      </div>
-    </div>
   </main>
 </div>
 

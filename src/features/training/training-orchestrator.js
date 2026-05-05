@@ -829,17 +829,20 @@ export function createOrchestrator({
     update(resetAfterSettlement(state));
   }
 
-  function handlePlaceBet(zone) {
+  function handlePlaceBet(zone, seatId) {
     let state = getState();
     if (state.role !== 'customer' || !BETTING_PHASES.has(state.phase) || ZONES.indexOf(zone) < 0) return;
+    const targetSeatId = clampSeatId(seatId || state.activeSeatId);
     if (!state.selectedChip) {
       emitFeedback('Vui lòng chọn chip trước khi đặt cược.', 'warning', { code: 'chip-required' });
       return;
     }
-    if (activeSeat(state).balance < state.selectedChip) return;
+    const targetSeat = getSeat(state.seats, targetSeatId);
+    if (!targetSeat || targetSeat.balance < state.selectedChip) return;
 
-    let seats = debitSeat(state.seats, state.activeSeatId, state.selectedChip);
-    seats = setBet(seats, state.activeSeatId, zone, state.selectedChip);
+    let seats = debitSeat(state.seats, targetSeatId, state.selectedChip);
+    seats = setBet(seats, targetSeatId, zone, state.selectedChip);
+    state = setActiveSeatId(state, targetSeatId);
     state = setSeats(state, seats);
     state = setPayouts(state, null);
     state = setSettlement(state, null);
@@ -861,7 +864,7 @@ export function createOrchestrator({
     const customerBetting = state.role === 'customer' && BETTING_PHASES.has(state.phase);
     const dealerSettlement = state.role === 'dealer' && state.phase === PHASES.SETTLEMENT;
     if (!customerBetting && !dealerSettlement) return;
-    update(setSelectedChip(state, state.selectedChip === value ? null : value));
+    update(setSelectedChip(state, value));
   }
 
   function handleSubmitBets() {

@@ -3698,3 +3698,311 @@ body[data-role="dealer"] .tr-customer-rail { display: none !important; }
     margin-bottom: 0 !important;
   }
 }
+
+/* ============================================================
+   R8 - Reference-style baccarat table and 25/50/25 workspace
+   ============================================================ */
+.tr-main {
+  grid-template-columns: minmax(240px, 25%) minmax(0, 50%) minmax(260px, 25%);
+  min-height: calc(100vh - 58px);
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(27, 145, 190, 0.18) 0%, transparent 42%),
+    #03010a;
+}
+
+#tr-left-panel.tr-side-strip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 0;
+  border: 0;
+  border-right: 1px solid rgba(212, 175, 85, 0.16);
+  background:
+    linear-gradient(180deg, rgba(12, 9, 25, 0.94), rgba(4, 1, 12, 0.98)),
+    radial-gradient(ellipse at 50% 0%, rgba(25, 160, 210, 0.18), transparent 48%);
+  box-shadow: none;
+  overflow: auto;
+}
+
+#tr-left-panel.tr-side-strip .tr-balance-bar,
+#tr-left-panel.tr-side-strip .tr-chip-section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  background: rgba(8, 6, 19, 0.72);
+  border: 1px solid rgba(212, 175, 85, 0.16);
+  border-radius: 8px;
+}
+
+#tr-left-panel.tr-side-strip .tr-balance-item {
+  justify-content: space-between;
+}
+
+#tr-left-panel.tr-side-strip .tr-payout-summary {
+  margin-left: 0;
+  flex-wrap: wrap;
+}
+
+#tr-left-panel.tr-side-strip #tr-chip-tray {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(46px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+#tr-left-panel.tr-side-strip .tr-chip {
+  width: 48px;
+  height: 48px;
+  justify-self: center;
+}
+
+#tr-left-panel.tr-side-strip .tr-btn {
+  width: 100%;
+}
+
+#tr-center {
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 12px 16px;
+  overflow: auto;
+}
+
+#tr-roadmap-strip,
+#tr-baccarat-table.tr-table-svg,
+#tr-controls-bar,
+#tr-overlay-panel {
+  width: 100%;
+  max-width: 980px;
+}
+
+#tr-baccarat-table.tr-table-svg {
+  aspect-ratio: 1000 / 560;
+  margin: 6px auto 0;
+  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.62));
+  transform: none !important;
+  overflow: hidden;
+}
+
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg,
+body[data-role="customer"] #tr-baccarat-table.tr-table-svg,
+body[data-role="insurance"] #tr-baccarat-table.tr-table-svg {
+  transform: none !important;
+}
+
+#tr-baccarat-table.tr-table-svg #tr-bet-matrix.tr-svg-host {
+  inset: 0;
+}
+
+.tr-bet-svg .tr-svg-leather {
+  filter:
+    drop-shadow(0 16px 10px rgba(0, 0, 0, 0.54))
+    drop-shadow(0 0 1px rgba(255, 255, 255, 0.22));
+}
+
+.tr-bet-svg .tr-svg-wood {
+  filter: drop-shadow(0 4px 2px rgba(0, 0, 0, 0.46));
+}
+
+.tr-bet-svg .tr-svg-felt {
+  filter: inset(0 0 24px rgba(0, 0, 0, 0.4));
+}
+
+.tr-bet-svg .tr-svg-brand {
+  fill: #ffffff;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 2;
+}
+
+.tr-bet-svg .tr-svg-header-player,
+.tr-bet-svg .tr-svg-header-banker,
+.tr-bet-svg .tr-svg-header-tie {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.42);
+  stroke-width: 1.2;
+}
+
+.tr-bet-svg .tr-svg-header-player { fill: #dfefff; }
+.tr-bet-svg .tr-svg-header-banker { fill: #ffe255; }
+.tr-bet-svg .tr-svg-header-tie { fill: rgba(255, 255, 255, 0.92); font-size: 16px; }
+
+.tr-bet-svg .tr-svg-zone__shape {
+  fill: rgba(255, 255, 255, 0.035);
+  stroke: rgba(217, 246, 255, 0.72);
+  stroke-width: 1.35;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+.tr-bet-svg .tr-svg-zone:hover .tr-svg-zone__shape {
+  fill: rgba(255, 255, 255, 0.16);
+  stroke: #ffffff;
+}
+
+.tr-bet-svg .tr-zone--player .tr-svg-zone__shape,
+.tr-bet-svg .tr-zone--ppair .tr-svg-zone__shape {
+  fill: rgba(0, 115, 200, 0.16);
+  stroke: rgba(219, 243, 255, 0.8);
+}
+
+.tr-bet-svg .tr-zone--banker .tr-svg-zone__shape,
+.tr-bet-svg .tr-zone--bpair .tr-svg-zone__shape {
+  fill: rgba(255, 207, 55, 0.10);
+  stroke: rgba(255, 226, 85, 0.82);
+}
+
+.tr-bet-svg .tr-zone--tie .tr-svg-zone__shape {
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: rgba(235, 250, 255, 0.8);
+}
+
+.tr-bet-svg .tr-zone--lucky6 .tr-svg-zone__shape {
+  fill: rgba(10, 84, 144, 0.12);
+  stroke: rgba(210, 238, 255, 0.58);
+}
+
+.tr-bet-svg .tr-svg-zone__label {
+  fill: rgba(246, 252, 255, 0.9);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.tr-bet-svg .tr-zone--banker .tr-svg-zone__label,
+.tr-bet-svg .tr-zone--bpair .tr-svg-zone__label {
+  fill: #ffe255;
+}
+
+.tr-bet-svg .tr-zone--player .tr-svg-zone__label,
+.tr-bet-svg .tr-zone--ppair .tr-svg-zone__label {
+  fill: #e6f5ff;
+}
+
+.tr-bet-svg .tr-svg-zone--main .tr-svg-zone__label {
+  font-size: 32px;
+  letter-spacing: 0;
+}
+
+.tr-bet-svg .tr-svg-zone--tie-main .tr-svg-zone__label {
+  font-size: 13px;
+}
+
+.tr-bet-svg .tr-zone--lucky6 .tr-svg-zone__label {
+  font-size: 10px;
+  fill: rgba(235, 250, 255, 0.72);
+}
+
+.tr-bet-svg .tr-zone-bet-amt,
+.tr-bet-svg .tr-zone-payout {
+  font-size: 12px;
+  fill: #fff36d;
+  stroke-width: 0.8;
+}
+
+.tr-bet-svg .tr-svg-seat-num {
+  fill: rgba(255, 240, 168, 0.86);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.tr-bet-svg .tr-svg-front-chip-label {
+  fill: #ffffff;
+  font-size: 8px;
+  font-weight: 900;
+  stroke: rgba(0, 0, 0, 0.5);
+  stroke-width: 0.8;
+}
+
+.tr-svg-overlay--cards {
+  left: 32%;
+  right: 32%;
+  top: 24%;
+  height: 15%;
+  opacity: 0;
+}
+
+body[data-role="customer"] .tr-svg-overlay--cards,
+body[data-role="customer"] .tr-svg-overlay--cards .tr-hand {
+  pointer-events: none;
+}
+
+.tr-svg-overlay--cards .tr-hand-label,
+.tr-bet-svg .tr-svg-card-zone,
+.tr-bet-svg .tr-svg-card-zone__label,
+.tr-bet-svg .tr-svg-vs {
+  display: none !important;
+}
+
+.tr-svg-overlay--shoe {
+  left: 71%;
+  top: -30%;
+  width: 12%;
+  height: 11%;
+  opacity: 0;
+}
+
+#tr-baccarat-table.tr-table-svg .tr-compat-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-zone__label,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-pocket__label,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-dealer-label,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-card-zone__label,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-vs,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-seat-num,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-zone-bet-amt,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-zone-payout,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-svg-overlay {
+  transform: none !important;
+}
+
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-svg-overlay--burn {
+  transform: translateX(-50%) !important;
+}
+
+#tr-right {
+  border-left: 1px solid rgba(212, 175, 85, 0.16);
+  background: linear-gradient(180deg, rgba(5, 3, 13, 0.96), rgba(2, 0, 8, 0.98));
+  min-width: 0;
+}
+
+body[data-role="insurance"] #tr-left-panel.tr-side-strip,
+body[data-role="insurance"] .tr-chip-section,
+body[data-role="insurance"] .tr-balance-bar {
+  display: none !important;
+}
+
+@media (max-width: 1120px) {
+  .tr-main {
+    grid-template-columns: 1fr;
+  }
+
+  #tr-left-panel.tr-side-strip {
+    order: 2;
+    border-right: 0;
+    border-top: 1px solid rgba(212, 175, 85, 0.16);
+  }
+
+  #tr-center { order: 1; }
+  #tr-right { order: 3; }
+}

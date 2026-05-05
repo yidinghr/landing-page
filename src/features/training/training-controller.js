@@ -251,7 +251,7 @@ function renderAll() {
 function attachEvents() {
   if (el.betMatrix) el.betMatrix.addEventListener('click', (e) => {
     const zoneEl = e.target.closest('[data-zone]');
-    if (zoneEl) orchestrator.placeBet(zoneEl.getAttribute('data-zone'));
+    if (zoneEl) orchestrator.placeBet(zoneEl.getAttribute('data-zone'), zoneEl.getAttribute('data-seat'));
   });
   if (el.chipTray) el.chipTray.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-chip]');

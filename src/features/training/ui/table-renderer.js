@@ -167,6 +167,16 @@ function matrixCell(root, seatId, zone) {
   return root ? root.querySelector('[data-seat="' + seatId + '"][data-zone="' + zone + '"]') : null;
 }
 
+function setHidden(el, hidden) {
+  if (!el) return;
+  if (hidden) {
+    el.setAttribute('hidden', '');
+  } else {
+    el.removeAttribute('hidden');
+  }
+  if ('hidden' in el) el.hidden = hidden;
+}
+
 export function renderBetZones(root, bets, payouts, totalBetEl, activeSeatId = 1) {
   if (totalBetEl) {
     const total = betTotal(bets);
@@ -181,17 +191,17 @@ export function renderBetZones(root, bets, payouts, totalBetEl, activeSeatId = 1
 
     if (betEl) {
       betEl.textContent = betAmt > 0 ? betAmt.toLocaleString() : '';
-      betEl.hidden = betAmt === 0;
+      setHidden(betEl, betAmt === 0);
     }
 
     if (payEl) {
       if (payouts && payouts[zone] !== undefined) {
         const p = payouts[zone];
         payEl.textContent = fmtAmt(p);
-        payEl.className = 'tr-zone-payout ' + (p > 0 ? 'is-win' : p < 0 ? 'is-lose' : 'is-push');
-        payEl.hidden = false;
+        payEl.setAttribute('class', 'tr-zone-payout ' + (p > 0 ? 'is-win' : p < 0 ? 'is-lose' : 'is-push'));
+        setHidden(payEl, false);
       } else {
-        payEl.hidden = true;
+        setHidden(payEl, true);
       }
     }
 
@@ -217,7 +227,7 @@ export function renderSeats(host, seats, activeSeatId, settlement) {
       const betEl = cell.querySelector('.tr-zone-bet-amt');
       if (betEl) {
         betEl.textContent = '';
-        betEl.hidden = true;
+        setHidden(betEl, true);
       }
     });
 
@@ -234,7 +244,7 @@ export function renderSeats(host, seats, activeSeatId, settlement) {
         cell.classList.toggle('has-bet', amt > 0);
         if (betEl) {
           betEl.textContent = amt > 0 ? amt.toLocaleString() : '';
-          betEl.hidden = amt === 0;
+          setHidden(betEl, amt === 0);
         }
       });
     });
@@ -263,7 +273,7 @@ export function renderSeats(host, seats, activeSeatId, settlement) {
       const strong = betEl.querySelector('strong');
       betEl.firstChild.textContent = zoneLabel(zone) + ' ';
       if (strong) strong.textContent = amt.toLocaleString();
-      betEl.hidden = amt === 0;
+      setHidden(betEl, amt === 0);
     });
 
     const bal = seatEl.querySelector('.tr-seat__balance strong');
