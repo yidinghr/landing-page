@@ -3032,3 +3032,193 @@ body[data-role="customer"] .tr-seat-bay:has(.tr-seat--active)::before {
     transform: none;
   }
 }
+
+/* ============================================================
+   R6 — Real semicircular baccarat table
+   The table is now a true half-pill shape (bottom edge is a
+   continuous half-circle). The felt is unbroken from the
+   PLAYER/BANKER hands all the way through the bet zones —
+   no gray separator. Outer seat bays fan out so the bet
+   cells trace the curve like a real baccarat felt layout.
+   ============================================================ */
+
+#tr-baccarat-table {
+  /* Half-pill: top corners square-ish, bottom corners 50%/100%
+     so the bottom arc spans the full width and full height. */
+  border-radius: 26px 26px 50% 50% / 26px 26px 100% 100%;
+  /* Slightly more breathing room for the leather rim curve */
+  padding-bottom: 4px;
+}
+
+#tr-baccarat-table::before {
+  inset: 22px 22px 30px;
+  border-radius: 18px 18px 50% 50% / 18px 18px 100% 100%;
+}
+
+/* Felt is a single continuous green from BANKER/PLAYER through
+   the bet zones — kill the gray strip between them. */
+#tr-baccarat-table #tr-card-zones {
+  border-bottom: none;
+  border-radius: 0;
+  margin-bottom: 0;
+  padding-bottom: 6px;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(48, 132, 70, 0.28) 0%, transparent 38%),
+    radial-gradient(ellipse at 50% 92%, rgba(24, 78, 40, 0.22) 0%, transparent 70%),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.018) 2px, rgba(0,0,0,0.018) 4px);
+  background-color: transparent;
+}
+
+#tr-baccarat-table > #betZones,
+#tr-baccarat-table #betZones {
+  background: transparent;
+  padding: 2px 12px 6px;
+  margin-top: -8px;
+}
+
+#tr-baccarat-table #tr-bet-matrix {
+  padding: 6px 4px 0;
+  align-items: stretch;
+  gap: 6px;
+}
+
+/* Each seat bay is a fan blade rotating around a virtual point
+   below the table — outer blades tilt more so the row of cells
+   traces the curve of the felt. */
+#tr-baccarat-table .tr-seat-bay {
+  margin-top: 0 !important;
+  padding: 14px 2px 4px;
+  background: transparent;
+  transform-origin: 50% 220%;
+  transition: transform 0.4s ease;
+}
+
+#tr-baccarat-table .tr-seat-bay--1 { transform: rotate(-9deg); }
+#tr-baccarat-table .tr-seat-bay--2 { transform: rotate(-4.5deg); }
+#tr-baccarat-table .tr-seat-bay--3 { transform: rotate(0deg); }
+#tr-baccarat-table .tr-seat-bay--4 { transform: rotate(4.5deg); }
+#tr-baccarat-table .tr-seat-bay--5 { transform: rotate(9deg); }
+
+/* Lose the heavy outline around each bay so cells float on felt */
+#tr-baccarat-table .tr-seat-bay::before {
+  background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0) 60%);
+  border-color: rgba(242, 212, 134, 0.12);
+  box-shadow: inset 0 8px 18px rgba(0,0,0,0.06), inset 0 -8px 14px rgba(0,0,0,0.08);
+}
+#tr-baccarat-table .tr-seat-bay::after { display: none; }
+
+/* Pill-style bet cells sitting directly on the felt */
+#tr-baccarat-table #tr-bet-matrix [data-zone] {
+  border-radius: 999px;
+  padding: 7px 4px 6px;
+  min-height: 42px;
+  background: rgba(2, 12, 8, 0.55);
+  border: 1px solid rgba(212, 175, 85, 0.38);
+  box-shadow:
+    inset 0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+#tr-baccarat-table #tr-bet-matrix .tr-zone--player,
+#tr-baccarat-table #tr-bet-matrix .tr-zone--banker,
+#tr-baccarat-table #tr-bet-matrix .tr-zone--tie {
+  min-height: 48px;
+}
+
+#tr-baccarat-table #tr-bet-matrix .tr-zone--player {
+  background: radial-gradient(ellipse at 50% 50%, rgba(74, 158, 255, 0.18) 0%, rgba(2, 12, 28, 0.7) 100%);
+  border-color: rgba(74, 158, 255, 0.52);
+}
+
+#tr-baccarat-table #tr-bet-matrix .tr-zone--banker {
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 90, 90, 0.18) 0%, rgba(28, 6, 6, 0.7) 100%);
+  border-color: rgba(255, 90, 90, 0.52);
+}
+
+#tr-baccarat-table #tr-bet-matrix .tr-zone--tie {
+  background: radial-gradient(ellipse at 50% 50%, rgba(80, 216, 144, 0.2) 0%, rgba(2, 22, 12, 0.7) 100%);
+  border-color: rgba(80, 216, 144, 0.55);
+}
+
+#tr-baccarat-table #tr-bet-matrix .tr-zone--lucky6 {
+  min-height: 30px;
+  border-radius: 999px;
+  font-size: 10px;
+}
+
+/* Seat arc curves along the bottom rim — outer seats nudge up
+   and rotate to ride the half-circle edge */
+#tr-baccarat-table #tr-seat-arc {
+  margin: 0 60px;
+  padding: 6px 12px 22px;
+  border-top: none;
+  background: transparent;
+  gap: 4px;
+}
+
+#tr-baccarat-table .tr-arc-seat {
+  background: linear-gradient(180deg, rgba(18, 18, 28, 0.55) 0%, rgba(10, 12, 24, 0.32) 100%);
+  border: 1px solid rgba(212, 175, 85, 0.22);
+  transform-origin: 50% 280%;
+  transition: transform 0.4s ease;
+}
+
+#tr-baccarat-table .tr-arc-seat:nth-child(1) { transform: rotate(-14deg); margin-bottom: 18px; }
+#tr-baccarat-table .tr-arc-seat:nth-child(2) { transform: rotate(-7deg);  margin-bottom: 8px; }
+#tr-baccarat-table .tr-arc-seat:nth-child(3) { transform: rotate(0deg);   margin-bottom: 0; }
+#tr-baccarat-table .tr-arc-seat:nth-child(4) { transform: rotate(7deg);   margin-bottom: 8px; }
+#tr-baccarat-table .tr-arc-seat:nth-child(5) { transform: rotate(14deg);  margin-bottom: 18px; }
+
+/* Chip rail follows the half-circle edge */
+.tr-customer-rail {
+  margin: -10px 60px 22px;
+  padding: 8px 18px 14px;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  border-top: 1px solid rgba(242, 212, 134, 0.4);
+}
+
+/* Decorative chip stacks pinned on the leather rim */
+#tr-baccarat-table .tr-rim-chips {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 0 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#tr-baccarat-table .tr-rim-chips__stack {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--c-chip, #d4af55) 0%, rgba(0,0,0,0.55) 100%);
+  box-shadow:
+    0 -3px 0 -1px var(--c-chip, #d4af55),
+    0 -6px 0 -2px var(--c-chip, #d4af55),
+    0 3px 6px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+#tr-baccarat-table .tr-rim-chips__stack:nth-child(1) { --c-chip: #d4af55; }
+#tr-baccarat-table .tr-rim-chips__stack:nth-child(2) { --c-chip: #4a9eff; }
+#tr-baccarat-table .tr-rim-chips__stack:nth-child(3) { --c-chip: #50d890; }
+#tr-baccarat-table .tr-rim-chips__stack:nth-child(4) { --c-chip: #ff5a5a; }
+#tr-baccarat-table .tr-rim-chips__stack:nth-child(5) { --c-chip: #c484ff; }
+
+@media (max-width: 1180px) {
+  #tr-baccarat-table .tr-seat-bay--1,
+  #tr-baccarat-table .tr-seat-bay--2,
+  #tr-baccarat-table .tr-seat-bay--3,
+  #tr-baccarat-table .tr-seat-bay--4,
+  #tr-baccarat-table .tr-seat-bay--5 {
+    transform: none;
+  }
+  #tr-baccarat-table .tr-arc-seat {
+    transform: none !important;
+    margin-bottom: 0 !important;
+  }
+}
