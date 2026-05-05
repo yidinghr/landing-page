@@ -147,16 +147,6 @@ function buildDefs() {
   seatLeather.appendChild(el("stop", { offset: "100%", "stop-color": "#030406" }));
   defs.appendChild(seatLeather);
 
-  const glass = el("linearGradient", { id: "tr-shoe-glass", x1: "0%", y1: "0%", x2: "100%", y2: "100%" });
-  glass.appendChild(el("stop", { offset: "0%", "stop-color": "rgba(255,255,255,0.62)" }));
-  glass.appendChild(el("stop", { offset: "42%", "stop-color": "rgba(255,255,255,0.16)" }));
-  glass.appendChild(el("stop", { offset: "100%", "stop-color": "rgba(95,175,210,0.08)" }));
-  defs.appendChild(glass);
-
-  const shadow = el("filter", { id: "tr-deep-shadow", x: "-20%", y: "-20%", width: "140%", height: "150%" });
-  shadow.appendChild(el("feDropShadow", { dx: "0", dy: "16", stdDeviation: "16", "flood-color": "#000", "flood-opacity": "0.55" }));
-  defs.appendChild(shadow);
-
   const woodTexture = el("filter", { id: "tr-wood-texture", x: "-8%", y: "-8%", width: "116%", height: "116%" });
   woodTexture.appendChild(el("feTurbulence", { type: "fractalNoise", baseFrequency: "0.018 0.22", numOctaves: "3", seed: "8", result: "noise" }));
   woodTexture.appendChild(el("feColorMatrix", { in: "noise", type: "matrix", values: "0.32 0 0 0 0.1  0 0.16 0 0 0.04  0 0 0.05 0 0.01  0 0 0 0.34 0", result: "grain" }));
@@ -175,18 +165,6 @@ function buildDefs() {
   tray.appendChild(el("stop", { offset: "0%", "stop-color": "#302018" }));
   tray.appendChild(el("stop", { offset: "100%", "stop-color": "#0b0705" }));
   defs.appendChild(tray);
-
-  const skin = el("radialGradient", { id: "tr-dealer-skin", cx: "42%", cy: "28%", r: "74%" });
-  skin.appendChild(el("stop", { offset: "0%", "stop-color": "#ffe0c8" }));
-  skin.appendChild(el("stop", { offset: "58%", "stop-color": "#d69b72" }));
-  skin.appendChild(el("stop", { offset: "100%", "stop-color": "#9a6046" }));
-  defs.appendChild(skin);
-
-  const vest = el("linearGradient", { id: "tr-dealer-vest", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
-  vest.appendChild(el("stop", { offset: "0%", "stop-color": "#2f343c" }));
-  vest.appendChild(el("stop", { offset: "56%", "stop-color": "#12161d" }));
-  vest.appendChild(el("stop", { offset: "100%", "stop-color": "#05070a" }));
-  defs.appendChild(vest);
 
   return defs;
 }
@@ -301,42 +279,6 @@ function buildTableShell(svg) {
     fill: "url(#tr-felt-depth)"
   }));
 
-  [
-    { y: 228, bend: -30, start: 102, end: 898, width: 18 },
-    { y: 462, bend: 56, start: 150, end: 850, width: 22 }
-  ].forEach(function (slot) {
-    svg.appendChild(el("path", {
-      class: "tr-svg-rail-slot",
-      d: "M " + slot.start + " " + slot.y + " Q 500 " + (slot.y + slot.bend) + " " + slot.end + " " + slot.y,
-      fill: "none",
-      stroke: "rgba(15, 8, 4, 0.84)",
-      "stroke-width": slot.width,
-      "stroke-linecap": "round"
-    }));
-    svg.appendChild(el("path", {
-      class: "tr-svg-rail-slot-hi",
-      d: "M " + (slot.start + 8) + " " + slot.y + " Q 500 " + (slot.y + slot.bend * 0.86) + " " + (slot.end - 8) + " " + slot.y,
-      fill: "none",
-      stroke: "rgba(230, 145, 45, 0.5)",
-      "stroke-width": 3,
-      "stroke-linecap": "round"
-    }));
-  });
-
-  [
-    [96, 330],
-    [210, 426],
-    [790, 426],
-    [904, 330]
-  ].forEach(function (pos) {
-    svg.appendChild(el("circle", {
-      class: "tr-svg-rail-light",
-      cx: pos[0], cy: pos[1], r: 18,
-      fill: "#f4b530",
-      stroke: "rgba(0,0,0,0.62)",
-      "stroke-width": 4
-    }));
-  });
 }
 
 function buildPlayerChipSlots(svg) {
@@ -376,88 +318,6 @@ function buildPlayerChipSlots(svg) {
   });
 }
 
-function buildDealerNpc(svg) {
-  const npc = el("g", { class: "tr-svg-npc-dealer", transform: "translate(0 -34)" });
-
-  npc.appendChild(el("path", {
-    d: "M 382,-20 C 428,-56 572,-56 618,-20 L 650,170 C 590,192 410,192 350,170 Z",
-    fill: "url(#tr-dealer-vest)",
-    stroke: "rgba(0,0,0,0.45)",
-    "stroke-width": 2
-  }));
-  npc.appendChild(el("path", {
-    d: "M 414,-10 L 470,166 L 530,166 L 586,-10 C 548,-28 452,-28 414,-10 Z",
-    fill: "#e6ebf0",
-    opacity: 0.92
-  }));
-  npc.appendChild(el("path", {
-    d: "M 462,36 L 492,166 L 508,166 L 538,36 C 518,48 482,48 462,36 Z",
-    fill: "#15191f",
-    opacity: 0.9
-  }));
-  npc.appendChild(el("circle", {
-    cx: 500, cy: 18, r: 34,
-    fill: "url(#tr-dealer-skin)",
-    stroke: "rgba(0,0,0,0.45)",
-    "stroke-width": 2
-  }));
-  npc.appendChild(el("path", {
-    d: "M 472,6 C 486,-5 514,-5 528,6 C 518,0 482,0 472,6 Z",
-    fill: "rgba(255,255,255,0.18)"
-  }));
-  npc.appendChild(el("path", {
-    d: "M 486,31 Q 500,37 514,31",
-    fill: "none",
-    stroke: "rgba(94,48,40,0.58)",
-    "stroke-width": 1.4,
-    "stroke-linecap": "round"
-  }));
-  npc.appendChild(el("ellipse", { cx: 488, cy: 22, rx: 3.5, ry: 2.4, fill: "#221b18" }));
-  npc.appendChild(el("ellipse", { cx: 512, cy: 22, rx: 3.5, ry: 2.4, fill: "#221b18" }));
-  npc.appendChild(el("path", { d: "M 481,15 Q 488,12 495,15 M 505,15 Q 512,12 519,15", fill: "none", stroke: "#3d251f", "stroke-width": 1.8, "stroke-linecap": "round" }));
-  npc.appendChild(el("path", { d: "M 492,38 Q 500,44 508,38", fill: "none", stroke: "#7a3d35", "stroke-width": 2, "stroke-linecap": "round" }));
-  npc.appendChild(el("path", {
-    d: "M 466,16 C 468,-20 532,-20 536,16 C 520,2 486,2 466,16 Z",
-    fill: "#191717"
-  }));
-  npc.appendChild(el("path", {
-    d: "M 388,124 C 324,128 282,152 236,198",
-    fill: "none",
-    stroke: "#e8edf2",
-    "stroke-width": 34,
-    "stroke-linecap": "round"
-  }));
-  npc.appendChild(el("path", {
-    d: "M 612,124 C 676,128 718,152 764,198",
-    fill: "none",
-    stroke: "#e8edf2",
-    "stroke-width": 34,
-    "stroke-linecap": "round"
-  }));
-  npc.appendChild(el("path", {
-    d: "M 382,136 C 316,144 276,164 232,202",
-    fill: "none",
-    stroke: "url(#tr-dealer-skin)",
-    "stroke-width": 14,
-    "stroke-linecap": "round"
-  }));
-  npc.appendChild(el("path", {
-    d: "M 618,136 C 684,144 724,164 768,202",
-    fill: "none",
-    stroke: "url(#tr-dealer-skin)",
-    "stroke-width": 14,
-    "stroke-linecap": "round"
-  }));
-  npc.appendChild(el("path", { d: "M 420,36 C 446,62 470,116 482,166", fill: "none", stroke: "rgba(255,255,255,0.22)", "stroke-width": 2 }));
-  npc.appendChild(el("path", { d: "M 580,36 C 554,62 530,116 518,166", fill: "none", stroke: "rgba(255,255,255,0.22)", "stroke-width": 2 }));
-  npc.appendChild(el("circle", { cx: 474, cy: 104, r: 3, fill: "#0d1015" }));
-  npc.appendChild(el("circle", { cx: 526, cy: 104, r: 3, fill: "#0d1015" }));
-  npc.appendChild(el("ellipse", { cx: 224, cy: 206, rx: 22, ry: 11, fill: "url(#tr-dealer-skin)" }));
-  npc.appendChild(el("ellipse", { cx: 776, cy: 206, rx: 22, ry: 11, fill: "url(#tr-dealer-skin)" }));
-
-  svg.appendChild(npc);
-}
-
 function buildDealerArea(svg) {
   svg.appendChild(el("text", {
     class: "tr-svg-brand",
@@ -480,32 +340,6 @@ function buildDealerArea(svg) {
     svg.appendChild(el("circle", { cx: x, cy: y, r: 5, fill: "rgba(255,255,255,0.22)" }));
   });
 
-  const shoe = el("g", { class: "tr-svg-shoe-drawn" });
-  shoe.appendChild(el("polygon", {
-    points: "730,100 878,142 832,252 684,210",
-    fill: "url(#tr-shoe-glass)",
-    stroke: "rgba(255,255,255,0.42)",
-    "stroke-width": 2,
-    opacity: 0.72
-  }));
-  shoe.appendChild(el("polygon", {
-    points: "742,112 870,150 828,242 700,204",
-    fill: "#dfe5e7",
-    stroke: "rgba(0,0,0,0.65)",
-    "stroke-width": 3
-  }));
-  shoe.appendChild(el("polygon", {
-    points: "766,140 838,162 812,218 740,196",
-    fill: "#e34040",
-    opacity: 0.82
-  }));
-  shoe.appendChild(el("path", {
-    d: "M 754,120 L 858,150 M 718,204 L 826,236 M 826,124 L 790,224",
-    fill: "none",
-    stroke: "rgba(255,255,255,0.42)",
-    "stroke-width": 2
-  }));
-  svg.appendChild(shoe);
 }
 
 function buildBetHeaders(svg) {
@@ -614,7 +448,6 @@ export function buildSvgBetLayout(host) {
   svg.appendChild(buildDefs());
   buildPlayerChairs(svg);
   buildTableShell(svg);
-  buildDealerNpc(svg);
   buildDealerArea(svg);
   buildBetHeaders(svg);
   buildSeatFan(svg);

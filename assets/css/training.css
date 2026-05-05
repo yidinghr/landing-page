@@ -4080,25 +4080,6 @@ body[data-role="dealer"] #tr-baccarat-table.tr-table-svg {
     drop-shadow(0 5px 5px rgba(0, 0, 0, 0.58));
 }
 
-.tr-bet-svg .tr-svg-shoe-drawn {
-  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.5));
-}
-
-.tr-bet-svg .tr-svg-npc-dealer {
-  opacity: 0;
-  transition: opacity 220ms ease;
-  pointer-events: none;
-}
-
-body[data-role="customer"] .tr-bet-svg .tr-svg-npc-dealer {
-  opacity: 1;
-}
-
-body[data-role="dealer"] .tr-bet-svg .tr-svg-npc-dealer,
-body[data-role="insurance"] .tr-bet-svg .tr-svg-npc-dealer {
-  opacity: 0;
-}
-
 .tr-bet-svg .tr-svg-zone__shape {
   stroke-width: 1.15;
 }
