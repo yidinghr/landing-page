@@ -4202,6 +4202,89 @@ body[data-role="dealer"] #tr-baccarat-table.tr-table-svg {
   flex-direction: column;
 }
 
+.tr-legacy-hidden {
+  display: none !important;
+}
+
+.tr-table-chat {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tr-table-chat__messages {
+  flex: 1 1 auto;
+  min-height: 160px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(212, 175, 85, 0.2);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tr-chat-message {
+  max-width: 86%;
+  align-self: flex-start;
+  padding: 7px 9px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.tr-chat-message--me {
+  align-self: flex-end;
+  color: #1c1306;
+  background: linear-gradient(180deg, #f7df99, #d3a846);
+}
+
+.tr-chat-message--system {
+  align-self: center;
+  max-width: 100%;
+  color: rgba(242, 212, 134, 0.82);
+  background: rgba(242, 212, 134, 0.08);
+  font-size: 11px;
+}
+
+.tr-table-chat__form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.tr-table-chat__form input {
+  min-width: 0;
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid rgba(212, 175, 85, 0.24);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(0, 0, 0, 0.3);
+  outline: none;
+}
+
+.tr-table-chat__form input:focus {
+  border-color: rgba(242, 212, 134, 0.62);
+  box-shadow: 0 0 0 2px rgba(242, 212, 134, 0.14);
+}
+
+.tr-table-chat__form button {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(242, 212, 134, 0.5);
+  border-radius: 8px;
+  color: #1c1306;
+  background: linear-gradient(180deg, #f7df99, #d3a846);
+  font-weight: 850;
+  cursor: pointer;
+}
+
 .tr-panel-head {
   display: flex;
   align-items: flex-start;
@@ -4868,6 +4951,72 @@ body.is-photo-drag .tr-photo-hand {
   line-height: 1;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
 }
+.tr-card-royal {
+  position: relative;
+  width: 18px;
+  height: 27px;
+  border-radius: 8px 8px 5px 5px;
+  background:
+    linear-gradient(135deg, transparent 0 42%, currentColor 43% 52%, transparent 53%),
+    linear-gradient(180deg, #f7d98a 0 18%, #315aa2 19% 52%, #d9b24d 53% 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(80, 42, 18, 0.38),
+    0 1px 2px rgba(0, 0, 0, 0.22);
+}
+.tr-card-royal__crown,
+.tr-card-royal__head,
+.tr-card-royal__robe,
+.tr-card-royal__sash,
+.tr-card-royal b {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.tr-card-royal__crown {
+  top: 2px;
+  width: 12px;
+  height: 5px;
+  background: #f3ca55;
+  clip-path: polygon(0 100%, 18% 28%, 36% 100%, 50% 0, 64% 100%, 82% 28%, 100% 100%);
+}
+.tr-card-royal__head {
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f0c7a4;
+  box-shadow: inset -1px -1px 0 rgba(102, 45, 24, 0.18);
+}
+.tr-card-royal__robe {
+  bottom: 3px;
+  width: 14px;
+  height: 13px;
+  border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(135deg, #b92730 0 48%, #f0d178 49% 55%, #244f9c 56% 100%);
+}
+.tr-card-royal__sash {
+  bottom: 7px;
+  width: 15px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.72);
+  transform: translateX(-50%) rotate(-24deg);
+}
+.tr-card-royal b {
+  bottom: 1px;
+  color: rgba(30, 20, 12, 0.82);
+  font-size: 7px;
+  line-height: 1;
+}
+.tr-card-royal--q {
+  background:
+    linear-gradient(135deg, transparent 0 42%, currentColor 43% 52%, transparent 53%),
+    linear-gradient(180deg, #f7d98a 0 18%, #8d2ba8 19% 52%, #d9b24d 53% 100%);
+}
+.tr-card-royal--k {
+  background:
+    linear-gradient(135deg, transparent 0 42%, currentColor 43% 52%, transparent 53%),
+    linear-gradient(180deg, #f7d98a 0 18%, #263f86 19% 52%, #b92730 53% 100%);
+}
 
 /* --- Card source (shoe overlay) — sits over the red shoe in the photo.
    Subtle hover glow only (so the dealer knows where the shoe is) — no
@@ -5319,6 +5468,7 @@ body[data-role="customer"] #trPhotoSettle {
   border-radius: 18px;
   cursor: grab;
   user-select: none;
+  transform-origin: 0 100%;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
 }
 .tr-squeeze-card:active { cursor: grabbing; }
@@ -5359,14 +5509,7 @@ body[data-role="customer"] #trPhotoSettle {
   border: 5px solid rgba(44, 30, 18, 0.72);
   color: #111;
   font-size: 110px;
-  /* Reveal from BOTTOM upward — bottom strip reveals first as the player
-     slowly drags the card up. At --reveal=1 the entire face is visible. */
-  clip-path: polygon(
-    0 calc(100% - var(--reveal) * 100%),
-    100% calc(100% - var(--reveal) * 100%),
-    100% 100%,
-    0 100%
-  );
+  clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%);
 }
 .tr-squeeze-card.is-red .tr-squeeze-face { color: #c1272d; }
 .tr-squeeze-card .tr-squeeze-face .tr-card-corner {
@@ -5384,6 +5527,39 @@ body[data-role="customer"] #trPhotoSettle {
 }
 .tr-squeeze-card .tr-squeeze-face .tr-card-pip {
   font-size: 118px;
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-royal {
+  width: 118px;
+  height: 176px;
+  border-radius: 44px 44px 20px 20px;
+  box-shadow:
+    inset 0 0 0 4px rgba(80, 42, 18, 0.26),
+    0 5px 12px rgba(0, 0, 0, 0.24);
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-royal__crown {
+  top: 14px;
+  width: 76px;
+  height: 32px;
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-royal__head {
+  top: 46px;
+  width: 52px;
+  height: 52px;
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-royal__robe {
+  bottom: 20px;
+  width: 88px;
+  height: 82px;
+  border-radius: 32px 32px 16px 16px;
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-royal__sash {
+  bottom: 48px;
+  width: 98px;
+  height: 10px;
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-royal b {
+  bottom: 8px;
+  font-size: 34px;
 }
 .tr-squeeze-modal__close {
   font: inherit;

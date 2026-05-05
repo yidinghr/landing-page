@@ -212,12 +212,21 @@
         <div class="tr-panel-head">
           <div>
             <span class="tr-panel-kicker">TABLE CHAT</span>
-            <h3>NPC requests</h3>
+            <h3>Chat</h3>
           </div>
-          <span class="tr-panel-badge">Solo</span>
+          <span class="tr-panel-badge">Live</span>
         </div>
-        <div id="tr-npc-chat" class="tr-npc-chat"></div>
-        <div id="tr-session-log" class="tr-log"><p class="hint-text">No hands played yet.</p></div>
+        <div class="tr-table-chat" id="trTableChat">
+          <div class="tr-table-chat__messages" id="trTableChatMessages">
+            <div class="tr-chat-message tr-chat-message--system">Chat tạm thời đã sẵn sàng.</div>
+          </div>
+          <form class="tr-table-chat__form" id="trTableChatForm">
+            <input id="trTableChatInput" type="text" autocomplete="off" placeholder="Nhập tin nhắn...">
+            <button type="submit">Gửi</button>
+          </form>
+        </div>
+        <div id="tr-npc-chat" class="tr-npc-chat tr-legacy-hidden"></div>
+        <div id="tr-session-log" class="tr-log tr-legacy-hidden"><p class="hint-text">No hands played yet.</p></div>
       </section>
     </aside>
 
@@ -260,7 +269,7 @@
 
 <!-- Squeeze modal: enlarged card the player drags upward to slowly reveal -->
 <div id="trSqueezeModal" class="tr-squeeze-modal" hidden>
-  <div class="tr-squeeze-hint">Kéo bài từ dưới lên để nặn bài</div>
+  <div class="tr-squeeze-hint">Kéo từ góc trái dưới lên để nặn bài</div>
   <div class="tr-squeeze-stage">
     <div class="tr-squeeze-card" id="trSqueezeCard">
       <div class="tr-squeeze-back">🂠</div>

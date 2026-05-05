@@ -254,16 +254,32 @@
   }
 
   function suitMeta(key) {
-    return SUITS.find((s) => s.key === key) || SUITS[0];
+    const meta = {
+      S: { sym: '&spades;', red: false, key: 'S' },
+      H: { sym: '&hearts;', red: true, key: 'H' },
+      D: { sym: '&diams;', red: true, key: 'D' },
+      C: { sym: '&clubs;', red: false, key: 'C' }
+    };
+    return meta[key] || meta.S;
   }
 
   function cardFaceHtml(card) {
     const meta = suitMeta(card.suit);
+    const isRoyal = card.rank === 'J' || card.rank === 'Q' || card.rank === 'K';
+    const center = isRoyal
+      ? '<span class="tr-card-royal tr-card-royal--' + card.rank.toLowerCase() + '">' +
+          '<i class="tr-card-royal__crown"></i>' +
+          '<i class="tr-card-royal__head"></i>' +
+          '<i class="tr-card-royal__robe"></i>' +
+          '<i class="tr-card-royal__sash"></i>' +
+          '<b>' + card.rank + '</b>' +
+        '</span>'
+      : '<span class="tr-card-pip">' + meta.sym + '</span>';
     return (
       '<span class="tr-card-corner tr-card-corner--tl">' +
         '<strong>' + card.rank + '</strong><em>' + meta.sym + '</em>' +
       '</span>' +
-      '<span class="tr-card-pip">' + meta.sym + '</span>' +
+      center +
       '<span class="tr-card-corner tr-card-corner--br">' +
         '<strong>' + card.rank + '</strong><em>' + meta.sym + '</em>' +
       '</span>'
@@ -778,28 +794,40 @@
     cardEl.classList.toggle('is-red', meta.red);
     faceEl.innerHTML = cardFaceHtml(card);
     cardEl.style.setProperty('--reveal', '0');
+    faceEl.style.clipPath = 'polygon(0 100%, 0 100%, 0 100%, 0 100%)';
 
-    state.squeeze = { handKey, idx, reveal: 0, dragging: false, startY: 0 };
+    state.squeeze = { handKey, idx, reveal: 0, dragging: false, startX: 0, startY: 0 };
     modal.hidden = false;
 
     function onDown(e) {
       if (e.touches === undefined && e.button !== 0 && e.button !== 2) return;
       e.preventDefault();
       state.squeeze.dragging = true;
+      state.squeeze.startX = (e.touches ? e.touches[0].clientX : e.clientX);
       state.squeeze.startY = (e.touches ? e.touches[0].clientY : e.clientY);
     }
 
     function onMove(e) {
       if (!state.squeeze || !state.squeeze.dragging) return;
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
       const y = e.touches ? e.touches[0].clientY : e.clientY;
       const dy = state.squeeze.startY - y;
-      // Reveal scales over a 260px drag window. Persist max reveal so the
-      // player can pull the card up gradually.
-      const r = Math.max(state.squeeze.reveal, Math.max(0, Math.min(1, dy / 260)));
+      const dx = x - state.squeeze.startX;
+      // Bottom-left squeeze: moving upward does most of the reveal, with a
+      // slight reward for pulling toward the card center/right.
+      const pull = Math.max(dy / 270, (dy + Math.max(0, dx) * 0.45) / 320);
+      const r = Math.max(state.squeeze.reveal, Math.max(0, Math.min(1, pull)));
       state.squeeze.reveal = r;
       cardEl.style.setProperty('--reveal', String(r));
-      // Translate the card upward as the player pulls
-      cardEl.style.transform = 'translateY(' + (-r * 60) + 'px)';
+      if (r < 0.76) {
+        const topY = Math.max(0, 100 - r * 125);
+        const rightX = Math.min(100, r * 132);
+        faceEl.style.clipPath = 'polygon(0 100%, 0 ' + topY + '%, ' + rightX + '% 100%, ' + rightX + '% 100%)';
+      } else {
+        const rightTopY = Math.max(0, (1 - r) / 0.24 * 100);
+        faceEl.style.clipPath = 'polygon(0 100%, 0 0, 100% ' + rightTopY + '%, 100% 100%)';
+      }
+      cardEl.style.transform = 'translate(' + (-r * 18) + 'px, ' + (-r * 58) + 'px) rotate(' + (-r * 4) + 'deg)';
     }
 
     function onUp() {
@@ -813,6 +841,7 @@
           renderHand(hk, false);
         }
         cardEl.style.setProperty('--reveal', '1');
+        faceEl.style.clipPath = 'polygon(0 100%, 0 0, 100% 0, 100% 100%)';
         setTimeout(function () {
           closeSqueeze();
           settleIfPlayerRevealComplete();
@@ -845,6 +874,8 @@
     if (cardEl) {
       cardEl.style.setProperty('--reveal', '0');
       cardEl.style.transform = '';
+      const faceEl = document.getElementById('trSqueezeFace');
+      if (faceEl) faceEl.style.clipPath = '';
     }
     if (modal) modal.hidden = true;
     state.squeeze = null;
@@ -1080,6 +1111,25 @@
     });
   }
 
+  function wireTableChat() {
+    const form = document.getElementById('trTableChatForm');
+    const input = document.getElementById('trTableChatInput');
+    const messages = document.getElementById('trTableChatMessages');
+    if (!form || !input || !messages) return;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      const msg = document.createElement('div');
+      msg.className = 'tr-chat-message tr-chat-message--me';
+      msg.textContent = text;
+      messages.appendChild(msg);
+      input.value = '';
+      messages.scrollTop = messages.scrollHeight;
+    });
+  }
+
   function wireModeControls() {
     $$('.tr-photo-hand').forEach(function (hand) {
       hand.style.pointerEvents = 'auto';
@@ -1125,6 +1175,7 @@
     wireCardClicks();
     wireSqueezeClose();
     wireRoadmap();
+    wireTableChat();
     wireModeControls();
     exposeAnimationApi();
     renderBalance();
