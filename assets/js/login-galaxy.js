@@ -96,7 +96,6 @@
   let twinkleStars = [];
   let flareStars = [];
   let meteors = [];
-  let loginPlanets = [];
   let nextFlareAt = 0;
   let nextMeteorAt = 0;
   let lastMeteorFrameAt = 0;
@@ -313,19 +312,6 @@
     }
   }
 
-  function buildLoginPlanets() {
-    loginPlanets = isLoginPage
-      ? [
-          { orbit: 0.44, size: 12, speed: 0.18, phase: 0.15, colorA: [255, 229, 154], colorB: [178, 92, 34], ring: false },
-          { orbit: 0.58, size: 17, speed: -0.12, phase: 2.25, colorA: [126, 195, 255], colorB: [31, 75, 180], ring: false },
-          { orbit: 0.73, size: 10, speed: 0.1, phase: 4.1, colorA: [255, 178, 105], colorB: [132, 54, 34], ring: false },
-          { orbit: 0.88, size: 22, speed: -0.07, phase: 5.45, colorA: [230, 198, 132], colorB: [98, 70, 54], ring: true },
-          { orbit: 1.03, size: 14, speed: 0.055, phase: 3.25, colorA: [177, 151, 255], colorB: [54, 40, 126], ring: false },
-          { orbit: 1.16, size: 8, speed: -0.16, phase: 1.35, colorA: [180, 224, 255], colorB: [50, 90, 150], ring: false }
-        ]
-      : [];
-  }
-
   function drawBaseScene() {
     const rng = createPrng(0x18c4d2ab ^ width ^ (height << 2));
 
@@ -344,7 +330,6 @@
     drawStaticConstellations(sceneContext, rng);
     drawStaticStars(sceneContext, rng);
     buildTwinkleStars(rng);
-    buildLoginPlanets();
 
     const vignette = sceneContext.createRadialGradient(
       width * 0.5,
@@ -359,130 +344,6 @@
 
     sceneContext.fillStyle = vignette;
     sceneContext.fillRect(0, 0, width, height);
-  }
-
-  function drawLoginPlanetLayer(timestamp) {
-    if (!isLoginPage) {
-      return;
-    }
-
-    const centerX = width * 0.5;
-    const centerY = height * 0.47;
-    const coreRadius = clamp(Math.min(width, height) * 0.07, 46, 94);
-    const orbitRadiusX = clamp(width * 0.27, 250, 500);
-    const orbitRadiusY = clamp(height * 0.17, 105, 220);
-    const time = timestamp * 0.001;
-
-    context.save();
-    context.globalCompositeOperation = "screen";
-
-    drawGlow(context, centerX, centerY, coreRadius * 4.8, COLORS.violet, 0.22);
-    drawGlow(context, centerX, centerY, coreRadius * 3.2, COLORS.cool, 0.14);
-    drawGlow(context, centerX - coreRadius * 0.34, centerY - coreRadius * 0.3, coreRadius * 2.1, COLORS.amber, 0.16);
-
-    context.save();
-    context.translate(centerX, centerY);
-    context.rotate(-0.18);
-    for (let ring = 0; ring < 6; ring += 1) {
-      context.strokeStyle = ring % 2 === 0
-        ? "rgba(236, 194, 102, " + (0.14 - ring * 0.014) + ")"
-        : "rgba(194, 130, 255, " + (0.12 - ring * 0.012) + ")";
-      context.lineWidth = 1;
-      context.beginPath();
-      context.ellipse(
-        0,
-        0,
-        orbitRadiusX * (0.42 + ring * 0.15),
-        orbitRadiusY * (0.42 + ring * 0.15),
-        0,
-        0,
-        Math.PI * 2
-      );
-      context.stroke();
-    }
-    context.restore();
-
-    const coreGradient = context.createRadialGradient(
-      centerX - coreRadius * 0.36,
-      centerY - coreRadius * 0.34,
-      coreRadius * 0.08,
-      centerX,
-      centerY,
-      coreRadius
-    );
-    coreGradient.addColorStop(0, "rgba(255, 248, 220, 0.98)");
-    coreGradient.addColorStop(0.2, "rgba(248, 209, 120, 0.94)");
-    coreGradient.addColorStop(0.48, "rgba(118, 82, 212, 0.92)");
-    coreGradient.addColorStop(0.74, "rgba(28, 48, 136, 0.92)");
-    coreGradient.addColorStop(1, "rgba(8, 6, 28, 0.98)");
-
-    context.fillStyle = coreGradient;
-    context.beginPath();
-    context.arc(centerX, centerY, coreRadius * (1 + Math.sin(time * 0.9) * 0.025), 0, Math.PI * 2);
-    context.fill();
-
-    context.globalCompositeOperation = "source-atop";
-    context.fillStyle = "rgba(255, 238, 184, 0.16)";
-    for (let band = -3; band <= 3; band += 1) {
-      context.beginPath();
-      context.ellipse(
-        centerX,
-        centerY + band * coreRadius * 0.18 + Math.sin(time * 0.35 + band) * 1.8,
-        coreRadius * (0.74 + Math.abs(band) * 0.055),
-        coreRadius * 0.045,
-        -0.18,
-        0,
-        Math.PI * 2
-      );
-      context.fill();
-    }
-
-    context.globalCompositeOperation = "screen";
-
-    loginPlanets.forEach(function (planet) {
-      const angle = planet.phase + time * planet.speed;
-      const ellipseX = Math.cos(angle) * orbitRadiusX * planet.orbit;
-      const ellipseY = Math.sin(angle) * orbitRadiusY * planet.orbit;
-      const tiltCos = Math.cos(-0.18);
-      const tiltSin = Math.sin(-0.18);
-      const x = centerX + ellipseX * tiltCos - ellipseY * tiltSin;
-      const y = centerY + ellipseX * tiltSin + ellipseY * tiltCos;
-      const nearSide = Math.sin(angle) > -0.2;
-      const radius = planet.size * clamp(Math.min(width, height) / 720, 0.82, 1.18) * (nearSide ? 1 : 0.76);
-      const alpha = nearSide ? 0.94 : 0.44;
-
-      const planetGradient = context.createRadialGradient(
-        x - radius * 0.35,
-        y - radius * 0.36,
-        radius * 0.08,
-        x,
-        y,
-        radius
-      );
-      planetGradient.addColorStop(0, rgba(COLORS.white, alpha));
-      planetGradient.addColorStop(0.2, rgba(planet.colorA, alpha));
-      planetGradient.addColorStop(1, rgba(planet.colorB, alpha));
-
-      drawGlow(context, x, y, radius * 4.4, planet.colorA, alpha * 0.16);
-      context.fillStyle = planetGradient;
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      context.fill();
-
-      if (planet.ring) {
-        context.save();
-        context.translate(x, y);
-        context.rotate(-0.28);
-        context.strokeStyle = "rgba(255, 224, 166, " + (alpha * 0.58) + ")";
-        context.lineWidth = Math.max(1, radius * 0.12);
-        context.beginPath();
-        context.ellipse(0, 0, radius * 1.85, radius * 0.48, 0, 0, Math.PI * 2);
-        context.stroke();
-        context.restore();
-      }
-    });
-
-    context.restore();
   }
 
   function drawTwinkleLayer(time) {
@@ -707,7 +568,6 @@
 
     context.setTransform(dpr, 0, 0, dpr, 0, 0);
     context.drawImage(sceneBuffer, 0, 0, width, height);
-    drawLoginPlanetLayer(timestamp);
 
     if (!prefersReducedMotion.matches) {
       drawTwinkleLayer(timestamp * 0.001);
