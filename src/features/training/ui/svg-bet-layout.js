@@ -129,18 +129,107 @@ function buildDefs() {
   wood.appendChild(el("stop", { offset: "100%", "stop-color": "#2c1406" }));
   defs.appendChild(wood);
 
+  const woodFine = el("linearGradient", { id: "tr-wood-fine", x1: "0%", y1: "0%", x2: "100%", y2: "0%" });
+  woodFine.appendChild(el("stop", { offset: "0%", "stop-color": "rgba(255, 210, 126, 0)" }));
+  woodFine.appendChild(el("stop", { offset: "45%", "stop-color": "rgba(255, 210, 126, 0.18)" }));
+  woodFine.appendChild(el("stop", { offset: "100%", "stop-color": "rgba(65, 24, 6, 0)" }));
+  defs.appendChild(woodFine);
+
   const leather = el("linearGradient", { id: "tr-black-leather", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
   leather.appendChild(el("stop", { offset: "0%", "stop-color": "#313238" }));
   leather.appendChild(el("stop", { offset: "50%", "stop-color": "#111218" }));
   leather.appendChild(el("stop", { offset: "100%", "stop-color": "#030305" }));
   defs.appendChild(leather);
 
+  const seatLeather = el("linearGradient", { id: "tr-seat-leather", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
+  seatLeather.appendChild(el("stop", { offset: "0%", "stop-color": "#2c2e34" }));
+  seatLeather.appendChild(el("stop", { offset: "48%", "stop-color": "#0d0f14" }));
+  seatLeather.appendChild(el("stop", { offset: "100%", "stop-color": "#030406" }));
+  defs.appendChild(seatLeather);
+
+  const glass = el("linearGradient", { id: "tr-shoe-glass", x1: "0%", y1: "0%", x2: "100%", y2: "100%" });
+  glass.appendChild(el("stop", { offset: "0%", "stop-color": "rgba(255,255,255,0.62)" }));
+  glass.appendChild(el("stop", { offset: "42%", "stop-color": "rgba(255,255,255,0.16)" }));
+  glass.appendChild(el("stop", { offset: "100%", "stop-color": "rgba(95,175,210,0.08)" }));
+  defs.appendChild(glass);
+
+  const shadow = el("filter", { id: "tr-deep-shadow", x: "-20%", y: "-20%", width: "140%", height: "150%" });
+  shadow.appendChild(el("feDropShadow", { dx: "0", dy: "16", stdDeviation: "16", "flood-color": "#000", "flood-opacity": "0.55" }));
+  defs.appendChild(shadow);
+
+  const woodTexture = el("filter", { id: "tr-wood-texture", x: "-8%", y: "-8%", width: "116%", height: "116%" });
+  woodTexture.appendChild(el("feTurbulence", { type: "fractalNoise", baseFrequency: "0.018 0.22", numOctaves: "3", seed: "8", result: "noise" }));
+  woodTexture.appendChild(el("feColorMatrix", { in: "noise", type: "matrix", values: "0.32 0 0 0 0.1  0 0.16 0 0 0.04  0 0 0.05 0 0.01  0 0 0 0.34 0", result: "grain" }));
+  woodTexture.appendChild(el("feComposite", { in: "grain", in2: "SourceAlpha", operator: "in", result: "grainClip" }));
+  woodTexture.appendChild(el("feBlend", { in: "SourceGraphic", in2: "grainClip", mode: "multiply" }));
+  defs.appendChild(woodTexture);
+
+  const leatherTexture = el("filter", { id: "tr-leather-texture", x: "-8%", y: "-8%", width: "116%", height: "116%" });
+  leatherTexture.appendChild(el("feTurbulence", { type: "fractalNoise", baseFrequency: "0.9", numOctaves: "2", seed: "12", result: "noise" }));
+  leatherTexture.appendChild(el("feColorMatrix", { in: "noise", type: "matrix", values: "0.12 0 0 0 0  0 0.12 0 0 0  0 0 0.12 0 0  0 0 0 0.22 0", result: "grain" }));
+  leatherTexture.appendChild(el("feComposite", { in: "grain", in2: "SourceAlpha", operator: "in", result: "grainClip" }));
+  leatherTexture.appendChild(el("feBlend", { in: "SourceGraphic", in2: "grainClip", mode: "screen" }));
+  defs.appendChild(leatherTexture);
+
   const tray = el("linearGradient", { id: "tr-chip-tray-dark", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
   tray.appendChild(el("stop", { offset: "0%", "stop-color": "#302018" }));
   tray.appendChild(el("stop", { offset: "100%", "stop-color": "#0b0705" }));
   defs.appendChild(tray);
 
+  const skin = el("radialGradient", { id: "tr-dealer-skin", cx: "42%", cy: "28%", r: "74%" });
+  skin.appendChild(el("stop", { offset: "0%", "stop-color": "#ffe0c8" }));
+  skin.appendChild(el("stop", { offset: "58%", "stop-color": "#d69b72" }));
+  skin.appendChild(el("stop", { offset: "100%", "stop-color": "#9a6046" }));
+  defs.appendChild(skin);
+
+  const vest = el("linearGradient", { id: "tr-dealer-vest", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
+  vest.appendChild(el("stop", { offset: "0%", "stop-color": "#2f343c" }));
+  vest.appendChild(el("stop", { offset: "56%", "stop-color": "#12161d" }));
+  vest.appendChild(el("stop", { offset: "100%", "stop-color": "#05070a" }));
+  defs.appendChild(vest);
+
   return defs;
+}
+
+function buildPlayerChairs(svg) {
+  const chairs = [
+    { x: 95, y: 432, r: -30, w: 120, h: 112 },
+    { x: 300, y: 512, r: -14, w: 128, h: 100 },
+    { x: 500, y: 540, r: 0, w: 132, h: 98 },
+    { x: 700, y: 512, r: 14, w: 128, h: 100 },
+    { x: 905, y: 432, r: 30, w: 120, h: 112 }
+  ];
+
+  chairs.forEach(function (chair) {
+    const g = el("g", { class: "tr-svg-player-chair", transform: "translate(" + chair.x + " " + chair.y + ") rotate(" + chair.r + ")" });
+    g.appendChild(el("rect", {
+      x: (-chair.w / 2).toFixed(1),
+      y: (-chair.h / 2).toFixed(1),
+      width: chair.w,
+      height: chair.h,
+      rx: 26,
+      fill: "url(#tr-seat-leather)",
+      stroke: "rgba(0,0,0,0.72)",
+      "stroke-width": 4,
+      filter: "url(#tr-leather-texture)"
+    }));
+    g.appendChild(el("path", {
+      d: "M " + (-chair.w / 2 + 16) + "," + (-chair.h / 2 + 28) + " Q 0," + (-chair.h / 2 + 8) + " " + (chair.w / 2 - 16) + "," + (-chair.h / 2 + 28),
+      fill: "none",
+      stroke: "rgba(255,255,255,0.13)",
+      "stroke-width": 3,
+      "stroke-linecap": "round"
+    }));
+    [-28, 0, 28].forEach(function (x) {
+      g.appendChild(el("path", {
+        d: "M " + x + "," + (-chair.h / 2 + 24) + " L " + (x * 0.58) + "," + (chair.h / 2 - 16),
+        fill: "none",
+        stroke: "rgba(255,255,255,0.08)",
+        "stroke-width": 2
+      }));
+    });
+    svg.appendChild(g);
+  });
 }
 
 function buildTableShell(svg) {
@@ -155,7 +244,8 @@ function buildTableShell(svg) {
       "C 160,452 64,302 40,160",
       "Z"
     ].join(" "),
-    fill: "url(#tr-black-leather)"
+    fill: "url(#tr-black-leather)",
+    filter: "url(#tr-leather-texture)"
   }));
   svg.appendChild(el("path", {
     class: "tr-svg-wood",
@@ -168,7 +258,21 @@ function buildTableShell(svg) {
       "C 210,408 126,292 96,164",
       "Z"
     ].join(" "),
-    fill: "url(#tr-wood-rail)"
+    fill: "url(#tr-wood-rail)",
+    filter: "url(#tr-wood-texture)"
+  }));
+  svg.appendChild(el("path", {
+    class: "tr-svg-wood-highlight",
+    d: [
+      "M 130,144",
+      "C 224,92 776,92 870,144",
+      "C 864,166 852,188 834,212",
+      "C 736,154 264,154 166,212",
+      "C 148,188 136,166 130,144",
+      "Z"
+    ].join(" "),
+    fill: "url(#tr-wood-fine)",
+    opacity: 0.75
   }));
   svg.appendChild(el("path", {
     class: "tr-svg-felt",
@@ -235,12 +339,49 @@ function buildTableShell(svg) {
   });
 }
 
+function buildPlayerChipSlots(svg) {
+  const slots = [
+    { a: -47, len: 18, label: "Seat 1" },
+    { a: -24, len: 17, label: "Seat 2" },
+    { a: 0, len: 17, label: "Seat 3" },
+    { a: 24, len: 17, label: "Seat 4" },
+    { a: 47, len: 18, label: "Seat 5" }
+  ];
+
+  slots.forEach(function (slot, index) {
+    const start = point(slot.a - slot.len / 2, 414);
+    const mid = point(slot.a, 430);
+    const end = point(slot.a + slot.len / 2, 414);
+    const chip = point(slot.a, 392);
+    svg.appendChild(el("path", {
+      class: "tr-svg-money-slot",
+      d: "M " + start.x.toFixed(1) + "," + start.y.toFixed(1) + " Q " + mid.x.toFixed(1) + "," + mid.y.toFixed(1) + " " + end.x.toFixed(1) + "," + end.y.toFixed(1),
+      fill: "none",
+      stroke: "rgba(12, 7, 3, 0.86)",
+      "stroke-width": 18,
+      "stroke-linecap": "round"
+    }));
+    svg.appendChild(el("path", {
+      class: "tr-svg-money-slot-hi",
+      d: "M " + start.x.toFixed(1) + "," + (start.y - 3).toFixed(1) + " Q " + mid.x.toFixed(1) + "," + (mid.y - 4).toFixed(1) + " " + end.x.toFixed(1) + "," + (end.y - 3).toFixed(1),
+      fill: "none",
+      stroke: "rgba(226, 145, 45, 0.48)",
+      "stroke-width": 2.4,
+      "stroke-linecap": "round"
+    }));
+
+    const colors = ["#e73a55", "#34b75f", "#2e85d5", "#ef982f", "#8f45cf"];
+    svg.appendChild(el("circle", { class: "tr-svg-front-chip", cx: chip.x, cy: chip.y - 18, r: 15, fill: colors[index], stroke: "#fff", "stroke-width": 1.6 }));
+    svg.appendChild(el("text", { class: "tr-svg-front-chip-label", x: chip.x, y: chip.y - 14, "text-anchor": "middle" }, index === 0 ? "1K" : index === 1 ? "5K" : index === 2 ? "10K" : index === 3 ? "50K" : "100K"));
+  });
+}
+
 function buildDealerNpc(svg) {
-  const npc = el("g", { class: "tr-svg-npc-dealer" });
+  const npc = el("g", { class: "tr-svg-npc-dealer", transform: "translate(0 -34)" });
 
   npc.appendChild(el("path", {
     d: "M 382,-20 C 428,-56 572,-56 618,-20 L 650,170 C 590,192 410,192 350,170 Z",
-    fill: "#23272d",
+    fill: "url(#tr-dealer-vest)",
     stroke: "rgba(0,0,0,0.45)",
     "stroke-width": 2
   }));
@@ -256,12 +397,24 @@ function buildDealerNpc(svg) {
   }));
   npc.appendChild(el("circle", {
     cx: 500, cy: 18, r: 34,
-    fill: "#d7a178",
+    fill: "url(#tr-dealer-skin)",
     stroke: "rgba(0,0,0,0.45)",
     "stroke-width": 2
   }));
+  npc.appendChild(el("path", {
+    d: "M 472,6 C 486,-5 514,-5 528,6 C 518,0 482,0 472,6 Z",
+    fill: "rgba(255,255,255,0.18)"
+  }));
+  npc.appendChild(el("path", {
+    d: "M 486,31 Q 500,37 514,31",
+    fill: "none",
+    stroke: "rgba(94,48,40,0.58)",
+    "stroke-width": 1.4,
+    "stroke-linecap": "round"
+  }));
   npc.appendChild(el("ellipse", { cx: 488, cy: 22, rx: 3.5, ry: 2.4, fill: "#221b18" }));
   npc.appendChild(el("ellipse", { cx: 512, cy: 22, rx: 3.5, ry: 2.4, fill: "#221b18" }));
+  npc.appendChild(el("path", { d: "M 481,15 Q 488,12 495,15 M 505,15 Q 512,12 519,15", fill: "none", stroke: "#3d251f", "stroke-width": 1.8, "stroke-linecap": "round" }));
   npc.appendChild(el("path", { d: "M 492,38 Q 500,44 508,38", fill: "none", stroke: "#7a3d35", "stroke-width": 2, "stroke-linecap": "round" }));
   npc.appendChild(el("path", {
     d: "M 466,16 C 468,-20 532,-20 536,16 C 520,2 486,2 466,16 Z",
@@ -284,14 +437,14 @@ function buildDealerNpc(svg) {
   npc.appendChild(el("path", {
     d: "M 382,136 C 316,144 276,164 232,202",
     fill: "none",
-    stroke: "#d8a57d",
+    stroke: "url(#tr-dealer-skin)",
     "stroke-width": 14,
     "stroke-linecap": "round"
   }));
   npc.appendChild(el("path", {
     d: "M 618,136 C 684,144 724,164 768,202",
     fill: "none",
-    stroke: "#d8a57d",
+    stroke: "url(#tr-dealer-skin)",
     "stroke-width": 14,
     "stroke-linecap": "round"
   }));
@@ -299,8 +452,8 @@ function buildDealerNpc(svg) {
   npc.appendChild(el("path", { d: "M 580,36 C 554,62 530,116 518,166", fill: "none", stroke: "rgba(255,255,255,0.22)", "stroke-width": 2 }));
   npc.appendChild(el("circle", { cx: 474, cy: 104, r: 3, fill: "#0d1015" }));
   npc.appendChild(el("circle", { cx: 526, cy: 104, r: 3, fill: "#0d1015" }));
-  npc.appendChild(el("ellipse", { cx: 224, cy: 206, rx: 22, ry: 11, fill: "#e2b08a" }));
-  npc.appendChild(el("ellipse", { cx: 776, cy: 206, rx: 22, ry: 11, fill: "#e2b08a" }));
+  npc.appendChild(el("ellipse", { cx: 224, cy: 206, rx: 22, ry: 11, fill: "url(#tr-dealer-skin)" }));
+  npc.appendChild(el("ellipse", { cx: 776, cy: 206, rx: 22, ry: 11, fill: "url(#tr-dealer-skin)" }));
 
   svg.appendChild(npc);
 }
@@ -329,6 +482,13 @@ function buildDealerArea(svg) {
 
   const shoe = el("g", { class: "tr-svg-shoe-drawn" });
   shoe.appendChild(el("polygon", {
+    points: "730,100 878,142 832,252 684,210",
+    fill: "url(#tr-shoe-glass)",
+    stroke: "rgba(255,255,255,0.42)",
+    "stroke-width": 2,
+    opacity: 0.72
+  }));
+  shoe.appendChild(el("polygon", {
     points: "742,112 870,150 828,242 700,204",
     fill: "#dfe5e7",
     stroke: "rgba(0,0,0,0.65)",
@@ -338,6 +498,12 @@ function buildDealerArea(svg) {
     points: "766,140 838,162 812,218 740,196",
     fill: "#e34040",
     opacity: 0.82
+  }));
+  shoe.appendChild(el("path", {
+    d: "M 754,120 L 858,150 M 718,204 L 826,236 M 826,124 L 790,224",
+    fill: "none",
+    stroke: "rgba(255,255,255,0.42)",
+    "stroke-width": 2
   }));
   svg.appendChild(shoe);
 }
@@ -431,16 +597,7 @@ function buildSeatFan(svg) {
 }
 
 function buildFrontRail(svg) {
-  ["#e93c55", "#28bd64", "#2a83d8", "#f4a53a", "#8d44d8"].forEach(function (color, i) {
-    const p = point(-30 + i * 15, 420);
-    svg.appendChild(el("circle", { class: "tr-svg-front-chip", cx: p.x, cy: p.y - 14, r: 14, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
-    svg.appendChild(el("text", {
-      class: "tr-svg-front-chip-label",
-      x: p.x,
-      y: p.y - 10,
-      "text-anchor": "middle"
-    }, i === 0 ? "1K" : i === 1 ? "5K" : i === 2 ? "10K" : i === 3 ? "50K" : "100K"));
-  });
+  buildPlayerChipSlots(svg);
 }
 
 export function buildSvgBetLayout(host) {
@@ -455,6 +612,7 @@ export function buildSvgBetLayout(host) {
   });
 
   svg.appendChild(buildDefs());
+  buildPlayerChairs(svg);
   buildTableShell(svg);
   buildDealerNpc(svg);
   buildDealerArea(svg);
