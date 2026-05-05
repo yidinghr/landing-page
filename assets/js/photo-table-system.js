@@ -52,6 +52,7 @@
     phase:   'betting',  // 'betting' | 'dealing' | 'settled'
     drag:    null,
     squeeze: null,
+    selectedChipValue: 0,  // chip currently selected for click-to-bet
     // Round history — appended on every settle, used by the roadmap modal
     // and by the right-panel empirical % update.
     // Each entry: { winner: 'P'|'B'|'T', pp: bool, bp: bool, l6: bool }
@@ -116,6 +117,27 @@
       betEl.textContent = t > 0 ? fmt(t) : '—';
       if (t > 0) flash(betEl);
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Chip selection (click-to-bet mode)
+  // ---------------------------------------------------------------------
+
+  function selectChip(value) {
+    state.selectedChipValue = value;
+    $$('[data-chip], [data-chip-value]').forEach(function (btn) {
+      const raw = btn.getAttribute('data-chip') || btn.getAttribute('data-chip-value');
+      btn.classList.toggle('is-photo-selected', parseInt(raw, 10) === value);
+    });
+    document.body.classList.add('has-selected-chip');
+  }
+
+  function clearSelectedChip() {
+    state.selectedChipValue = 0;
+    $$('[data-chip], [data-chip-value]').forEach(function (btn) {
+      btn.classList.remove('is-photo-selected');
+    });
+    document.body.classList.remove('has-selected-chip');
   }
 
   // ---------------------------------------------------------------------
@@ -715,6 +737,7 @@
     const tray = document.getElementById('tr-chip-tray');
     if (!tray) return;
 
+    // DRAG: chip → zone (drag-and-drop)
     tray.addEventListener('mousedown', function (e) {
       if (e.button !== 0) return;
       const chipBtn = e.target.closest('[data-chip], [data-chip-value]');
@@ -722,6 +745,10 @@
       const raw = chipBtn.getAttribute('data-chip') || chipBtn.getAttribute('data-chip-value');
       const value = parseInt(raw, 10);
       if (!value) return;
+
+      let dragged = false;
+      function onFirstMove() { dragged = true; }
+      document.addEventListener('mousemove', onFirstMove, { once: true, capture: true });
 
       e.preventDefault();
       e.stopPropagation();
@@ -731,9 +758,26 @@
         targetSelector: '.tr-photo-zone',
         dragBodyClass: 'is-photo-drag',
         startX: e.clientX, startY: e.clientY,
-        onDrop: (zoneEl) => placeBet(zoneEl.getAttribute('data-bet'), value)
+        onDrop: (zoneEl) => {
+          placeBet(zoneEl.getAttribute('data-bet'), value);
+          clearSelectedChip();
+        }
       });
     }, true);
+
+    // CLICK: select chip for click-to-bet mode
+    tray.addEventListener('click', function (e) {
+      const chipBtn = e.target.closest('[data-chip], [data-chip-value]');
+      if (!chipBtn) return;
+      const raw = chipBtn.getAttribute('data-chip') || chipBtn.getAttribute('data-chip-value');
+      const value = parseInt(raw, 10);
+      if (!value) return;
+      if (state.selectedChipValue === value) {
+        clearSelectedChip();
+      } else {
+        selectChip(value);
+      }
+    });
   }
 
   function wireShoe() {
@@ -772,6 +816,25 @@
   function refreshSettleLabel() {
     const btn = document.getElementById('trPhotoSettle');
     if (btn) btn.textContent = state.phase === 'settled' ? 'New Round' : 'Settle';
+  }
+
+  function wireZoneClicks() {
+    // Click-to-bet: if a chip is selected, clicking a zone places it
+    $$('.tr-photo-zone').forEach(function (zoneEl) {
+      zoneEl.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!state.selectedChipValue) return;
+        if (state.phase === 'dealing') { hint('Đã đóng cược'); return; }
+        placeBet(zoneEl.getAttribute('data-bet'), state.selectedChipValue);
+        // Keep chip selected so player can quickly multi-bet
+      });
+    });
+    // Click outside zones + tray → deselect chip
+    document.addEventListener('click', function (e) {
+      if (!state.selectedChipValue) return;
+      if (e.target.closest('.tr-photo-zone') || e.target.closest('#tr-chip-tray')) return;
+      clearSelectedChip();
+    });
   }
 
   function wireCardClicks() {
@@ -820,6 +883,7 @@
     wireChipTray();
     wireShoe();
     wireToolbar();
+    wireZoneClicks();
     wireCardClicks();
     wireSqueezeClose();
     wireRoadmap();
