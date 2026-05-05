@@ -75,8 +75,18 @@ test('photo table: bet → balance debit, settle → payout, squeeze opens', asy
   expect(await page.locator('.tr-photo-card.is-face-down').count()).toBe(4);
   await page.screenshot({ path: 'test-results/photo-03-after-deal.png' });
 
-  // Click a face-down card → squeeze modal opens
+  // Left-click a face-down card → slow flip/reveal
   await page.locator('.tr-photo-card.is-face-down').first().click();
+  await page.waitForTimeout(800);
+  expect(await page.locator('.tr-photo-card:not(.is-face-down)').count()).toBeGreaterThan(0);
+
+  // Right-drag another face-down card → squeeze modal opens
+  const squeezeTarget = page.locator('.tr-photo-card.is-face-down').first();
+  const squeezeBox = await squeezeTarget.boundingBox();
+  await page.mouse.move(squeezeBox.x + squeezeBox.width / 2, squeezeBox.y + squeezeBox.height - 5);
+  await page.mouse.down({ button: 'right' });
+  await page.mouse.move(squeezeBox.x + squeezeBox.width / 2, squeezeBox.y - 80, { steps: 12 });
+  await page.mouse.up({ button: 'right' });
   await expect(page.locator('#trSqueezeModal')).toBeVisible();
   await page.screenshot({ path: 'test-results/photo-04-squeeze-open.png' });
 

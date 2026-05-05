@@ -40,6 +40,14 @@
   };
 
   const STARTING_BALANCE = 1000000;
+  const BET_ZONES = [
+    { key: 'player', label: 'PLAYER', left: 31, top: 55, width: 15, height: 12 },
+    { key: 'banker', label: 'BANKER', left: 54, top: 55, width: 15, height: 12 },
+    { key: 'tie', label: 'TIE', left: 43, top: 39, width: 14, height: 9 },
+    { key: 'playerPair', label: 'P PAIR', left: 37, top: 33, width: 10, height: 10 },
+    { key: 'bankerPair', label: 'B PAIR', left: 56, top: 33, width: 10, height: 10 },
+    { key: 'lucky6', label: 'LUCKY 6', left: 24, top: 52, width: 9, height: 9 }
+  ];
 
   // ---------------------------------------------------------------------
   // State
@@ -50,6 +58,7 @@
     hands:   { player: [], banker: [] },  // { rank, suit, faceUp }
     balance: STARTING_BALANCE,
     phase:   'betting',  // 'betting' | 'dealing' | 'settled'
+    autoDealing: false,
     drag:    null,
     squeeze: null,
     selectedChipValue: 0,  // chip currently selected for click-to-bet
@@ -72,6 +81,23 @@
     el.classList.remove('is-flashing');
     void el.offsetWidth;
     el.classList.add('is-flashing');
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function currentMode() {
+    return document.body && document.body.getAttribute('data-role') === 'customer'
+      ? 'player'
+      : 'dealer';
+  }
+
+  function shake(el) {
+    if (!el) return;
+    el.classList.remove('is-shaking');
+    void el.offsetWidth;
+    el.classList.add('is-shaking');
   }
 
   // ---------------------------------------------------------------------
@@ -173,6 +199,26 @@
     $$('.tr-photo-zone').forEach((z) => renderZone(z.getAttribute('data-bet')));
   }
 
+  function createBetZones() {
+    const overlay = document.getElementById('trPhotoOverlay');
+    if (!overlay || $('.tr-photo-zone', overlay)) return;
+
+    BET_ZONES.forEach(function (zone) {
+      const el = document.createElement('div');
+      el.className = 'tr-photo-zone';
+      el.setAttribute('data-bet', zone.key);
+      el.style.left = zone.left + '%';
+      el.style.top = zone.top + '%';
+      el.style.width = zone.width + '%';
+      el.style.height = zone.height + '%';
+      el.innerHTML =
+        '<span class="tr-zone-tag">' + zone.label + '</span>' +
+        '<div class="tr-zone-stack"></div>' +
+        '<span class="tr-zone-amount" data-zone-amount></span>';
+      overlay.appendChild(el);
+    });
+  }
+
   function placeBet(zoneKey, value) {
     if (state.phase === 'dealing') return; // betting closed once dealing starts
     if (state.balance < value) {
@@ -250,17 +296,25 @@
       : '';
   }
 
-  function dealCard(handKey) {
-    if (state.hands[handKey].length >= 3) return;  // baccarat max 3 cards/hand
+  function dealCard(from, to, speed, options) {
+    const handKey = to || from;
+    const opts = options || {};
+    if (state.hands[handKey].length >= 3) return Promise.resolve();  // baccarat max 3 cards/hand
     if (state.phase === 'settled') resetForNextRound();
     if (state.phase === 'betting') state.phase = 'dealing';
     state.hands[handKey].push(randomCard());
     renderHand(handKey, /*animateLast=*/true);
+    return delay(speed || 420).then(function () {
+      const handEl = $('.tr-photo-hand[data-hand="' + handKey + '"]');
+      const last = handEl ? $('.tr-photo-card:last-child', handEl) : null;
+      if (last && !opts.quiet) shake(last);
+    });
   }
 
   function clearAllCards() {
     state.hands.player = [];
     state.hands.banker = [];
+    state.autoDealing = false;
     renderHand('player', false);
     renderHand('banker', false);
     if (state.phase !== 'betting') state.phase = 'betting';
@@ -273,6 +327,45 @@
 
   function handTotal(cards) {
     return cards.reduce((s, c) => s + cardValue(c.rank), 0) % 10;
+  }
+
+  function playerNeedsThirdCard() {
+    return handTotal(state.hands.player) <= 5;
+  }
+
+  function bankerNeedsThirdCard(playerThirdCard) {
+    const bankerTotal = handTotal(state.hands.banker);
+    if (!playerThirdCard) return bankerTotal <= 5;
+    const p3 = cardValue(playerThirdCard.rank);
+    if (bankerTotal <= 2) return true;
+    if (bankerTotal === 3) return p3 !== 8;
+    if (bankerTotal === 4) return p3 >= 2 && p3 <= 7;
+    if (bankerTotal === 5) return p3 >= 4 && p3 <= 7;
+    if (bankerTotal === 6) return p3 === 6 || p3 === 7;
+    return false;
+  }
+
+  function expectedDealerHand() {
+    const p = state.hands.player;
+    const b = state.hands.banker;
+    if (p.length === 0 && b.length === 0) return 'player';
+    if (p.length === 1 && b.length === 0) return 'banker';
+    if (p.length === 1 && b.length === 1) return 'player';
+    if (p.length === 2 && b.length === 1) return 'banker';
+    if (p.length < 2 || b.length < 2) return null;
+    const pTotal = handTotal(p.slice(0, 2));
+    const bTotal = handTotal(b.slice(0, 2));
+    if (pTotal >= 8 || bTotal >= 8) return null;
+    if (p.length === 2 && playerNeedsThirdCard()) return 'player';
+    if (b.length === 2 && bankerNeedsThirdCard(p[2] || null)) return 'banker';
+    return null;
+  }
+
+  function markReadyToSettle() {
+    const expected = expectedDealerHand();
+    if (!expected && state.phase === 'dealing') {
+      hint('Đủ bài. Dealer có thể mở bài hoặc bấm Settle.');
+    }
   }
 
   function determineWinners() {
@@ -347,6 +440,7 @@
     state.hands.player = [];
     state.hands.banker = [];
     state.phase = 'betting';
+    state.autoDealing = false;
     renderAllZones();
     renderHand('player', false);
     renderHand('banker', false);
@@ -624,12 +718,12 @@
     function onUp(e) {
       document.removeEventListener('mousemove', onMove, true);
       document.removeEventListener('mouseup', onUp, true);
-      document.body.classList.remove(opts.dragBodyClass);
 
       ghost.style.display = 'none';
       const under = document.elementFromPoint(e.clientX, e.clientY);
       ghost.style.display = '';
       const target = under ? under.closest(opts.targetSelector) : null;
+      document.body.classList.remove(opts.dragBodyClass);
 
       if (lastTarget) lastTarget.classList.remove('is-drag-over');
       ghost.remove();
@@ -665,7 +759,7 @@
     modal.hidden = false;
 
     function onDown(e) {
-      if (e.button !== 0 && e.touches === undefined) return;
+      if (e.touches === undefined && e.button !== 0 && e.button !== 2) return;
       e.preventDefault();
       state.squeeze.dragging = true;
       state.squeeze.startY = (e.touches ? e.touches[0].clientY : e.clientY);
@@ -729,6 +823,57 @@
     state.squeeze = null;
   }
 
+  function flipCard(cardElement) {
+    if (!cardElement || !cardElement.classList.contains('is-face-down')) return Promise.resolve();
+    const handKey = cardElement.dataset.handKey;
+    const idx = parseInt(cardElement.dataset.cardIndex, 10);
+    const card = state.hands[handKey] && state.hands[handKey][idx];
+    if (!card || card.faceUp) return Promise.resolve();
+    cardElement.classList.add('is-flipping');
+    return delay(620).then(function () {
+      card.faceUp = true;
+      renderHand(handKey, false);
+    });
+  }
+
+  function squeezeCard(cardElement) {
+    if (!cardElement || !cardElement.classList.contains('is-face-down')) return;
+    openSqueeze(cardElement.dataset.handKey, parseInt(cardElement.dataset.cardIndex, 10));
+  }
+
+  async function autoDealRound() {
+    if (state.autoDealing) return;
+    if (state.phase === 'settled') resetForNextRound();
+    clearAllCards();
+    state.phase = 'dealing';
+    state.autoDealing = true;
+    refreshSettleLabel();
+
+    await dealCard('shoe', 'player', 460, { quiet: true });
+    await dealCard('shoe', 'banker', 460, { quiet: true });
+    await dealCard('shoe', 'player', 460, { quiet: true });
+    await dealCard('shoe', 'banker', 520, { quiet: true });
+
+    const pInitial = handTotal(state.hands.player);
+    const bInitial = handTotal(state.hands.banker);
+    if (pInitial < 8 && bInitial < 8) {
+      if (playerNeedsThirdCard()) {
+        await dealCard('shoe', 'player', 520, { quiet: true });
+      }
+      if (bankerNeedsThirdCard(state.hands.player[2] || null)) {
+        await dealCard('shoe', 'banker', 520, { quiet: true });
+      }
+    }
+
+    const cards = $$('.tr-photo-card.is-face-down');
+    for (const cardEl of cards) {
+      await flipCard(cardEl);
+      await delay(120);
+    }
+    state.autoDealing = false;
+    settle();
+  }
+
   // ---------------------------------------------------------------------
   // Wiring
   // ---------------------------------------------------------------------
@@ -785,6 +930,10 @@
     if (!shoe) return;
     shoe.addEventListener('mousedown', function (e) {
       if (e.button !== 0) return;
+      if (currentMode() !== 'dealer') {
+        hint('Player Mode tự chia bài bằng nút Deal.');
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       startDrag({
@@ -792,7 +941,17 @@
         targetSelector: '.tr-photo-hand',
         dragBodyClass: 'is-photo-drag-card',
         startX: e.clientX, startY: e.clientY,
-        onDrop: (handEl) => dealCard(handEl.getAttribute('data-hand'))
+        onDrop: (handEl) => {
+          const targetHand = handEl.getAttribute('data-hand');
+          const expected = expectedDealerHand();
+          if (!expected || targetHand !== expected) {
+            hint('Sai vị trí chia bài');
+            shake(shoe);
+            shake(handEl);
+            return;
+          }
+          dealCard('shoe', targetHand, 420).then(markReadyToSettle);
+        }
       });
     }, true);
   }
@@ -804,9 +963,13 @@
     if (settleBtn) {
       settleBtn.addEventListener('click', () => {
         settleBtn.blur();
+        if (currentMode() === 'player') {
+          autoDealRound();
+          return;
+        }
         if (state.phase === 'settled') resetForNextRound();
         else settle();
-        settleBtn.textContent = state.phase === 'settled' ? 'New Round' : 'Settle';
+        refreshSettleLabel();
       });
     }
     if (clearBets)  clearBets.addEventListener('click', refundAllBets);
@@ -815,7 +978,14 @@
 
   function refreshSettleLabel() {
     const btn = document.getElementById('trPhotoSettle');
-    if (btn) btn.textContent = state.phase === 'settled' ? 'New Round' : 'Settle';
+    if (!btn) return;
+    if (currentMode() === 'player') {
+      btn.textContent = state.autoDealing ? 'Dealing...' : 'Deal';
+      btn.disabled = state.autoDealing;
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = state.phase === 'settled' ? 'New Round' : 'Settle';
   }
 
   function wireZoneClicks() {
@@ -838,13 +1008,23 @@
   }
 
   function wireCardClicks() {
-    // Delegate clicks from hand zones to open squeeze modal on face-down cards
+    document.addEventListener('contextmenu', function (e) {
+      if (e.target.closest('.tr-photo-card.is-face-down') || e.target.closest('#trSqueezeCard')) {
+        e.preventDefault();
+      }
+    });
+
+    document.addEventListener('mousedown', function (e) {
+      const cardEl = e.target.closest('.tr-photo-card.is-face-down');
+      if (!cardEl || e.button !== 2) return;
+      e.preventDefault();
+      squeezeCard(cardEl);
+    });
+
     document.addEventListener('click', function (e) {
       const cardEl = e.target.closest('.tr-photo-card.is-face-down');
       if (!cardEl) return;
-      const hk = cardEl.dataset.handKey;
-      const ix = parseInt(cardEl.dataset.cardIndex, 10);
-      openSqueeze(hk, ix);
+      flipCard(cardEl);
     });
   }
 
@@ -875,11 +1055,44 @@
     });
   }
 
+  function wireModeControls() {
+    $$('.tr-photo-hand').forEach(function (hand) {
+      hand.style.pointerEvents = 'auto';
+    });
+
+    const roleSelector = document.querySelector('.tr-role-selector');
+    if (roleSelector) {
+      roleSelector.addEventListener('click', function () {
+        setTimeout(refreshSettleLabel, 0);
+      });
+    }
+
+    const legacyDeal = document.getElementById('btnDeal');
+    if (legacyDeal) {
+      legacyDeal.addEventListener('click', function (e) {
+        if (currentMode() !== 'player') return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        autoDealRound();
+      }, true);
+    }
+  }
+
+  function exposeAnimationApi() {
+    window.BaccaratPhotoTable = {
+      dealCard: dealCard,
+      flipCard: flipCard,
+      squeezeCard: squeezeCard,
+      state: state
+    };
+  }
+
   // ---------------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------------
 
   function init() {
+    createBetZones();
     wireChipTray();
     wireShoe();
     wireToolbar();
@@ -887,7 +1100,11 @@
     wireCardClicks();
     wireSqueezeClose();
     wireRoadmap();
+    wireModeControls();
+    exposeAnimationApi();
     renderBalance();
+    renderAllZones();
+    refreshSettleLabel();
   }
 
   if (document.readyState === 'loading') {
