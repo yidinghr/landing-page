@@ -2787,3 +2787,248 @@ body[data-phase="draw-b3"] #tr-card-source::before {
   100% { transform: rotateY(0deg) scale(1); opacity: 1; }
 }
 
+/* ============================================================
+   R5 — Curved baccarat table redesign
+   Goal: casino-grade arched table with wooden/leather rim,
+   plus a customer-only chip rail at the front of the table
+   that mirrors the slot in real-life baccarat tables.
+   ============================================================ */
+
+#tr-baccarat-table {
+  border: none;
+  border-radius: 28px 28px 320px 320px / 28px 28px 110px 110px;
+  padding: 0;
+  background:
+    radial-gradient(ellipse at 50% 14%, rgba(40, 132, 70, 0.55) 0%, transparent 36%),
+    radial-gradient(ellipse at 18% 92%, rgba(0, 0, 0, 0.42) 0%, transparent 44%),
+    radial-gradient(ellipse at 82% 92%, rgba(0, 0, 0, 0.42) 0%, transparent 44%),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.022) 2px, rgba(0,0,0,0.022) 4px),
+    var(--tr-felt);
+  box-shadow:
+    /* gold inlay just inside the rim */
+    inset 0 0 0 2px rgba(242, 212, 134, 0.55),
+    /* dark leather edge */
+    inset 0 0 0 4px rgba(20, 10, 4, 0.85),
+    /* primary wooden rim */
+    inset 0 0 0 18px #4a2c10,
+    /* warm leather highlight on top of rim */
+    inset 0 4px 0 18px rgba(118, 70, 28, 0.6),
+    /* soft rim outer gold trim */
+    inset 0 0 0 20px rgba(212, 175, 85, 0.45),
+    /* deep inner felt vignette */
+    inset 0 0 110px rgba(0, 0, 0, 0.5),
+    /* table shadow */
+    0 14px 56px rgba(0, 0, 0, 0.8),
+    0 2px 0 1px rgba(212, 175, 85, 0.25);
+}
+
+#tr-baccarat-table::before {
+  content: '';
+  position: absolute;
+  inset: 22px 22px 26px;
+  border: 1px solid rgba(242, 212, 134, 0.22);
+  border-radius: 18px 18px 286px 286px / 18px 18px 96px 96px;
+  pointer-events: none;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.28);
+}
+
+#tr-baccarat-table::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 38%),
+    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.28) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Pull the dealer strip in so it doesn't overlap the rim */
+#tr-baccarat-table .tr-dealer-strip {
+  margin: 22px 22px 0;
+  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid rgba(212, 175, 85, 0.28);
+  background: linear-gradient(180deg, rgba(8, 5, 20, 0.94) 0%, rgba(10, 12, 24, 0.74) 100%);
+}
+
+#tr-baccarat-table #tr-card-zones {
+  margin: 0 22px;
+  border-radius: 0 0 40px 40px;
+}
+
+#tr-baccarat-table #betZones {
+  margin: 0 22px;
+}
+
+#tr-baccarat-table #tr-seat-arc {
+  margin: 0 22px;
+  padding-bottom: 10px;
+}
+
+/* === Customer chip rail (front-of-table slot) === */
+.tr-customer-rail {
+  display: none;
+  position: relative;
+  margin: 4px 22px 26px;
+  padding: 10px 18px;
+  border-radius: 0 0 240px 240px / 0 0 70px 70px;
+  background:
+    linear-gradient(180deg, rgba(74, 44, 16, 0.95) 0%, rgba(36, 20, 6, 0.98) 100%);
+  border-top: 1px solid rgba(242, 212, 134, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.45),
+    0 6px 14px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.tr-customer-rail::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 6px),
+    radial-gradient(ellipse at 50% -20%, rgba(242, 212, 134, 0.18) 0%, transparent 60%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.tr-customer-rail__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 1;
+}
+
+.tr-customer-rail__label {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(242, 212, 134, 0.78);
+}
+
+.tr-customer-rail__wells {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.tr-customer-rail__well {
+  width: 56px;
+  height: 22px;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.85) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.7),
+    inset 0 -1px 0 rgba(255,255,255,0.04);
+}
+
+.tr-customer-rail__balance {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.tr-customer-rail__balance-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(242, 212, 134, 0.7);
+}
+
+.tr-customer-rail__balance-amt {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--tr-accent);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+
+/* === Role-based perspective transforms === */
+
+/* Dealer: looking down at the table from the dealer's side
+   (top edge of the table tilts toward viewer). */
+body[data-role="dealer"] #tr-baccarat-table {
+  transform: perspective(1600px) rotateX(-3deg);
+  transform-origin: 50% 0%;
+  transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Customer: looking up at the table from a player seat
+   (bottom edge tilts toward viewer, top edge falls away). */
+body[data-role="customer"] #tr-baccarat-table {
+  transform: perspective(1400px) rotateX(8deg);
+  transform-origin: 50% 100%;
+  transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body[data-role="insurance"] #tr-baccarat-table {
+  transform: none;
+  transition: transform 0.4s ease;
+}
+
+body[data-role="customer"] .tr-customer-rail {
+  display: block;
+}
+
+body[data-role="customer"] .tr-dealer-pocket--discard,
+body[data-role="customer"] .tr-dealer-pocket--commission {
+  opacity: 0.45;
+  filter: grayscale(0.4);
+}
+
+body[data-role="customer"] #tr-bet-matrix {
+  transform: scale(1.02);
+  transform-origin: 50% 100%;
+}
+
+body[data-role="customer"] .tr-arc-seat {
+  filter: drop-shadow(0 0 6px rgba(242, 212, 134, 0.18));
+}
+
+/* Highlight the active seat in customer mode */
+body[data-role="customer"] .tr-seat-bay:has(.tr-seat--active)::before {
+  border-color: rgba(242, 212, 134, 0.7);
+  box-shadow:
+    inset 0 12px 24px rgba(0,0,0,0.08),
+    inset 0 -12px 18px rgba(0,0,0,0.1),
+    0 0 32px rgba(242, 212, 134, 0.18);
+}
+
+/* Mobile / narrow */
+@media (max-width: 960px) {
+  #tr-baccarat-table {
+    box-shadow:
+      inset 0 0 0 2px rgba(242, 212, 134, 0.55),
+      inset 0 0 0 4px rgba(20, 10, 4, 0.85),
+      inset 0 0 0 12px #4a2c10,
+      inset 0 4px 0 12px rgba(118, 70, 28, 0.6),
+      inset 0 0 0 14px rgba(212, 175, 85, 0.45),
+      inset 0 0 80px rgba(0, 0, 0, 0.5),
+      0 10px 30px rgba(0, 0, 0, 0.7);
+  }
+
+  #tr-baccarat-table .tr-dealer-strip,
+  #tr-baccarat-table #tr-card-zones,
+  #tr-baccarat-table #betZones,
+  #tr-baccarat-table #tr-seat-arc,
+  .tr-customer-rail {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  body[data-role="customer"] #tr-baccarat-table {
+    transform: none;
+  }
+}

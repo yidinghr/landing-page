@@ -274,6 +274,8 @@ export function renderSeats(host, seats, activeSeatId, settlement) {
 export function renderBalance(balanceAmt, rulesName, balance, rules) {
   if (balanceAmt) balanceAmt.textContent = fmtBalance(balance);
   if (rulesName) rulesName.textContent = rules.name || 'Standard Rules';
+  const railAmt = document.getElementById('customerRailBalance');
+  if (railAmt) railAmt.textContent = fmtBalance(balance);
 }
 
 export function renderPayoutSummary(host, payouts) {
