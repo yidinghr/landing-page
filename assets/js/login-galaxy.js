@@ -314,17 +314,22 @@
   }
 
   function buildAsteroidBelt(rng) {
-    const count = isLoginPage ? 42 : 0;
+    const count = isLoginPage ? 260 : 0;
     asteroidBelt = [];
 
     for (let index = 0; index < count; index += 1) {
+      const arm = index % 4;
+      const orbit = Math.pow(rng(), 0.58);
       asteroidBelt.push({
-        angle: rng() * Math.PI * 2,
-        radiusRatio: randomBetween(0.78, 1.18, rng),
-        size: randomBetween(1.2, 4.2, rng),
-        speed: randomBetween(0.035, 0.1, rng) * (rng() < 0.5 ? -1 : 1),
-        depth: randomBetween(0.48, 1.1, rng),
-        alpha: randomBetween(0.28, 0.72, rng),
+        arm: arm,
+        orbit: orbit,
+        angle: arm * Math.PI * 0.5 + orbit * Math.PI * 5.6 + randomBetween(-0.28, 0.28, rng),
+        jitterX: randomBetween(-1, 1, rng),
+        jitterY: randomBetween(-1, 1, rng),
+        size: randomBetween(0.72, 2.7, rng) * (orbit < 0.18 ? 1.3 : 1),
+        speed: randomBetween(0.035, 0.12, rng) * (rng() < 0.24 ? -1 : 1),
+        depth: randomBetween(0.52, 1.18, rng),
+        alpha: randomBetween(0.26, 0.86, rng) * (1 - orbit * 0.28),
         color: rng() < 0.58 ? COLORS.amber : rng() < 0.82 ? COLORS.violet : COLORS.cool
       });
     }
@@ -371,91 +376,72 @@
     }
 
     const centerX = width * 0.5;
-    const centerY = height * 0.52;
-    const planetRadius = clamp(Math.min(width, height) * 0.105, 64, 138);
-    const orbitRadiusX = planetRadius * 2.35;
-    const orbitRadiusY = planetRadius * 0.74;
+    const centerY = height * 0.42;
+    const coreRadius = clamp(Math.min(width, height) * 0.018, 12, 28);
+    const orbitRadiusX = clamp(width * 0.28, 260, 520);
+    const orbitRadiusY = clamp(height * 0.19, 112, 230);
     const time = timestamp * 0.001;
 
     context.save();
     context.globalCompositeOperation = "screen";
 
-    drawGlow(context, centerX, centerY, planetRadius * 3.4, COLORS.violet, 0.12);
-    drawGlow(context, centerX - planetRadius * 0.24, centerY - planetRadius * 0.16, planetRadius * 2.1, COLORS.cool, 0.08);
+    drawGlow(context, centerX, centerY, orbitRadiusX * 0.62, COLORS.violet, 0.18);
+    drawGlow(context, centerX, centerY, orbitRadiusX * 0.34, COLORS.amber, 0.14);
+    drawGlow(context, centerX - orbitRadiusX * 0.08, centerY - orbitRadiusY * 0.14, orbitRadiusX * 0.22, COLORS.white, 0.1);
 
     context.save();
     context.translate(centerX, centerY);
-    context.rotate(-0.23);
-    context.strokeStyle = "rgba(236, 194, 102, 0.16)";
-    context.lineWidth = Math.max(1, planetRadius * 0.012);
-    context.beginPath();
-    context.ellipse(0, 0, orbitRadiusX, orbitRadiusY, 0, 0, Math.PI * 2);
-    context.stroke();
-    context.strokeStyle = "rgba(194, 130, 255, 0.12)";
-    context.beginPath();
-    context.ellipse(0, 0, orbitRadiusX * 1.24, orbitRadiusY * 1.18, 0, 0, Math.PI * 2);
-    context.stroke();
+    context.rotate(-0.18);
+    for (let ring = 0; ring < 4; ring += 1) {
+      context.strokeStyle = ring % 2 === 0
+        ? "rgba(236, 194, 102, " + (0.09 - ring * 0.012) + ")"
+        : "rgba(194, 130, 255, " + (0.08 - ring * 0.01) + ")";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.ellipse(
+        0,
+        0,
+        orbitRadiusX * (0.44 + ring * 0.18),
+        orbitRadiusY * (0.42 + ring * 0.18),
+        0,
+        0,
+        Math.PI * 2
+      );
+      context.stroke();
+    }
     context.restore();
 
     asteroidBelt.forEach(function (asteroid) {
       const angle = asteroid.angle + time * asteroid.speed;
-      const ellipseX = Math.cos(angle) * orbitRadiusX * asteroid.radiusRatio;
-      const ellipseY = Math.sin(angle) * orbitRadiusY * asteroid.radiusRatio;
-      const tiltCos = Math.cos(-0.23);
-      const tiltSin = Math.sin(-0.23);
+      const orbit = asteroid.orbit;
+      const spiralPull = 0.28 + orbit * 0.9;
+      const ellipseX = Math.cos(angle) * orbitRadiusX * spiralPull + asteroid.jitterX * orbitRadiusX * 0.045;
+      const ellipseY = Math.sin(angle) * orbitRadiusY * spiralPull + asteroid.jitterY * orbitRadiusY * 0.09;
+      const tiltCos = Math.cos(-0.18);
+      const tiltSin = Math.sin(-0.18);
       const x = centerX + ellipseX * tiltCos - ellipseY * tiltSin;
       const y = centerY + ellipseX * tiltSin + ellipseY * tiltCos;
-      const farSide = Math.sin(angle) < 0;
-      const radius = asteroid.size * asteroid.depth * (farSide ? 0.72 : 1);
-      const alpha = asteroid.alpha * (farSide ? 0.45 : 1);
+      const nearSide = Math.sin(angle) > -0.2;
+      const shimmer = 0.7 + Math.sin(time * 2.1 + asteroid.angle * 3.7) * 0.3;
+      const radius = asteroid.size * asteroid.depth * (nearSide ? 1 : 0.62) * shimmer;
+      const alpha = asteroid.alpha * (nearSide ? 1 : 0.42);
 
       context.fillStyle = rgba(asteroid.color, alpha);
       context.beginPath();
       context.arc(x, y, radius, 0, Math.PI * 2);
       context.fill();
 
-      if (!farSide && radius > 2.4) {
-        drawGlow(context, x, y, radius * 4.2, asteroid.color, alpha * 0.12);
+      if (nearSide && radius > 1.6) {
+        drawGlow(context, x, y, radius * 5.4, asteroid.color, alpha * 0.24);
       }
     });
 
-    const planetGradient = context.createRadialGradient(
-      centerX - planetRadius * 0.38,
-      centerY - planetRadius * 0.42,
-      planetRadius * 0.06,
-      centerX,
-      centerY,
-      planetRadius
-    );
-    planetGradient.addColorStop(0, "rgba(255, 248, 212, 0.98)");
-    planetGradient.addColorStop(0.18, "rgba(238, 184, 88, 0.92)");
-    planetGradient.addColorStop(0.48, "rgba(114, 70, 184, 0.9)");
-    planetGradient.addColorStop(0.78, "rgba(30, 18, 74, 0.96)");
-    planetGradient.addColorStop(1, "rgba(4, 3, 18, 0.98)");
-
-    context.shadowColor = "rgba(236, 194, 102, 0.24)";
-    context.shadowBlur = planetRadius * 0.34;
-    context.fillStyle = planetGradient;
+    context.fillStyle = rgba(COLORS.white, 0.9);
     context.beginPath();
-    context.arc(centerX, centerY, planetRadius, 0, Math.PI * 2);
+    context.arc(centerX, centerY, coreRadius * (0.9 + Math.sin(time * 1.4) * 0.08), 0, Math.PI * 2);
     context.fill();
-    context.shadowBlur = 0;
-
-    context.globalCompositeOperation = "source-atop";
-    context.fillStyle = "rgba(255, 235, 174, 0.12)";
-    for (let band = -2; band <= 2; band += 1) {
-      context.beginPath();
-      context.ellipse(
-        centerX,
-        centerY + band * planetRadius * 0.2 + Math.sin(time * 0.16 + band) * 2,
-        planetRadius * (0.78 + Math.abs(band) * 0.08),
-        planetRadius * 0.055,
-        -0.18,
-        0,
-        Math.PI * 2
-      );
-      context.fill();
-    }
+    drawGlow(context, centerX, centerY, coreRadius * 7.2, COLORS.white, 0.22);
+    drawGlow(context, centerX, centerY, coreRadius * 12.5, COLORS.amber, 0.12);
 
     context.restore();
   }
