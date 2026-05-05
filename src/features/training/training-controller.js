@@ -17,6 +17,7 @@ import { initCardDrag, initChipDrag, triggerShoeShake } from './ui/drag-engine.j
 import { createSettingsPanel } from './ui/settings-panel.js';
 import { renderNpcSpeechBubbles } from './ui/npc-speech-renderer.js';
 import { createCustomerRequestPanel } from './ui/customer-request-panel.js';
+import { buildSvgBetLayout } from './ui/svg-bet-layout.js';
 
 const CHIPS = [[1000000, '1M', 'tr-chip--1m'], [500000, '500K', 'tr-chip--500k'], [100000, '100K', 'tr-chip--100k'], [50000, '50K', 'tr-chip--50k'], [10000, '10K', 'tr-chip--10k'], [5000, '5K', 'tr-chip--5k'], [1000, '1K', 'tr-chip--1k'], [500, '500', 'tr-chip--500'], [100, '100', 'tr-chip--100'], [25, '25', 'tr-chip--25'], [5, '5', 'tr-chip--5']].map(([value, label, cls]) => ({ value, label, cls }));
 const DEAL_LABELS = { idle: 'DEAL', betting: 'DEAL', 'deal-1': 'Deal P1', 'deal-2': 'Deal B1', 'deal-3': 'Deal P2', 'deal-4': 'Deal B2', 'draw-p3': 'Deal P3', 'draw-b3': 'Deal B3', reveal: 'Reveal Ready', settlement: 'SETTLED', 'round-end': 'SETTLED' };
@@ -388,6 +389,9 @@ export function init() {
       orchestrator.customerRequest(requestType);
     });
   }
+  // Build the curved SVG bet layout in place of the static .tr-matrix-cell grid.
+  // Must run before the first render so the renderer finds data-seat/data-zone nodes.
+  if (el.betMatrix) buildSvgBetLayout(el.betMatrix);
   orchestrator.newShoe({ confirm: false, promptForCut: false, notify: false });
   attachEvents();
   initInteractions();

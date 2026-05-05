@@ -3034,7 +3034,483 @@ body[data-role="customer"] .tr-seat-bay:has(.tr-seat--active)::before {
 }
 
 /* ============================================================
-   R6 — Real semicircular baccarat table
+   R7 — SVG-driven curved baccarat table (final)
+   Replaces all earlier flat layouts. The table is now a single
+   inline <svg> with vector-drawn rim, felt, dealer strip
+   (chip tray + shoe + discard), and a fan of donut-slice
+   bet zones. Interactive HTML overlays (card source, hand
+   areas, burn notice) are absolutely positioned on top of
+   specific SVG regions.
+   ============================================================ */
+
+/* --- Page layout: 50% table | 25% existing panel | 25% reserved --- */
+.tr-main {
+  display: grid;
+  grid-template-columns: minmax(0, 50%) minmax(0, 25%) minmax(0, 25%);
+  gap: 0;
+}
+
+body[data-role="insurance"] .tr-main {
+  grid-template-columns: 1fr;
+}
+
+/* tr-center holds the table + chips strip + controls.
+   The old left aside is now a horizontal strip below the table. */
+#tr-center {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#tr-left-panel.tr-side-strip {
+  position: static;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 2fr) auto;
+  gap: 12px;
+  align-items: stretch;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(10, 8, 24, 0.92) 0%, rgba(4, 1, 12, 0.9) 100%);
+  border: 1px solid rgba(212, 175, 85, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+#tr-left-panel.tr-side-strip .tr-balance-bar,
+#tr-left-panel.tr-side-strip .tr-chip-section {
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba(14, 10, 30, 0.5);
+  border: 1px solid rgba(212, 175, 85, 0.14);
+  border-radius: 10px;
+}
+
+#tr-left-panel.tr-side-strip .tr-chip-section {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+#tr-left-panel.tr-side-strip #tr-chip-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+}
+
+#tr-left-panel.tr-side-strip .tr-chip-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+#tr-spare.tr-spare-column {
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-left: 1px dashed rgba(212, 175, 85, 0.18);
+  background: linear-gradient(180deg, rgba(8, 5, 16, 0.5) 0%, rgba(4, 1, 12, 0.7) 100%);
+}
+
+.tr-spare-card {
+  border: 1px dashed rgba(212, 175, 85, 0.28);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: rgba(12, 8, 26, 0.5);
+}
+
+.tr-spare-card__label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(242, 212, 134, 0.55);
+  margin-bottom: 6px;
+}
+
+.tr-spare-card__hint {
+  font-size: 12px;
+  color: var(--tr-text-soft);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --- Curved SVG table container --- */
+#tr-baccarat-table.tr-table-svg {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1000 / 720;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  overflow: visible;
+  flex: none;
+  min-height: 0;
+  transform-origin: 50% 50%;
+  transform: rotate(0deg);
+  transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+#tr-baccarat-table.tr-table-svg::before,
+#tr-baccarat-table.tr-table-svg::after {
+  content: none;
+}
+
+#tr-baccarat-table.tr-table-svg #tr-bet-matrix.tr-svg-host {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+#tr-baccarat-table.tr-table-svg .tr-bet-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* --- SVG fill / stroke styling --- */
+.tr-bet-svg .tr-svg-felt {
+  filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.4));
+}
+
+.tr-bet-svg .tr-svg-rim {
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.4));
+}
+
+.tr-bet-svg .tr-svg-dealer-plate {
+  stroke-width: 1;
+}
+
+.tr-bet-svg .tr-svg-pocket,
+.tr-bet-svg .tr-svg-shoe,
+.tr-bet-svg .tr-svg-chip-tray {
+  stroke-width: 1.5;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+}
+
+.tr-bet-svg .tr-svg-pocket__label {
+  fill: rgba(242, 212, 134, 0.78);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tr-bet-svg .tr-svg-dealer-label {
+  fill: rgba(242, 212, 134, 0.85);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+}
+
+.tr-bet-svg .tr-svg-card-zone {
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.85;
+}
+
+.tr-bet-svg .tr-svg-card-zone__label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  fill: rgba(247, 234, 204, 0.72);
+}
+
+.tr-bet-svg .tr-svg-card-zone__label--banker { fill: rgba(255, 130, 130, 0.85); }
+.tr-bet-svg .tr-svg-card-zone__label--player { fill: rgba(120, 178, 255, 0.85); }
+
+.tr-bet-svg .tr-svg-vs {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  fill: rgba(242, 212, 134, 0.55);
+}
+
+/* --- Bet zone wedges (the donut slices) --- */
+.tr-bet-svg .tr-svg-zone {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.tr-bet-svg .tr-svg-zone__shape {
+  fill: rgba(2, 12, 8, 0.5);
+  stroke: rgba(242, 212, 134, 0.34);
+  stroke-width: 1.4;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+.tr-bet-svg .tr-svg-zone:hover .tr-svg-zone__shape {
+  fill: rgba(242, 212, 134, 0.18);
+  stroke: rgba(242, 212, 134, 0.7);
+}
+
+.tr-bet-svg .tr-zone--player .tr-svg-zone__shape  { fill: rgba(74, 158, 255, 0.18); stroke: rgba(74, 158, 255, 0.55); }
+.tr-bet-svg .tr-zone--banker .tr-svg-zone__shape  { fill: rgba(255, 90, 90, 0.18);  stroke: rgba(255, 90, 90, 0.55); }
+.tr-bet-svg .tr-zone--tie .tr-svg-zone__shape     { fill: rgba(80, 216, 144, 0.2);  stroke: rgba(80, 216, 144, 0.6); }
+.tr-bet-svg .tr-zone--ppair .tr-svg-zone__shape   { fill: rgba(140, 190, 255, 0.14); stroke: rgba(140, 190, 255, 0.5); }
+.tr-bet-svg .tr-zone--bpair .tr-svg-zone__shape   { fill: rgba(255, 150, 150, 0.14); stroke: rgba(255, 150, 150, 0.5); }
+.tr-bet-svg .tr-zone--lucky6 .tr-svg-zone__shape  { fill: rgba(242, 212, 134, 0.14); stroke: rgba(242, 212, 134, 0.55); }
+
+.tr-bet-svg .tr-svg-zone__label {
+  fill: rgba(247, 234, 204, 0.92);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+.tr-bet-svg .tr-zone--player .tr-svg-zone__label  { fill: #98c5ff; }
+.tr-bet-svg .tr-zone--banker .tr-svg-zone__label  { fill: #ff9090; }
+.tr-bet-svg .tr-zone--tie .tr-svg-zone__label     { fill: #80e8b0; }
+.tr-bet-svg .tr-zone--lucky6 .tr-svg-zone__label  { fill: #f2d486; font-size: 10px; }
+.tr-bet-svg .tr-zone--ppair .tr-svg-zone__label,
+.tr-bet-svg .tr-zone--bpair .tr-svg-zone__label   { font-size: 10px; }
+
+.tr-bet-svg .tr-zone-bet-amt,
+.tr-bet-svg .tr-zone-payout {
+  font-size: 11px;
+  font-weight: 800;
+  fill: var(--tr-accent);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-bet-svg .tr-zone-bet-amt[hidden],
+.tr-bet-svg .tr-zone-payout[hidden] { display: none; }
+
+.tr-bet-svg .tr-zone-payout.is-win  { fill: var(--tr-tie); }
+.tr-bet-svg .tr-zone-payout.is-lose { fill: var(--tr-banker); }
+.tr-bet-svg .tr-zone-payout.is-push { fill: var(--tr-text-soft); }
+
+.tr-bet-svg .tr-svg-zone.has-bet .tr-svg-zone__shape { stroke-width: 2.4; }
+.tr-bet-svg .tr-svg-zone.tr-seat--active .tr-svg-zone__shape {
+  stroke: rgba(242, 212, 134, 0.85);
+  stroke-width: 2.4;
+}
+.tr-bet-svg .tr-svg-zone.tr-seat--winner .tr-svg-zone__shape {
+  stroke: rgba(80, 216, 144, 0.85);
+  stroke-width: 2.6;
+}
+.tr-bet-svg .tr-svg-zone.tr-seat--loser .tr-svg-zone__shape {
+  stroke: rgba(255, 90, 90, 0.85);
+  stroke-width: 2.6;
+}
+
+.tr-bet-svg .tr-svg-seat-num {
+  fill: rgba(242, 212, 134, 0.75);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+/* --- HTML overlays positioned on top of the SVG --- */
+.tr-svg-overlay {
+  position: absolute;
+  z-index: 5;
+}
+
+.tr-svg-overlay--cards {
+  /* Sits across the centre ellipse drawn by the SVG.
+     Rect: x≈260..740, y≈115..235 over a 1000x720 viewBox. */
+  left: 26%;
+  right: 26%;
+  top: 16%;
+  height: 17%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  pointer-events: none;
+}
+
+.tr-svg-overlay--cards .tr-hand {
+  pointer-events: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: center;
+}
+
+.tr-svg-overlay--cards .tr-hand-label {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tr-svg-overlay--cards .tr-cards-row {
+  min-height: 60px;
+}
+
+.tr-svg-overlay--cards .bac-card {
+  width: 38px;
+  height: 54px;
+}
+
+.tr-svg-overlay--cards .bac-score {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+}
+
+.tr-svg-overlay--shoe {
+  /* SVG shoe rect: x=790..940, y=24..80 in 1000x720 viewBox. */
+  left: 79%;
+  top: 3.3%;
+  width: 15%;
+  height: 7.7%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border-radius: 8px;
+  cursor: grab;
+  user-select: none;
+}
+
+.tr-svg-overlay--shoe .tr-deck-icon {
+  font-size: 24px;
+  color: rgba(247, 234, 204, 0.92);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.tr-svg-overlay--shoe #tr-shoe-count {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--tr-accent);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.tr-svg-overlay--shoe .tr-shoe-track {
+  position: absolute;
+  bottom: -4px;
+  left: 8%;
+  right: 8%;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.tr-svg-overlay--shoe .tr-shoe-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--tr-tie), var(--tr-accent));
+}
+
+.tr-svg-overlay--burn {
+  left: 50%;
+  top: 13.5%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--tr-accent);
+  background: rgba(8, 5, 20, 0.85);
+  border: 1px solid rgba(242, 212, 134, 0.35);
+  border-radius: 999px;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+/* --- Dealer / Customer rotation animation --- */
+body[data-role="customer"] #tr-baccarat-table.tr-table-svg {
+  transform: rotate(0deg);
+  transform-origin: 50% 50%;
+}
+
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg {
+  transform: rotate(180deg);
+  transform-origin: 50% 50%;
+}
+
+body[data-role="insurance"] #tr-baccarat-table.tr-table-svg {
+  transform: rotate(0deg);
+  transform-origin: 50% 50%;
+}
+
+/* Counter-rotate text + overlays so they remain readable
+   when the table flips for the dealer perspective. */
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-zone__label,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-pocket__label,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-dealer-label,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-card-zone__label,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-vs,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-svg-seat-num,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-zone-bet-amt,
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-bet-svg .tr-zone-payout {
+  transform: rotate(180deg);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-svg-overlay {
+  transform: rotate(180deg);
+  transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-svg-overlay--shoe {
+  transform: rotate(180deg);
+  transform-origin: center;
+}
+
+body[data-role="dealer"] #tr-baccarat-table.tr-table-svg .tr-svg-overlay--burn {
+  transform: translateX(-50%) rotate(180deg);
+}
+
+/* Customer layout already shows the chip rail row; no override needed.
+   When dealer flips, hide the customer rail since it belongs to the player. */
+body[data-role="dealer"] .tr-customer-rail { display: none !important; }
+
+/* Keep text drawing crisp in SVG */
+.tr-bet-svg text {
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.45);
+  stroke-width: 0.5;
+  font-family: "Source Han Sans VF", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+}
+
+@media (max-width: 1280px) {
+  .tr-main {
+    grid-template-columns: minmax(0, 60%) minmax(0, 25%) minmax(0, 15%);
+  }
+}
+
+@media (max-width: 980px) {
+  .tr-main {
+    grid-template-columns: 1fr;
+  }
+  #tr-spare.tr-spare-column { display: none; }
+  #tr-baccarat-table.tr-table-svg {
+    aspect-ratio: 1000 / 600;
+  }
+}
+
+/* ============================================================
+   R6 — Real semicircular baccarat table (LEGACY — superseded by R7)
    The table is now a true half-pill shape (bottom edge is a
    continuous half-circle). The felt is unbroken from the
    PLAYER/BANKER hands all the way through the bet zones —

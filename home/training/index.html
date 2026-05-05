@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="../../assets/css/i18n.css">
 <link rel="stylesheet" href="../../assets/css/training.css">
 </head>
-<body class="training-page">
+<body class="training-page" data-role="dealer">
 
 <div class="tr-app">
   <header id="tr-header" class="tr-header">
@@ -33,28 +33,6 @@
   </header>
 
   <main class="tr-main">
-    <aside id="tr-left-panel">
-      <div class="tr-balance-bar">
-        <div class="tr-balance-item">
-          <span class="tr-balance-label">BALANCE</span>
-          <span id="balanceAmt" class="tr-balance-amount">1,000,000</span>
-        </div>
-        <div class="tr-balance-item">
-          <span class="tr-balance-label">TOTAL BET</span>
-          <span id="totalBetAmt" class="tr-balance-bet">—</span>
-        </div>
-        <div id="payoutSummary" class="tr-payout-summary" hidden></div>
-      </div>
-
-      <div class="tr-chip-section">
-        <span class="tr-chip-label">CHIPS</span>
-        <div id="tr-chip-tray" class="tr-chip-tray"></div>
-        <button type="button" id="btnClearBets" class="tr-btn tr-btn--ghost tr-btn--sm">Clear</button>
-        <button type="button" id="btnSubmitBets" class="tr-btn tr-btn--customer tr-btn--sm">Submit</button>
-      </div>
-      <div id="tr-feedback-panel"></div>
-    </aside>
-
     <section id="tr-center">
       <div id="tr-roadmap-strip">
         <canvas id="tr-road-bead"></canvas>
@@ -63,41 +41,18 @@
         <canvas id="tr-road-small"></canvas>
       </div>
 
-      <div id="tr-baccarat-table">
-        <div class="tr-dealer-strip">
-          <div class="tr-dealer-pocket tr-dealer-pocket--discard" aria-hidden="true">
-            <span class="tr-dealer-pocket__label">Discard Rack</span>
-            <div class="tr-dealer-pocket__well">
-              <span class="tr-dealer-pocket__hint">Discard</span>
-            </div>
-          </div>
-          <div class="tr-dealer-center">
-            <span class="tr-dealer-label">◆ DEALER ◆</span>
-            <div id="burnNotice" class="tr-burn-notice tr-burn-notice--rail" hidden></div>
-          </div>
-          <div id="tr-card-source" class="tr-dealer-pocket tr-dealer-pocket--shoe">
-            <span class="tr-dealer-pocket__label">Card Shoe</span>
-            <div class="tr-dealer-pocket__well tr-dealer-pocket__well--shoe">
-              <div class="tr-deck-icon">🂠</div>
-              <span id="tr-shoe-count">—</span>
-              <div class="tr-shoe-track"><div id="shoeFill" class="tr-shoe-fill"></div></div>
-            </div>
-          </div>
-          <div class="tr-dealer-pocket tr-dealer-pocket--commission" aria-hidden="true">
-            <span class="tr-dealer-pocket__label">Commission</span>
-            <div class="tr-dealer-pocket__well">
-              <span class="tr-dealer-pocket__hint">Tray</span>
-            </div>
-          </div>
-        </div>
+      <!-- Curved baccarat table — entirely SVG-driven.
+           #tr-bet-matrix hosts the generated <svg>; HTML overlays sit on top
+           of specific SVG regions for drag/drop and live card rendering. -->
+      <div id="tr-baccarat-table" class="tr-table-svg">
+        <div id="tr-bet-matrix" class="tr-svg-host"></div>
 
-        <div id="tr-card-zones" class="tr-felt">
+        <div class="tr-svg-overlay tr-svg-overlay--cards" id="tr-card-zones">
           <div id="tr-banker-area" class="tr-hand tr-hand--banker">
             <div class="tr-hand-label">BANKER</div>
             <div id="bCards" class="tr-cards-row tr-cards-row--banker"></div>
             <div id="bScore" class="bac-score">—</div>
           </div>
-          <div class="tr-vs">VS</div>
           <div id="tr-player-area" class="tr-hand tr-hand--player">
             <div class="tr-hand-label">PLAYER</div>
             <div id="pCards" class="tr-cards-row tr-cards-row--player"></div>
@@ -105,97 +60,36 @@
           </div>
         </div>
 
-        <div id="betZones" class="tr-bet-zones">
-          <div id="tr-bet-matrix">
-            <div class="tr-seat-bay tr-seat-bay--1" data-seat-bay="1">
-              <div class="tr-seat-bay__zones">
-                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="1" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--ppair" data-seat="1" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--player" data-seat="1" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--tie" data-seat="1" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--banker" data-seat="1" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--bpair" data-seat="1" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-              </div>
-            </div>
-            <div class="tr-seat-bay tr-seat-bay--2" data-seat-bay="2">
-              <div class="tr-seat-bay__zones">
-                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="2" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--ppair" data-seat="2" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--player" data-seat="2" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--tie" data-seat="2" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--banker" data-seat="2" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--bpair" data-seat="2" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-              </div>
-            </div>
-            <div class="tr-seat-bay tr-seat-bay--3" data-seat-bay="3">
-              <div class="tr-seat-bay__zones">
-                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="3" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--ppair" data-seat="3" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--player" data-seat="3" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--tie" data-seat="3" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--banker" data-seat="3" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--bpair" data-seat="3" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-              </div>
-            </div>
-            <div class="tr-seat-bay tr-seat-bay--4" data-seat-bay="4">
-              <div class="tr-seat-bay__zones">
-                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="4" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--ppair" data-seat="4" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--player" data-seat="4" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--tie" data-seat="4" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--banker" data-seat="4" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--bpair" data-seat="4" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-              </div>
-            </div>
-            <div class="tr-seat-bay tr-seat-bay--5" data-seat-bay="5">
-              <div class="tr-seat-bay__zones">
-                <div class="tr-matrix-cell tr-zone--lucky6" data-seat="5" data-zone="luckySix"><span>L6</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--ppair" data-seat="5" data-zone="playerPair"><span>P.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--player" data-seat="5" data-zone="player"><span>PLAYER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--tie" data-seat="5" data-zone="tie"><span>TIE</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--banker" data-seat="5" data-zone="banker"><span>BANKER</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-                <div class="tr-matrix-cell tr-zone--bpair" data-seat="5" data-zone="bankerPair"><span>B.Pair</span><div class="tr-zone-bet-amt" hidden></div><div class="tr-zone-payout" hidden></div></div>
-              </div>
-            </div>
-          </div>
+        <div id="tr-card-source" class="tr-svg-overlay tr-svg-overlay--shoe">
+          <div class="tr-deck-icon">🂠</div>
+          <span id="tr-shoe-count">—</span>
+          <div class="tr-shoe-track"><div id="shoeFill" class="tr-shoe-fill"></div></div>
         </div>
 
-        <div id="tr-seat-arc">
-          <div class="tr-arc-seat" data-seat-id="1">①<span>Seat 1</span></div>
-          <div class="tr-arc-seat" data-seat-id="2">②<span>Seat 2</span></div>
-          <div class="tr-arc-seat" data-seat-id="3">③<span>Seat 3</span></div>
-          <div class="tr-arc-seat" data-seat-id="4">④<span>Seat 4</span></div>
-          <div class="tr-arc-seat" data-seat-id="5">⑤<span>Seat 5</span></div>
-        </div>
-
-        <div class="tr-rim-chips" aria-hidden="true">
-          <span class="tr-rim-chips__stack"></span>
-          <span class="tr-rim-chips__stack"></span>
-          <span class="tr-rim-chips__stack"></span>
-          <span class="tr-rim-chips__stack"></span>
-          <span class="tr-rim-chips__stack"></span>
-        </div>
-
-        <div id="tr-customer-rail" class="tr-customer-rail" aria-hidden="true">
-          <div class="tr-customer-rail__inner">
-            <span class="tr-customer-rail__label">Player Rail</span>
-            <div class="tr-customer-rail__wells">
-              <span class="tr-customer-rail__well" data-rail-slot="1"></span>
-              <span class="tr-customer-rail__well" data-rail-slot="2"></span>
-              <span class="tr-customer-rail__well" data-rail-slot="3"></span>
-              <span class="tr-customer-rail__well" data-rail-slot="4"></span>
-              <span class="tr-customer-rail__well" data-rail-slot="5"></span>
-              <span class="tr-customer-rail__well" data-rail-slot="6"></span>
-              <span class="tr-customer-rail__well" data-rail-slot="7"></span>
-              <span class="tr-customer-rail__well" data-rail-slot="8"></span>
-            </div>
-            <span class="tr-customer-rail__balance">
-              <span class="tr-customer-rail__balance-label">Stack</span>
-              <span id="customerRailBalance" class="tr-customer-rail__balance-amt">1,000,000</span>
-            </span>
-          </div>
-        </div>
+        <div id="burnNotice" class="tr-svg-overlay tr-svg-overlay--burn" hidden></div>
       </div>
+
+      <aside id="tr-left-panel" class="tr-side-strip">
+        <div class="tr-balance-bar">
+          <div class="tr-balance-item">
+            <span class="tr-balance-label">BALANCE</span>
+            <span id="balanceAmt" class="tr-balance-amount">1,000,000</span>
+          </div>
+          <div class="tr-balance-item">
+            <span class="tr-balance-label">TOTAL BET</span>
+            <span id="totalBetAmt" class="tr-balance-bet">—</span>
+          </div>
+          <div id="payoutSummary" class="tr-payout-summary" hidden></div>
+        </div>
+
+        <div class="tr-chip-section">
+          <span class="tr-chip-label">CHIPS</span>
+          <div id="tr-chip-tray" class="tr-chip-tray"></div>
+          <button type="button" id="btnClearBets" class="tr-btn tr-btn--ghost tr-btn--sm">Clear</button>
+          <button type="button" id="btnSubmitBets" class="tr-btn tr-btn--customer tr-btn--sm">Submit</button>
+        </div>
+        <div id="tr-feedback-panel"></div>
+      </aside>
 
       <div id="seatsRow" class="tr-seats tr-seats--renderer-cache" aria-hidden="true">
         <div class="tr-seat tr-seat--active" data-seat="1"><div class="tr-seat__head"><span class="tr-seat__label">Seat 1</span><span class="tr-seat__badge">active</span></div><div class="tr-seat__bets"><span class="tr-seat__bet" data-seat-bet="playerPair" hidden>P.Pair <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="player" hidden>Player <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="tie" hidden>Tie <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="banker" hidden>Banker <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="bankerPair" hidden>B.Pair <strong>0</strong></span><span class="tr-seat__bet" data-seat-bet="luckySix" hidden>Lucky 6 <strong>0</strong></span></div><div class="tr-seat__balance">Balance <strong>1,000,000</strong></div></div>
@@ -244,6 +138,13 @@
         <div id="tr-session-log" class="tr-log"><p class="hint-text">No hands played yet.</p></div>
       </div>
     </aside>
+
+    <div id="tr-spare" class="tr-spare-column" aria-hidden="true">
+      <div class="tr-spare-card">
+        <span class="tr-spare-card__label">Reserved</span>
+        <p class="tr-spare-card__hint">Future panel — leave 25% column for upcoming widgets.</p>
+      </div>
+    </div>
   </main>
 </div>
 
