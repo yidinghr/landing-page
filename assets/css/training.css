@@ -5123,12 +5123,11 @@ body[data-role="dealer"] .tr-chip:active { cursor: grabbing !important; }
   font-size: 10px;
   font-weight: 800;
   position: relative;
-  background: #fff;
 }
-.tr-bead-cell--P { border-color: #1565c0; color: #1565c0; }
-.tr-bead-cell--B { border-color: #c62828; color: #c62828; }
-.tr-bead-cell--T { border-color: #2e7d32; color: #2e7d32; }
-.tr-bead-cell--empty { border-color: rgba(0,0,0,0.08); }
+.tr-bead-cell--P { background: #1565c0; border-color: #1565c0; color: #fff; }
+.tr-bead-cell--B { background: #c62828; border-color: #c62828; color: #fff; }
+.tr-bead-cell--T { background: #2e7d32; border-color: #2e7d32; color: #fff; }
+.tr-bead-cell--empty { background: transparent; border-color: rgba(0,0,0,0.08); }
 .tr-bead-cell::before,
 .tr-bead-cell::after {
   content: '';

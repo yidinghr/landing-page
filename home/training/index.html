@@ -85,72 +85,32 @@
       <div id="tr-baccarat-table" class="tr-table-svg tr-table-photo-mode">
         <img class="tr-table-photo" src="/image/baccarat-table.png" alt="Baccarat table">
 
-        <!-- Photo overlay: drag-and-drop bet zones, hand zones, shoe source.
-             Coordinates target the printed bet labels on baccarat-table.png.
-             Each zone is invisible — JS snaps a dropped chip to the
-             nearest zone center within ~120px tolerance. -->
+        <!-- Photo overlay: coordinate-based betting (no visible zone boxes).
+             Chips snap to nearest zone when dropped or clicked.
+             Shoe: drag to deal cards to PLAYER or BANKER. -->
         <div class="tr-photo-overlay" id="trPhotoOverlay">
-          <!-- PLAYER main bet — sits on the white "PLAYER" text -->
-          <div class="tr-photo-zone" data-bet="player"      style="left:32%;top:32%;width:14%;height:11%">
-            <span class="tr-zone-tag">PLAYER</span>
-            <div class="tr-zone-stack"></div>
-            <span class="tr-zone-amount" data-zone-amount></span>
-          </div>
-          <!-- BANKER main bet — sits on the white "BANKER" text -->
-          <div class="tr-photo-zone" data-bet="banker"      style="left:54%;top:32%;width:14%;height:11%">
-            <span class="tr-zone-tag">BANKER</span>
-            <div class="tr-zone-stack"></div>
-            <span class="tr-zone-amount" data-zone-amount></span>
-          </div>
-          <!-- TIE — small zone right under the BACCARAT logo -->
-          <div class="tr-photo-zone" data-bet="tie"         style="left:47%;top:42%;width:6%;height:7%">
-            <span class="tr-zone-tag">TIE</span>
-            <div class="tr-zone-stack"></div>
-            <span class="tr-zone-amount" data-zone-amount></span>
-          </div>
-          <!-- PLAYER PAIR — small zone left of TIE -->
-          <div class="tr-photo-zone" data-bet="playerPair"  style="left:39%;top:42%;width:8%;height:7%">
-            <span class="tr-zone-tag">P. PAIR</span>
-            <div class="tr-zone-stack"></div>
-            <span class="tr-zone-amount" data-zone-amount></span>
-          </div>
-          <!-- BANKER PAIR — small zone right of TIE -->
-          <div class="tr-photo-zone" data-bet="bankerPair"  style="left:53%;top:42%;width:8%;height:7%">
-            <span class="tr-zone-tag">B. PAIR</span>
-            <div class="tr-zone-stack"></div>
-            <span class="tr-zone-amount" data-zone-amount></span>
-          </div>
-          <!-- LUCKY 6 / SMALL — far-right small zone -->
-          <div class="tr-photo-zone" data-bet="lucky6"      style="left:71%;top:40%;width:10%;height:9%">
-            <span class="tr-zone-tag">LUCKY 6</span>
-            <div class="tr-zone-stack"></div>
-            <span class="tr-zone-amount" data-zone-amount></span>
-          </div>
 
-          <!-- Hand zones (drop targets for cards) — open felt area below
-               the bet row where dealt cards visually land. -->
-          <div class="tr-photo-hand" data-hand="player" style="left:30%;top:54%;width:18%;height:14%">
-            <span class="tr-hand-tag">PLAYER HAND</span>
+          <!-- Invisible hand zones for card rendering only -->
+          <div class="tr-photo-hand" data-hand="player" style="left:28%;top:53%;width:20%;height:16%;pointer-events:none;">
             <div class="tr-hand-cards"></div>
           </div>
-          <div class="tr-photo-hand" data-hand="banker" style="left:52%;top:54%;width:18%;height:14%">
-            <span class="tr-hand-tag">BANKER HAND</span>
+          <div class="tr-photo-hand" data-hand="banker" style="left:52%;top:53%;width:20%;height:16%;pointer-events:none;">
             <div class="tr-hand-cards"></div>
           </div>
 
-          <!-- Card source — sits over the actual red shoe at the top-right
-               of the photo (above the dealer's right hand). -->
-          <div class="tr-photo-shoe" id="trPhotoShoe" style="left:75%;top:6%;width:18%;height:22%" title="Kéo lá bài vào ô PLAYER HAND hoặc BANKER HAND">
-            <span class="tr-shoe-tag">SHOE</span>
+          <!-- Card source shoe -->
+          <div class="tr-photo-shoe" id="trPhotoShoe"
+               style="left:75%;top:6%;width:18%;height:22%"
+               title="Kéo lá bài → thả vào vùng PLAYER hoặc BANKER để chia">
+            <span class="tr-shoe-tag">SHOE ✋</span>
           </div>
 
-          <!-- Roadmap sign overlay — click the dealer's black sign to open
-               the history/roadmap modal. -->
+          <!-- Roadmap sign -->
           <button type="button" class="tr-photo-sign" id="trPhotoSignBtn"
                   style="left:9%;top:10%;width:14%;height:20%"
-                  title="Xem lịch sử và roadmap"></button>
+                  title="Xem lịch sử roadmap"></button>
 
-          <!-- Toolbar: settle round, clear bets, clear cards -->
+          <!-- Toolbar -->
           <div class="tr-photo-tools">
             <button type="button" class="tr-photo-tool" id="trPhotoSettle">Settle</button>
             <button type="button" class="tr-photo-tool" id="trPhotoClearBets">Clear Bets</button>
