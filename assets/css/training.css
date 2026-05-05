@@ -4608,3 +4608,47 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
     border-top: 1px solid rgba(212, 175, 85, 0.16);
   }
 }
+
+/* === Photo-mode baccarat table (temporary placeholder for system rebuild) === */
+#tr-baccarat-table.tr-table-photo-mode {
+  position: relative;
+  width: 100%;
+  aspect-ratio: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: none !important;
+}
+
+#tr-baccarat-table.tr-table-photo-mode::before,
+#tr-baccarat-table.tr-table-photo-mode::after {
+  content: none;
+}
+
+#tr-baccarat-table.tr-table-photo-mode .tr-table-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+#tr-baccarat-table.tr-table-photo-mode > #tr-bet-matrix,
+#tr-baccarat-table.tr-table-photo-mode .tr-dealer-strip,
+#tr-baccarat-table.tr-table-photo-mode #tr-seat-arc,
+#tr-baccarat-table.tr-table-photo-mode .tr-svg-overlay,
+#tr-baccarat-table.tr-table-photo-mode #tr-card-zones,
+#tr-baccarat-table.tr-table-photo-mode #tr-card-source,
+#tr-baccarat-table.tr-table-photo-mode #burnNotice {
+  display: none !important;
+}
