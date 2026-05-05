@@ -4158,3 +4158,278 @@ body[data-role="dealer"] #tr-baccarat-table.tr-table-svg {
     grid-template-columns: minmax(170px, 18%) minmax(0, 50%) minmax(290px, 32%);
   }
 }
+
+/* ============================================================
+   R10 - Operator right panel: limits, exact odds, NPC chat
+   ============================================================ */
+.tr-main {
+  grid-template-columns: minmax(150px, 12.5%) minmax(0, 62.5%) minmax(300px, 25%);
+}
+
+#tr-right.tr-operator-panel {
+  display: grid;
+  grid-template-rows: minmax(210px, 32%) minmax(230px, 34%) minmax(0, 1fr);
+  gap: 10px;
+  height: calc(100vh - 58px);
+  padding: 10px;
+  overflow: hidden;
+  border-left: 1px solid rgba(212, 175, 85, 0.2);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(24, 126, 168, 0.16), transparent 46%),
+    linear-gradient(180deg, rgba(7, 5, 16, 0.98), rgba(2, 0, 8, 0.99));
+}
+
+.tr-panel-card {
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid rgba(212, 175, 85, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(18, 15, 32, 0.88), rgba(6, 4, 14, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 24px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.tr-panel-card--limits,
+.tr-panel-card--odds {
+  overflow: auto;
+}
+
+.tr-panel-card--chat {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tr-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tr-panel-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(242, 212, 134, 0.68);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.tr-panel-head h3 {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.tr-panel-icon-btn,
+.tr-panel-badge {
+  flex: 0 0 auto;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgba(212, 175, 85, 0.24);
+  border-radius: 999px;
+  color: #f2d486;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.tr-panel-icon-btn {
+  cursor: pointer;
+}
+
+.tr-limit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tr-limit-grid label {
+  display: grid;
+  gap: 5px;
+  color: rgba(232, 238, 248, 0.64);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.tr-limit-grid input {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid rgba(212, 175, 85, 0.16);
+  border-radius: 6px;
+  color: #fff;
+  background: rgba(2, 0, 8, 0.72);
+  font: inherit;
+  font-size: 11px;
+  outline: none;
+}
+
+.tr-limit-grid input:focus {
+  border-color: rgba(242, 212, 134, 0.55);
+  box-shadow: 0 0 0 2px rgba(242, 212, 134, 0.12);
+}
+
+.tr-panel-meter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(232, 238, 248, 0.62);
+  font-size: 11px;
+}
+
+.tr-panel-meter-row strong {
+  color: #f2d486;
+  font-size: 12px;
+}
+
+#tr-right #tr-card-counter {
+  margin-bottom: 8px;
+}
+
+#tr-right .tr-card-counter-grid {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  gap: 3px;
+}
+
+#tr-right .tr-card-count-cell {
+  min-width: 0;
+  padding: 4px 2px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.035);
+  text-align: center;
+}
+
+#tr-right .tr-card-count-rank,
+#tr-right .tr-card-count-rem {
+  display: block;
+  font-size: 9px;
+  line-height: 1.1;
+}
+
+#tr-live-prob {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  font-size: 11px;
+}
+
+.tr-prob-card {
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.tr-prob-card span {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(232, 238, 248, 0.58);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.tr-prob-card strong {
+  display: block;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.tr-prob--player strong { color: #dcefff; }
+.tr-prob--banker strong { color: #ffe15d; }
+.tr-prob--tie strong { color: #66d892; }
+.tr-prob--pair strong { color: #c9b7ff; }
+.tr-prob--lucky strong { color: #ffbe58; }
+
+#tr-right .tr-stats-panel {
+  margin-top: 10px;
+  max-height: 96px;
+  overflow: auto;
+}
+
+#tr-right .tr-round-detail {
+  max-height: 92px;
+  overflow: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.tr-npc-chat {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tr-chat-line {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.tr-chat-line--request {
+  border-color: rgba(242, 212, 134, 0.32);
+  background: rgba(242, 212, 134, 0.075);
+}
+
+.tr-chat-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #f2d486;
+  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid rgba(242, 212, 134, 0.2);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.tr-chat-line strong {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 11px;
+}
+
+.tr-chat-line p {
+  margin: 0;
+  color: rgba(232, 238, 248, 0.7);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+#tr-right .tr-log {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+@media (max-width: 1280px) {
+  .tr-main {
+    grid-template-columns: minmax(150px, 14%) minmax(0, 61%) minmax(290px, 25%);
+  }
+}

@@ -130,21 +130,52 @@
       </div>
     </section>
 
-    <aside id="tr-right">
-      <div id="tr-live-prob"></div>
-      <div id="tr-card-counter"></div>
-      <div class="tr-sidebar-section tr-sidebar-section--stats">
-        <h3 class="tr-sidebar-title">STATISTICS</h3>
-        <div id="statsPanel" class="tr-stats-panel"><p class="hint-text">No rounds played yet.</p></div>
-      </div>
-      <div class="tr-sidebar-section">
-        <h3 class="tr-sidebar-title">ROUND DETAIL</h3>
+    <aside id="tr-right" class="tr-operator-panel">
+      <section class="tr-panel-card tr-panel-card--limits">
+        <div class="tr-panel-head">
+          <div>
+            <span class="tr-panel-kicker">TABLE CONTROL</span>
+            <h3>Limit & Shoe</h3>
+          </div>
+          <button type="button" id="btnPanelSettings" class="tr-panel-icon-btn" aria-label="Open settings">⚙</button>
+        </div>
+        <div class="tr-limit-grid" data-limit-panel>
+          <label>Min bet<input id="trLimitMin" type="number" min="0" step="1000" value="1000"></label>
+          <label>Max bet<input id="trLimitMax" type="number" min="0" step="1000" value="500000"></label>
+          <label>Tie max<input id="trLimitTie" type="number" min="0" step="1000" value="100000"></label>
+          <label>Pair max<input id="trLimitPair" type="number" min="0" step="1000" value="100000"></label>
+        </div>
+        <div class="tr-panel-meter-row">
+          <span>Shoe</span>
+          <strong id="tr-panel-shoe-count">—</strong>
+        </div>
+        <div id="tr-card-counter"></div>
         <div id="roundDetail" class="tr-round-detail"><p class="hint-text">Deal a hand to see the breakdown.</p></div>
-      </div>
-      <div class="tr-sidebar-section tr-sidebar-section--log">
-        <h3 class="tr-sidebar-title">SESSION LOG</h3>
+      </section>
+
+      <section class="tr-panel-card tr-panel-card--odds">
+        <div class="tr-panel-head">
+          <div>
+            <span class="tr-panel-kicker">LIVE ODDS</span>
+            <h3>Current shoe probability</h3>
+          </div>
+          <span class="tr-panel-badge">Exact</span>
+        </div>
+        <div id="tr-live-prob"></div>
+        <div id="statsPanel" class="tr-stats-panel"><p class="hint-text">No rounds played yet.</p></div>
+      </section>
+
+      <section class="tr-panel-card tr-panel-card--chat">
+        <div class="tr-panel-head">
+          <div>
+            <span class="tr-panel-kicker">TABLE CHAT</span>
+            <h3>NPC requests</h3>
+          </div>
+          <span class="tr-panel-badge">Solo</span>
+        </div>
+        <div id="tr-npc-chat" class="tr-npc-chat"></div>
         <div id="tr-session-log" class="tr-log"><p class="hint-text">No hands played yet.</p></div>
-      </div>
+      </section>
     </aside>
 
   </main>

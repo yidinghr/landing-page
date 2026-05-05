@@ -475,6 +475,62 @@ export function renderLog(host, log) {
   }).join('');
 }
 
+function requestLabel(req) {
+  if (!req) return '';
+  if (req.label) return req.label;
+  const type = String(req.type || '');
+  const map = {
+    'squeeze-p1': 'Squeeze Player card 1',
+    'squeeze-p2': 'Squeeze Player card 2',
+    'squeeze-b1': 'Squeeze Banker card 1',
+    'squeeze-b2': 'Squeeze Banker card 2',
+    'flip-player-first': 'Open Player first',
+    'flip-banker-first': 'Open Banker first',
+    'flip-all-together': 'Open all cards',
+    'hold-my-card': 'Hold my card',
+    'wait-a-moment': 'Wait a moment'
+  };
+  return map[type] || type || 'Waiting for next decision';
+}
+
+export function renderNpcChat(host, state) {
+  if (!host || !state) return;
+  const requests = Array.isArray(state.npcRequestQueue) ? state.npcRequestQueue : [];
+  const phase = state.phase || 'idle';
+  const activeRequests = requests.slice(0, 5).map(function (req) {
+    return [
+      '<div class="tr-chat-line tr-chat-line--request">',
+      '<span class="tr-chat-avatar">S' + req.seatId + '</span>',
+      '<div><strong>Seat ' + req.seatId + '</strong><p>' + requestLabel(req) + '</p></div>',
+      '</div>'
+    ].join('');
+  });
+
+  if (activeRequests.length) {
+    host.innerHTML = activeRequests.join('');
+    return;
+  }
+
+  const idleLines = phase === 'idle' || phase === 'betting'
+    ? [
+      ['S2', 'Waiting for the next shoe.'],
+      ['S4', 'Place bets, then I may ask for squeeze.'],
+      ['SYS', 'Online staff play will be connected later.']
+    ]
+    : phase === 'reveal'
+      ? [['SYS', 'No NPC request this round. Dealer may reveal normally.']]
+      : [['SYS', 'NPC requests appear after the first four cards are dealt.']];
+
+  host.innerHTML = idleLines.map(function (line) {
+    return [
+      '<div class="tr-chat-line">',
+      '<span class="tr-chat-avatar">' + line[0] + '</span>',
+      '<div><strong>' + (line[0] === 'SYS' ? 'System' : 'Seat ' + line[0].replace('S', '')) + '</strong><p>' + line[1] + '</p></div>',
+      '</div>'
+    ].join('');
+  }).join('');
+}
+
 export function renderStats(host, shoe, log, procedureStats = { errors: 0, catches: 0 }, tablePrefs = {}) {
   if (!host || !shoe) return;
   const stats = sessionStats(log);

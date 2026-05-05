@@ -126,15 +126,18 @@ export function renderLiveProb(host, probs) {
 
   if (!host || !probs) return;
 
-  function pct(n) { return Math.round(n * 100) + '%'; }
+  function pct(n) {
+    const value = Number(n || 0) * 100;
+    return value.toFixed(2) + '%';
+  }
 
   host.innerHTML = [
-    '<span class="tr-prob-item tr-prob--banker">B ' + pct(probs.banker) + '</span>',
-    '<span class="tr-prob-item tr-prob--player">P ' + pct(probs.player) + '</span>',
-    '<span class="tr-prob-item tr-prob--tie">T ' + pct(probs.tie) + '</span>',
-    '<span class="tr-prob-item tr-prob--pair">BP ' + pct(probs.bankerPair) + '</span>',
-    '<span class="tr-prob-item tr-prob--pair">PP ' + pct(probs.playerPair) + '</span>',
-    '<span class="tr-prob-item tr-prob--lucky">L6 ' + pct(probs.luckySix) + '</span>'
+    '<div class="tr-prob-card tr-prob--player"><span>PLAYER</span><strong>' + pct(probs.player) + '</strong></div>',
+    '<div class="tr-prob-card tr-prob--banker"><span>BANKER</span><strong>' + pct(probs.banker) + '</strong></div>',
+    '<div class="tr-prob-card tr-prob--tie"><span>TIE</span><strong>' + pct(probs.tie) + '</strong></div>',
+    '<div class="tr-prob-card tr-prob--pair"><span>P PAIR</span><strong>' + pct(probs.playerPair) + '</strong></div>',
+    '<div class="tr-prob-card tr-prob--pair"><span>B PAIR</span><strong>' + pct(probs.bankerPair) + '</strong></div>',
+    '<div class="tr-prob-card tr-prob--lucky"><span>LUCKY 6</span><strong>' + pct(probs.luckySix) + '</strong></div>'
   ].join('');
 }
 

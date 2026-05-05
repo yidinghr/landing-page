@@ -7,11 +7,11 @@ import { SHOE_PRESETS } from './scenarios/shoe-presets.js';
 import { createState } from './training-state.js';
 import { createOrchestrator } from './training-orchestrator.js';
 import { PHASES } from './phase-machine.js';
-import { renderBalance, renderBetZones, renderChipTray, renderDetail, renderHands, renderLog, renderPayoutSummary, renderResult, renderSeats, renderShoe, renderStats } from './ui/table-renderer.js';
+import { renderBalance, renderBetZones, renderChipTray, renderDetail, renderHands, renderLog, renderNpcChat, renderPayoutSummary, renderResult, renderSeats, renderShoe, renderStats } from './ui/table-renderer.js';
 import { renderSettlementBoard } from './ui/settlement-renderer.js';
 import { renderAllRoads } from './ui/result-boards-renderer.js';
 import { renderCardCounter, renderFeedback, renderLiveProb } from './ui/card-counter-renderer.js';
-import { probFromShoe } from './engines/prob-engine.js';
+import { exactBaccaratProbabilities } from './engines/prob-engine.js';
 import { isSettlementComplete } from './engines/payout-validator.js';
 import { initCardDrag, initChipDrag, triggerShoeShake } from './ui/drag-engine.js';
 import { createSettingsPanel } from './ui/settings-panel.js';
@@ -28,14 +28,14 @@ const getState = () => _state, setState = (next) => { _state = next; };
 
 const byId = (id) => document.getElementById(id);
 const el = [
-  'shoeFill', 'shoeWarn', 'burnNotice', 'btnSettings', 'settingsRoot', 'pCards', 'bCards', 'pScore', 'bScore', 'resultBox', 'roundDetail',
+  'shoeFill', 'shoeWarn', 'burnNotice', 'btnSettings', 'btnPanelSettings', 'settingsRoot', 'pCards', 'bCards', 'pScore', 'bScore', 'resultBox', 'roundDetail',
   'btnCloseBets', 'btnDeal', 'btnAutoDeal', 'btnReveal', 'btnNext', 'btnShoe', 'balanceAmt', 'totalBetAmt', 'payoutSummary', 'btnSubmitBets',
   'settlementBoard', 'btnClearBets', 'rulesName', 'statsPanel', 'insurancePanel', 'insBankerScore', 'insPlayerBet', 'insMaxBet', 'insEligibleCount',
   'insuranceSeatRows', 'insCurrentBet', 'btnInsDecline', 'btnIns25', 'btnIns50', 'btnInsConfirm', 'btnInsuranceNpcRound'
 ].reduce((acc, id) => (acc[id] = byId(id), acc), {});
 Object.assign(el, Object.fromEntries([
   ['chipTray', 'tr-chip-tray'], ['cardSource', 'tr-card-source'], ['feedbackPanel', 'tr-feedback-panel'], ['bankerArea', 'tr-banker-area'], ['playerArea', 'tr-player-area'], ['betMatrix', 'tr-bet-matrix'], ['controlsBar', 'tr-controls-bar'],
-  ['overlayPanel', 'tr-overlay-panel'], ['liveProb', 'tr-live-prob'], ['cardCounter', 'tr-card-counter'], ['sessionLog', 'tr-session-log'], ['shoeCount', 'tr-shoe-count'], ['roadBead', 'tr-road-bead'], ['roadBig', 'tr-road-big'], ['roadEye', 'tr-road-eye'], ['roadSmall', 'tr-road-small']
+  ['overlayPanel', 'tr-overlay-panel'], ['liveProb', 'tr-live-prob'], ['cardCounter', 'tr-card-counter'], ['sessionLog', 'tr-session-log'], ['shoeCount', 'tr-shoe-count'], ['panelShoeCount', 'tr-panel-shoe-count'], ['npcChat', 'tr-npc-chat'], ['roadBead', 'tr-road-bead'], ['roadBig', 'tr-road-big'], ['roadEye', 'tr-road-eye'], ['roadSmall', 'tr-road-small']
 ].map(([key, id]) => [key, byId(id)])));
 
 const orchestrator = createOrchestrator({
@@ -54,6 +54,7 @@ const fmtMoney = (value) => Number(value || 0).toLocaleString();
 const activeSeat = (state) => getSeat(state.seats, state.activeSeatId);
 const getDraft = (state, seatId) => Number(state.insuranceDrafts[seatId] || 0);
 const isIdlePhase = (phase) => phase === PHASES.IDLE || phase === PHASES.BETTING;
+const LIMITS_KEY = 'yiding_training_table_limits_v1';
 
 function canResolveInsuranceSeat(state, seatId) {
   if (state.phase !== PHASES.INSURANCE) return false;
@@ -77,6 +78,28 @@ function showBurnNotice(state = getState()) {
   el.burnNotice.textContent = formatBurnNotice(state);
   el.burnNotice.hidden = false;
   burnTimer = setTimeout(function () { el.burnNotice.hidden = true; }, 3000);
+}
+
+function initPanelLimits() {
+  const inputs = ['trLimitMin', 'trLimitMax', 'trLimitTie', 'trLimitPair']
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  if (!inputs.length) return;
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(LIMITS_KEY) || '{}');
+    inputs.forEach(function (input) {
+      if (saved[input.id] !== undefined) input.value = saved[input.id];
+    });
+  } catch (_) {}
+
+  inputs.forEach(function (input) {
+    input.addEventListener('change', function () {
+      const payload = {};
+      inputs.forEach(function (node) { payload[node.id] = node.value; });
+      try { localStorage.setItem(LIMITS_KEY, JSON.stringify(payload)); } catch (_) {}
+    });
+  });
 }
 
 function showFeedback(msg, severity) {
@@ -212,8 +235,10 @@ function renderAll() {
   const state = getState();
   if (!state.seats.length) return;
   const seat = activeSeat(state);
+  const exactProbs = exactBaccaratProbabilities(state.shoe, state.pCards, state.bCards);
   if (el.overlayPanel) el.overlayPanel.style.display = (state.phase === PHASES.SETTLEMENT || state.phase === PHASES.INSURANCE) ? 'flex' : 'none';
   renderShoe(el, state.shoe);
+  if (el.panelShoeCount && el.shoeCount) el.panelShoeCount.textContent = el.shoeCount.textContent;
   renderHands(el, state.pCards, state.bCards, {
     role: state.role,
     phase: state.phase,
@@ -238,7 +263,8 @@ function renderAll() {
     chipsCollectedBySeat: state.chipsCollectedBySeat
   });
   renderCardCounter(el.cardCounter, state.shoe);
-  renderLiveProb(el.liveProb, probFromShoe(state.shoe));
+  renderLiveProb(el.liveProb, exactProbs);
+  renderNpcChat(el.npcChat, state);
   renderInsurancePanel(state);
   renderRole(state);
   renderControls(state);
@@ -266,6 +292,7 @@ function attachEvents() {
   if (el.btnClearBets) el.btnClearBets.addEventListener('click', () => orchestrator.clearBets());
   if (el.btnSubmitBets) el.btnSubmitBets.addEventListener('click', () => orchestrator.submitBets());
   if (el.btnSettings) el.btnSettings.addEventListener('click', () => settingsPanel.open());
+  if (el.btnPanelSettings) el.btnPanelSettings.addEventListener('click', () => settingsPanel.open());
   if (el.settlementBoard) el.settlementBoard.addEventListener('click', onSettlementActionClick);
   if (el.btnInsDecline) el.btnInsDecline.addEventListener('click', () => orchestrator.insurance(getState().activeSeatId, 'decline'));
   if (el.btnInsConfirm) el.btnInsConfirm.addEventListener('click', () => orchestrator.insurance(getState().activeSeatId, 'confirm'));
@@ -394,5 +421,6 @@ export function init() {
   if (el.betMatrix) buildSvgBetLayout(el.betMatrix);
   orchestrator.newShoe({ confirm: false, promptForCut: false, notify: false });
   attachEvents();
+  initPanelLimits();
   initInteractions();
 }
