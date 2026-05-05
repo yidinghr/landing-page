@@ -13,16 +13,22 @@ const CX = 500;
 const CY = 120;
 const Y_SCALE = 0.7;
 const SEAT_COUNT = 5;
-const FAN_HALF_SPAN = 61;
-const SEAT_GAP = 1.4;
 
 const BANDS = {
-  pairIn: 118,
-  pairOut: 184,
+  pairIn: 112,
+  pairOut: 180,
   mainOut: 304,
-  luckyOut: 352,
+  luckyOut: 346,
   seat: 382
 };
+
+const SEAT_ARCS = [
+  [-58, -35],
+  [-34, -12],
+  [-11, 11],
+  [12, 34],
+  [35, 58]
+];
 
 const ZONE_KEY = {
   playerPair: "ppair",
@@ -78,33 +84,38 @@ function midPoint(rIn, rOut, aStart, aEnd) {
   return point((aStart + aEnd) / 2, (rIn + rOut) / 2);
 }
 
-function makeZone(seatId, zone, d, label, labelPos, extraClass) {
-  const cls = "tr-matrix-cell tr-svg-zone tr-zone--" + ZONE_KEY[zone] + (extraClass ? " " + extraClass : "");
-  const g = el("g", { class: cls, "data-seat": String(seatId), "data-zone": zone });
-  g.appendChild(el("path", { d, class: "tr-svg-zone__shape" }));
-  g.appendChild(el("text", {
-    class: "tr-svg-zone__label",
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function labelRotation(aStart, aEnd, scale, max) {
+  return clamp(((aStart + aEnd) / 2) * scale, -max, max);
+}
+
+function rotatedTextAttrs(labelPos, rotateDeg) {
+  const attrs = {
     x: labelPos.x.toFixed(1),
     y: labelPos.y.toFixed(1),
     "text-anchor": "middle",
     "dominant-baseline": "middle"
-  }, label));
-  g.appendChild(el("text", {
-    class: "tr-zone-bet-amt",
-    x: labelPos.x.toFixed(1),
-    y: (labelPos.y + 17).toFixed(1),
-    "text-anchor": "middle",
-    "dominant-baseline": "middle",
-    hidden: ""
-  }));
-  g.appendChild(el("text", {
-    class: "tr-zone-payout",
-    x: labelPos.x.toFixed(1),
-    y: (labelPos.y + 32).toFixed(1),
-    "text-anchor": "middle",
-    "dominant-baseline": "middle",
-    hidden: ""
-  }));
+  };
+  if (rotateDeg) {
+    attrs.transform = "rotate(" + rotateDeg.toFixed(1) + " " + labelPos.x.toFixed(1) + " " + labelPos.y.toFixed(1) + ")";
+  }
+  return attrs;
+}
+
+function makeZone(seatId, zone, d, label, labelPos, extraClass, rotateDeg) {
+  const cls = "tr-matrix-cell tr-svg-zone tr-zone--" + ZONE_KEY[zone] + (extraClass ? " " + extraClass : "");
+  const g = el("g", { class: cls, "data-seat": String(seatId), "data-zone": zone });
+  g.appendChild(el("path", { d, class: "tr-svg-zone__shape" }));
+  g.appendChild(el("text", Object.assign({ class: "tr-svg-zone__label" }, rotatedTextAttrs(labelPos, rotateDeg)), label));
+
+  const betPos = { x: labelPos.x, y: labelPos.y + 17 };
+  g.appendChild(el("text", Object.assign({ class: "tr-zone-bet-amt", hidden: "" }, rotatedTextAttrs(betPos, rotateDeg)), ""));
+
+  const payoutPos = { x: labelPos.x, y: labelPos.y + 32 };
+  g.appendChild(el("text", Object.assign({ class: "tr-zone-payout", hidden: "" }, rotatedTextAttrs(payoutPos, rotateDeg)), ""));
   return g;
 }
 
@@ -122,6 +133,13 @@ function buildDefs() {
   feltDark.appendChild(el("stop", { offset: "60%", "stop-color": "rgba(255,255,255,0)" }));
   feltDark.appendChild(el("stop", { offset: "100%", "stop-color": "rgba(0,0,0,0.22)" }));
   defs.appendChild(feltDark);
+
+  const feltTexture = el("filter", { id: "tr-felt-texture", x: "-8%", y: "-8%", width: "116%", height: "116%" });
+  feltTexture.appendChild(el("feTurbulence", { type: "fractalNoise", baseFrequency: "0.8 0.18", numOctaves: "2", seed: "22", result: "noise" }));
+  feltTexture.appendChild(el("feColorMatrix", { in: "noise", type: "matrix", values: "0.05 0 0 0 0  0 0.09 0 0 0.02  0 0 0.12 0 0.04  0 0 0 0.2 0", result: "grain" }));
+  feltTexture.appendChild(el("feComposite", { in: "grain", in2: "SourceAlpha", operator: "in", result: "grainClip" }));
+  feltTexture.appendChild(el("feBlend", { in: "SourceGraphic", in2: "grainClip", mode: "multiply" }));
+  defs.appendChild(feltTexture);
 
   const wood = el("linearGradient", { id: "tr-wood-rail", x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
   wood.appendChild(el("stop", { offset: "0%", "stop-color": "#b86d27" }));
@@ -211,6 +229,14 @@ function buildPlayerChairs(svg) {
 }
 
 function buildTableShell(svg) {
+  svg.appendChild(el("ellipse", {
+    class: "tr-svg-floor-shadow",
+    cx: 500,
+    cy: 486,
+    rx: 416,
+    ry: 64,
+    fill: "rgba(0,0,0,0.55)"
+  }));
   svg.appendChild(el("path", {
     class: "tr-svg-leather",
     d: [
@@ -278,29 +304,29 @@ function buildTableShell(svg) {
     ].join(" "),
     fill: "url(#tr-felt-depth)"
   }));
-
 }
 
 function buildPlayerChipSlots(svg) {
   const slots = [
-    { a: -47, len: 18, label: "Seat 1" },
-    { a: -24, len: 17, label: "Seat 2" },
-    { a: 0, len: 17, label: "Seat 3" },
-    { a: 24, len: 17, label: "Seat 4" },
-    { a: 47, len: 18, label: "Seat 5" }
+    { a: -47, len: 17, label: "Seat 1" },
+    { a: -24, len: 16, label: "Seat 2" },
+    { a: 0, len: 16, label: "Seat 3" },
+    { a: 24, len: 16, label: "Seat 4" },
+    { a: 47, len: 17, label: "Seat 5" }
   ];
 
   slots.forEach(function (slot, index) {
-    const start = point(slot.a - slot.len / 2, 414);
+    const start = point(slot.a - slot.len / 2, 410);
     const mid = point(slot.a, 430);
-    const end = point(slot.a + slot.len / 2, 414);
-    const chip = point(slot.a, 392);
+    const end = point(slot.a + slot.len / 2, 410);
+    const chip = point(slot.a, 386);
+    const plate = point(slot.a, 415);
     svg.appendChild(el("path", {
       class: "tr-svg-money-slot",
       d: "M " + start.x.toFixed(1) + "," + start.y.toFixed(1) + " Q " + mid.x.toFixed(1) + "," + mid.y.toFixed(1) + " " + end.x.toFixed(1) + "," + end.y.toFixed(1),
       fill: "none",
-      stroke: "rgba(12, 7, 3, 0.86)",
-      "stroke-width": 18,
+      stroke: "rgba(8, 5, 3, 0.92)",
+      "stroke-width": 20,
       "stroke-linecap": "round"
     }));
     svg.appendChild(el("path", {
@@ -313,7 +339,9 @@ function buildPlayerChipSlots(svg) {
     }));
 
     const colors = ["#e73a55", "#34b75f", "#2e85d5", "#ef982f", "#8f45cf"];
+    svg.appendChild(el("ellipse", { class: "tr-svg-slot-plate", cx: plate.x, cy: plate.y - 10, rx: 28, ry: 6, fill: "rgba(255, 173, 65, 0.13)" }));
     svg.appendChild(el("circle", { class: "tr-svg-front-chip", cx: chip.x, cy: chip.y - 18, r: 15, fill: colors[index], stroke: "#fff", "stroke-width": 1.6 }));
+    svg.appendChild(el("circle", { class: "tr-svg-front-chip-gloss", cx: chip.x - 4, cy: chip.y - 23, r: 5, fill: "rgba(255,255,255,0.28)" }));
     svg.appendChild(el("text", { class: "tr-svg-front-chip-label", x: chip.x, y: chip.y - 14, "text-anchor": "middle" }, index === 0 ? "1K" : index === 1 ? "5K" : index === 2 ? "10K" : index === 3 ? "50K" : "100K"));
   });
 }
@@ -328,16 +356,44 @@ function buildDealerArea(svg) {
 
   svg.appendChild(el("path", {
     class: "tr-svg-chip-tray",
-    d: "M 340,166 Q 500,146 660,166 L 654,194 Q 500,176 346,194 Z",
+    d: "M 328,162 Q 500,144 672,162 L 662,196 Q 500,176 338,196 Z",
     fill: "url(#tr-chip-tray-dark)",
-    stroke: "rgba(242, 212, 134, 0.48)"
+    stroke: "rgba(242, 212, 134, 0.58)",
+    "stroke-width": 2
+  }));
+  svg.appendChild(el("path", {
+    class: "tr-svg-chip-tray-hi",
+    d: "M 344,166 Q 500,154 656,166",
+    fill: "none",
+    stroke: "rgba(255,255,255,0.26)",
+    "stroke-width": 2,
+    "stroke-linecap": "round"
   }));
 
-  ["#e93c55", "#28bd64", "#2a83d8", "#f4a53a", "#8d44d8", "#e93c55", "#28bd64", "#2a83d8"].forEach(function (color, i) {
-    const x = 372 + i * 36.5;
+  ["#e93c55", "#28bd64", "#2a83d8", "#f4a53a", "#8d44d8", "#e93c55", "#28bd64", "#2a83d8", "#f4a53a"].forEach(function (color, i) {
+    const x = 354 + i * 36.5;
     const y = 176 - Math.sin((i + 1) / 9 * Math.PI) * 8;
-    svg.appendChild(el("circle", { cx: x, cy: y, r: 11, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
-    svg.appendChild(el("circle", { cx: x, cy: y, r: 5, fill: "rgba(255,255,255,0.22)" }));
+    for (let s = 0; s < 4; s++) {
+      svg.appendChild(el("rect", {
+        class: "tr-svg-tray-chip",
+        x: (x - 10).toFixed(1),
+        y: (y + 6 - s * 5).toFixed(1),
+        width: 20,
+        height: 9,
+        rx: 4,
+        fill: color,
+        stroke: "rgba(255,255,255,0.72)",
+        "stroke-width": 0.8
+      }));
+    }
+    svg.appendChild(el("rect", {
+      x: (x - 7).toFixed(1),
+      y: (y - 13).toFixed(1),
+      width: 14,
+      height: 4,
+      rx: 2,
+      fill: "rgba(255,255,255,0.28)"
+    }));
   });
 
 }
@@ -345,10 +401,7 @@ function buildDealerArea(svg) {
 function buildBetHeaders(svg) {
   [
     ["tr-svg-header-player", 382, 198, "PLAYER"],
-    ["tr-svg-header-banker", 618, 198, "BANKER"],
-    ["tr-svg-header-tie", 500, 228, "TIE"],
-    ["tr-svg-header-small", 452, 244, "SMALL"],
-    ["tr-svg-header-big", 548, 244, "BIG"]
+    ["tr-svg-header-banker", 618, 198, "BANKER"]
   ].forEach(function (row) {
     svg.appendChild(el("text", {
       class: row[0],
@@ -361,31 +414,33 @@ function buildBetHeaders(svg) {
 }
 
 function buildSeatFan(svg) {
-  const total = FAN_HALF_SPAN * 2;
-  const seatSpan = (total - SEAT_GAP * (SEAT_COUNT - 1)) / SEAT_COUNT;
-
   for (let i = 0; i < SEAT_COUNT; i++) {
     const seatId = i + 1;
-    const aStart = -FAN_HALF_SPAN + i * (seatSpan + SEAT_GAP);
-    const aEnd = aStart + seatSpan;
+    const aStart = SEAT_ARCS[i][0];
+    const aEnd = SEAT_ARCS[i][1];
+    const seatSpan = aEnd - aStart;
     const aMid = (aStart + aEnd) / 2;
     const aPairMid = aStart + seatSpan * 0.5;
-    const aMain1 = aStart + seatSpan * 0.36;
-    const aMain2 = aEnd - seatSpan * 0.36;
+    const aMain1 = aStart + seatSpan * 0.34;
+    const aMain2 = aEnd - seatSpan * 0.34;
 
     svg.appendChild(makeZone(
       seatId,
       "playerPair",
       bandPath(BANDS.pairIn, BANDS.pairOut, aStart, aPairMid),
       "P.PAIR",
-      midPoint(BANDS.pairIn, BANDS.pairOut, aStart, aPairMid)
+      midPoint(BANDS.pairIn, BANDS.pairOut, aStart, aPairMid),
+      null,
+      labelRotation(aStart, aPairMid, 0.62, 28)
     ));
     svg.appendChild(makeZone(
       seatId,
       "bankerPair",
       bandPath(BANDS.pairIn, BANDS.pairOut, aPairMid, aEnd),
       "B.PAIR",
-      midPoint(BANDS.pairIn, BANDS.pairOut, aPairMid, aEnd)
+      midPoint(BANDS.pairIn, BANDS.pairOut, aPairMid, aEnd),
+      null,
+      labelRotation(aPairMid, aEnd, 0.62, 28)
     ));
     svg.appendChild(makeZone(
       seatId,
@@ -393,7 +448,8 @@ function buildSeatFan(svg) {
       bandPath(BANDS.pairOut, BANDS.mainOut, aStart, aMain1),
       "P",
       midPoint(BANDS.pairOut, BANDS.mainOut, aStart, aMain1),
-      "tr-svg-zone--main"
+      "tr-svg-zone--main",
+      labelRotation(aStart, aMain1, 0.48, 22)
     ));
     svg.appendChild(makeZone(
       seatId,
@@ -401,7 +457,8 @@ function buildSeatFan(svg) {
       bandPath(BANDS.pairOut, BANDS.mainOut, aMain1, aMain2),
       "T",
       midPoint(BANDS.pairOut, BANDS.mainOut, aMain1, aMain2),
-      "tr-svg-zone--tie-main"
+      "tr-svg-zone--tie-main",
+      labelRotation(aMain1, aMain2, 0.38, 16)
     ));
     svg.appendChild(makeZone(
       seatId,
@@ -409,14 +466,17 @@ function buildSeatFan(svg) {
       bandPath(BANDS.pairOut, BANDS.mainOut, aMain2, aEnd),
       "B",
       midPoint(BANDS.pairOut, BANDS.mainOut, aMain2, aEnd),
-      "tr-svg-zone--main"
+      "tr-svg-zone--main",
+      labelRotation(aMain2, aEnd, 0.48, 22)
     ));
     svg.appendChild(makeZone(
       seatId,
       "luckySix",
       bandPath(BANDS.mainOut, BANDS.luckyOut, aStart, aEnd),
       "LUCKY 6",
-      midPoint(BANDS.mainOut, BANDS.luckyOut, aStart, aEnd)
+      midPoint(BANDS.mainOut, BANDS.luckyOut, aStart, aEnd),
+      null,
+      labelRotation(aStart, aEnd, 0.5, 22)
     ));
 
     const seatPos = point(aMid, BANDS.seat);
@@ -428,6 +488,30 @@ function buildSeatFan(svg) {
       "dominant-baseline": "middle"
     }, "Seat " + seatId));
   }
+}
+
+function buildCenterPlaque(svg) {
+  svg.appendChild(el("path", {
+    class: "tr-svg-center-plaque",
+    d: "M 424,218 Q 500,206 576,218 L 564,254 Q 500,246 436,254 Z",
+    fill: "rgba(5, 68, 111, 0.58)",
+    stroke: "rgba(220, 244, 255, 0.58)",
+    "stroke-width": 1.4
+  }));
+  svg.appendChild(el("text", {
+    class: "tr-svg-plaque-title",
+    x: 500,
+    y: 231,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle"
+  }, "BACCARAT"));
+  svg.appendChild(el("text", {
+    class: "tr-svg-plaque-sub",
+    x: 500,
+    y: 246,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle"
+  }, "TIE 8 TO 1"));
 }
 
 function buildFrontRail(svg) {
@@ -449,8 +533,9 @@ export function buildSvgBetLayout(host) {
   buildPlayerChairs(svg);
   buildTableShell(svg);
   buildDealerArea(svg);
-  buildBetHeaders(svg);
   buildSeatFan(svg);
+  buildCenterPlaque(svg);
+  buildBetHeaders(svg);
   buildFrontRail(svg);
 
   host.appendChild(svg);
