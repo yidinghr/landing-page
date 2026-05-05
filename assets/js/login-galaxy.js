@@ -96,7 +96,7 @@
   let twinkleStars = [];
   let flareStars = [];
   let meteors = [];
-  let asteroidBelt = [];
+  let loginPlanets = [];
   let nextFlareAt = 0;
   let nextMeteorAt = 0;
   let lastMeteorFrameAt = 0;
@@ -313,26 +313,17 @@
     }
   }
 
-  function buildAsteroidBelt(rng) {
-    const count = isLoginPage ? 260 : 0;
-    asteroidBelt = [];
-
-    for (let index = 0; index < count; index += 1) {
-      const arm = index % 4;
-      const orbit = Math.pow(rng(), 0.58);
-      asteroidBelt.push({
-        arm: arm,
-        orbit: orbit,
-        angle: arm * Math.PI * 0.5 + orbit * Math.PI * 5.6 + randomBetween(-0.28, 0.28, rng),
-        jitterX: randomBetween(-1, 1, rng),
-        jitterY: randomBetween(-1, 1, rng),
-        size: randomBetween(0.72, 2.7, rng) * (orbit < 0.18 ? 1.3 : 1),
-        speed: randomBetween(0.035, 0.12, rng) * (rng() < 0.24 ? -1 : 1),
-        depth: randomBetween(0.52, 1.18, rng),
-        alpha: randomBetween(0.26, 0.86, rng) * (1 - orbit * 0.28),
-        color: rng() < 0.58 ? COLORS.amber : rng() < 0.82 ? COLORS.violet : COLORS.cool
-      });
-    }
+  function buildLoginPlanets() {
+    loginPlanets = isLoginPage
+      ? [
+          { orbit: 0.44, size: 12, speed: 0.18, phase: 0.15, colorA: [255, 229, 154], colorB: [178, 92, 34], ring: false },
+          { orbit: 0.58, size: 17, speed: -0.12, phase: 2.25, colorA: [126, 195, 255], colorB: [31, 75, 180], ring: false },
+          { orbit: 0.73, size: 10, speed: 0.1, phase: 4.1, colorA: [255, 178, 105], colorB: [132, 54, 34], ring: false },
+          { orbit: 0.88, size: 22, speed: -0.07, phase: 5.45, colorA: [230, 198, 132], colorB: [98, 70, 54], ring: true },
+          { orbit: 1.03, size: 14, speed: 0.055, phase: 3.25, colorA: [177, 151, 255], colorB: [54, 40, 126], ring: false },
+          { orbit: 1.16, size: 8, speed: -0.16, phase: 1.35, colorA: [180, 224, 255], colorB: [50, 90, 150], ring: false }
+        ]
+      : [];
   }
 
   function drawBaseScene() {
@@ -353,7 +344,7 @@
     drawStaticConstellations(sceneContext, rng);
     drawStaticStars(sceneContext, rng);
     buildTwinkleStars(rng);
-    buildAsteroidBelt(rng);
+    buildLoginPlanets();
 
     const vignette = sceneContext.createRadialGradient(
       width * 0.5,
@@ -376,33 +367,33 @@
     }
 
     const centerX = width * 0.5;
-    const centerY = height * 0.42;
-    const coreRadius = clamp(Math.min(width, height) * 0.018, 12, 28);
-    const orbitRadiusX = clamp(width * 0.28, 260, 520);
-    const orbitRadiusY = clamp(height * 0.19, 112, 230);
+    const centerY = height * 0.47;
+    const coreRadius = clamp(Math.min(width, height) * 0.07, 46, 94);
+    const orbitRadiusX = clamp(width * 0.27, 250, 500);
+    const orbitRadiusY = clamp(height * 0.17, 105, 220);
     const time = timestamp * 0.001;
 
     context.save();
     context.globalCompositeOperation = "screen";
 
-    drawGlow(context, centerX, centerY, orbitRadiusX * 0.62, COLORS.violet, 0.18);
-    drawGlow(context, centerX, centerY, orbitRadiusX * 0.34, COLORS.amber, 0.14);
-    drawGlow(context, centerX - orbitRadiusX * 0.08, centerY - orbitRadiusY * 0.14, orbitRadiusX * 0.22, COLORS.white, 0.1);
+    drawGlow(context, centerX, centerY, coreRadius * 4.8, COLORS.violet, 0.22);
+    drawGlow(context, centerX, centerY, coreRadius * 3.2, COLORS.cool, 0.14);
+    drawGlow(context, centerX - coreRadius * 0.34, centerY - coreRadius * 0.3, coreRadius * 2.1, COLORS.amber, 0.16);
 
     context.save();
     context.translate(centerX, centerY);
     context.rotate(-0.18);
-    for (let ring = 0; ring < 4; ring += 1) {
+    for (let ring = 0; ring < 6; ring += 1) {
       context.strokeStyle = ring % 2 === 0
-        ? "rgba(236, 194, 102, " + (0.09 - ring * 0.012) + ")"
-        : "rgba(194, 130, 255, " + (0.08 - ring * 0.01) + ")";
+        ? "rgba(236, 194, 102, " + (0.14 - ring * 0.014) + ")"
+        : "rgba(194, 130, 255, " + (0.12 - ring * 0.012) + ")";
       context.lineWidth = 1;
       context.beginPath();
       context.ellipse(
         0,
         0,
-        orbitRadiusX * (0.44 + ring * 0.18),
-        orbitRadiusY * (0.42 + ring * 0.18),
+        orbitRadiusX * (0.42 + ring * 0.15),
+        orbitRadiusY * (0.42 + ring * 0.15),
         0,
         0,
         Math.PI * 2
@@ -411,37 +402,85 @@
     }
     context.restore();
 
-    asteroidBelt.forEach(function (asteroid) {
-      const angle = asteroid.angle + time * asteroid.speed;
-      const orbit = asteroid.orbit;
-      const spiralPull = 0.28 + orbit * 0.9;
-      const ellipseX = Math.cos(angle) * orbitRadiusX * spiralPull + asteroid.jitterX * orbitRadiusX * 0.045;
-      const ellipseY = Math.sin(angle) * orbitRadiusY * spiralPull + asteroid.jitterY * orbitRadiusY * 0.09;
+    const coreGradient = context.createRadialGradient(
+      centerX - coreRadius * 0.36,
+      centerY - coreRadius * 0.34,
+      coreRadius * 0.08,
+      centerX,
+      centerY,
+      coreRadius
+    );
+    coreGradient.addColorStop(0, "rgba(255, 248, 220, 0.98)");
+    coreGradient.addColorStop(0.2, "rgba(248, 209, 120, 0.94)");
+    coreGradient.addColorStop(0.48, "rgba(118, 82, 212, 0.92)");
+    coreGradient.addColorStop(0.74, "rgba(28, 48, 136, 0.92)");
+    coreGradient.addColorStop(1, "rgba(8, 6, 28, 0.98)");
+
+    context.fillStyle = coreGradient;
+    context.beginPath();
+    context.arc(centerX, centerY, coreRadius * (1 + Math.sin(time * 0.9) * 0.025), 0, Math.PI * 2);
+    context.fill();
+
+    context.globalCompositeOperation = "source-atop";
+    context.fillStyle = "rgba(255, 238, 184, 0.16)";
+    for (let band = -3; band <= 3; band += 1) {
+      context.beginPath();
+      context.ellipse(
+        centerX,
+        centerY + band * coreRadius * 0.18 + Math.sin(time * 0.35 + band) * 1.8,
+        coreRadius * (0.74 + Math.abs(band) * 0.055),
+        coreRadius * 0.045,
+        -0.18,
+        0,
+        Math.PI * 2
+      );
+      context.fill();
+    }
+
+    context.globalCompositeOperation = "screen";
+
+    loginPlanets.forEach(function (planet) {
+      const angle = planet.phase + time * planet.speed;
+      const ellipseX = Math.cos(angle) * orbitRadiusX * planet.orbit;
+      const ellipseY = Math.sin(angle) * orbitRadiusY * planet.orbit;
       const tiltCos = Math.cos(-0.18);
       const tiltSin = Math.sin(-0.18);
       const x = centerX + ellipseX * tiltCos - ellipseY * tiltSin;
       const y = centerY + ellipseX * tiltSin + ellipseY * tiltCos;
       const nearSide = Math.sin(angle) > -0.2;
-      const shimmer = 0.7 + Math.sin(time * 2.1 + asteroid.angle * 3.7) * 0.3;
-      const radius = asteroid.size * asteroid.depth * (nearSide ? 1 : 0.62) * shimmer;
-      const alpha = asteroid.alpha * (nearSide ? 1 : 0.42);
+      const radius = planet.size * clamp(Math.min(width, height) / 720, 0.82, 1.18) * (nearSide ? 1 : 0.76);
+      const alpha = nearSide ? 0.94 : 0.44;
 
-      context.fillStyle = rgba(asteroid.color, alpha);
+      const planetGradient = context.createRadialGradient(
+        x - radius * 0.35,
+        y - radius * 0.36,
+        radius * 0.08,
+        x,
+        y,
+        radius
+      );
+      planetGradient.addColorStop(0, rgba(COLORS.white, alpha));
+      planetGradient.addColorStop(0.2, rgba(planet.colorA, alpha));
+      planetGradient.addColorStop(1, rgba(planet.colorB, alpha));
+
+      drawGlow(context, x, y, radius * 4.4, planet.colorA, alpha * 0.16);
+      context.fillStyle = planetGradient;
       context.beginPath();
       context.arc(x, y, radius, 0, Math.PI * 2);
       context.fill();
 
-      if (nearSide && radius > 1.6) {
-        drawGlow(context, x, y, radius * 5.4, asteroid.color, alpha * 0.24);
+      if (planet.ring) {
+        context.save();
+        context.translate(x, y);
+        context.rotate(-0.28);
+        context.strokeStyle = "rgba(255, 224, 166, " + (alpha * 0.58) + ")";
+        context.lineWidth = Math.max(1, radius * 0.12);
+        context.beginPath();
+        context.ellipse(0, 0, radius * 1.85, radius * 0.48, 0, 0, Math.PI * 2);
+        context.stroke();
+        context.restore();
       }
     });
-
-    context.fillStyle = rgba(COLORS.white, 0.9);
-    context.beginPath();
-    context.arc(centerX, centerY, coreRadius * (0.9 + Math.sin(time * 1.4) * 0.08), 0, Math.PI * 2);
-    context.fill();
-    drawGlow(context, centerX, centerY, coreRadius * 7.2, COLORS.white, 0.22);
-    drawGlow(context, centerX, centerY, coreRadius * 12.5, COLORS.amber, 0.12);
 
     context.restore();
   }
