@@ -794,17 +794,22 @@
     cardEl.classList.toggle('is-red', meta.red);
     faceEl.innerHTML = cardFaceHtml(card);
     cardEl.style.setProperty('--reveal', '0');
-    faceEl.style.clipPath = 'polygon(0 100%, 0 100%, 0 100%, 0 100%)';
+    faceEl.style.clipPath = 'circle(0% at 50% 100%)';
 
-    state.squeeze = { handKey, idx, reveal: 0, dragging: false, startX: 0, startY: 0 };
+    state.squeeze = { handKey, idx, reveal: 0, dragging: false, startX: 0, startY: 0, anchorX: 50, anchorY: 100 };
     modal.hidden = false;
 
     function onDown(e) {
       if (e.touches === undefined && e.button !== 0 && e.button !== 2) return;
       e.preventDefault();
+      const point = e.touches ? e.touches[0] : e;
+      const rect = cardEl.getBoundingClientRect();
       state.squeeze.dragging = true;
-      state.squeeze.startX = (e.touches ? e.touches[0].clientX : e.clientX);
-      state.squeeze.startY = (e.touches ? e.touches[0].clientY : e.clientY);
+      state.squeeze.startX = point.clientX;
+      state.squeeze.startY = point.clientY;
+      state.squeeze.anchorX = Math.max(0, Math.min(100, ((point.clientX - rect.left) / rect.width) * 100));
+      state.squeeze.anchorY = Math.max(0, Math.min(100, ((point.clientY - rect.top) / rect.height) * 100));
+      faceEl.style.clipPath = 'circle(0% at ' + state.squeeze.anchorX + '% ' + state.squeeze.anchorY + '%)';
     }
 
     function onMove(e) {
@@ -813,21 +818,12 @@
       const y = e.touches ? e.touches[0].clientY : e.clientY;
       const dy = state.squeeze.startY - y;
       const dx = x - state.squeeze.startX;
-      // Bottom-left squeeze: moving upward does most of the reveal, with a
-      // slight reward for pulling toward the card center/right.
-      const pull = Math.max(dy / 270, (dy + Math.max(0, dx) * 0.45) / 320);
+      const pull = Math.max(dy / 270, (dy + Math.abs(dx) * 0.18) / 320);
       const r = Math.max(state.squeeze.reveal, Math.max(0, Math.min(1, pull)));
       state.squeeze.reveal = r;
       cardEl.style.setProperty('--reveal', String(r));
-      if (r < 0.76) {
-        const topY = Math.max(0, 100 - r * 125);
-        const rightX = Math.min(100, r * 132);
-        faceEl.style.clipPath = 'polygon(0 100%, 0 ' + topY + '%, ' + rightX + '% 100%, ' + rightX + '% 100%)';
-      } else {
-        const rightTopY = Math.max(0, (1 - r) / 0.24 * 100);
-        faceEl.style.clipPath = 'polygon(0 100%, 0 0, 100% ' + rightTopY + '%, 100% 100%)';
-      }
-      cardEl.style.transform = 'translate(' + (-r * 18) + 'px, ' + (-r * 58) + 'px) rotate(' + (-r * 4) + 'deg)';
+      faceEl.style.clipPath = 'circle(' + (r * 148) + '% at ' + state.squeeze.anchorX + '% ' + state.squeeze.anchorY + '%)';
+      cardEl.style.transform = 'translate(' + (dx * 0.04) + 'px, ' + (-r * 58) + 'px) rotate(' + (dx * 0.015) + 'deg)';
     }
 
     function onUp() {
@@ -841,7 +837,7 @@
           renderHand(hk, false);
         }
         cardEl.style.setProperty('--reveal', '1');
-        faceEl.style.clipPath = 'polygon(0 100%, 0 0, 100% 0, 100% 100%)';
+        faceEl.style.clipPath = 'circle(148% at ' + state.squeeze.anchorX + '% ' + state.squeeze.anchorY + '%)';
         setTimeout(function () {
           closeSqueeze();
           settleIfPlayerRevealComplete();
