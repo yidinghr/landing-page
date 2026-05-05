@@ -51,7 +51,11 @@
     balance: STARTING_BALANCE,
     phase:   'betting',  // 'betting' | 'dealing' | 'settled'
     drag:    null,
-    squeeze: null
+    squeeze: null,
+    // Round history — appended on every settle, used by the roadmap modal
+    // and by the right-panel empirical % update.
+    // Each entry: { winner: 'P'|'B'|'T', pp: bool, bp: bool, l6: bool }
+    history: []
   };
 
   // ---------------------------------------------------------------------
@@ -131,9 +135,12 @@
       total += chip.value;
       const dot = document.createElement('div');
       dot.className = 'tr-zone-chip ' + chip.cls;
+      // Center the chip on the zone (offsetting by -50% of its own size)
+      // and stagger upward as more chips are added so the pile looks 3D.
       const offsetY = -i * 4;
       const offsetX = (i % 2 === 0 ? -1 : 1) * Math.min(i, 4);
-      dot.style.transform = 'translate(' + offsetX + 'px, ' + offsetY + 'px)';
+      dot.style.transform =
+        'translate(calc(-50% + ' + offsetX + 'px), calc(-50% + ' + offsetY + 'px))';
       dot.textContent = chip.label;
       stack.appendChild(dot);
     });
@@ -294,10 +301,22 @@
 
     state.balance += payout;
     state.phase = 'settled';
+
+    // Record the round in history (for roadmap + empirical odds)
+    const winnerLetter = winners.has('player') ? 'P'
+                       : winners.has('banker') ? 'B' : 'T';
+    state.history.push({
+      winner: winnerLetter,
+      pp: winners.has('playerPair'),
+      bp: winners.has('bankerPair'),
+      l6: winners.has('lucky6')
+    });
+
     renderHand('player', false);
     renderHand('banker', false);
     renderBalance();
     refreshSettleLabel();
+    updateLiveProb();
     showResultBanner(winners, ps, bs, payout, totalStake);
   }
 
@@ -363,6 +382,177 @@
     el.style.opacity = '1';
     clearTimeout(_hintTimer);
     _hintTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.4s'; }, 1800);
+  }
+
+  // ---------------------------------------------------------------------
+  // Live odds (right-panel) — empirical from history
+  // ---------------------------------------------------------------------
+
+  function updateLiveProb() {
+    const host = document.getElementById('tr-live-prob');
+    if (!host) return;
+
+    const n = state.history.length;
+    if (n === 0) return;  // keep whatever the legacy renderer wrote
+
+    const counts = { P: 0, B: 0, T: 0, pp: 0, bp: 0, l6: 0 };
+    state.history.forEach((r) => {
+      counts[r.winner]++;
+      if (r.pp) counts.pp++;
+      if (r.bp) counts.bp++;
+      if (r.l6) counts.l6++;
+    });
+
+    const pct = (k) => (counts[k] / n * 100).toFixed(2) + '%';
+    const cells = [
+      ['PLAYER',   pct('P')],
+      ['BANKER',   pct('B')],
+      ['TIE',      pct('T')],
+      ['P PAIR',   pct('pp')],
+      ['B PAIR',   pct('bp')],
+      ['LUCKY 6',  pct('l6')]
+    ];
+
+    host.innerHTML = cells.map(([label, value]) =>
+      '<div class="tr-prob-cell"><span class="tr-prob-label">' + label + '</span>' +
+      '<strong class="tr-prob-value">' + value + '</strong></div>'
+    ).join('');
+    host.setAttribute('data-empirical', String(n));
+  }
+
+  // ---------------------------------------------------------------------
+  // Roadmap modal (history overview)
+  // ---------------------------------------------------------------------
+
+  function readLimit(id, fallback) {
+    const inp = document.getElementById(id);
+    const v = inp ? Number(inp.value) : NaN;
+    return Number.isFinite(v) && v > 0 ? '$' + fmt(v) : fallback;
+  }
+
+  function openRoadmap() {
+    const modal = document.getElementById('trRoadmapModal');
+    if (!modal) return;
+    // Reflect the current bet limits (from the right panel inputs)
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setText('rmMin',   readLimit('trLimitMin', '$1,000'));
+    setText('rmMax',   readLimit('trLimitMax', '$500,000'));
+    setText('rmTie',   '0 - ' + readLimit('trLimitTie', '$100,000'));
+    setText('rmPair',  '0 - ' + readLimit('trLimitPair', '$100,000'));
+    setText('rmLucky', '0 - ' + readLimit('trLimitPair', '$100,000'));
+    renderRoadmap();
+    modal.hidden = false;
+  }
+
+  function closeRoadmap() {
+    const modal = document.getElementById('trRoadmapModal');
+    if (modal) modal.hidden = true;
+  }
+
+  function renderRoadmap() {
+    renderBead();
+    renderBigRoad();
+    renderStats();
+  }
+
+  function renderBead() {
+    const host = document.getElementById('rmBead');
+    if (!host) return;
+    const ROWS = 6, COLS = 16, MAX = ROWS * COLS;
+    const slice = state.history.slice(-MAX);
+    host.innerHTML = '';
+    for (let i = 0; i < MAX; i++) {
+      const r = slice[i];
+      const cell = document.createElement('div');
+      if (!r) {
+        cell.className = 'tr-bead-cell tr-bead-cell--empty';
+      } else {
+        cell.className = 'tr-bead-cell tr-bead-cell--' + r.winner;
+        cell.textContent = r.winner;
+        if (r.pp) cell.classList.add('is-pair-p');
+        if (r.bp) cell.classList.add('is-pair-b');
+      }
+      host.appendChild(cell);
+    }
+  }
+
+  function renderBigRoad() {
+    const host = document.getElementById('rmBig');
+    if (!host) return;
+    const ROWS = 6;
+    // Build columns from history, ignoring ties (ties hang on the previous cell)
+    const cols = [];
+    let lastWinner = null;
+    state.history.forEach((r) => {
+      if (r.winner === 'T') {
+        if (cols.length) {
+          const col = cols[cols.length - 1];
+          const lastCell = col[col.length - 1];
+          if (lastCell) lastCell.tieCount = (lastCell.tieCount || 0) + 1;
+        } else {
+          cols.push([{ winner: 'T', tieCount: 1, pp: r.pp, bp: r.bp }]);
+        }
+        return;
+      }
+      if (r.winner !== lastWinner || (cols.length && cols[cols.length - 1].length >= ROWS)) {
+        cols.push([{ winner: r.winner, pp: r.pp, bp: r.bp }]);
+        lastWinner = r.winner;
+      } else {
+        cols[cols.length - 1].push({ winner: r.winner, pp: r.pp, bp: r.bp });
+      }
+    });
+
+    host.innerHTML = '';
+    // Render at least 12 columns so empty grid still shows
+    const totalCols = Math.max(12, cols.length);
+    for (let c = 0; c < totalCols; c++) {
+      const col = cols[c] || [];
+      for (let row = 0; row < ROWS; row++) {
+        const cellData = col[row];
+        const cell = document.createElement('div');
+        if (!cellData) {
+          cell.className = 'tr-big-cell tr-big-cell--empty';
+        } else {
+          cell.className = 'tr-big-cell tr-big-cell--' + cellData.winner;
+          if (cellData.tieCount) cell.classList.add('has-tie');
+          if (cellData.pp) cell.classList.add('is-pair-p');
+          if (cellData.bp) cell.classList.add('is-pair-b');
+        }
+        host.appendChild(cell);
+      }
+    }
+  }
+
+  function renderStats() {
+    const host = document.getElementById('rmStats');
+    if (!host) return;
+    const n = state.history.length;
+    if (n === 0) {
+      host.className = 'tr-roadmap-stats tr-roadmap-stats--empty';
+      host.innerHTML = 'Chưa có ván nào — settle ván đầu tiên để xem dữ liệu.';
+      return;
+    }
+    host.className = 'tr-roadmap-stats';
+    const c = { P: 0, B: 0, T: 0, pp: 0, bp: 0, l6: 0 };
+    state.history.forEach((r) => {
+      c[r.winner]++;
+      if (r.pp) c.pp++;
+      if (r.bp) c.bp++;
+      if (r.l6) c.l6++;
+    });
+    const pct = (k) => (c[k] / n * 100).toFixed(1) + '%';
+    const items = [
+      ['Player',  c.P,  pct('P')],
+      ['Banker',  c.B,  pct('B')],
+      ['Tie',     c.T,  pct('T')],
+      ['P Pair',  c.pp, pct('pp')],
+      ['B Pair',  c.bp, pct('bp')],
+      ['Lucky 6', c.l6, pct('l6')]
+    ];
+    host.innerHTML = items.map(([label, count, pct]) =>
+      '<div><span>' + label + '</span><strong>' + count + '</strong><small>' + pct + '</small></div>'
+    ).join('') +
+      '<div style="grid-column: 1 / -1;"><span>Tổng số ván</span><strong>' + n + '</strong></div>';
   }
 
   // ---------------------------------------------------------------------
@@ -600,8 +790,25 @@
     const modal = document.getElementById('trSqueezeModal');
     if (close) close.addEventListener('click', closeSqueeze);
     if (modal) modal.addEventListener('click', (e) => {
-      // Click outside the card (on the dimmed backdrop) closes the modal
       if (e.target === modal) closeSqueeze();
+    });
+  }
+
+  function wireRoadmap() {
+    const sign = document.getElementById('trPhotoSignBtn');
+    const close = document.getElementById('trRoadmapClose');
+    const modal = document.getElementById('trRoadmapModal');
+    if (sign)  sign.addEventListener('click', openRoadmap);
+    if (close) close.addEventListener('click', closeRoadmap);
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeRoadmap();
+    });
+    // ESC closes whichever modal is open
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeRoadmap();
+        closeSqueeze();
+      }
     });
   }
 
@@ -615,6 +822,7 @@
     wireToolbar();
     wireCardClicks();
     wireSqueezeClose();
+    wireRoadmap();
     renderBalance();
   }
 

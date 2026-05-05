@@ -4668,25 +4668,29 @@ body[data-role="insurance"] #tr-left-panel.tr-side-strip {
 }
 
 /* --- Bet zones (drop targets for chips) ---
-   Invisible by default — they sit transparently over the photo's printed
-   bet labels. Only highlight on hover (or while a chip drag is active). */
+   Completely invisible — no border, no background, no hover highlight.
+   They sit transparently over the photo's printed bet labels and only
+   light up while a chip drag is in progress so the player can see where
+   chips will land. */
 .tr-photo-zone {
   position: absolute;
   pointer-events: auto;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  border: none;
   background: transparent;
-  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: copy;
+  transition: background 0.12s, box-shadow 0.12s;
 }
-body.is-photo-drag .tr-photo-zone,
-.tr-photo-zone:hover {
-  border-color: rgba(242, 212, 134, 0.55);
-  background: rgba(242, 212, 134, 0.06);
+body.is-photo-drag .tr-photo-zone {
+  background: rgba(242, 212, 134, 0.10);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(242, 212, 134, 0.35);
+}
+.tr-photo-zone.is-drag-over {
+  background: rgba(242, 212, 134, 0.22);
+  box-shadow: inset 0 0 0 2px #f2d486, 0 0 18px rgba(242, 212, 134, 0.45);
 }
 .tr-photo-zone.is-drag-over {
   border-color: #f2d486;
@@ -4708,61 +4712,67 @@ body.is-photo-drag .tr-photo-zone,
   white-space: nowrap;
 }
 .tr-zone-stack {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
 }
 .tr-zone-amount {
   position: absolute;
-  bottom: 4px;
-  right: 6px;
+  left: 50%;
+  bottom: -16px;
+  transform: translateX(-50%);
   font-size: 11px;
   font-weight: 800;
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.8);
   pointer-events: none;
+  white-space: nowrap;
 }
 .tr-zone-amount:empty { display: none; }
 
-/* Stacked chip pile inside a zone */
+/* Stacked chip pile inside a zone — chips center on the zone (which sits
+   over the photo's printed bet label) and stagger slightly upward so the
+   stack reads as a small pile of chips. */
 .tr-zone-chip {
   position: absolute;
-  width: 26px;
-  height: 26px;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: 2px solid rgba(0, 0, 0, 0.35);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.02em;
   pointer-events: none;
 }
 
-/* --- Hand zones (drop targets for cards) — also invisible by default --- */
+/* --- Hand zones (drop targets for cards) — invisible at rest, glow only
+   while a card is being dragged. */
 .tr-photo-hand {
   position: absolute;
   pointer-events: auto;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: none;
   background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+  transition: background 0.12s, box-shadow 0.12s;
   cursor: copy;
 }
-body.is-photo-drag-card .tr-photo-hand,
-.tr-photo-hand:hover {
-  border-color: rgba(242, 212, 134, 0.55);
-  background: rgba(242, 212, 134, 0.06);
+body.is-photo-drag-card .tr-photo-hand {
+  background: rgba(242, 212, 134, 0.10);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(242, 212, 134, 0.35);
+}
+.tr-photo-hand.is-drag-over {
+  background: rgba(242, 212, 134, 0.22);
+  box-shadow: inset 0 0 0 2px #f2d486, 0 0 18px rgba(242, 212, 134, 0.45);
 }
 .tr-photo-hand.is-drag-over {
   border-color: #f2d486;
@@ -4982,6 +4992,196 @@ body[data-role="dealer"] .tr-chip:active { cursor: grabbing !important; }
   from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
   to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
+
+/* === Photo sign overlay (clickable area on the dealer's black sign) ==== */
+.tr-photo-sign {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 8px;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+.tr-photo-sign:hover {
+  background: rgba(242, 212, 134, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(242, 212, 134, 0.55), 0 0 14px rgba(242, 212, 134, 0.3);
+}
+
+/* === Roadmap modal (history + bead plate + big road + stats) =========== */
+.tr-roadmap-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.86);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+.tr-roadmap-modal[hidden] { display: none; }
+.tr-roadmap-card {
+  width: 100%;
+  max-width: 1100px;
+  max-height: 92vh;
+  background: linear-gradient(180deg, #f4ede0 0%, #e8dcc4 100%);
+  color: #1a1a1a;
+  border-radius: 14px;
+  border: 3px solid #c8a04a;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tr-roadmap-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  background: linear-gradient(180deg, #1f1a14 0%, #2a221a 100%);
+  color: #f2d486;
+  border-bottom: 2px solid #c8a04a;
+}
+.tr-roadmap-limits {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.tr-roadmap-limits > div {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tr-roadmap-limits span { color: rgba(247, 234, 204, 0.62); font-weight: 600; }
+.tr-roadmap-limits strong { font-size: 16px; font-weight: 800; color: #f2d486; }
+.tr-roadmap-close {
+  font: inherit;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 212, 134, 0.55);
+  background: transparent;
+  color: #f2d486;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+.tr-roadmap-close:hover { background: rgba(242, 212, 134, 0.18); }
+.tr-roadmap-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 18px;
+  padding: 22px;
+  overflow: auto;
+}
+.tr-roadmap-section h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #4a2c10;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid rgba(74, 44, 16, 0.25);
+  padding-bottom: 4px;
+}
+.tr-roadmap-section--stats {
+  grid-column: 1 / -1;
+}
+
+/* --- Bead plate: 6 rows × 16 cols, oldest top-left, newest bottom-right --- */
+.tr-roadmap-bead {
+  display: grid;
+  grid-template-rows: repeat(6, 22px);
+  grid-template-columns: repeat(16, 22px);
+  grid-auto-flow: column;
+  gap: 2px;
+  background: #fff;
+  padding: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+}
+.tr-bead-cell {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  position: relative;
+  background: #fff;
+}
+.tr-bead-cell--P { border-color: #1565c0; color: #1565c0; }
+.tr-bead-cell--B { border-color: #c62828; color: #c62828; }
+.tr-bead-cell--T { border-color: #2e7d32; color: #2e7d32; }
+.tr-bead-cell--empty { border-color: rgba(0,0,0,0.08); }
+.tr-bead-cell::before,
+.tr-bead-cell::after {
+  content: '';
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.tr-bead-cell.is-pair-p::before { top: 1px; left: 1px; background: #1565c0; }
+.tr-bead-cell.is-pair-b::after  { bottom: 1px; right: 1px; background: #c62828; }
+
+/* --- Big road: column-based (consecutive same colour stacks vertically) --- */
+.tr-roadmap-big {
+  display: grid;
+  grid-template-rows: repeat(6, 24px);
+  grid-auto-flow: column;
+  grid-auto-columns: 24px;
+  gap: 2px;
+  background: #fff;
+  padding: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+  overflow-x: auto;
+}
+.tr-big-cell {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  position: relative;
+}
+.tr-big-cell--P { border-color: #1565c0; }
+.tr-big-cell--B { border-color: #c62828; }
+.tr-big-cell--empty { border: 1px dashed rgba(0,0,0,0.08); border-radius: 0; }
+.tr-big-cell.has-tie::before {
+  content: ''; position: absolute;
+  top: 50%; left: 50%; width: 24px; height: 2px;
+  background: #2e7d32;
+  transform: translate(-50%, -50%) rotate(135deg);
+}
+.tr-big-cell.is-pair-p::before { content: ''; position: absolute; top: 1px; left: 1px; width: 5px; height: 5px; border-radius: 50%; background: #1565c0; }
+.tr-big-cell.is-pair-b::after  { content: ''; position: absolute; bottom: 1px; right: 1px; width: 5px; height: 5px; border-radius: 50%; background: #c62828; }
+
+/* --- Stats panel --- */
+.tr-roadmap-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  font-size: 13px;
+}
+.tr-roadmap-stats > div {
+  background: rgba(74, 44, 16, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid rgba(74, 44, 16, 0.15);
+}
+.tr-roadmap-stats > div span { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #4a2c10; opacity: 0.75; }
+.tr-roadmap-stats > div strong { font-size: 18px; color: #1a1a1a; }
+.tr-roadmap-stats > div small  { font-size: 11px; color: #4a2c10; opacity: 0.7; }
+.tr-roadmap-stats--empty { grid-column: 1 / -1; text-align: center; color: #4a2c10; padding: 24px; font-style: italic; }
 
 /* === Squeeze modal (drag-from-bottom-up to reveal a card) ============== */
 .tr-squeeze-modal {

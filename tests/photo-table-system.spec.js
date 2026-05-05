@@ -114,6 +114,48 @@ test('photo table: bet → balance debit, settle → payout, squeeze opens', asy
   expect(errors, 'no console/page errors\n' + errors.join('\n')).toHaveLength(0);
 });
 
+test('photo table: insurance hidden, sign opens roadmap, settle updates live odds', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (err) => errors.push('PAGEERROR: ' + err.message));
+  page.on('console', (msg) => { if (msg.type() === 'error') errors.push('CONSOLE_ERROR: ' + msg.text()); });
+
+  await seedAuth(page);
+  await page.goto('/home/training/index.html', { waitUntil: 'networkidle' });
+
+  // Insurance role button is removed (only Dealer + Customer remain)
+  expect(await page.locator('.tr-role-btn').count()).toBe(2);
+  await expect(page.locator('.tr-role-btn[data-role="insurance"]')).toHaveCount(0);
+
+  // Click sign on photo opens roadmap modal
+  await page.locator('#trPhotoSignBtn').click();
+  await expect(page.locator('#trRoadmapModal')).toBeVisible();
+  await expect(page.locator('#rmStats')).toContainText('Chưa có ván nào');
+  await page.screenshot({ path: 'test-results/photo-roadmap-empty.png' });
+  await page.locator('#trRoadmapClose').click();
+  await expect(page.locator('#trRoadmapModal')).toBeHidden();
+
+  // Play one round so history is non-empty: bet 50K on player, deal 4 cards, settle
+  await dragChip(page, '50000', 'player');
+  for (const h of ['player', 'banker', 'player', 'banker']) {
+    await dragShoeTo(page, h);
+  }
+  await page.locator('#trPhotoSettle').click();
+  await page.waitForTimeout(200);
+
+  // Right-panel live odds now reflect the empirical history (1 round, so 100% / 0%)
+  const probHost = page.locator('#tr-live-prob');
+  await expect(probHost).toHaveAttribute('data-empirical', '1');
+
+  // Reopen roadmap → stats should now show 1 total round
+  await page.locator('#trPhotoSignBtn').click();
+  await expect(page.locator('#trRoadmapModal')).toBeVisible();
+  await expect(page.locator('#rmStats')).toContainText('Tổng số ván');
+  await expect(page.locator('.tr-bead-cell:not(.tr-bead-cell--empty)')).toHaveCount(1);
+  await page.screenshot({ path: 'test-results/photo-roadmap-with-data.png' });
+
+  expect(errors, 'no console/page errors\n' + errors.join('\n')).toHaveLength(0);
+});
+
 test('photo table: clear bets refunds balance', async ({ page }) => {
   await seedAuth(page);
   await page.goto('/home/training/index.html', { waitUntil: 'networkidle' });

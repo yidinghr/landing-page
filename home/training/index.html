@@ -23,7 +23,6 @@
     <div class="tr-role-selector">
       <button type="button" class="tr-role-btn is-active" data-role="dealer">Dealer</button>
       <button type="button" class="tr-role-btn" data-role="customer">Customer</button>
-      <button type="button" class="tr-role-btn" data-role="insurance">Insurance</button>
     </div>
     <div class="tr-header-right">
       <span id="rulesName" class="tr-rules-name">Standard Rules</span>
@@ -134,6 +133,12 @@
           <div class="tr-photo-shoe" id="trPhotoShoe" style="left:78%;top:60%;width:14%;height:24%" title="Kéo lá bài vào ô PLAYER hoặc BANKER">
             <span class="tr-shoe-tag">SHOE</span>
           </div>
+
+          <!-- Roadmap sign overlay — click the dealer's black sign to open the
+               history/roadmap modal. -->
+          <button type="button" class="tr-photo-sign" id="trPhotoSignBtn"
+                  style="left:8%;top:14%;width:14%;height:18%"
+                  title="Xem lịch sử và roadmap"></button>
 
           <!-- Toolbar: settle round, clear bets, clear cards -->
           <div class="tr-photo-tools">
@@ -258,6 +263,38 @@
 </div>
 
 <div id="settingsRoot" class="tr-settings-root" hidden></div>
+
+<!-- Roadmap modal: history grid + big road + stats, opens when the dealer's
+     black sign on the photo is clicked. -->
+<div id="trRoadmapModal" class="tr-roadmap-modal" hidden>
+  <div class="tr-roadmap-card">
+    <div class="tr-roadmap-head">
+      <div class="tr-roadmap-limits">
+        <div><span>Min Bet</span><strong id="rmMin">$1,000</strong></div>
+        <div><span>Max Bet</span><strong id="rmMax">$500,000</strong></div>
+        <div><span>TIE</span><strong id="rmTie">$500 - $6,000</strong></div>
+        <div><span>B/P PAIR</span><strong id="rmPair">$500 - $4,000</strong></div>
+        <div><span>LUCKY 6</span><strong id="rmLucky">$500 - $8,000</strong></div>
+      </div>
+      <button type="button" class="tr-roadmap-close" id="trRoadmapClose" aria-label="Close">×</button>
+    </div>
+
+    <div class="tr-roadmap-body">
+      <section class="tr-roadmap-section">
+        <h4>Bead Plate (60 ván gần nhất)</h4>
+        <div class="tr-roadmap-bead" id="rmBead"></div>
+      </section>
+      <section class="tr-roadmap-section">
+        <h4>Big Road</h4>
+        <div class="tr-roadmap-big" id="rmBig"></div>
+      </section>
+      <section class="tr-roadmap-section tr-roadmap-section--stats">
+        <h4>Thống kê</h4>
+        <div class="tr-roadmap-stats" id="rmStats">Chưa có ván nào.</div>
+      </section>
+    </div>
+  </div>
+</div>
 
 <!-- Squeeze modal: enlarged card the player drags upward to slowly reveal -->
 <div id="trSqueezeModal" class="tr-squeeze-modal" hidden>
