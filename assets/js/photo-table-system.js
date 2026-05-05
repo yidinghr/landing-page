@@ -257,6 +257,30 @@
     return SUITS.find((s) => s.key === key) || SUITS[0];
   }
 
+  function cardFaceHtml(card) {
+    const meta = suitMeta(card.suit);
+    return (
+      '<span class="tr-card-corner tr-card-corner--tl">' +
+        '<strong>' + card.rank + '</strong><em>' + meta.sym + '</em>' +
+      '</span>' +
+      '<span class="tr-card-pip">' + meta.sym + '</span>' +
+      '<span class="tr-card-corner tr-card-corner--br">' +
+        '<strong>' + card.rank + '</strong><em>' + meta.sym + '</em>' +
+      '</span>'
+    );
+  }
+
+  function allCardsFaceUp() {
+    const cards = state.hands.player.concat(state.hands.banker);
+    return cards.length > 0 && cards.every((card) => card.faceUp);
+  }
+
+  function settleIfPlayerRevealComplete() {
+    if (currentMode() === 'player' && state.phase === 'dealing' && allCardsFaceUp()) {
+      settle();
+    }
+  }
+
   function renderHand(handKey, animateLast) {
     const handEl = $('.tr-photo-hand[data-hand="' + handKey + '"]');
     if (!handEl) return;
@@ -273,7 +297,7 @@
       if (card.faceUp) {
         const meta = suitMeta(card.suit);
         if (meta.red) el.classList.add('is-red');
-        el.textContent = card.rank + meta.sym;
+        el.innerHTML = cardFaceHtml(card);
       } else {
         el.classList.add('is-face-down');
         el.title = 'Bấm để nặn bài';
@@ -752,7 +776,7 @@
 
     const meta = suitMeta(card.suit);
     cardEl.classList.toggle('is-red', meta.red);
-    faceEl.textContent = card.rank + meta.sym;
+    faceEl.innerHTML = cardFaceHtml(card);
     cardEl.style.setProperty('--reveal', '0');
 
     state.squeeze = { handKey, idx, reveal: 0, dragging: false, startY: 0 };
@@ -789,7 +813,10 @@
           renderHand(hk, false);
         }
         cardEl.style.setProperty('--reveal', '1');
-        setTimeout(closeSqueeze, 450);
+        setTimeout(function () {
+          closeSqueeze();
+          settleIfPlayerRevealComplete();
+        }, 450);
       }
     }
 
@@ -865,13 +892,9 @@
       }
     }
 
-    const cards = $$('.tr-photo-card.is-face-down');
-    for (const cardEl of cards) {
-      await flipCard(cardEl);
-      await delay(120);
-    }
     state.autoDealing = false;
-    settle();
+    hint('Đã chia bài. Bấm từng lá để mở lớn và kéo lộ bài.');
+    refreshSettleLabel();
   }
 
   // ---------------------------------------------------------------------
@@ -980,8 +1003,10 @@
     const btn = document.getElementById('trPhotoSettle');
     if (!btn) return;
     if (currentMode() === 'player') {
-      btn.textContent = state.autoDealing ? 'Dealing...' : 'Deal';
-      btn.disabled = state.autoDealing;
+      btn.textContent = state.autoDealing
+        ? 'Dealing...'
+        : (state.phase === 'dealing' ? 'Reveal Cards' : 'Deal');
+      btn.disabled = state.autoDealing || state.phase === 'dealing';
       return;
     }
     btn.disabled = false;
@@ -1024,7 +1049,7 @@
     document.addEventListener('click', function (e) {
       const cardEl = e.target.closest('.tr-photo-card.is-face-down');
       if (!cardEl) return;
-      flipCard(cardEl);
+      squeezeCard(cardEl);
     });
   }
 

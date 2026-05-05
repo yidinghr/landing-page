@@ -75,12 +75,21 @@ test('photo table: bet → balance debit, settle → payout, squeeze opens', asy
   expect(await page.locator('.tr-photo-card.is-face-down').count()).toBe(4);
   await page.screenshot({ path: 'test-results/photo-03-after-deal.png' });
 
-  // Left-click a face-down card → slow flip/reveal
+  // Left-click a face-down card → enlarged squeeze modal opens
   await page.locator('.tr-photo-card.is-face-down').first().click();
-  await page.waitForTimeout(800);
-  expect(await page.locator('.tr-photo-card:not(.is-face-down)').count()).toBeGreaterThan(0);
+  await expect(page.locator('#trSqueezeModal')).toBeVisible();
 
-  // Right-drag another face-down card → squeeze modal opens
+  // Drag squeeze card up by 300px → should reveal and auto-close
+  let sqCard = page.locator('#trSqueezeCard');
+  let sb = await sqCard.boundingBox();
+  await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2 - 280, { steps: 20 });
+  await page.mouse.up();
+  await page.waitForTimeout(700);
+  await expect(page.locator('#trSqueezeModal')).toBeHidden();
+
+  // Right-drag another face-down card still opens squeeze
   const squeezeTarget = page.locator('.tr-photo-card.is-face-down').first();
   const squeezeBox = await squeezeTarget.boundingBox();
   await page.mouse.move(squeezeBox.x + squeezeBox.width / 2, squeezeBox.y + squeezeBox.height - 5);
@@ -90,9 +99,8 @@ test('photo table: bet → balance debit, settle → payout, squeeze opens', asy
   await expect(page.locator('#trSqueezeModal')).toBeVisible();
   await page.screenshot({ path: 'test-results/photo-04-squeeze-open.png' });
 
-  // Drag squeeze card up by 300px → should reveal and auto-close
-  const sqCard = page.locator('#trSqueezeCard');
-  const sb = await sqCard.boundingBox();
+  sqCard = page.locator('#trSqueezeCard');
+  sb = await sqCard.boundingBox();
   await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2);
   await page.mouse.down();
   await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2 - 280, { steps: 20 });

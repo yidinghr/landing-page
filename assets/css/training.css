@@ -4818,22 +4818,56 @@ body.is-photo-drag .tr-photo-hand {
 /* Re-enable clicks on cards themselves so the squeeze modal opens */
 .tr-hand-cards .tr-photo-card { pointer-events: auto; }
 .tr-photo-card {
-  width: 26px;
-  height: 38px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #fafafa 0%, #e5e5e5 100%);
-  border: 1px solid #888;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+  width: 34px;
+  height: 48px;
+  border-radius: 5px;
+  background:
+    radial-gradient(circle at 50% 54%, rgba(255, 255, 255, 0.9) 0 18%, transparent 19%),
+    linear-gradient(180deg, #ffffff 0%, #f7f2e8 54%, #ded4c1 100%);
+  border: 1px solid rgba(44, 30, 18, 0.7);
+  box-shadow:
+    0 3px 7px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.85),
+    inset 0 -8px 16px rgba(112, 82, 40, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 800;
-  font-family: serif;
+  font-family: Georgia, "Times New Roman", serif;
   color: #111;
   user-select: none;
 }
 .tr-photo-card.is-red { color: #c1272d; }
+.tr-card-corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.86;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+.tr-card-corner strong,
+.tr-card-corner em {
+  display: block;
+  font-style: normal;
+}
+.tr-card-corner em { font-size: 10px; }
+.tr-card-corner--tl {
+  top: 4px;
+  left: 4px;
+}
+.tr-card-corner--br {
+  right: 4px;
+  bottom: 4px;
+  transform: rotate(180deg);
+}
+.tr-card-pip {
+  font-size: 21px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+}
 
 /* --- Card source (shoe overlay) — sits over the red shoe in the photo.
    Subtle hover glow only (so the dealer knows where the shoe is) — no
@@ -4887,8 +4921,10 @@ body.is-photo-drag .tr-photo-hand {
   width: 38px;
   height: 54px;
   border-radius: 5px;
-  background: linear-gradient(135deg, #2a1a4a 0%, #1a0e30 100%);
-  border: 2px solid #c8a04a;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 230, 156, 0.25) 0 16%, transparent 17%),
+    repeating-linear-gradient(45deg, #9f1d24 0 4px, #6f1218 4px 8px);
+  border: 2px solid #f6e3bd;
 }
 
 /* --- Toolbar (clear bets / cards) --- */
@@ -4935,12 +4971,11 @@ body[data-role="dealer"] .tr-chip:active { cursor: grabbing !important; }
   overflow: hidden;
 }
 .tr-photo-card.is-face-down {
-  background: repeating-linear-gradient(
-    45deg,
-    #2a1a4a 0 6px,
-    #1a0e30 6px 12px
-  );
-  border: 2px solid #c8a04a;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 232, 156, 0.38) 0 15%, transparent 16%),
+    linear-gradient(135deg, transparent 0 46%, rgba(255, 255, 255, 0.16) 47% 53%, transparent 54%),
+    repeating-linear-gradient(45deg, #b71f2b 0 4px, #7d121a 4px 8px);
+  border: 2px solid #f6e3bd;
   cursor: pointer;
 }
 .tr-photo-card.is-face-down::before {
@@ -4954,6 +4989,16 @@ body[data-role="dealer"] .tr-chip:active { cursor: grabbing !important; }
 .tr-photo-card.is-face-down:hover {
   outline: 2px solid #f2d486;
   outline-offset: 1px;
+}
+.tr-photo-card.is-face-down::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(255, 235, 178, 0.62);
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, transparent 0 46%, rgba(255, 235, 178, 0.35) 47% 53%, transparent 54%),
+    linear-gradient(0deg, transparent 0 46%, rgba(255, 235, 178, 0.35) 47% 53%, transparent 54%);
 }
 
 /* --- Deal slide-in animation --- */
@@ -5290,14 +5335,28 @@ body[data-role="customer"] #trPhotoSettle {
 }
 .tr-squeeze-card .tr-squeeze-back {
   background:
-    repeating-linear-gradient(45deg, #2a1a4a 0 12px, #1a0e30 12px 24px);
-  border: 4px solid #c8a04a;
-  color: rgba(242, 212, 134, 0.8);
-  font-size: 110px;
+    radial-gradient(circle at 50% 50%, rgba(255, 232, 156, 0.28) 0 15%, transparent 16%),
+    linear-gradient(135deg, transparent 0 46%, rgba(255, 255, 255, 0.15) 47% 53%, transparent 54%),
+    repeating-linear-gradient(45deg, #b71f2b 0 12px, #7d121a 12px 24px);
+  border: 5px solid #f6e3bd;
+  color: transparent;
+  font-size: 0;
+}
+.tr-squeeze-card .tr-squeeze-back::before {
+  content: '';
+  position: absolute;
+  inset: 18px;
+  border: 2px solid rgba(255, 235, 178, 0.62);
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, transparent 0 47%, rgba(255, 235, 178, 0.35) 48% 52%, transparent 53%),
+    linear-gradient(0deg, transparent 0 47%, rgba(255, 235, 178, 0.35) 48% 52%, transparent 53%);
 }
 .tr-squeeze-card .tr-squeeze-face {
-  background: linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%);
-  border: 4px solid #888;
+  background:
+    radial-gradient(circle at 50% 54%, rgba(255, 255, 255, 0.95) 0 18%, transparent 19%),
+    linear-gradient(180deg, #ffffff 0%, #f7f2e8 54%, #ded4c1 100%);
+  border: 5px solid rgba(44, 30, 18, 0.72);
   color: #111;
   font-size: 110px;
   /* Reveal from BOTTOM upward — bottom strip reveals first as the player
@@ -5310,6 +5369,22 @@ body[data-role="customer"] #trPhotoSettle {
   );
 }
 .tr-squeeze-card.is-red .tr-squeeze-face { color: #c1272d; }
+.tr-squeeze-card .tr-squeeze-face .tr-card-corner {
+  font-size: 34px;
+  line-height: 0.9;
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-corner em { font-size: 42px; }
+.tr-squeeze-card .tr-squeeze-face .tr-card-corner--tl {
+  top: 24px;
+  left: 24px;
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-corner--br {
+  right: 24px;
+  bottom: 24px;
+}
+.tr-squeeze-card .tr-squeeze-face .tr-card-pip {
+  font-size: 118px;
+}
 .tr-squeeze-modal__close {
   font: inherit;
   font-size: 13px;
