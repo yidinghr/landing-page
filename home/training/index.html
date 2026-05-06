@@ -279,13 +279,18 @@
   </div>
 </div>
 
-<!-- Squeeze modal: enlarged card the player drags upward to slowly reveal -->
+<!-- Squeeze modal: drag the lower edge upward to physically peel the card open. -->
 <div id="trSqueezeModal" class="tr-squeeze-modal" hidden>
-  <div class="tr-squeeze-hint">Bấm vào điểm muốn nặn rồi kéo lên để mở bài</div>
+  <div class="tr-squeeze-hint">Giữ mép dưới lá bài rồi kéo lên để khui bài</div>
   <div class="tr-squeeze-stage">
     <div class="tr-squeeze-card" id="trSqueezeCard">
+      <div class="tr-squeeze-shadow"></div>
       <div class="tr-squeeze-back">🂠</div>
-      <div class="tr-squeeze-face" id="trSqueezeFace"></div>
+      <div class="tr-squeeze-peel" id="trSqueezePeel">
+        <div class="tr-squeeze-face" id="trSqueezeFace"></div>
+      </div>
+      <div class="tr-squeeze-shine"></div>
+      <div class="tr-squeeze-grip"></div>
     </div>
   </div>
   <button type="button" class="tr-squeeze-modal__close" id="trSqueezeClose">Đóng</button>
