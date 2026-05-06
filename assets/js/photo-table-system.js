@@ -787,105 +787,35 @@
 
     const modal = document.getElementById('trSqueezeModal');
     const cardEl = document.getElementById('trSqueezeCard');
-    const stageEl = cardEl ? cardEl.closest('.tr-squeeze-stage') : null;
     const faceEl = document.getElementById('trSqueezeFace');
-    const revealEl = document.getElementById('trSqueezeFrontReveal');
-    if (!modal || !cardEl || !faceEl || !revealEl) return;
+    if (!modal || !cardEl || !faceEl) return;
 
     const meta = suitMeta(card.suit);
-    const clamp = function (value, min, max) { return Math.max(min, Math.min(max, value)); };
     cardEl.classList.toggle('is-red', meta.red);
-    const faceHtml = cardFaceHtml(card);
-    faceEl.innerHTML = faceHtml;
-    revealEl.innerHTML = '<div class="tr-squeeze-face tr-squeeze-front-copy">' + faceHtml + '</div>';
+    faceEl.innerHTML = cardFaceHtml(card);
     cardEl.style.setProperty('--reveal', '0');
-    cardEl.style.setProperty('--peel-left', '50%');
-    cardEl.style.setProperty('--peel-top', '100%');
-    cardEl.style.setProperty('--peel-width', '0px');
-    cardEl.style.setProperty('--peel-height', '0px');
-    cardEl.style.setProperty('--peel-origin-x', '50%');
-    cardEl.style.setProperty('--peel-origin-y', '100%');
-    cardEl.style.setProperty('--edge-angle', '0deg');
-    cardEl.style.setProperty('--edge-twist', '0deg');
-    cardEl.style.setProperty('--edge-lift', '0px');
-    cardEl.style.setProperty('--curve-scale', '1');
-    cardEl.style.setProperty('--blur', '0px');
-    cardEl.style.setProperty('--shadow-y', '18px');
-    cardEl.style.setProperty('--shadow-blur', '42px');
-    cardEl.style.setProperty('--bend', '0px');
     faceEl.style.clipPath = '';
     cardEl.classList.remove('is-squeezing', 'is-squeeze-complete');
 
-    state.squeeze = { handKey, idx, reveal: 0, dragging: false, startX: 0, startY: 0, anchorX: 50, anchorY: 100 };
+    state.squeeze = { handKey, idx, reveal: 0, dragging: false, startY: 0 };
     modal.hidden = false;
 
     function onDown(e) {
       if (e.touches === undefined && e.button !== 0 && e.button !== 2) return;
       e.preventDefault();
       e.stopPropagation();
-      const point = e.touches ? e.touches[0] : e;
-      const rect = cardEl.getBoundingClientRect();
       state.squeeze.dragging = true;
-      state.squeeze.startX = point.clientX;
-      state.squeeze.startY = point.clientY;
-      state.squeeze.anchorX = Math.max(0, Math.min(100, ((point.clientX - rect.left) / rect.width) * 100));
-      state.squeeze.anchorY = Math.max(0, Math.min(100, ((point.clientY - rect.top) / rect.height) * 100));
-      cardEl.style.setProperty('--peel-left', state.squeeze.anchorX + '%');
-      cardEl.style.setProperty('--peel-top', state.squeeze.anchorY + '%');
-      cardEl.style.setProperty('--peel-origin-x', state.squeeze.anchorX + '%');
-      cardEl.style.setProperty('--peel-origin-y', state.squeeze.anchorY + '%');
-      cardEl.classList.add('is-squeezing');
+      state.squeeze.startY = (e.touches ? e.touches[0].clientY : e.clientY);
     }
 
     function onMove(e) {
       if (!state.squeeze || !state.squeeze.dragging) return;
-      const x = e.touches ? e.touches[0].clientX : e.clientX;
       const y = e.touches ? e.touches[0].clientY : e.clientY;
       const dy = state.squeeze.startY - y;
-      const dx = x - state.squeeze.startX;
-      const rect = cardEl.getBoundingClientRect();
-      const anchorXpx = (state.squeeze.anchorX / 100) * rect.width;
-      const anchorYpx = (state.squeeze.anchorY / 100) * rect.height;
-      const pull = Math.max(dy / 270, (dy + Math.abs(dx) * 0.18) / 320);
-      const r = Math.max(state.squeeze.reveal, Math.max(0, Math.min(1, pull)));
+      const r = Math.max(state.squeeze.reveal, Math.max(0, Math.min(1, dy / 260)));
       state.squeeze.reveal = r;
       cardEl.style.setProperty('--reveal', String(r));
-      const peelWidth = clamp(30 + r * rect.width * 1.22, 0, rect.width);
-      const peelHeight = clamp(22 + r * rect.height * 1.12, 0, rect.height);
-      const peelLeft = clamp(anchorXpx - peelWidth * (state.squeeze.anchorX / 100), 0, rect.width - peelWidth);
-      const peelTop = clamp(anchorYpx - peelHeight * (state.squeeze.anchorY / 100), 0, rect.height - peelHeight);
-      const originX = clamp(((anchorXpx - peelLeft) / Math.max(1, peelWidth)) * 100, 0, 100);
-      const originY = clamp(((anchorYpx - peelTop) / Math.max(1, peelHeight)) * 100, 0, 100);
-      let edgeAngle;
-      let edgeLift;
-      if (r < 0.28) {
-        const t = r / 0.28;
-        edgeAngle = -(t * 15);
-        edgeLift = -4 - (t * 8);
-      } else if (r < 0.72) {
-        const t = (r - 0.28) / 0.44;
-        edgeAngle = -15 - (t * 20);
-        edgeLift = -12 - (t * 13);
-      } else {
-        const t = (r - 0.72) / 0.28;
-        edgeAngle = -35 + (t * 35);
-        edgeLift = -25 + (t * 25);
-      }
-      const angleDirection = state.squeeze.anchorY >= 50 ? 1 : -1;
-      cardEl.style.setProperty('--peel-left', peelLeft.toFixed(2) + 'px');
-      cardEl.style.setProperty('--peel-top', peelTop.toFixed(2) + 'px');
-      cardEl.style.setProperty('--peel-width', peelWidth.toFixed(2) + 'px');
-      cardEl.style.setProperty('--peel-height', peelHeight.toFixed(2) + 'px');
-      cardEl.style.setProperty('--peel-origin-x', originX.toFixed(2) + '%');
-      cardEl.style.setProperty('--peel-origin-y', originY.toFixed(2) + '%');
-      cardEl.style.setProperty('--edge-angle', (edgeAngle * angleDirection).toFixed(2) + 'deg');
-      cardEl.style.setProperty('--edge-twist', clamp(dx * 0.045, -12, 12).toFixed(2) + 'deg');
-      cardEl.style.setProperty('--edge-lift', edgeLift.toFixed(2) + 'px');
-      cardEl.style.setProperty('--curve-scale', (1 + Math.sin(Math.min(1, r) * Math.PI) * 0.035).toFixed(3));
-      cardEl.style.setProperty('--blur', (r > 0.1 && r < 0.82 ? 0.55 : 0).toFixed(2) + 'px');
-      cardEl.style.setProperty('--shadow-y', (18 + r * 28).toFixed(1) + 'px');
-      cardEl.style.setProperty('--shadow-blur', (42 + r * 52).toFixed(1) + 'px');
-      cardEl.style.setProperty('--bend', (Math.sin(Math.min(1, r) * Math.PI) * 3).toFixed(1) + 'px');
+      cardEl.style.transform = 'translateY(' + (-r * 60) + 'px)';
     }
 
     function onUp() {
@@ -899,31 +829,17 @@
           renderHand(hk, false);
         }
         cardEl.style.setProperty('--reveal', '1');
-        cardEl.style.setProperty('--peel-left', '0px');
-        cardEl.style.setProperty('--peel-top', '0px');
-        cardEl.style.setProperty('--peel-width', '100%');
-        cardEl.style.setProperty('--peel-height', '100%');
-        cardEl.style.setProperty('--peel-origin-x', state.squeeze.anchorX + '%');
-        cardEl.style.setProperty('--peel-origin-y', state.squeeze.anchorY + '%');
-        cardEl.style.setProperty('--edge-angle', '0deg');
-        cardEl.style.setProperty('--edge-twist', '0deg');
-        cardEl.style.setProperty('--edge-lift', '0px');
-        cardEl.style.setProperty('--curve-scale', '1');
         cardEl.classList.remove('is-squeezing');
         cardEl.classList.add('is-squeeze-complete');
         setTimeout(function () {
           closeSqueeze();
           settleIfPlayerRevealComplete();
-        }, 760);
+        }, 450);
       }
     }
 
     cardEl.addEventListener('mousedown', onDown);
     cardEl.addEventListener('touchstart', onDown, { passive: false });
-    if (stageEl) {
-      stageEl.addEventListener('mousedown', onDown);
-      stageEl.addEventListener('touchstart', onDown, { passive: false });
-    }
     document.addEventListener('mousemove', onMove);
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('mouseup', onUp);
@@ -933,10 +849,6 @@
     state.squeeze.cleanup = () => {
       cardEl.removeEventListener('mousedown', onDown);
       cardEl.removeEventListener('touchstart', onDown);
-      if (stageEl) {
-        stageEl.removeEventListener('mousedown', onDown);
-        stageEl.removeEventListener('touchstart', onDown);
-      }
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('mouseup', onUp);
@@ -950,20 +862,10 @@
     if (state.squeeze && state.squeeze.cleanup) state.squeeze.cleanup();
     if (cardEl) {
       cardEl.style.setProperty('--reveal', '0');
-      cardEl.style.setProperty('--peel-left', '50%');
-      cardEl.style.setProperty('--peel-top', '100%');
-      cardEl.style.setProperty('--peel-width', '0px');
-      cardEl.style.setProperty('--peel-height', '0px');
-      cardEl.style.setProperty('--edge-angle', '0deg');
-      cardEl.style.setProperty('--edge-twist', '0deg');
-      cardEl.style.setProperty('--edge-lift', '0px');
-      cardEl.style.setProperty('--curve-scale', '1');
       cardEl.style.transform = '';
       cardEl.classList.remove('is-squeezing', 'is-squeeze-complete');
       const faceEl = document.getElementById('trSqueezeFace');
       if (faceEl) faceEl.style.clipPath = '';
-      const revealEl = document.getElementById('trSqueezeFrontReveal');
-      if (revealEl) revealEl.innerHTML = '';
     }
     if (modal) modal.hidden = true;
     state.squeeze = null;

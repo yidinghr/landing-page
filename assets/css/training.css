@@ -5760,6 +5760,35 @@ body[data-role="customer"] #trPhotoSettle {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
   }
 }
+
+/* Reverted squeeze: simple gradual reveal mask. */
+.tr-squeeze-card {
+  --reveal: 0;
+  transform: translateY(calc(var(--reveal) * -60px));
+  filter: none;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+.tr-squeeze-card::after,
+.tr-squeeze-front-reveal {
+  display: none !important;
+}
+.tr-squeeze-card .tr-squeeze-back {
+  z-index: 1;
+  transform: translateZ(0);
+}
+.tr-squeeze-card .tr-squeeze-face {
+  z-index: 2;
+  clip-path: polygon(
+    0 calc(100% - var(--reveal) * 100%),
+    100% calc(100% - var(--reveal) * 100%),
+    100% 100%,
+    0 100%
+  ) !important;
+  transform: translateZ(1px);
+}
+.tr-squeeze-card.is-squeeze-complete {
+  animation: none;
+}
 .tr-squeeze-modal__close {
   font: inherit;
   font-size: 13px;
