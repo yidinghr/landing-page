@@ -5642,8 +5642,14 @@ body[data-role="customer"] #trPhotoSettle {
 /* Real edge-squeeze: the full card stays down; only the lower front edge folds up. */
 .tr-squeeze-card {
   --edge-angle: 0deg;
+  --edge-twist: 0deg;
   --edge-lift: 0px;
-  --reveal-height: 0%;
+  --peel-left: 50%;
+  --peel-top: 100%;
+  --peel-width: 0px;
+  --peel-height: 0px;
+  --peel-origin-x: 50%;
+  --peel-origin-y: 100%;
   --curve-scale: 1;
   transform: none;
   filter: blur(var(--blur));
@@ -5665,18 +5671,19 @@ body[data-role="customer"] #trPhotoSettle {
 }
 .tr-squeeze-front-reveal {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--reveal-height);
+  left: var(--peel-left);
+  top: var(--peel-top);
+  width: var(--peel-width);
+  height: var(--peel-height);
   z-index: 3;
   overflow: hidden;
-  border-radius: 0 0 18px 18px;
-  transform-origin: bottom center;
+  border-radius: 16px;
+  transform-origin: var(--peel-origin-x) var(--peel-origin-y);
   transform:
     perspective(1000px)
     translateY(var(--edge-lift))
     rotateX(var(--edge-angle))
+    rotateY(var(--edge-twist))
     scaleY(var(--curve-scale));
   transform-style: preserve-3d;
   box-shadow:
@@ -5696,13 +5703,24 @@ body[data-role="customer"] #trPhotoSettle {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(0, 0, 0, 0.18));
   transform: translateY(calc(var(--bend) * -0.6));
 }
+.tr-squeeze-front-reveal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at var(--peel-origin-x) var(--peel-origin-y), rgba(255, 255, 255, 0.32), transparent 34%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.18), transparent 45%, rgba(0, 0, 0, 0.22));
+  mix-blend-mode: soft-light;
+}
 .tr-squeeze-front-copy {
   position: absolute !important;
-  inset: auto 0 0 0 !important;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
+  inset: auto auto auto auto !important;
+  left: calc(-1 * var(--peel-left)) !important;
+  top: calc(-1 * var(--peel-top)) !important;
+  width: 240px;
   height: 340px;
   clip-path: none !important;
   transform: translateZ(3px) rotateX(calc(var(--bend) * -0.9deg));
@@ -5716,21 +5734,27 @@ body[data-role="customer"] #trPhotoSettle {
 }
 @keyframes tr-squeeze-edge-final {
   0% {
-    height: 8%;
-    transform: perspective(1000px) translateY(-4px) rotateX(-12deg) scaleY(1.01);
+    width: 24%;
+    height: 16%;
+    transform: perspective(1000px) translateY(-4px) rotateX(var(--edge-angle)) rotateY(var(--edge-twist)) scaleY(1.01);
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.58);
   }
   28% {
-    height: 26%;
-    transform: perspective(1000px) translateY(-12px) rotateX(-28deg) scaleY(1.028);
+    width: 46%;
+    height: 34%;
+    transform: perspective(1000px) translateY(-12px) rotateX(var(--edge-angle)) rotateY(var(--edge-twist)) scaleY(1.028);
     box-shadow: 0 30px 66px rgba(0, 0, 0, 0.68);
   }
   68% {
-    height: 72%;
-    transform: perspective(1000px) translateY(-24px) rotateX(-35deg) scaleY(1.018);
+    width: 82%;
+    height: 78%;
+    transform: perspective(1000px) translateY(-24px) rotateX(var(--edge-angle)) rotateY(calc(var(--edge-twist) * 0.4)) scaleY(1.018);
     box-shadow: 0 44px 88px rgba(0, 0, 0, 0.72);
   }
   100% {
+    left: 0;
+    top: 0;
+    width: 100%;
     height: 100%;
     transform: perspective(1000px) translateY(0) rotateX(0deg) scaleY(1);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
