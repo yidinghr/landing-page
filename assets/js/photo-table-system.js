@@ -41,12 +41,12 @@
 
   const STARTING_BALANCE = 1000000;
   const BET_ZONES = [
-    { key: 'player', label: 'PLAYER', left: 31, top: 55, width: 15, height: 12 },
-    { key: 'banker', label: 'BANKER', left: 54, top: 55, width: 15, height: 12 },
-    { key: 'tie', label: 'TIE', left: 43, top: 39, width: 14, height: 9 },
-    { key: 'playerPair', label: 'P PAIR', left: 37, top: 33, width: 10, height: 10 },
-    { key: 'bankerPair', label: 'B PAIR', left: 56, top: 33, width: 10, height: 10 },
-    { key: 'lucky6', label: 'LUCKY 6', left: 24, top: 52, width: 9, height: 9 }
+    { key: 'player', label: 'PLAYER', left: 31, top: 55, width: 15, height: 12, chipX: 63, chipY: 64 },
+    { key: 'banker', label: 'BANKER', left: 54, top: 55, width: 15, height: 12, chipX: 37, chipY: 64 },
+    { key: 'tie', label: 'TIE', left: 43, top: 39, width: 14, height: 9, chipX: 50, chipY: 70 },
+    { key: 'playerPair', label: 'P PAIR', left: 37, top: 33, width: 10, height: 10, chipX: 50, chipY: 70 },
+    { key: 'bankerPair', label: 'B PAIR', left: 56, top: 33, width: 10, height: 10, chipX: 20, chipY: 70 },
+    { key: 'lucky6', label: 'LUCKY 6', left: 24, top: 52, width: 9, height: 9, chipX: 45, chipY: 72 }
   ];
 
   // ---------------------------------------------------------------------
@@ -183,10 +183,12 @@
       total += chip.value;
       const dot = document.createElement('div');
       dot.className = 'tr-zone-chip ' + chip.cls;
-      // Center the chip on the zone (offsetting by -50% of its own size)
-      // and stagger upward as more chips are added so the pile looks 3D.
-      const offsetY = -i * 4;
-      const offsetX = (i % 2 === 0 ? -1 : 1) * Math.min(i, 4);
+      // Keep the pile compact around the zone's visual anchor so chips stay
+      // inside the printed baccarat bet area instead of drifting below it.
+      const row = Math.floor(i / 3);
+      const col = i % 3;
+      const offsetX = (col - 1) * 4;
+      const offsetY = -row * 4;
       dot.style.transform =
         'translate(calc(-50% + ' + offsetX + 'px), calc(-50% + ' + offsetY + 'px))';
       dot.textContent = chip.label;
@@ -211,6 +213,8 @@
       el.style.top = zone.top + '%';
       el.style.width = zone.width + '%';
       el.style.height = zone.height + '%';
+      el.style.setProperty('--chip-x', (zone.chipX || 50) + '%');
+      el.style.setProperty('--chip-y', (zone.chipY || 50) + '%');
       el.innerHTML =
         '<span class="tr-zone-tag">' + zone.label + '</span>' +
         '<div class="tr-zone-stack"></div>' +

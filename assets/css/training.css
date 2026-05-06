@@ -4823,10 +4823,10 @@ body.is-photo-drag-card .tr-photo-zone {
 }
 .tr-zone-amount {
   position: absolute;
-  left: 50%;
-  bottom: -16px;
-  transform: translateX(-50%);
-  font-size: 11px;
+  left: var(--chip-x, 50%);
+  top: calc(var(--chip-y, 50%) + 17px);
+  transform: translate(-50%, -50%);
+  font-size: 10px;
   font-weight: 800;
   color: #fff;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.8);
@@ -4840,10 +4840,10 @@ body.is-photo-drag-card .tr-photo-zone {
    stack reads as a small pile of chips. */
 .tr-zone-chip {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 30px;
-  height: 30px;
+  top: var(--chip-y, 50%);
+  left: var(--chip-x, 50%);
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid rgba(0, 0, 0, 0.35);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.25);
