@@ -4869,8 +4869,13 @@ body.is-photo-drag-card .tr-photo-zone {
   transform: translate(-50%, -50%) rotate(var(--slot-rotate, 0deg));
   transform-origin: 50% 50%;
   border-radius: 999px;
-  overflow: visible;
+  overflow: hidden;
   perspective: 180px;
+}
+.tr-player-chip-slot__well,
+.tr-player-chip-slot__acrylic,
+.tr-player-chip-slot__balance {
+  display: none !important;
 }
 .tr-player-chip-slot__well {
   position: absolute;
@@ -4931,7 +4936,7 @@ body.is-photo-drag-card .tr-photo-zone {
 }
 .tr-player-chip-slot__chips {
   position: absolute;
-  inset: 11% 8% 16%;
+  inset: 6% 9% 8%;
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
   align-items: end;
@@ -4941,7 +4946,7 @@ body.is-photo-drag-card .tr-photo-zone {
 .tr-player-chip-stack {
   position: relative;
   width: 100%;
-  height: clamp(22px, 3.6vw, 42px);
+  height: 100%;
   transform: translateY(calc((var(--stack-index, 0) % 2) * -1px)) rotateX(2deg);
   transform-style: preserve-3d;
 }
@@ -4949,8 +4954,8 @@ body.is-photo-drag-card .tr-photo-zone {
   position: absolute;
   left: 50%;
   bottom: calc(var(--chip-layer, 0) * clamp(1.7px, 0.22vw, 2.6px));
-  width: clamp(11px, 1.55vw, 20px);
-  height: clamp(11px, 1.55vw, 20px);
+  width: clamp(9px, 1.42vw, 18px);
+  height: clamp(9px, 1.42vw, 18px);
   transform: translateX(-50%) rotateX(60deg);
   border-radius: 50%;
   border-width: 2px;

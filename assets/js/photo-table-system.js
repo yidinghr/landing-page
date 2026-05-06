@@ -52,11 +52,13 @@
     { key: 'lucky6', label: 'LUCKY 6', left: 24, top: 52, width: 9, height: 9, chipX: 45, chipY: 72 }
   ];
   const PLAYER_CHIP_SLOTS = [
-    { seat: 1, left: 21.5, top: 76.8, width: 11.2, height: 6.7, rotate: 8 },
-    { seat: 2, left: 34.3, top: 82.9, width: 11.6, height: 6.5, rotate: 3 },
-    { seat: 3, left: 47.5, top: 85.1, width: 10.8, height: 6.4, rotate: 0 },
-    { seat: 4, left: 60.1, top: 82.7, width: 11.6, height: 6.5, rotate: -3 },
-    { seat: 5, left: 73.4, top: 76.6, width: 11.2, height: 6.7, rotate: -8 }
+    { seat: 1, left: 22.5, top: 65.6, width: 13.6, height: 10.8, rotate: 14 },
+    { seat: 2, left: 39.2, top: 75.0, width: 13.2, height: 7.2, rotate: 4 },
+    { seat: 3, left: 50.6, top: 77.4, width: 11.6, height: 6.8, rotate: 0 },
+    { seat: 4, left: 58.2, top: 76.4, width: 13.6, height: 6.9, rotate: -2 },
+    { seat: 5, left: 74.6, top: 66.9, width: 15.0, height: 10.8, rotate: -13 },
+    { seat: 6, left: 10.8, top: 50.8, width: 7.2, height: 16.2, rotate: 67 },
+    { seat: 7, left: 87.5, top: 54.0, width: 7.2, height: 16.0, rotate: -66 }
   ];
 
   // ---------------------------------------------------------------------
@@ -72,7 +74,7 @@
     drag:    null,
     squeeze: null,
     activeSeat: 1,
-    seatBalances: [STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE],
+    seatBalances: [STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE],
     selectedChipValue: 0,  // chip currently selected for click-to-bet
     // Round history — appended on every settle, used by the roadmap modal
     // and by the right-panel empirical % update.
