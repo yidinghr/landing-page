@@ -1014,87 +1014,66 @@
     const meta = suitMeta(card.suit);
     cardEl.classList.toggle('is-red', meta.red);
     faceEl.innerHTML = cardFaceHtml(card);
-    faceEl.setAttribute('aria-label', card.rank + meta.key);
-    setSqueezeProgress(cardEl, 0);
+    cardEl.style.setProperty('--reveal', '0');
     faceEl.style.clipPath = '';
     cardEl.classList.remove('is-squeezing', 'is-squeeze-complete');
 
-    state.squeeze = { handKey, idx, reveal: 0, dragging: false, startY: 0, startReveal: 0, pointerId: null };
+    state.squeeze = { handKey, idx, reveal: 0, dragging: false, startY: 0 };
     modal.hidden = false;
 
-    function setSqueezeProgress(node, reveal) {
-      const r = Math.max(0, Math.min(1, reveal));
-      const faceAlpha = Math.max(0, Math.min(1, (r - 0.48) / 0.18));
-      node.style.setProperty('--reveal', r.toFixed(4));
-      node.style.setProperty('--peel-height', (12 + r * 88).toFixed(2) + '%');
-      node.style.setProperty('--edge-angle', (-4 - r * 82).toFixed(2) + 'deg');
-      node.style.setProperty('--edge-lift', (-r * 42).toFixed(2) + 'px');
-      node.style.setProperty('--edge-pull', (-r * 28).toFixed(2) + 'px');
-      node.style.setProperty('--bend', (r * 22).toFixed(2) + 'deg');
-      node.style.setProperty('--curve-scale', (1 + r * 0.055).toFixed(4));
-      node.style.setProperty('--shadow-y', (18 + r * 30).toFixed(2) + 'px');
-      node.style.setProperty('--shadow-blur', (34 + r * 44).toFixed(2) + 'px');
-      node.style.setProperty('--face-alpha', faceAlpha.toFixed(4));
-    }
-
     function onDown(e) {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.touches === undefined && e.button !== 0 && e.button !== 2) return;
       e.preventDefault();
       e.stopPropagation();
       state.squeeze.dragging = true;
-      state.squeeze.startY = e.clientY;
-      state.squeeze.startReveal = state.squeeze.reveal;
-      state.squeeze.pointerId = e.pointerId;
-      cardEl.classList.add('is-squeezing');
-      if (cardEl.setPointerCapture) {
-        try { cardEl.setPointerCapture(e.pointerId); } catch (err) {}
-      }
+      state.squeeze.startY = (e.touches ? e.touches[0].clientY : e.clientY);
     }
 
     function onMove(e) {
       if (!state.squeeze || !state.squeeze.dragging) return;
-      e.preventDefault();
-      const dy = state.squeeze.startY - e.clientY;
-      const r = Math.max(0, Math.min(1, state.squeeze.startReveal + dy / 245));
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+      const dy = state.squeeze.startY - y;
+      const r = Math.max(state.squeeze.reveal, Math.max(0, Math.min(1, dy / 260)));
       state.squeeze.reveal = r;
-      setSqueezeProgress(cardEl, r);
+      cardEl.style.setProperty('--reveal', String(r));
+      cardEl.style.transform = 'translateY(' + (-r * 60) + 'px)';
     }
 
-    function onUp(e) {
+    function onUp() {
       if (!state.squeeze) return;
-      if (e && state.squeeze.pointerId !== null && e.pointerId !== state.squeeze.pointerId) return;
       state.squeeze.dragging = false;
-      state.squeeze.startReveal = state.squeeze.reveal;
-      state.squeeze.pointerId = null;
-      cardEl.classList.remove('is-squeezing');
       // If revealed past threshold, flip card permanently and close
-      if (state.squeeze.reveal >= 0.92) {
+      if (state.squeeze.reveal >= 0.85) {
         const { handKey: hk, idx: ix } = state.squeeze;
         if (state.hands[hk] && state.hands[hk][ix]) {
           state.hands[hk][ix].faceUp = true;
           renderHand(hk, false);
         }
-        setSqueezeProgress(cardEl, 1);
+        cardEl.style.setProperty('--reveal', '1');
         cardEl.classList.remove('is-squeezing');
         cardEl.classList.add('is-squeeze-complete');
         setTimeout(function () {
           closeSqueeze();
           settleIfPlayerRevealComplete();
-        }, 760);
+        }, 450);
       }
     }
 
-    cardEl.addEventListener('pointerdown', onDown);
-    document.addEventListener('pointermove', onMove, { passive: false });
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onUp);
+    cardEl.addEventListener('mousedown', onDown);
+    cardEl.addEventListener('touchstart', onDown, { passive: false });
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
 
     // Stash listeners so closeSqueeze can detach them
     state.squeeze.cleanup = () => {
-      cardEl.removeEventListener('pointerdown', onDown);
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
+      cardEl.removeEventListener('mousedown', onDown);
+      cardEl.removeEventListener('touchstart', onDown);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchend', onUp);
     };
   }
 
@@ -1104,8 +1083,6 @@
     if (state.squeeze && state.squeeze.cleanup) state.squeeze.cleanup();
     if (cardEl) {
       cardEl.style.setProperty('--reveal', '0');
-      cardEl.style.setProperty('--face-alpha', '0');
-      cardEl.style.setProperty('--peel-height', '12%');
       cardEl.style.transform = '';
       cardEl.classList.remove('is-squeezing', 'is-squeeze-complete');
       const faceEl = document.getElementById('trSqueezeFace');
