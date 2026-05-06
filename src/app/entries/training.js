@@ -11,6 +11,16 @@ function initLobbyIntro() {
 
   document.body.classList.add("tr-lobby-is-open");
   if (lobbyVideo && typeof lobbyVideo.play === "function") {
+    const startAtTableAction = function () {
+      if (lobbyVideo.duration > 6) {
+        lobbyVideo.currentTime = 5;
+      }
+    };
+    if (lobbyVideo.readyState >= 1) {
+      startAtTableAction();
+    } else {
+      lobbyVideo.addEventListener("loadedmetadata", startAtTableAction, { once: true });
+    }
     lobbyVideo.play().catch(function () {});
   }
 

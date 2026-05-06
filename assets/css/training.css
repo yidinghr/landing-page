@@ -6189,7 +6189,6 @@ body[data-role="dealer"] .tr-photo-result {
   object-fit: cover;
   object-position: center center;
   filter: saturate(1.12) contrast(1.08) brightness(0.9);
-  transform: scale(1.02);
 }
 
 .tr-lobby-intro__veil {
