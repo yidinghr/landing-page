@@ -6243,9 +6243,168 @@ body[data-role="dealer"] .tr-photo-result {
   animation: tr-lobby-scan 2.8s linear infinite;
 }
 
+.tr-lobby-intro__motion {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+
+.tr-lobby-intro__table-glint {
+  position: absolute;
+  left: 25%;
+  top: 48%;
+  width: 50%;
+  height: 22%;
+  border-radius: 50%;
+  background:
+    linear-gradient(105deg, transparent 20%, rgba(255, 242, 186, 0.18) 44%, transparent 62%),
+    radial-gradient(ellipse at 50% 50%, rgba(50, 184, 255, 0.12), transparent 66%);
+  mix-blend-mode: screen;
+  filter: blur(1px);
+  opacity: 0.48;
+  transform: rotateX(62deg) rotateZ(-1deg);
+  animation: tr-lobby-table-glint 5.2s ease-in-out infinite;
+}
+
+.tr-lobby-intro__card {
+  position: absolute;
+  width: clamp(18px, 2.15vw, 31px);
+  height: clamp(26px, 3vw, 44px);
+  border-radius: 3px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(226, 232, 238, 0.96)),
+    radial-gradient(circle at 72% 22%, rgba(210, 36, 52, 0.92) 0 9%, transparent 10%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.42),
+    0 0 14px rgba(255, 255, 255, 0.14);
+  opacity: 0;
+  transform-origin: 50% 85%;
+}
+
+.tr-lobby-intro__card::before,
+.tr-lobby-intro__card::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #c7192f;
+}
+
+.tr-lobby-intro__card::before {
+  left: 5px;
+  top: 5px;
+}
+
+.tr-lobby-intro__card::after {
+  right: 5px;
+  bottom: 5px;
+}
+
+.tr-lobby-intro__card--one {
+  left: 64%;
+  top: 44%;
+  animation: tr-lobby-deal-one 4.9s cubic-bezier(0.46, 0, 0.22, 1) infinite;
+}
+
+.tr-lobby-intro__card--two {
+  left: 64%;
+  top: 44%;
+  animation: tr-lobby-deal-two 4.9s cubic-bezier(0.46, 0, 0.22, 1) infinite 0.62s;
+}
+
+.tr-lobby-intro__card--three {
+  left: 64%;
+  top: 44%;
+  animation: tr-lobby-deal-three 4.9s cubic-bezier(0.46, 0, 0.22, 1) infinite 1.24s;
+}
+
+.tr-lobby-intro__chip {
+  position: absolute;
+  width: clamp(18px, 2.5vw, 36px);
+  height: clamp(18px, 2.5vw, 36px);
+  border-radius: 50%;
+  opacity: 0;
+  border: 3px solid rgba(255, 255, 255, 0.58);
+  box-shadow:
+    inset 0 0 0 3px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 6px rgba(255, 255, 255, 0.16),
+    0 8px 18px rgba(0, 0, 0, 0.46),
+    0 0 14px rgba(255, 221, 121, 0.18);
+}
+
+.tr-lobby-intro__chip::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.54);
+}
+
+.tr-lobby-intro__chip--blue {
+  left: 24%;
+  top: 64%;
+  background: radial-gradient(circle at 35% 32%, #8fc8ff, #135aa5 70%);
+  animation: tr-lobby-chip-left 5.8s ease-in-out infinite 0.9s;
+}
+
+.tr-lobby-intro__chip--gold {
+  left: 75%;
+  top: 63%;
+  background: radial-gradient(circle at 35% 32%, #fff0a6, #b57a12 70%);
+  animation: tr-lobby-chip-right 5.8s ease-in-out infinite 1.8s;
+}
+
+.tr-lobby-intro__chip--green {
+  left: 48%;
+  top: 73%;
+  background: radial-gradient(circle at 35% 32%, #78ffb2, #028a4f 70%);
+  animation: tr-lobby-chip-center 5.8s ease-in-out infinite 2.7s;
+}
+
+.tr-lobby-intro__hand {
+  position: absolute;
+  width: clamp(28px, 4.3vw, 64px);
+  height: clamp(12px, 1.45vw, 22px);
+  border-radius: 999px;
+  opacity: 0.1;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 28%),
+    linear-gradient(90deg, rgba(236, 190, 150, 0.66), rgba(178, 103, 70, 0.36));
+  filter: blur(3px);
+  box-shadow: 0 0 18px rgba(255, 223, 180, 0.14);
+  transform-origin: 14% 50%;
+}
+
+.tr-lobby-intro__hand--dealer-left {
+  left: 46%;
+  top: 50%;
+  transform: rotate(7deg);
+  animation: tr-lobby-dealer-left 4.9s ease-in-out infinite;
+}
+
+.tr-lobby-intro__hand--dealer-right {
+  left: 58.5%;
+  top: 48.2%;
+  transform: rotate(-13deg);
+  animation: tr-lobby-dealer-right 4.9s ease-in-out infinite 0.3s;
+}
+
+.tr-lobby-intro__hand--player {
+  left: 74%;
+  top: 61%;
+  width: clamp(24px, 3.8vw, 58px);
+  transform: rotate(-25deg);
+  animation: tr-lobby-player-hand 5.8s ease-in-out infinite 1.8s;
+}
+
 .tr-lobby-intro__content {
   position: relative;
-  z-index: 3;
+  z-index: 4;
   align-self: end;
   justify-self: center;
   width: min(420px, calc(100vw - 40px));
@@ -6345,6 +6504,193 @@ body.tr-lobby-is-open .tr-app {
   to { transform: translateY(12px); }
 }
 
+@keyframes tr-lobby-table-glint {
+  0%, 100% {
+    opacity: 0.18;
+    transform: rotateX(62deg) rotateZ(-1deg) translateX(-4%);
+  }
+  42% {
+    opacity: 0.62;
+    transform: rotateX(62deg) rotateZ(-1deg) translateX(6%);
+  }
+  70% {
+    opacity: 0.28;
+    transform: rotateX(62deg) rotateZ(-1deg) translateX(11%);
+  }
+}
+
+@keyframes tr-lobby-deal-one {
+  0%, 7% {
+    opacity: 0;
+    transform: translate3d(0, 0, 44px) rotateZ(8deg) rotateX(58deg) scale(0.72);
+  }
+  12% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 1;
+    transform: translate3d(-13.5vw, 5.6vh, 12px) rotateZ(-7deg) rotateX(62deg) scale(1);
+  }
+  66% {
+    opacity: 1;
+    transform: translate3d(-13.5vw, 5.6vh, 12px) rotateZ(-7deg) rotateX(62deg) scale(1);
+  }
+  86%, 100% {
+    opacity: 0;
+    transform: translate3d(-13.5vw, 6.4vh, 12px) rotateZ(-7deg) rotateX(62deg) scale(0.96);
+  }
+}
+
+@keyframes tr-lobby-deal-two {
+  0%, 7% {
+    opacity: 0;
+    transform: translate3d(0, 0, 44px) rotateZ(8deg) rotateX(58deg) scale(0.72);
+  }
+  12% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 1;
+    transform: translate3d(-4.7vw, 5.2vh, 16px) rotateZ(4deg) rotateX(62deg) scale(1);
+  }
+  66% {
+    opacity: 1;
+    transform: translate3d(-4.7vw, 5.2vh, 16px) rotateZ(4deg) rotateX(62deg) scale(1);
+  }
+  86%, 100% {
+    opacity: 0;
+    transform: translate3d(-4.7vw, 6vh, 16px) rotateZ(4deg) rotateX(62deg) scale(0.96);
+  }
+}
+
+@keyframes tr-lobby-deal-three {
+  0%, 7% {
+    opacity: 0;
+    transform: translate3d(0, 0, 44px) rotateZ(8deg) rotateX(58deg) scale(0.72);
+  }
+  12% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 1;
+    transform: translate3d(-20.2vw, 5vh, 16px) rotateZ(9deg) rotateX(62deg) scale(1);
+  }
+  58% {
+    opacity: 1;
+    transform: translate3d(-20.2vw, 5vh, 16px) rotateZ(9deg) rotateX(62deg) scale(1);
+  }
+  72% {
+    opacity: 0.78;
+    transform: translate3d(-23.2vw, 4.3vh, 20px) rotateZ(22deg) rotateX(44deg) scale(1.04);
+  }
+  86%, 100% {
+    opacity: 0;
+    transform: translate3d(-26vw, 2.8vh, 18px) rotateZ(31deg) rotateX(38deg) scale(0.9);
+  }
+}
+
+@keyframes tr-lobby-chip-left {
+  0%, 12% {
+    opacity: 0;
+    transform: translate3d(0, 0, 30px) scale(0.78);
+  }
+  24% {
+    opacity: 1;
+    transform: translate3d(11vw, -10vh, 22px) scale(1);
+  }
+  68% {
+    opacity: 1;
+    transform: translate3d(11vw, -10vh, 22px) scale(1);
+  }
+  82%, 100% {
+    opacity: 0;
+    transform: translate3d(11.3vw, -10.3vh, 22px) scale(0.9);
+  }
+}
+
+@keyframes tr-lobby-chip-right {
+  0%, 12% {
+    opacity: 0;
+    transform: translate3d(0, 0, 30px) scale(0.78);
+  }
+  24% {
+    opacity: 1;
+    transform: translate3d(-17vw, -8.4vh, 22px) scale(1);
+  }
+  68% {
+    opacity: 1;
+    transform: translate3d(-17vw, -8.4vh, 22px) scale(1);
+  }
+  82%, 100% {
+    opacity: 0;
+    transform: translate3d(-17.3vw, -8.7vh, 22px) scale(0.9);
+  }
+}
+
+@keyframes tr-lobby-chip-center {
+  0%, 12% {
+    opacity: 0;
+    transform: translate3d(0, 0, 30px) scale(0.78);
+  }
+  24% {
+    opacity: 1;
+    transform: translate3d(0.8vw, -17.2vh, 22px) scale(1);
+  }
+  68% {
+    opacity: 1;
+    transform: translate3d(0.8vw, -17.2vh, 22px) scale(1);
+  }
+  82%, 100% {
+    opacity: 0;
+    transform: translate3d(0.8vw, -17.5vh, 22px) scale(0.9);
+  }
+}
+
+@keyframes tr-lobby-dealer-left {
+  0%, 100% {
+    opacity: 0.1;
+    transform: translate3d(0, 0, 0) rotate(7deg);
+  }
+  18%, 45% {
+    opacity: 0.17;
+    transform: translate3d(-3.4vw, 2vh, 0) rotate(2deg);
+  }
+  62% {
+    opacity: 0.14;
+    transform: translate3d(-1vw, 0.8vh, 0) rotate(5deg);
+  }
+}
+
+@keyframes tr-lobby-dealer-right {
+  0%, 100% {
+    opacity: 0.1;
+    transform: translate3d(0, 0, 0) rotate(-13deg);
+  }
+  20%, 48% {
+    opacity: 0.18;
+    transform: translate3d(3.2vw, 0.6vh, 0) rotate(-5deg);
+  }
+  66% {
+    opacity: 0.13;
+    transform: translate3d(1vw, 0.2vh, 0) rotate(-10deg);
+  }
+}
+
+@keyframes tr-lobby-player-hand {
+  0%, 100% {
+    opacity: 0.08;
+    transform: translate3d(0, 0, 0) rotate(-25deg);
+  }
+  26%, 50% {
+    opacity: 0.12;
+    transform: translate3d(-4.6vw, -5.8vh, 0) rotate(-18deg);
+  }
+  68% {
+    opacity: 0.11;
+    transform: translate3d(-1.4vw, -1.8vh, 0) rotate(-23deg);
+  }
+}
+
 @keyframes tr-lobby-play-glow {
   0%, 100% {
     box-shadow:
@@ -6384,7 +6730,11 @@ body.tr-lobby-is-open .tr-app {
   .tr-lobby-intro__scene,
   .tr-lobby-intro__veil::before,
   .tr-lobby-intro__scan,
-  .tr-lobby-intro__btn--play {
+  .tr-lobby-intro__btn--play,
+  .tr-lobby-intro__table-glint,
+  .tr-lobby-intro__card,
+  .tr-lobby-intro__chip,
+  .tr-lobby-intro__hand {
     animation: none;
   }
 }
