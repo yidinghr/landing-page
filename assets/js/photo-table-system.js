@@ -40,6 +40,7 @@
   };
 
   const STARTING_BALANCE = 1000000;
+  const HISTORY_STORAGE_KEY = 'yiding-baccarat-photo-history-v1';
   const BET_ZONES = [
     { key: 'player', label: 'PLAYER', left: 31, top: 55, width: 15, height: 12, chipX: 63, chipY: 64 },
     { key: 'banker', label: 'BANKER', left: 54, top: 55, width: 15, height: 12, chipX: 37, chipY: 64 },
@@ -468,14 +469,19 @@
       winner: winnerLetter,
       pp: winners.has('playerPair'),
       bp: winners.has('bankerPair'),
-      l6: winners.has('lucky6')
+      l6: winners.has('lucky6'),
+      playerScore: ps,
+      bankerScore: bs,
+      at: Date.now()
     });
+    saveHistory();
 
     renderHand('player', false);
     renderHand('banker', false);
     renderBalance();
     refreshSettleLabel();
     updateLiveProb();
+    renderRoadmapSign();
     showResultBanner(winners, ps, bs, payout, totalStake);
   }
 
@@ -713,6 +719,218 @@
       '<div><span>' + label + '</span><strong>' + count + '</strong><small>' + pct + '</small></div>'
     ).join('') +
       '<div style="grid-column: 1 / -1;"><span>Tổng số ván</span><strong>' + n + '</strong></div>';
+  }
+
+  function loadHistory() {
+    try {
+      const raw = window.localStorage && window.localStorage.getItem(HISTORY_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+      state.history = parsed.filter((r) => r && ['P', 'B', 'T'].includes(r.winner)).map((r) => ({
+        winner: r.winner,
+        pp: !!r.pp,
+        bp: !!r.bp,
+        l6: !!r.l6,
+        playerScore: Number.isFinite(Number(r.playerScore)) ? Number(r.playerScore) : null,
+        bankerScore: Number.isFinite(Number(r.bankerScore)) ? Number(r.bankerScore) : null,
+        at: Number(r.at) || 0
+      }));
+    } catch (_) {
+      state.history = [];
+    }
+  }
+
+  function saveHistory() {
+    try {
+      if (window.localStorage) {
+        window.localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(state.history.slice(-500)));
+      }
+    } catch (_) {}
+  }
+
+  function renderRoadmap() {
+    renderBead();
+    renderBigRoad();
+    renderDerivedRoads();
+    renderStats();
+    renderPrediction();
+  }
+
+  function renderRoadmapSign() {
+    const host = document.getElementById('trPhotoSignBoard');
+    if (!host) return;
+    const ROWS = 5, COLS = 9, MAX = ROWS * COLS;
+    const slice = state.history.slice(-MAX);
+    host.innerHTML = '';
+    for (let i = 0; i < MAX; i++) {
+      const r = slice[i];
+      const cell = document.createElement('i');
+      cell.className = 'tr-photo-sign-dot' + (r ? ' tr-photo-sign-dot--' + r.winner : '');
+      if (r) cell.textContent = r.winner;
+      host.appendChild(cell);
+    }
+  }
+
+  function renderBead() {
+    const host = document.getElementById('rmBead');
+    if (!host) return;
+    const ROWS = 6, COLS = 44, MAX = ROWS * COLS;
+    const slice = state.history.slice(-MAX);
+    host.innerHTML = '';
+    for (let i = 0; i < MAX; i++) {
+      const r = slice[i];
+      const cell = document.createElement('div');
+      if (!r) {
+        cell.className = 'tr-bead-cell tr-bead-cell--empty';
+      } else {
+        cell.className = 'tr-bead-cell tr-bead-cell--' + r.winner;
+        cell.textContent = r.winner;
+        if (r.pp) cell.classList.add('is-pair-p');
+        if (r.bp) cell.classList.add('is-pair-b');
+      }
+      host.appendChild(cell);
+    }
+  }
+
+  function buildBigRoadData() {
+    const ROWS = 6;
+    const cols = [];
+    let lastWinner = null;
+    state.history.forEach((r) => {
+      if (r.winner === 'T') {
+        if (cols.length) {
+          const col = cols[cols.length - 1];
+          const lastCell = col[col.length - 1];
+          if (lastCell) lastCell.tieCount = (lastCell.tieCount || 0) + 1;
+        } else {
+          cols.push([{ winner: 'T', tieCount: 1, pp: r.pp, bp: r.bp }]);
+        }
+        return;
+      }
+      if (r.winner !== lastWinner || (cols.length && cols[cols.length - 1].length >= ROWS)) {
+        cols.push([{ winner: r.winner, pp: r.pp, bp: r.bp }]);
+        lastWinner = r.winner;
+      } else {
+        cols[cols.length - 1].push({ winner: r.winner, pp: r.pp, bp: r.bp });
+      }
+    });
+    return cols;
+  }
+
+  function renderBigRoad() {
+    const host = document.getElementById('rmBig');
+    if (!host) return;
+    const ROWS = 6;
+    const cols = buildBigRoadData();
+    host.innerHTML = '';
+    const totalCols = Math.max(24, cols.length);
+    for (let c = 0; c < totalCols; c++) {
+      const col = cols[c] || [];
+      for (let row = 0; row < ROWS; row++) {
+        const cellData = col[row];
+        const cell = document.createElement('div');
+        if (!cellData) {
+          cell.className = 'tr-big-cell tr-big-cell--empty';
+        } else {
+          cell.className = 'tr-big-cell tr-big-cell--' + cellData.winner;
+          if (cellData.tieCount) cell.classList.add('has-tie');
+          if (cellData.pp) cell.classList.add('is-pair-p');
+          if (cellData.bp) cell.classList.add('is-pair-b');
+        }
+        host.appendChild(cell);
+      }
+    }
+  }
+
+  function derivedSequence(offset) {
+    const base = buildBigRoadData();
+    const seq = [];
+    for (let c = offset + 1; c < base.length; c++) {
+      const col = base[c] || [];
+      for (let r = 0; r < col.length; r++) {
+        const prev = base[c - offset] || [];
+        const ref = base[c - offset - 1] || [];
+        const red = r === 0 ? prev.length === ref.length : !!prev[r];
+        seq.push(red ? 'R' : 'B');
+      }
+    }
+    return seq;
+  }
+
+  function renderDerivedGrid(parent, title, seq, type) {
+    const wrap = document.createElement('div');
+    wrap.className = 'tr-derived-road tr-derived-road--' + type;
+    wrap.innerHTML = '<span>' + title + '</span><div></div>';
+    const grid = wrap.querySelector('div');
+    const ROWS = 6, COLS = 44, MAX = ROWS * COLS;
+    const slice = seq.slice(-MAX);
+    for (let i = 0; i < MAX; i++) {
+      const v = slice[i];
+      const cell = document.createElement('i');
+      cell.className = 'tr-derived-cell' + (v ? ' tr-derived-cell--' + v : '');
+      grid.appendChild(cell);
+    }
+    parent.appendChild(wrap);
+  }
+
+  function renderDerivedRoads() {
+    const host = document.getElementById('rmDerived');
+    if (!host) return;
+    host.innerHTML = '';
+    renderDerivedGrid(host, 'Big Eye Road', derivedSequence(1), 'eye');
+    renderDerivedGrid(host, 'Small Road', derivedSequence(2), 'small');
+    renderDerivedGrid(host, 'Cockroach Road', derivedSequence(3), 'cockroach');
+  }
+
+  function renderStats() {
+    const host = document.getElementById('rmStats');
+    if (!host) return;
+    const n = state.history.length;
+    if (n === 0) {
+      host.className = 'tr-roadmap-stats tr-roadmap-stats--empty';
+      host.innerHTML = 'Chưa có ván nào.';
+      return;
+    }
+    host.className = 'tr-roadmap-stats';
+    const c = { P: 0, B: 0, T: 0, pp: 0, bp: 0, l6: 0 };
+    state.history.forEach((r) => {
+      c[r.winner]++;
+      if (r.pp) c.pp++;
+      if (r.bp) c.bp++;
+      if (r.l6) c.l6++;
+    });
+    const pct = (k) => (c[k] / n * 100).toFixed(1) + '%';
+    const items = [
+      ['Table', 'VIP BACCARAT 1', ''],
+      ['Shoe', '3', ''],
+      ['Game', n, ''],
+      ['Banker', c.B, pct('B')],
+      ['Player', c.P, pct('P')],
+      ['Tie', c.T, pct('T')],
+      ['B.Pair', c.bp, pct('bp')],
+      ['P.Pair', c.pp, pct('pp')],
+      ['Lucky 6', c.l6, pct('l6')],
+      ['Tổng số ván', n, '']
+    ];
+    host.innerHTML = items.map(([label, count, pctText]) =>
+      '<div><span>' + label + '</span><strong>' + count + '</strong><small>' + pctText + '</small></div>'
+    ).join('');
+  }
+
+  function renderPrediction() {
+    const host = document.getElementById('rmPredict');
+    if (!host) return;
+    const n = state.history.length || 1;
+    const p = state.history.filter((r) => r.winner === 'P').length;
+    const b = state.history.filter((r) => r.winner === 'B').length;
+    const pPct = Math.round(p / n * 100);
+    const bPct = Math.round(b / n * 100);
+    host.innerHTML =
+      '<div class="tr-road-legend"><b class="is-b">B</b><b class="is-p">P</b><b class="is-t">T</b></div>' +
+      '<span>NEXT GAME PREDICTION</span>' +
+      '<div class="tr-road-predict-row"><strong class="is-b">B</strong><strong class="is-p">P</strong></div>' +
+      '<div class="tr-road-predict-row"><small>' + bPct + '%</small><small>' + pPct + '%</small></div>';
   }
 
   // ---------------------------------------------------------------------
@@ -1161,6 +1379,7 @@
   // ---------------------------------------------------------------------
 
   function init() {
+    loadHistory();
     createBetZones();
     wireChipTray();
     wireShoe();
@@ -1174,6 +1393,8 @@
     exposeAnimationApi();
     renderBalance();
     renderAllZones();
+    renderRoadmapSign();
+    updateLiveProb();
     refreshSettleLabel();
   }
 

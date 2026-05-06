@@ -108,7 +108,11 @@
           <!-- Roadmap sign -->
           <button type="button" class="tr-photo-sign" id="trPhotoSignBtn"
                   style="left:9%;top:10%;width:14%;height:20%"
-                  title="Xem lịch sử roadmap"></button>
+                  title="Baccarat history" aria-label="Open baccarat history">
+            <span class="tr-photo-sign__title">HISTORY</span>
+            <span class="tr-photo-sign__limits">Min 1K / Max 500K</span>
+            <span class="tr-photo-sign__board" id="trPhotoSignBoard"></span>
+          </button>
 
           <!-- Toolbar -->
           <div class="tr-photo-tools">
@@ -251,17 +255,16 @@
     </div>
 
     <div class="tr-roadmap-body">
-      <section class="tr-roadmap-section">
-        <h4>Bead Plate (60 ván gần nhất)</h4>
+      <section class="tr-roadmap-section tr-roadmap-section--bead">
         <div class="tr-roadmap-bead" id="rmBead"></div>
       </section>
-      <section class="tr-roadmap-section">
-        <h4>Big Road</h4>
-        <div class="tr-roadmap-big" id="rmBig"></div>
+      <section class="tr-roadmap-section tr-roadmap-section--derived">
+        <div class="tr-roadmap-derived" id="rmDerived"></div>
       </section>
-      <section class="tr-roadmap-section tr-roadmap-section--stats">
-        <h4>Thống kê</h4>
+      <section class="tr-roadmap-section tr-roadmap-section--bottom">
+        <div class="tr-roadmap-big" id="rmBig"></div>
         <div class="tr-roadmap-stats" id="rmStats">Chưa có ván nào.</div>
+        <div class="tr-roadmap-predict" id="rmPredict"></div>
       </section>
     </div>
   </div>
