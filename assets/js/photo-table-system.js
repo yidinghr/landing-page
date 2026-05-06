@@ -41,8 +41,6 @@
 
   const STARTING_BALANCE = 1000000;
   const HISTORY_STORAGE_KEY = 'yiding-baccarat-photo-history-v1';
-  const CHIP_DENOMS = [1000000, 500000, 100000, 50000, 10000, 5000, 1000, 500, 100, 25, 5];
-  const BANK_CHIP_DENOMS = [100000, 50000, 10000, 5000, 1000, 500, 100, 25, 5];
   const BET_ZONES = [
     { key: 'player', label: 'PLAYER', left: 31, top: 55, width: 15, height: 12, chipX: 63, chipY: 64 },
     { key: 'banker', label: 'BANKER', left: 54, top: 55, width: 15, height: 12, chipX: 37, chipY: 64 },
@@ -51,16 +49,6 @@
     { key: 'bankerPair', label: 'B PAIR', left: 56, top: 33, width: 10, height: 10, chipX: 20, chipY: 70 },
     { key: 'lucky6', label: 'LUCKY 6', left: 24, top: 52, width: 9, height: 9, chipX: 45, chipY: 72 }
   ];
-  const PLAYER_CHIP_SLOTS = [
-    { seat: 1, left: 22.5, top: 65.6, width: 13.6, height: 10.8, rotate: 14 },
-    { seat: 2, left: 39.2, top: 75.0, width: 13.2, height: 7.2, rotate: 4 },
-    { seat: 3, left: 50.6, top: 77.4, width: 11.6, height: 6.8, rotate: 0 },
-    { seat: 4, left: 58.2, top: 76.4, width: 13.6, height: 6.9, rotate: -2 },
-    { seat: 5, left: 74.6, top: 66.9, width: 15.0, height: 10.8, rotate: -13 },
-    { seat: 6, left: 10.8, top: 50.8, width: 7.2, height: 16.2, rotate: 67 },
-    { seat: 7, left: 87.5, top: 54.0, width: 7.2, height: 16.0, rotate: -66 }
-  ];
-
   // ---------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------
@@ -73,8 +61,6 @@
     autoDealing: false,
     drag:    null,
     squeeze: null,
-    activeSeat: 1,
-    seatBalances: [STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE, STARTING_BALANCE],
     selectedChipValue: 0,  // chip currently selected for click-to-bet
     // Round history — appended on every settle, used by the roadmap modal
     // and by the right-panel empirical % update.
@@ -151,112 +137,12 @@
   function renderBalance() {
     const balEl = document.getElementById('balanceAmt');
     const betEl = document.getElementById('totalBetAmt');
-    state.seatBalances[state.activeSeat - 1] = state.balance;
     if (balEl) { balEl.textContent = fmt(state.balance); flash(balEl); }
     if (betEl) {
       const t = totalBet();
       betEl.textContent = t > 0 ? fmt(t) : '—';
       if (t > 0) flash(betEl);
     }
-    $$('.tr-seat').forEach(function (seatEl) {
-      const id = Number(seatEl.getAttribute('data-seat'));
-      const strong = $('.tr-seat__balance strong', seatEl);
-      if (id && strong) strong.textContent = fmt(state.seatBalances[id - 1] || STARTING_BALANCE);
-    });
-    renderSeatChipSlots();
-  }
-
-  function chipBreakdown(amount) {
-    let rest = Math.max(0, Math.floor(Number(amount) || 0));
-    const parts = [];
-    CHIP_DENOMS.forEach(function (value) {
-      const count = Math.floor(rest / value);
-      if (count > 0) {
-        parts.push({ value, count, label: chipShortLabel(value), cls: chipClassFor(value) });
-        rest -= count * value;
-      }
-    });
-    return parts;
-  }
-
-  function bankChipStacks(amount) {
-    let rest = Math.max(0, Math.floor(Number(amount) || 0));
-    const stacks = [];
-    BANK_CHIP_DENOMS.forEach(function (value) {
-      let count = Math.floor(rest / value);
-      rest -= count * value;
-      while (count > 0 && stacks.length < 9) {
-        const stackCount = Math.min(count, 10);
-        stacks.push({ value, count: stackCount, totalCount: count, label: chipShortLabel(value), cls: chipClassFor(value) });
-        count -= stackCount;
-      }
-    });
-    return stacks;
-  }
-
-  function createPlayerChipSlots() {
-    const overlay = document.getElementById('trPhotoOverlay');
-    if (!overlay || document.getElementById('trPlayerChipSlots')) return;
-    const root = document.createElement('div');
-    root.id = 'trPlayerChipSlots';
-    root.className = 'tr-player-chip-slots';
-    PLAYER_CHIP_SLOTS.forEach(function (slot) {
-      const el = document.createElement('div');
-      el.className = 'tr-player-chip-slot';
-      el.setAttribute('data-seat-slot', String(slot.seat));
-      el.style.left = slot.left + '%';
-      el.style.top = slot.top + '%';
-      el.style.width = slot.width + '%';
-      el.style.height = slot.height + '%';
-      el.style.setProperty('--slot-rotate', (slot.rotate || 0) + 'deg');
-      el.innerHTML =
-        '<div class="tr-player-chip-slot__well"></div>' +
-        '<div class="tr-player-chip-slot__acrylic"></div>' +
-        '<div class="tr-player-chip-slot__chips" data-slot-chips></div>' +
-        '<span class="tr-player-chip-slot__balance" data-slot-balance></span>';
-      root.appendChild(el);
-    });
-    overlay.appendChild(root);
-  }
-
-  function renderSeatChipSlots() {
-    const root = document.getElementById('trPlayerChipSlots');
-    if (!root) return;
-    PLAYER_CHIP_SLOTS.forEach(function (slot) {
-      const slotEl = $('[data-seat-slot="' + slot.seat + '"]', root);
-      if (!slotEl) return;
-      const balance = slot.seat === state.activeSeat
-        ? state.balance
-        : (state.seatBalances[slot.seat - 1] || STARTING_BALANCE);
-      const chipsHost = $('[data-slot-chips]', slotEl);
-      const balanceEl = $('[data-slot-balance]', slotEl);
-      if (balanceEl) balanceEl.textContent = fmt(balance);
-      if (!chipsHost) return;
-      chipsHost.innerHTML = '';
-      const parts = bankChipStacks(balance);
-      parts.forEach(function (part, groupIndex) {
-        const stack = document.createElement('div');
-        stack.className = 'tr-player-chip-stack';
-        stack.style.setProperty('--stack-index', String(groupIndex));
-        stack.style.setProperty('--stack-depth', String(part.count));
-        stack.title = part.label + ' x ' + part.count;
-        const visible = Math.min(part.count, 10);
-        for (let i = 0; i < visible; i++) {
-          const chip = document.createElement('i');
-          chip.className = 'tr-player-bank-chip ' + part.cls;
-          chip.style.setProperty('--chip-layer', String(i));
-          chip.textContent = i === visible - 1 ? part.label : '';
-          stack.appendChild(chip);
-        }
-        if (part.count > visible) {
-          const count = document.createElement('b');
-          count.textContent = 'x' + part.count;
-          stack.appendChild(count);
-        }
-        chipsHost.appendChild(stack);
-      });
-      slotEl.classList.toggle('is-active-seat', slot.seat === state.activeSeat);
-    });
   }
 
   // ---------------------------------------------------------------------
@@ -1493,7 +1379,6 @@
 
   function init() {
     loadHistory();
-    createPlayerChipSlots();
     createBetZones();
     wireChipTray();
     wireShoe();
