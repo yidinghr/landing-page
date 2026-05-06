@@ -14,10 +14,56 @@
 <body class="training-page" data-role="dealer">
 
 <section id="tr-lobby-intro" class="tr-lobby-intro" aria-label="Baccarat lobby intro">
-  <!-- Live video source: Pexels 7608215, free-to-use Baccarat dealer footage. -->
-  <video class="tr-lobby-intro__video" autoplay muted loop playsinline preload="auto" aria-label="Live Baccarat lobby preview">
-    <source src="/image/baccarat-lobby-live.mp4" type="video/mp4">
-  </video>
+  <div class="tr-lobby-game-scene" aria-hidden="true">
+    <div class="tr-lobby-topbar">
+      <span class="tr-lobby-logo">3D</span>
+      <span class="tr-lobby-title">BACCARAT</span>
+      <span class="tr-lobby-menu"></span>
+    </div>
+    <div class="tr-lobby-side tr-lobby-side--slots">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="tr-lobby-side tr-lobby-side--mini">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="tr-lobby-world">
+      <div class="tr-lobby-table">
+        <div class="tr-lobby-table__wood"></div>
+        <div class="tr-lobby-table__felt">
+          <span class="tr-lobby-table__label">BACCARAT</span>
+          <span class="tr-lobby-zone tr-lobby-zone--player">PLAYER</span>
+          <span class="tr-lobby-zone tr-lobby-zone--tie">TIE</span>
+          <span class="tr-lobby-zone tr-lobby-zone--banker">BANKER</span>
+          <span class="tr-lobby-shoe"></span>
+          <span class="tr-lobby-card tr-lobby-card--one"></span>
+          <span class="tr-lobby-card tr-lobby-card--two"></span>
+          <span class="tr-lobby-card tr-lobby-card--three"></span>
+          <span class="tr-lobby-card tr-lobby-card--four"></span>
+          <span class="tr-lobby-chip tr-lobby-chip--left"></span>
+          <span class="tr-lobby-chip tr-lobby-chip--right"></span>
+          <span class="tr-lobby-chip tr-lobby-chip--center"></span>
+        </div>
+      </div>
+      <div class="tr-lobby-dealer">
+        <span class="tr-lobby-person__head"></span>
+        <span class="tr-lobby-person__body"></span>
+        <span class="tr-lobby-arm tr-lobby-arm--left"></span>
+        <span class="tr-lobby-arm tr-lobby-arm--right"></span>
+      </div>
+      <div class="tr-lobby-player tr-lobby-player--left">
+        <span class="tr-lobby-chair"></span>
+        <span class="tr-lobby-person__head"></span>
+        <span class="tr-lobby-person__body"></span>
+        <span class="tr-lobby-player-arm"></span>
+      </div>
+      <div class="tr-lobby-player tr-lobby-player--right">
+        <span class="tr-lobby-chair"></span>
+        <span class="tr-lobby-person__head"></span>
+        <span class="tr-lobby-person__body"></span>
+        <span class="tr-lobby-player-arm"></span>
+      </div>
+    </div>
+  </div>
   <div class="tr-lobby-intro__veil"></div>
   <div class="tr-lobby-intro__scan"></div>
   <div class="tr-lobby-intro__content">
