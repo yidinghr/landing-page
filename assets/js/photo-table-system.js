@@ -794,7 +794,15 @@
     cardEl.classList.toggle('is-red', meta.red);
     faceEl.innerHTML = cardFaceHtml(card);
     cardEl.style.setProperty('--reveal', '0');
+    cardEl.style.setProperty('--tilt', '0deg');
+    cardEl.style.setProperty('--lift', '0px');
+    cardEl.style.setProperty('--twist', '0deg');
+    cardEl.style.setProperty('--blur', '0px');
+    cardEl.style.setProperty('--shadow-y', '20px');
+    cardEl.style.setProperty('--shadow-blur', '50px');
+    cardEl.style.setProperty('--bend', '0px');
     faceEl.style.clipPath = 'circle(0% at 50% 100%)';
+    cardEl.classList.remove('is-squeezing', 'is-squeeze-complete');
 
     state.squeeze = { handKey, idx, reveal: 0, dragging: false, startX: 0, startY: 0, anchorX: 50, anchorY: 100 };
     modal.hidden = false;
@@ -810,6 +818,7 @@
       state.squeeze.anchorX = Math.max(0, Math.min(100, ((point.clientX - rect.left) / rect.width) * 100));
       state.squeeze.anchorY = Math.max(0, Math.min(100, ((point.clientY - rect.top) / rect.height) * 100));
       faceEl.style.clipPath = 'circle(0% at ' + state.squeeze.anchorX + '% ' + state.squeeze.anchorY + '%)';
+      cardEl.classList.add('is-squeezing');
     }
 
     function onMove(e) {
@@ -823,7 +832,28 @@
       state.squeeze.reveal = r;
       cardEl.style.setProperty('--reveal', String(r));
       faceEl.style.clipPath = 'circle(' + (r * 148) + '% at ' + state.squeeze.anchorX + '% ' + state.squeeze.anchorY + '%)';
-      cardEl.style.transform = 'translate(' + (dx * 0.04) + 'px, ' + (-r * 58) + 'px) rotate(' + (dx * 0.015) + 'deg)';
+      let tilt;
+      let lift;
+      if (r < 0.28) {
+        const t = r / 0.28;
+        tilt = 75 - (t * 14);
+        lift = -10 * t;
+      } else if (r < 0.72) {
+        const t = (r - 0.28) / 0.44;
+        tilt = 61 - (t * 21);
+        lift = -10 - (t * 15);
+      } else {
+        const t = (r - 0.72) / 0.28;
+        tilt = 40 - (t * 40);
+        lift = -25 + (t * 25);
+      }
+      cardEl.style.setProperty('--tilt', tilt.toFixed(2) + 'deg');
+      cardEl.style.setProperty('--lift', lift.toFixed(2) + 'px');
+      cardEl.style.setProperty('--twist', (dx * 0.012).toFixed(2) + 'deg');
+      cardEl.style.setProperty('--blur', (r > 0.12 && r < 0.78 ? 0.8 : 0).toFixed(2) + 'px');
+      cardEl.style.setProperty('--shadow-y', (22 + r * 18).toFixed(1) + 'px');
+      cardEl.style.setProperty('--shadow-blur', (42 + r * 42).toFixed(1) + 'px');
+      cardEl.style.setProperty('--bend', (Math.sin(Math.min(1, r) * Math.PI) * 10).toFixed(1) + 'px');
     }
 
     function onUp() {
@@ -838,10 +868,12 @@
         }
         cardEl.style.setProperty('--reveal', '1');
         faceEl.style.clipPath = 'circle(148% at ' + state.squeeze.anchorX + '% ' + state.squeeze.anchorY + '%)';
+        cardEl.classList.remove('is-squeezing');
+        cardEl.classList.add('is-squeeze-complete');
         setTimeout(function () {
           closeSqueeze();
           settleIfPlayerRevealComplete();
-        }, 450);
+        }, 760);
       }
     }
 
@@ -870,6 +902,7 @@
     if (cardEl) {
       cardEl.style.setProperty('--reveal', '0');
       cardEl.style.transform = '';
+      cardEl.classList.remove('is-squeezing', 'is-squeeze-complete');
       const faceEl = document.getElementById('trSqueezeFace');
       if (faceEl) faceEl.style.clipPath = '';
     }

@@ -86,7 +86,7 @@ test('photo table: bet → balance debit, settle → payout, squeeze opens', asy
   await page.mouse.down();
   await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2 - 280, { steps: 20 });
   await page.mouse.up();
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(950);
   await expect(page.locator('#trSqueezeModal')).toBeHidden();
 
   // Right-drag another face-down card still opens squeeze
@@ -105,7 +105,7 @@ test('photo table: bet → balance debit, settle → payout, squeeze opens', asy
   await page.mouse.down();
   await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2 - 280, { steps: 20 });
   await page.mouse.up();
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(950);
   await expect(page.locator('#trSqueezeModal')).toBeHidden();
 
   // The squeezed card should now be face-up (revealed in hand)
