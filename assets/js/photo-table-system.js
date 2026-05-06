@@ -42,6 +42,7 @@
   const STARTING_BALANCE = 1000000;
   const HISTORY_STORAGE_KEY = 'yiding-baccarat-photo-history-v1';
   const CHIP_DENOMS = [1000000, 500000, 100000, 50000, 10000, 5000, 1000, 500, 100, 25, 5];
+  const BANK_CHIP_DENOMS = [100000, 50000, 10000, 5000, 1000, 500, 100, 25, 5];
   const BET_ZONES = [
     { key: 'player', label: 'PLAYER', left: 31, top: 55, width: 15, height: 12, chipX: 63, chipY: 64 },
     { key: 'banker', label: 'BANKER', left: 54, top: 55, width: 15, height: 12, chipX: 37, chipY: 64 },
@@ -176,6 +177,21 @@
     return parts;
   }
 
+  function bankChipStacks(amount) {
+    let rest = Math.max(0, Math.floor(Number(amount) || 0));
+    const stacks = [];
+    BANK_CHIP_DENOMS.forEach(function (value) {
+      let count = Math.floor(rest / value);
+      rest -= count * value;
+      while (count > 0 && stacks.length < 9) {
+        const stackCount = Math.min(count, 10);
+        stacks.push({ value, count: stackCount, totalCount: count, label: chipShortLabel(value), cls: chipClassFor(value) });
+        count -= stackCount;
+      }
+    });
+    return stacks;
+  }
+
   function createPlayerChipSlots() {
     const overlay = document.getElementById('trPhotoOverlay');
     if (!overlay || document.getElementById('trPlayerChipSlots')) return;
@@ -193,6 +209,7 @@
       el.style.setProperty('--slot-rotate', (slot.rotate || 0) + 'deg');
       el.innerHTML =
         '<div class="tr-player-chip-slot__well"></div>' +
+        '<div class="tr-player-chip-slot__acrylic"></div>' +
         '<div class="tr-player-chip-slot__chips" data-slot-chips></div>' +
         '<span class="tr-player-chip-slot__balance" data-slot-balance></span>';
       root.appendChild(el);
@@ -214,13 +231,14 @@
       if (balanceEl) balanceEl.textContent = fmt(balance);
       if (!chipsHost) return;
       chipsHost.innerHTML = '';
-      const parts = chipBreakdown(balance).slice(0, 6);
+      const parts = bankChipStacks(balance);
       parts.forEach(function (part, groupIndex) {
         const stack = document.createElement('div');
         stack.className = 'tr-player-chip-stack';
         stack.style.setProperty('--stack-index', String(groupIndex));
+        stack.style.setProperty('--stack-depth', String(part.count));
         stack.title = part.label + ' x ' + part.count;
-        const visible = Math.min(part.count, 7);
+        const visible = Math.min(part.count, 10);
         for (let i = 0; i < visible; i++) {
           const chip = document.createElement('i');
           chip.className = 'tr-player-bank-chip ' + part.cls;
