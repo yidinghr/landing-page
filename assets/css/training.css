@@ -5257,46 +5257,14 @@ body[data-role="customer"] #trPhotoSettle {
   position: absolute;
   pointer-events: auto;
   cursor: pointer;
-  overflow: hidden;
-  background: #07090f;
+  background: transparent;
   border: none;
   padding: 0;
   border-radius: 8px;
   transition: background 0.12s, box-shadow 0.12s;
 }
-.tr-photo-sign::before,
-.tr-photo-sign::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
-  animation: tr-photo-sign-slide 10s infinite;
-}
-.tr-photo-sign::before {
-  background:
-    linear-gradient(180deg, rgba(8, 11, 18, 0.24), rgba(0, 0, 0, 0.2)),
-    url("../../image/baccarat-table.png");
-  background-position: 17% 22%;
-  background-size: 760%;
-}
-.tr-photo-sign::after {
-  background-image: url("../../image/dealer-sign-dragon.jpeg");
-  opacity: 0;
-  animation-delay: -5s;
-}
-.tr-photo-sign:hover::before,
-.tr-photo-sign:hover::after {
-  filter: brightness(1.18);
-}
-@keyframes tr-photo-sign-slide {
-  0%, 45% { opacity: 1; }
-  50%, 95% { opacity: 0; }
-  100% { opacity: 1; }
-}
 .tr-photo-sign:hover {
+  background: rgba(242, 212, 134, 0.12);
   box-shadow: inset 0 0 0 1px rgba(242, 212, 134, 0.55), 0 0 14px rgba(242, 212, 134, 0.3);
 }
 
