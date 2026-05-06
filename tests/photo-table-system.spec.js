@@ -94,7 +94,7 @@ test('photo table: bet → balance debit, settle → payout, squeeze opens', asy
   const squeezeBox = await squeezeTarget.boundingBox();
   await page.mouse.move(squeezeBox.x + squeezeBox.width / 2, squeezeBox.y + squeezeBox.height - 5);
   await page.mouse.down({ button: 'right' });
-  await page.mouse.move(squeezeBox.x + squeezeBox.width / 2, squeezeBox.y - 80, { steps: 12 });
+  await page.mouse.move(squeezeBox.x + squeezeBox.width / 2, squeezeBox.y + squeezeBox.height / 2 - 280, { steps: 20 });
   await page.mouse.up({ button: 'right' });
   await expect(page.locator('#trSqueezeModal')).toBeVisible();
   await page.screenshot({ path: 'test-results/photo-04-squeeze-open.png' });

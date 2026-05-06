@@ -787,6 +787,7 @@
 
     const modal = document.getElementById('trSqueezeModal');
     const cardEl = document.getElementById('trSqueezeCard');
+    const stageEl = cardEl ? cardEl.closest('.tr-squeeze-stage') : null;
     const faceEl = document.getElementById('trSqueezeFace');
     if (!modal || !cardEl || !faceEl) return;
 
@@ -794,12 +795,12 @@
     cardEl.classList.toggle('is-red', meta.red);
     faceEl.innerHTML = cardFaceHtml(card);
     cardEl.style.setProperty('--reveal', '0');
-    cardEl.style.setProperty('--tilt', '0deg');
+    cardEl.style.setProperty('--tilt', '4deg');
     cardEl.style.setProperty('--lift', '0px');
     cardEl.style.setProperty('--twist', '0deg');
     cardEl.style.setProperty('--blur', '0px');
-    cardEl.style.setProperty('--shadow-y', '20px');
-    cardEl.style.setProperty('--shadow-blur', '50px');
+    cardEl.style.setProperty('--shadow-y', '18px');
+    cardEl.style.setProperty('--shadow-blur', '42px');
     cardEl.style.setProperty('--bend', '0px');
     faceEl.style.clipPath = 'circle(0% at 50% 100%)';
     cardEl.classList.remove('is-squeezing', 'is-squeeze-complete');
@@ -810,6 +811,7 @@
     function onDown(e) {
       if (e.touches === undefined && e.button !== 0 && e.button !== 2) return;
       e.preventDefault();
+      e.stopPropagation();
       const point = e.touches ? e.touches[0] : e;
       const rect = cardEl.getBoundingClientRect();
       state.squeeze.dragging = true;
@@ -836,24 +838,24 @@
       let lift;
       if (r < 0.28) {
         const t = r / 0.28;
-        tilt = 75 - (t * 14);
-        lift = -10 * t;
+        tilt = 4 - (t * 54);
+        lift = -12 * t;
       } else if (r < 0.72) {
         const t = (r - 0.28) / 0.44;
-        tilt = 61 - (t * 21);
-        lift = -10 - (t * 15);
+        tilt = -50 + (t * 30);
+        lift = -12 - (t * 13);
       } else {
         const t = (r - 0.72) / 0.28;
-        tilt = 40 - (t * 40);
+        tilt = -20 + (t * 20);
         lift = -25 + (t * 25);
       }
       cardEl.style.setProperty('--tilt', tilt.toFixed(2) + 'deg');
       cardEl.style.setProperty('--lift', lift.toFixed(2) + 'px');
       cardEl.style.setProperty('--twist', (dx * 0.012).toFixed(2) + 'deg');
-      cardEl.style.setProperty('--blur', (r > 0.12 && r < 0.78 ? 0.8 : 0).toFixed(2) + 'px');
-      cardEl.style.setProperty('--shadow-y', (22 + r * 18).toFixed(1) + 'px');
-      cardEl.style.setProperty('--shadow-blur', (42 + r * 42).toFixed(1) + 'px');
-      cardEl.style.setProperty('--bend', (Math.sin(Math.min(1, r) * Math.PI) * 10).toFixed(1) + 'px');
+      cardEl.style.setProperty('--blur', (r > 0.1 && r < 0.82 ? 0.55 : 0).toFixed(2) + 'px');
+      cardEl.style.setProperty('--shadow-y', (18 + r * 28).toFixed(1) + 'px');
+      cardEl.style.setProperty('--shadow-blur', (42 + r * 52).toFixed(1) + 'px');
+      cardEl.style.setProperty('--bend', (Math.sin(Math.min(1, r) * Math.PI) * 3).toFixed(1) + 'px');
     }
 
     function onUp() {
@@ -879,6 +881,10 @@
 
     cardEl.addEventListener('mousedown', onDown);
     cardEl.addEventListener('touchstart', onDown, { passive: false });
+    if (stageEl) {
+      stageEl.addEventListener('mousedown', onDown);
+      stageEl.addEventListener('touchstart', onDown, { passive: false });
+    }
     document.addEventListener('mousemove', onMove);
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('mouseup', onUp);
@@ -888,6 +894,10 @@
     state.squeeze.cleanup = () => {
       cardEl.removeEventListener('mousedown', onDown);
       cardEl.removeEventListener('touchstart', onDown);
+      if (stageEl) {
+        stageEl.removeEventListener('mousedown', onDown);
+        stageEl.removeEventListener('touchstart', onDown);
+      }
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('mouseup', onUp);
