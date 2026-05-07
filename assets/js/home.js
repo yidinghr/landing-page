@@ -195,7 +195,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     accountFormMode: "create",
     editingAccountUsername: "",
     accountFeedback: { text: "", type: "" },
-    pdfZoom: 1,
+    pdfZoom: 1.25,
     pdfValues: Object.create(null)
   };
   let pdfDocumentPromise = null;
@@ -662,12 +662,18 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     });
 
     chatBody.addEventListener("click", function (event) {
+      const exportButton = event.target.closest("[data-pdf-export]");
+      if (exportButton) {
+        exportFilledPdf(exportButton);
+        return;
+      }
+
       const zoomButton = event.target.closest("[data-pdf-zoom]");
       if (zoomButton) {
         const direction = zoomButton.getAttribute("data-pdf-zoom");
         const nextZoom = direction === "in"
-          ? Math.min(uiState.pdfZoom + 0.1, 1.8)
-          : Math.max(uiState.pdfZoom - 0.1, 0.55);
+          ? Math.min(uiState.pdfZoom + 0.1, 2.5)
+          : Math.max(uiState.pdfZoom - 0.1, 0.75);
         uiState.pdfZoom = Math.round(nextZoom * 10) / 10;
         const zoomLabel = chatBody.querySelector("[data-pdf-zoom-label]");
         if (zoomLabel) zoomLabel.textContent = Math.round(uiState.pdfZoom * 100) + "%";
@@ -1234,6 +1240,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
       '<span data-pdf-zoom-label>' + Math.round(uiState.pdfZoom * 100) + '%</span>',
       '<button type="button" data-pdf-zoom="in" aria-label="Zoom in">+</button>',
       '</div>',
+      '<button type="button" class="dashboard-button dashboard-button--accent dashboard-pdf-export" data-pdf-export>Xuất PDF</button>',
       '</div>',
       '<div class="dashboard-pdf-viewer" id="dashboardPdfViewer" aria-label="' + escapeHtml(t("pdfDropTitle")) + '">',
       '<div class="dashboard-pdf-loading">' + escapeHtml(t("pdfStatusReady")) + '</div>',
@@ -1402,6 +1409,111 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     if (value === true) return "✓";
     if (!value) return "";
     return String(value);
+  }
+
+  async function exportFilledPdf(button) {
+    const originalLabel = button ? button.textContent : "";
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Đang xuất...";
+    }
+
+    try {
+      const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+      const response = await fetch(PDF_FORM_URL);
+      const bytes = await response.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(bytes);
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const pages = pdfDoc.getPages();
+      const ink = rgb(0.02, 0.05, 0.1);
+      const markInk = rgb(0.02, 0.48, 0.18);
+
+      PDF_PREVIEW_FIELDS.forEach(function (field) {
+        const page = pages[field.page - 1];
+        if (!page) return;
+
+        const value = getPdfValue(field.key);
+        const expected = field.value;
+        const shouldMark = field.mark && (expected ? value === expected : Boolean(value));
+        const text = field.mark ? "" : formatPdfPreviewValue(value);
+        if (!shouldMark && !text) return;
+
+        const width = page.getWidth();
+        const height = page.getHeight();
+        const x = (field.x / 100) * width;
+        const yTop = (field.y / 100) * height;
+
+        if (field.mark) {
+          drawPdfCheck(page, {
+            x: x + 1.5,
+            y: height - yTop - ((field.h / 100) * height * 0.58),
+            width: (field.w / 100) * width,
+            color: markInk
+          });
+          return;
+        }
+
+        const fontSize = field.fontSize || 7.4;
+        page.drawText(toPdfSafeText(text), {
+          x: x,
+          y: height - yTop - fontSize,
+          size: fontSize,
+          font: font,
+          color: ink,
+          maxWidth: (field.w / 100) * width
+        });
+      });
+
+      const outputBytes = await pdfDoc.save();
+      const blob = new Blob([outputBytes], { type: "application/pdf" });
+      const fileName = "ITO Representative Application Form - filled.pdf";
+      downloadBlob(blob, fileName);
+    } catch (error) {
+      window.alert("Không thể xuất PDF: " + String(error && error.message || error));
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = originalLabel || "Xuất PDF";
+      }
+    }
+  }
+
+  function drawPdfCheck(page, options) {
+    const x = options.x;
+    const y = options.y;
+    const size = Math.max(options.width || 8, 8);
+    page.drawLine({
+      start: { x: x, y: y },
+      end: { x: x + size * 0.34, y: y - size * 0.33 },
+      thickness: 1.4,
+      color: options.color
+    });
+    page.drawLine({
+      start: { x: x + size * 0.34, y: y - size * 0.33 },
+      end: { x: x + size * 0.94, y: y + size * 0.42 },
+      thickness: 1.4,
+      color: options.color
+    });
+  }
+
+  function toPdfSafeText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\x20-\x7E]/g, "");
+  }
+
+  function downloadBlob(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 1000);
   }
 
   function renderStaticPanel(title, bodyText) {
