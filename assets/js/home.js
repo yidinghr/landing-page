@@ -395,10 +395,53 @@
     }
   };
 
+  Object.assign(customText["zh-Hant"], {
+    menuPdf: "Làm file pdf",
+    pdfTitle: "Làm file pdf",
+    pdfBadge: "Draft",
+    pdfBody: "Khu chuẩn bị tạo và xử lý file PDF. Bố cục hiện tại để sẵn vùng làm việc lớn ở giữa.",
+    pdfDropTitle: "Vùng làm việc PDF",
+    pdfDropHint: "Sau này có thể thêm kéo thả file, xem trước trang, ghép file hoặc xuất PDF tại đây.",
+    pdfSideTitle: "Công cụ PDF",
+    pdfSideHint: "Panel bên phải để đặt tuỳ chọn, lịch sử và trạng thái xử lý.",
+    pdfToolUpload: "Tải file",
+    pdfToolPreview: "Xem trước",
+    pdfToolExport: "Xuất PDF",
+    pdfStatusReady: "Sẵn sàng"
+  });
+  Object.assign(customText.vi, {
+    menuPdf: "Làm file pdf",
+    pdfTitle: "Làm file pdf",
+    pdfBadge: "Draft",
+    pdfBody: "Khu chuẩn bị tạo và xử lý file PDF. Bố cục hiện tại để sẵn vùng làm việc lớn ở giữa.",
+    pdfDropTitle: "Vùng làm việc PDF",
+    pdfDropHint: "Sau này có thể thêm kéo thả file, xem trước trang, ghép file hoặc xuất PDF tại đây.",
+    pdfSideTitle: "Công cụ PDF",
+    pdfSideHint: "Panel bên phải để đặt tuỳ chọn, lịch sử và trạng thái xử lý.",
+    pdfToolUpload: "Tải file",
+    pdfToolPreview: "Xem trước",
+    pdfToolExport: "Xuất PDF",
+    pdfStatusReady: "Sẵn sàng"
+  });
+  Object.assign(customText.en, {
+    menuPdf: "Make PDF",
+    pdfTitle: "Make PDF",
+    pdfBadge: "Draft",
+    pdfBody: "A workspace prepared for creating and processing PDF files. The current layout reserves a large work panel in the middle.",
+    pdfDropTitle: "PDF workspace",
+    pdfDropHint: "File upload, page preview, merge tools, and export actions can be added here next.",
+    pdfSideTitle: "PDF tools",
+    pdfSideHint: "The right panel is reserved for options, history, and processing status.",
+    pdfToolUpload: "Upload file",
+    pdfToolPreview: "Preview",
+    pdfToolExport: "Export PDF",
+    pdfStatusReady: "Ready"
+  });
   const menuConfigs = [
     { id: "employees", labelKey: "menuEmployees", icon: "👥", adminOnly: true },
     { id: "schedule", labelKey: "menuSchedule", icon: "🗓", adminOnly: true },
     { id: "operationTraining", labelKey: "menuTraining", icon: "🎯" },
+    { id: "pdfMaker", labelKey: "menuPdf", icon: "PDF", adminOnly: true },
     { id: "chiChi", labelKey: "menuChiChi", icon: "💬", adminOnly: true },
     { id: "attendance", labelKey: "menuAttendance", icon: "⏱", adminOnly: true },
     { id: "yidingInfo", labelKey: "menuInfo", icon: "✦", adminOnly: true },
@@ -754,6 +797,13 @@
       return;
     }
 
+    if (uiState.activeTab === "pdfMaker") {
+      chatTitle.textContent = t("pdfTitle");
+      chatBadge.textContent = t("pdfBadge");
+      chatBody.innerHTML = renderPdfMainPanel();
+      return;
+    }
+
     if (uiState.activeTab === "operationTraining") {
       chatTitle.textContent = t("trainingTitle");
       chatBadge.textContent = t("trainingBadge");
@@ -814,6 +864,12 @@
     if (uiState.activeTab === "yidingInfo") {
       detailTitle.textContent = t("infoTitle");
       detailBody.innerHTML = renderStaticPanel(t("infoTitle"), t("infoBody"));
+      return;
+    }
+
+    if (uiState.activeTab === "pdfMaker") {
+      detailTitle.textContent = t("pdfSideTitle");
+      detailBody.innerHTML = renderPdfSidePanel();
       return;
     }
 
@@ -1025,6 +1081,38 @@
     ].join("");
   }
 
+  function renderPdfMainPanel() {
+    return [
+      '<div class="dashboard-pdf-workspace">',
+      '<section class="dashboard-pdf-main-panel">',
+      '<div class="dashboard-pdf-main-panel__icon">PDF</div>',
+      '<h3 class="dashboard-chat-surface__title">' + escapeHtml(t("pdfDropTitle")) + '</h3>',
+      '<p class="dashboard-chat-surface__body">' + escapeHtml(t("pdfBody")) + '</p>',
+      '<div class="dashboard-pdf-dropzone">',
+      '<strong>' + escapeHtml(t("pdfDropTitle")) + '</strong>',
+      '<span>' + escapeHtml(t("pdfDropHint")) + '</span>',
+      '</div>',
+      '</section>',
+      '</div>'
+    ].join("");
+  }
+
+  function renderPdfSidePanel() {
+    return [
+      '<section class="dashboard-surface-card dashboard-pdf-side-panel">',
+      '<div class="dashboard-panel__meta">',
+      '<h3 class="dashboard-panel__title">' + escapeHtml(t("pdfSideTitle")) + '</h3>',
+      '<span class="dashboard-role-badge">' + escapeHtml(t("pdfStatusReady")) + '</span>',
+      '</div>',
+      '<p class="dashboard-readonly-note">' + escapeHtml(t("pdfSideHint")) + '</p>',
+      '<div class="dashboard-pdf-tool-list">',
+      '<button type="button" class="dashboard-pdf-tool" disabled><span>01</span><strong>' + escapeHtml(t("pdfToolUpload")) + '</strong></button>',
+      '<button type="button" class="dashboard-pdf-tool" disabled><span>02</span><strong>' + escapeHtml(t("pdfToolPreview")) + '</strong></button>',
+      '<button type="button" class="dashboard-pdf-tool" disabled><span>03</span><strong>' + escapeHtml(t("pdfToolExport")) + '</strong></button>',
+      '</div>',
+      '</section>'
+    ].join("");
+  }
   function renderStaticPanel(title, bodyText) {
     return [
       '<section class="dashboard-surface-card">',
