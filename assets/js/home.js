@@ -1,3 +1,6 @@
+import * as pdfjsLib from "pdfjs-dist";
+import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
+
 (function () {
   const i18n = window.YiDingI18n || null;
   const authStore = window.YiDingAuthStore || null;
@@ -6,7 +9,9 @@
   const HOME_TAB_STORAGE_KEY = "yiding_dashboard_active_tab_v2";
   const REDIRECT_TO_LOGIN = "../index.html";
   const CHI_CHI_URL = "http://46.225.160.243";
+  const PDF_FORM_URL = new URL("../pdf/ito-representative-application-form.pdf", import.meta.url).href;
   const ROLE_OWNER = "owner";
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
   const SHIFT_CODE_DEFINITIONS = Object.freeze([
     { code: "A", checkIn: "7", checkOut: "15", hoursPay: 8 },
     { code: "A1", checkIn: "8", checkOut: "16", hoursPay: 8 },
@@ -37,6 +42,112 @@
     result[item.code] = item;
     return result;
   }, {});
+  const PDF_FIELD_GROUPS = Object.freeze([
+    {
+      title: "Application",
+      fields: [
+        { key: "applicationType", label: "Application type", type: "choice", options: ["New", "Renewal", "Amendment", "Termination"] },
+        { key: "formNo", label: "NO.", type: "text" },
+        { key: "passEffectiveDate", label: "Pass Effective Date", type: "date" }
+      ]
+    },
+    {
+      title: "Representative",
+      fields: [
+        { key: "lastName", label: "Last Name", type: "text" },
+        { key: "firstName", label: "First Name", type: "text" },
+        { key: "commonName", label: "Common Name", type: "text" },
+        { key: "chineseName", label: "Chinese Name", type: "text" },
+        { key: "dateOfBirth", label: "Date of Birth", type: "date" },
+        { key: "sex", label: "Sex", type: "choice", options: ["Male", "Female"] },
+        { key: "passportNo", label: "Passport / ID No.", type: "text" },
+        { key: "passportExpiry", label: "Passport Expiry", type: "date" },
+        { key: "contactNumber", label: "Contact Number", type: "text" },
+        { key: "nationality", label: "Nationality", type: "text" },
+        { key: "itoGroup", label: "ITO Group", type: "text" },
+        { key: "itoAccountNo", label: "ITO Account No.", type: "text" },
+        { key: "familyEmployment", label: "Family member under Hoiana employment?", type: "choice", options: ["YES", "NO"] }
+      ]
+    },
+    {
+      title: "Signatures",
+      fields: [
+        { key: "representativeFullName", label: "Authorized Representative Name", type: "text" },
+        { key: "representativeDate", label: "Representative Date", type: "date" },
+        { key: "authorizerName", label: "ITO Authorizer Name", type: "text" },
+        { key: "authorizerDate", label: "Authorizer Date", type: "date" }
+      ]
+    },
+    {
+      title: "Authorization",
+      fields: [
+        { key: "authorizedBy", label: "I, hereby authorized", type: "text" },
+        { key: "authorizedItoGroup", label: "International Travel Operator Group", type: "text" },
+        { key: "categoryA", label: "Category A", type: "checkbox" },
+        { key: "categoryB", label: "Category B", type: "checkbox" },
+        { key: "categoryC", label: "Category C", type: "checkbox" },
+        { key: "categoryD", label: "Category D", type: "checkbox" },
+        { key: "categoryE", label: "Category E", type: "checkbox" }
+      ]
+    },
+    {
+      title: "Office Use",
+      fields: [
+        { key: "approvedBy", label: "Approved by", type: "text" },
+        { key: "approvedPosition", label: "Approved Position", type: "text" },
+        { key: "approvedDate", label: "Approved Date", type: "date" },
+        { key: "preparedBy", label: "Prepared by", type: "text" },
+        { key: "preparedPosition", label: "Prepared Position", type: "text" },
+        { key: "preparedDate", label: "Prepared Date", type: "date" },
+        { key: "receivedBy", label: "Received by", type: "text" },
+        { key: "receivedDesignation", label: "Received Designation", type: "text" },
+        { key: "receivedDate", label: "Received Date", type: "date" }
+      ]
+    }
+  ]);
+  const PDF_PREVIEW_FIELDS = Object.freeze([
+    { key: "formNo", page: 1, x: 84, y: 14.1, w: 11, h: 1.8 },
+    { key: "passEffectiveDate", page: 1, x: 82, y: 16.9, w: 13, h: 1.8 },
+    { key: "applicationType", value: "New", page: 1, x: 16.5, y: 21.7, w: 2.2, h: 2.2, mark: true },
+    { key: "applicationType", value: "Renewal", page: 1, x: 31.7, y: 21.7, w: 2.2, h: 2.2, mark: true },
+    { key: "applicationType", value: "Amendment", page: 1, x: 48.9, y: 21.7, w: 2.2, h: 2.2, mark: true },
+    { key: "applicationType", value: "Termination", page: 1, x: 67.4, y: 21.7, w: 2.2, h: 2.2, mark: true },
+    { key: "lastName", page: 1, x: 23, y: 24.4, w: 25, h: 2.2 },
+    { key: "firstName", page: 1, x: 62, y: 24.4, w: 27, h: 2.2 },
+    { key: "commonName", page: 1, x: 24, y: 26.7, w: 24, h: 2.2 },
+    { key: "chineseName", page: 1, x: 63, y: 26.7, w: 26, h: 2.2 },
+    { key: "dateOfBirth", page: 1, x: 23, y: 28.9, w: 18, h: 2.2 },
+    { key: "sex", value: "Male", page: 1, x: 61, y: 30.7, w: 2.1, h: 2.1, mark: true },
+    { key: "sex", value: "Female", page: 1, x: 72.7, y: 30.7, w: 2.1, h: 2.1, mark: true },
+    { key: "passportNo", page: 1, x: 28.5, y: 33, w: 20, h: 2.2 },
+    { key: "passportExpiry", page: 1, x: 66, y: 33, w: 22, h: 2.2 },
+    { key: "contactNumber", page: 1, x: 25, y: 35.3, w: 24, h: 2.2 },
+    { key: "nationality", page: 1, x: 62, y: 35.3, w: 27, h: 2.2 },
+    { key: "itoGroup", page: 1, x: 38, y: 38.1, w: 50, h: 2.2 },
+    { key: "itoAccountNo", page: 1, x: 43, y: 40.3, w: 45, h: 2.2 },
+    { key: "familyEmployment", value: "YES", page: 1, x: 72.8, y: 42.7, w: 2.1, h: 2.1, mark: true },
+    { key: "familyEmployment", value: "NO", page: 1, x: 80, y: 42.7, w: 2.1, h: 2.1, mark: true },
+    { key: "representativeFullName", page: 1, x: 10, y: 58.5, w: 36, h: 2.2 },
+    { key: "representativeDate", page: 1, x: 78, y: 58.5, w: 15, h: 2.2 },
+    { key: "authorizedBy", page: 1, x: 13, y: 65.8, w: 34, h: 2.2 },
+    { key: "authorizedItoGroup", page: 1, x: 11, y: 69.9, w: 36, h: 2.2 },
+    { key: "categoryA", page: 1, x: 14.8, y: 78.9, w: 2.2, h: 2.2, mark: true },
+    { key: "categoryB", page: 1, x: 14.8, y: 82.8, w: 2.2, h: 2.2, mark: true },
+    { key: "categoryC", page: 1, x: 14.8, y: 86.6, w: 2.2, h: 2.2, mark: true },
+    { key: "categoryD", page: 1, x: 14.8, y: 89.8, w: 2.2, h: 2.2, mark: true },
+    { key: "categoryE", page: 1, x: 14.8, y: 93.6, w: 2.2, h: 2.2, mark: true },
+    { key: "authorizerName", page: 2, x: 10, y: 42.9, w: 36, h: 2.2 },
+    { key: "authorizerDate", page: 2, x: 78, y: 42.9, w: 16, h: 2.2 },
+    { key: "approvedBy", page: 2, x: 10, y: 61.7, w: 36, h: 2.2 },
+    { key: "approvedPosition", page: 2, x: 52, y: 61.7, w: 18, h: 2.2 },
+    { key: "approvedDate", page: 2, x: 78, y: 61.7, w: 16, h: 2.2 },
+    { key: "preparedBy", page: 2, x: 10, y: 55.8, w: 36, h: 2.2 },
+    { key: "preparedPosition", page: 2, x: 52, y: 55.8, w: 18, h: 2.2 },
+    { key: "preparedDate", page: 2, x: 78, y: 55.8, w: 16, h: 2.2 },
+    { key: "receivedBy", page: 2, x: 10, y: 73.9, w: 36, h: 2.2 },
+    { key: "receivedDesignation", page: 2, x: 52, y: 73.9, w: 18, h: 2.2 },
+    { key: "receivedDate", page: 2, x: 78, y: 73.9, w: 16, h: 2.2 }
+  ]);
 
   const homeMenu = document.getElementById("homeMenu");
   const homeTopActions = document.getElementById("homeTopActions");
@@ -83,8 +194,12 @@
     accountFormOpen: false,
     accountFormMode: "create",
     editingAccountUsername: "",
-    accountFeedback: { text: "", type: "" }
+    accountFeedback: { text: "", type: "" },
+    pdfZoom: 1,
+    pdfValues: Object.create(null)
   };
+  let pdfDocumentPromise = null;
+  let pdfRenderToken = 0;
 
   const customText = {
     "zh-Hant": {
@@ -547,6 +662,19 @@
     });
 
     chatBody.addEventListener("click", function (event) {
+      const zoomButton = event.target.closest("[data-pdf-zoom]");
+      if (zoomButton) {
+        const direction = zoomButton.getAttribute("data-pdf-zoom");
+        const nextZoom = direction === "in"
+          ? Math.min(uiState.pdfZoom + 0.1, 1.8)
+          : Math.max(uiState.pdfZoom - 0.1, 0.55);
+        uiState.pdfZoom = Math.round(nextZoom * 10) / 10;
+        const zoomLabel = chatBody.querySelector("[data-pdf-zoom-label]");
+        if (zoomLabel) zoomLabel.textContent = Math.round(uiState.pdfZoom * 100) + "%";
+        renderPdfDocument();
+        return;
+      }
+
       const button = event.target.closest("[data-chat-action='open-external']");
       if (!button) {
         return;
@@ -594,6 +722,11 @@
     });
 
     detailBody.addEventListener("change", function (event) {
+      if (event.target.closest("[data-pdf-field]")) {
+        handlePdfFieldInput(event.target);
+        return;
+      }
+
       if (event.target.id === "dashboardDepartmentFilter") {
         uiState.employeeDepartmentId = event.target.value;
         renderDetailPanel();
@@ -606,6 +739,12 @@
 
       if (event.target.name === "employeesScope" || event.target.name === "scheduleScope") {
         renderDetailPanel();
+      }
+    });
+
+    detailBody.addEventListener("input", function (event) {
+      if (event.target.closest("[data-pdf-field]")) {
+        handlePdfFieldInput(event.target);
       }
     });
 
@@ -627,6 +766,9 @@
     renderSidebarMenu();
     renderChatPanel();
     renderDetailPanel();
+    if (uiState.activeTab === "pdfMaker") {
+      window.requestAnimationFrame(renderPdfDocument);
+    }
   }
 
   function renderProfile() {
@@ -1085,12 +1227,16 @@
     return [
       '<div class="dashboard-pdf-workspace">',
       '<section class="dashboard-pdf-main-panel">',
-      '<div class="dashboard-pdf-main-panel__icon">PDF</div>',
-      '<h3 class="dashboard-chat-surface__title">' + escapeHtml(t("pdfDropTitle")) + '</h3>',
-      '<p class="dashboard-chat-surface__body">' + escapeHtml(t("pdfBody")) + '</p>',
-      '<div class="dashboard-pdf-dropzone">',
-      '<strong>' + escapeHtml(t("pdfDropTitle")) + '</strong>',
-      '<span>' + escapeHtml(t("pdfDropHint")) + '</span>',
+      '<div class="dashboard-pdf-toolbar">',
+      '<div><strong>' + escapeHtml(t("pdfDropTitle")) + '</strong><span>' + escapeHtml(t("pdfDropHint")) + '</span></div>',
+      '<div class="dashboard-pdf-zoom">',
+      '<button type="button" data-pdf-zoom="out" aria-label="Zoom out">-</button>',
+      '<span data-pdf-zoom-label>' + Math.round(uiState.pdfZoom * 100) + '%</span>',
+      '<button type="button" data-pdf-zoom="in" aria-label="Zoom in">+</button>',
+      '</div>',
+      '</div>',
+      '<div class="dashboard-pdf-viewer" id="dashboardPdfViewer" aria-label="' + escapeHtml(t("pdfDropTitle")) + '">',
+      '<div class="dashboard-pdf-loading">' + escapeHtml(t("pdfStatusReady")) + '</div>',
       '</div>',
       '</section>',
       '</div>'
@@ -1105,14 +1251,159 @@
       '<span class="dashboard-role-badge">' + escapeHtml(t("pdfStatusReady")) + '</span>',
       '</div>',
       '<p class="dashboard-readonly-note">' + escapeHtml(t("pdfSideHint")) + '</p>',
-      '<div class="dashboard-pdf-tool-list">',
-      '<button type="button" class="dashboard-pdf-tool" disabled><span>01</span><strong>' + escapeHtml(t("pdfToolUpload")) + '</strong></button>',
-      '<button type="button" class="dashboard-pdf-tool" disabled><span>02</span><strong>' + escapeHtml(t("pdfToolPreview")) + '</strong></button>',
-      '<button type="button" class="dashboard-pdf-tool" disabled><span>03</span><strong>' + escapeHtml(t("pdfToolExport")) + '</strong></button>',
-      '</div>',
+      '<form class="dashboard-pdf-form" autocomplete="off">' + PDF_FIELD_GROUPS.map(renderPdfFieldGroup).join("") + '</form>',
       '</section>'
     ].join("");
   }
+
+  function renderPdfFieldGroup(group) {
+    return [
+      '<fieldset class="dashboard-pdf-fieldset">',
+      '<legend>' + escapeHtml(group.title) + '</legend>',
+      group.fields.map(renderPdfField).join(""),
+      '</fieldset>'
+    ].join("");
+  }
+
+  function renderPdfField(field) {
+    const value = getPdfValue(field.key);
+    if (field.type === "checkbox") {
+      return [
+        '<label class="dashboard-pdf-check">',
+        '<input type="checkbox" data-pdf-field="' + escapeHtml(field.key) + '"' + (value ? " checked" : "") + '>',
+        '<span>' + escapeHtml(field.label) + '</span>',
+        '</label>'
+      ].join("");
+    }
+
+    if (field.type === "choice") {
+      return [
+        '<label class="dashboard-form-label dashboard-pdf-label">',
+        escapeHtml(field.label),
+        '<select class="dashboard-select" data-pdf-field="' + escapeHtml(field.key) + '">',
+        '<option value=""></option>',
+        field.options.map(function (option) {
+          return '<option value="' + escapeHtml(option) + '"' + (value === option ? " selected" : "") + '>' + escapeHtml(option) + '</option>';
+        }).join(""),
+        '</select>',
+        '</label>'
+      ].join("");
+    }
+
+    return [
+      '<label class="dashboard-form-label dashboard-pdf-label">',
+      escapeHtml(field.label),
+      '<input class="dashboard-input" data-pdf-field="' + escapeHtml(field.key) + '" type="text" value="' + escapeHtml(value) + '" placeholder="' + (field.type === "date" ? "DD/MM/YYYY" : "") + '">',
+      '</label>'
+    ].join("");
+  }
+
+  function handlePdfFieldInput(input) {
+    const key = input.getAttribute("data-pdf-field");
+    if (!key) return;
+    uiState.pdfValues[key] = input.type === "checkbox" ? input.checked : input.value;
+    updatePdfOverlayValues();
+  }
+
+  function getPdfValue(key) {
+    return uiState.pdfValues[key] === undefined ? "" : uiState.pdfValues[key];
+  }
+
+  async function getPdfDocument() {
+    if (!pdfDocumentPromise) {
+      pdfDocumentPromise = pdfjsLib.getDocument({ url: PDF_FORM_URL }).promise;
+    }
+    return pdfDocumentPromise;
+  }
+
+  async function renderPdfDocument() {
+    const viewer = document.getElementById("dashboardPdfViewer");
+    if (!viewer || uiState.activeTab !== "pdfMaker") return;
+
+    const token = ++pdfRenderToken;
+    viewer.innerHTML = '<div class="dashboard-pdf-loading">' + escapeHtml(t("pdfStatusReady")) + '</div>';
+
+    try {
+      const doc = await getPdfDocument();
+      if (token !== pdfRenderToken) return;
+      viewer.innerHTML = "";
+
+      for (let pageNo = 1; pageNo <= doc.numPages; pageNo += 1) {
+        const page = await doc.getPage(pageNo);
+        if (token !== pdfRenderToken) return;
+
+        const viewport = page.getViewport({ scale: uiState.pdfZoom });
+        const outputScale = window.devicePixelRatio || 1;
+        const pageEl = document.createElement("div");
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        const overlay = document.createElement("div");
+
+        pageEl.className = "dashboard-pdf-page";
+        pageEl.style.width = viewport.width + "px";
+        pageEl.style.height = viewport.height + "px";
+        pageEl.setAttribute("data-pdf-page", String(pageNo));
+
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.style.width = viewport.width + "px";
+        canvas.style.height = viewport.height + "px";
+
+        overlay.className = "dashboard-pdf-overlay";
+        PDF_PREVIEW_FIELDS.filter(function (field) { return field.page === pageNo; }).forEach(function (field) {
+          const item = document.createElement("span");
+          item.className = "dashboard-pdf-fill" + (field.mark ? " dashboard-pdf-fill--mark" : "");
+          item.setAttribute("data-pdf-preview-field", field.key);
+          if (field.value) item.setAttribute("data-pdf-preview-value", field.value);
+          item.style.left = field.x + "%";
+          item.style.top = field.y + "%";
+          item.style.width = field.w + "%";
+          item.style.height = field.h + "%";
+          overlay.appendChild(item);
+        });
+
+        pageEl.appendChild(canvas);
+        pageEl.appendChild(overlay);
+        viewer.appendChild(pageEl);
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport,
+          transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null
+        }).promise;
+      }
+
+      updatePdfOverlayValues();
+    } catch (error) {
+      viewer.innerHTML = '<div class="dashboard-empty">' + escapeHtml(String(error && error.message || error)) + '</div>';
+    }
+  }
+
+  function updatePdfOverlayValues() {
+    document.querySelectorAll("[data-pdf-preview-field]").forEach(function (item) {
+      const key = item.getAttribute("data-pdf-preview-field");
+      const expected = item.getAttribute("data-pdf-preview-value");
+      const value = getPdfValue(key);
+
+      if (item.classList.contains("dashboard-pdf-fill--mark")) {
+        if (expected) {
+          item.textContent = value === expected ? "✓" : "";
+        } else {
+          item.textContent = value ? "✓" : "";
+        }
+        return;
+      }
+
+      item.textContent = formatPdfPreviewValue(value);
+    });
+  }
+
+  function formatPdfPreviewValue(value) {
+    if (value === true) return "✓";
+    if (!value) return "";
+    return String(value);
+  }
+
   function renderStaticPanel(title, bodyText) {
     return [
       '<section class="dashboard-surface-card">',

@@ -965,91 +965,167 @@ body.dashboard-page {
   padding: clamp(22px, 3vw, 34px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 16px;
 }
 
-.dashboard-pdf-main-panel__icon {
-  width: 82px;
-  height: 82px;
-  border-radius: 22px;
-  border: 1px solid rgba(242, 214, 154, 0.3);
-  background: linear-gradient(145deg, rgba(242, 214, 154, 0.2), rgba(181, 112, 255, 0.16));
+.dashboard-pdf-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dashboard-pdf-toolbar strong,
+.dashboard-pdf-toolbar span {
+  display: block;
+}
+
+.dashboard-pdf-toolbar strong {
+  color: var(--dashboard-text);
+  font-size: 18px;
+}
+
+.dashboard-pdf-toolbar span {
+  color: var(--dashboard-text-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dashboard-pdf-zoom {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  color: var(--dashboard-text);
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 214, 154, 0.14);
+  background: rgba(7, 5, 16, 0.45);
 }
 
-.dashboard-pdf-dropzone {
-  margin-top: 10px;
-  min-height: 260px;
-  border-radius: 22px;
-  border: 1px dashed rgba(242, 214, 154, 0.34);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 42%),
-    rgba(5, 4, 13, 0.42);
+.dashboard-pdf-zoom button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(242, 214, 154, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--dashboard-text);
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.dashboard-pdf-zoom span {
+  min-width: 54px;
+  color: var(--dashboard-text);
+  text-align: center;
+  font-weight: 800;
+}
+
+.dashboard-pdf-viewer {
+  flex: 1;
+  min-height: 0;
+  max-height: calc(100vh - 280px);
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(242, 214, 154, 0.12);
+  background: rgba(2, 2, 8, 0.6);
+  padding: 18px;
+}
+
+.dashboard-pdf-page {
+  position: relative;
+  margin: 0 auto 18px;
+  background: #fff;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
+}
+
+.dashboard-pdf-page canvas {
+  display: block;
+}
+
+.dashboard-pdf-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dashboard-pdf-fill {
+  position: absolute;
+  overflow: hidden;
+  color: #07111f;
+  font: 700 10px Arial, sans-serif;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.dashboard-pdf-fill--mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0c7a31;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.dashboard-pdf-loading {
+  min-height: 360px;
   display: grid;
   place-items: center;
-  align-content: center;
-  gap: 10px;
-  text-align: center;
   color: var(--dashboard-text-soft);
-}
-
-.dashboard-pdf-dropzone strong {
-  color: var(--dashboard-text);
-  font-size: clamp(24px, 2.4vw, 34px);
-  line-height: 1.15;
-}
-
-.dashboard-pdf-dropzone span {
-  width: min(520px, 100%);
-  line-height: 1.6;
 }
 
 .dashboard-pdf-side-panel {
   min-height: calc(100vh - 170px);
 }
 
-.dashboard-pdf-tool-list {
+.dashboard-pdf-form,
+.dashboard-pdf-fieldset {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
-.dashboard-pdf-tool {
-  width: 100%;
-  min-height: 64px;
+.dashboard-pdf-form {
+  margin-top: 16px;
+}
+
+.dashboard-pdf-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 13px;
   border-radius: 16px;
   border: 1px solid rgba(242, 214, 154, 0.14);
   background: rgba(8, 6, 18, 0.22);
-  color: var(--dashboard-text);
+}
+
+.dashboard-pdf-fieldset legend {
+  padding: 0 6px;
+  color: var(--dashboard-text-faint);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dashboard-pdf-label {
+  gap: 6px;
+}
+
+.dashboard-pdf-check {
+  min-height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(242, 214, 154, 0.1);
+  background: rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  text-align: left;
+  gap: 10px;
+  padding: 8px 10px;
+  color: var(--dashboard-text);
+  font-size: 13px;
 }
 
-.dashboard-pdf-tool span {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  border: 1px solid rgba(242, 214, 154, 0.2);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--dashboard-text-faint);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.dashboard-pdf-tool strong {
-  font: inherit;
-  font-weight: 800;
+.dashboard-pdf-check input {
+  accent-color: #d9b85f;
 }
 
 .dashboard-live-group,
