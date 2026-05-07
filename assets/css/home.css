@@ -1053,21 +1053,50 @@ body.dashboard-page {
 
 .dashboard-pdf-fill {
   position: absolute;
-  overflow: hidden;
-  color: #07111f;
-  font: 700 11px Arial, sans-serif;
-  line-height: 1.2;
+  overflow: visible;
+  color: #02060d;
+  font: 800 12px Arial, sans-serif;
+  line-height: 1;
+  opacity: 1;
   white-space: nowrap;
+  text-shadow: none;
+  mix-blend-mode: normal;
+  -webkit-font-smoothing: antialiased;
 }
 
 .dashboard-pdf-fill--mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #0c7a31;
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 1;
+  color: transparent;
+}
+
+.dashboard-pdf-fill--mark::before,
+.dashboard-pdf-fill--mark::after {
+  content: "";
+  position: absolute;
+  display: none;
+  height: 2px;
+  background: #078233;
+  border-radius: 999px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  transform-origin: left center;
+}
+
+.dashboard-pdf-fill--mark.is-visible::before,
+.dashboard-pdf-fill--mark.is-visible::after {
+  display: block;
+}
+
+.dashboard-pdf-fill--mark::before {
+  width: 38%;
+  left: 20%;
+  top: 53%;
+  transform: rotate(45deg);
+}
+
+.dashboard-pdf-fill--mark::after {
+  width: 64%;
+  left: 43%;
+  top: 66%;
+  transform: rotate(-48deg);
 }
 
 .dashboard-pdf-loading {

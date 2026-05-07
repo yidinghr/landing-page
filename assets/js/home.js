@@ -108,25 +108,25 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   const PDF_PREVIEW_FIELDS = Object.freeze([
     { key: "formNo", page: 1, x: 84, y: 14.1, w: 11, h: 1.8 },
     { key: "passEffectiveDate", page: 1, x: 82, y: 16.9, w: 13, h: 1.8 },
-    { key: "applicationType", value: "New", page: 1, x: 16.5, y: 21.7, w: 2.2, h: 2.2, mark: true },
-    { key: "applicationType", value: "Renewal", page: 1, x: 31.7, y: 21.7, w: 2.2, h: 2.2, mark: true },
-    { key: "applicationType", value: "Amendment", page: 1, x: 48.9, y: 21.7, w: 2.2, h: 2.2, mark: true },
-    { key: "applicationType", value: "Termination", page: 1, x: 67.4, y: 21.7, w: 2.2, h: 2.2, mark: true },
+    { key: "applicationType", value: "New", page: 1, x: 16.95, y: 21.6, w: 1.15, h: 1.15, mark: true },
+    { key: "applicationType", value: "Renewal", page: 1, x: 32.15, y: 21.6, w: 1.15, h: 1.15, mark: true },
+    { key: "applicationType", value: "Amendment", page: 1, x: 49.4, y: 21.6, w: 1.15, h: 1.15, mark: true },
+    { key: "applicationType", value: "Termination", page: 1, x: 67.9, y: 21.6, w: 1.15, h: 1.15, mark: true },
     { key: "lastName", page: 1, x: 23, y: 24.4, w: 25, h: 2.2 },
     { key: "firstName", page: 1, x: 62, y: 24.4, w: 27, h: 2.2 },
     { key: "commonName", page: 1, x: 24, y: 26.7, w: 24, h: 2.2 },
     { key: "chineseName", page: 1, x: 63, y: 26.7, w: 26, h: 2.2 },
     { key: "dateOfBirth", page: 1, x: 23, y: 28.9, w: 18, h: 2.2 },
-    { key: "sex", value: "Male", page: 1, x: 61, y: 30.7, w: 2.1, h: 2.1, mark: true },
-    { key: "sex", value: "Female", page: 1, x: 72.7, y: 30.7, w: 2.1, h: 2.1, mark: true },
+    { key: "sex", value: "Male", page: 1, x: 61.65, y: 30.65, w: 1.15, h: 1.15, mark: true },
+    { key: "sex", value: "Female", page: 1, x: 73.45, y: 30.65, w: 1.15, h: 1.15, mark: true },
     { key: "passportNo", page: 1, x: 28.5, y: 33, w: 20, h: 2.2 },
     { key: "passportExpiry", page: 1, x: 66, y: 33, w: 22, h: 2.2 },
     { key: "contactNumber", page: 1, x: 25, y: 35.3, w: 24, h: 2.2 },
     { key: "nationality", page: 1, x: 62, y: 35.3, w: 27, h: 2.2 },
     { key: "itoGroup", page: 1, x: 38, y: 38.1, w: 50, h: 2.2 },
     { key: "itoAccountNo", page: 1, x: 43, y: 40.3, w: 45, h: 2.2 },
-    { key: "familyEmployment", value: "YES", page: 1, x: 72.8, y: 42.7, w: 2.1, h: 2.1, mark: true },
-    { key: "familyEmployment", value: "NO", page: 1, x: 80, y: 42.7, w: 2.1, h: 2.1, mark: true },
+    { key: "familyEmployment", value: "YES", page: 1, x: 73.35, y: 42.7, w: 1.15, h: 1.15, mark: true },
+    { key: "familyEmployment", value: "NO", page: 1, x: 80.35, y: 42.7, w: 1.15, h: 1.15, mark: true },
     { key: "representativeFullName", page: 1, x: 10, y: 58.5, w: 36, h: 2.2 },
     { key: "representativeDate", page: 1, x: 78, y: 58.5, w: 15, h: 2.2 },
     { key: "authorizedBy", page: 1, x: 13, y: 65.8, w: 34, h: 2.2 },
@@ -1393,11 +1393,9 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
       const value = getPdfValue(key);
 
       if (item.classList.contains("dashboard-pdf-fill--mark")) {
-        if (expected) {
-          item.textContent = value === expected ? "✓" : "";
-        } else {
-          item.textContent = value ? "✓" : "";
-        }
+        const shouldShow = expected ? value === expected : Boolean(value);
+        item.classList.toggle("is-visible", shouldShow);
+        item.textContent = "";
         return;
       }
 
