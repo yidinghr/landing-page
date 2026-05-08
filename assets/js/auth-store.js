@@ -1,6 +1,8 @@
 (function () {
   const ACCOUNTS_STORAGE_KEY = "yiding_accounts_v1";
   const SESSION_STORAGE_KEY = "yiding_auth_session_v1";
+  const SESSION_TOKEN_KEY = "yiding_session_token_v1";
+  const SESSION_POLL_MS = 3000;
   const DEFAULT_AVATAR_SRC = "/image/logoweb.png";
   const MODULE_KEYS = Object.freeze(["employees", "schedule"]);
   const ADMIN_ACCOUNT = Object.freeze({
@@ -248,25 +250,36 @@
   }
 
   function setSession(account) {
-    const session = buildSession(account);
+    var session = buildSession(account);
+    var token = generateToken();
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    setSessionToken(account.username, token);
+    sessionStorage.setItem("__yd_token", token);
     return session;
   }
 
   function getSession() {
     try {
-      const parsed = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "null");
+      var parsed = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "null");
       if (!parsed || typeof parsed !== "object") {
         return null;
       }
 
-      const account = getAccountByUsername(parsed.username);
+      var account = getAccountByUsername(parsed.username);
       if (!account) {
         sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        removeSessionToken(parsed.username);
         return null;
       }
 
-      const freshSession = buildSession(account);
+      var myToken = sessionStorage.getItem("__yd_token");
+      var currentToken = getSessionToken(parsed.username);
+      if (myToken && currentToken && myToken !== currentToken) {
+        clearSession();
+        return null;
+      }
+
+      var freshSession = buildSession(account);
       if (JSON.stringify(freshSession) !== JSON.stringify(parsed)) {
         sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(freshSession));
       }
@@ -277,13 +290,74 @@
     }
   }
 
+  function generateToken() {
+    return "tok_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  function getSessionToken(username) {
+    try {
+      var tokens = JSON.parse(localStorage.getItem(SESSION_TOKEN_KEY) || "{}");
+      return (tokens && tokens[username]) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setSessionToken(username, token) {
+    try {
+      var tokens = JSON.parse(localStorage.getItem(SESSION_TOKEN_KEY) || "{}");
+      tokens[username] = token;
+      localStorage.setItem(SESSION_TOKEN_KEY, JSON.stringify(tokens));
+    } catch (e) {}
+  }
+
+  function removeSessionToken(username) {
+    try {
+      var tokens = JSON.parse(localStorage.getItem(SESSION_TOKEN_KEY) || "{}");
+      delete tokens[username];
+      localStorage.setItem(SESSION_TOKEN_KEY, JSON.stringify(tokens));
+    } catch (e) {}
+  }
   function getCurrentAccount() {
     const session = getSession();
     return session ? getAccountByUsername(session.username) : null;
   }
 
   function clearSession() {
+    try {
+      var session = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "null");
+      if (session && session.username) {
+        removeSessionToken(session.username);
+      }
+    } catch (e) {}
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    sessionStorage.removeItem("__yd_token");
+  }
+
+  function watchSession(onKicked) {
+    var pollTimer = null;
+
+    function check() {
+      var session = getSession();
+      if (!session) {
+        if (typeof onKicked === "function") {
+          onKicked();
+        }
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+    }
+
+    pollTimer = setInterval(check, SESSION_POLL_MS);
+
+    return function stopWatching() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    };
   }
 
   function authenticate(username, password) {
@@ -507,6 +581,7 @@
   window.YiDingAuthStore = {
     ACCOUNTS_STORAGE_KEY: ACCOUNTS_STORAGE_KEY,
     SESSION_STORAGE_KEY: SESSION_STORAGE_KEY,
+    SESSION_TOKEN_KEY: SESSION_TOKEN_KEY,
     DEFAULT_AVATAR_SRC: DEFAULT_AVATAR_SRC,
     ADMIN_ACCOUNT: cloneValue(ADMIN_ACCOUNT),
     getAccounts: getAccounts,
@@ -516,6 +591,7 @@
     getSession: getSession,
     getCurrentAccount: getCurrentAccount,
     clearSession: clearSession,
+    watchSession: watchSession,
     createAccount: createAccount,
     updateAccount: updateAccount,
     updateAvatar: updateAvatar,

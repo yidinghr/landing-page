@@ -459,6 +459,12 @@ body {
   background: rgba(255, 255, 255, 0.03);
   color: var(--dashboard-text);
   font-size: 14px;
+  color-scheme: dark;
+}
+
+.dashboard-select option {
+  background: #0a0a0a;
+  color: #c6b0ff;
 }
 
 .dashboard-list,

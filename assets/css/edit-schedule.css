@@ -398,8 +398,8 @@
 }
 
 .schedule-period-pair__value select option {
-  background: #080808;
-  color: var(--color-text);
+  background: #0a0a0a;
+  color: #c6b0ff;
 }
 
 .schedule-period-pair--year .schedule-period-pair__value {

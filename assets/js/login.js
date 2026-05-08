@@ -221,7 +221,7 @@
 
     document.body.classList.add("login-page--celebrating");
 
-    if (!successOverlay || !successCanvas || prefersReducedMotion.matches) {
+    if (!successOverlay || !successCanvas) {
       return wait(SUCCESS_DURATION_MS);
     }
 

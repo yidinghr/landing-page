@@ -1661,6 +1661,7 @@ body[data-role="insurance"] .tr-insurance-panel {
   font: inherit;
   min-height: 36px;
   padding: 7px 9px;
+  color-scheme: dark;
 }
 
 .tr-settings-check {

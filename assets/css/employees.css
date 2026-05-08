@@ -997,13 +997,14 @@ textarea {
 .employees-popover__field select {
   color: var(--employees-text);
   background: #050505;
+  color-scheme: dark;
 }
 
 .employee-form__field select option,
 .employees-toolbar__composer select option,
 .employees-popover__field select option {
-  background: #050505;
-  color: var(--employees-text);
+  background: #0a0a0a;
+  color: #c6b0ff;
 }
 
 .employee-form__field textarea {

@@ -20,10 +20,14 @@
     if (!authStore.canEditModule(currentAccount, moduleKey)) {
       window.location.replace(homePath);
     }
-    return;
+  } else if (!authStore.isAdmin(currentAccount)) {
+    window.location.replace(homePath);
   }
 
-  if (!authStore.isAdmin(currentAccount)) {
-    window.location.replace(homePath);
+  // Watch for session kick (another machine logged in)
+  if (typeof authStore.watchSession === "function") {
+    authStore.watchSession(function () {
+      window.location.replace(loginPath);
+    });
   }
 })();
