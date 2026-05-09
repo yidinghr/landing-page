@@ -74,6 +74,8 @@ test.describe("Local smoke routes", () => {
     await page.locator("#dashboardMainButton-salary").click();
     await expect(page.locator("#dashboardSalaryForm [name='monthlySalary']")).toHaveValue("");
     await expect(page.locator(".dashboard-salary-submit")).toHaveCount(0);
+    await expect(page.locator("#dashboardSalaryForm [name='shiftCode'] option")).toHaveCount(24);
+    await expect(page.locator("#dashboardSalaryForm [name='shiftCode'] option[value='C7']")).toHaveCount(1);
     await page.locator("#dashboardSalaryForm [name='monthlySalary']").fill("20.000.000");
     await page.locator("#dashboardSalaryForm [name='shiftCode']").selectOption("B");
     await page.locator("#dashboardSalaryForm").evaluate(function (form) {
@@ -83,6 +85,13 @@ test.describe("Local smoke routes", () => {
     await expect(page.locator("#dashboardChatBody")).toContainText(Math.round(hourlyPay).toLocaleString("vi-VN") + " VND");
     await expect(page.locator("#dashboardChatBody")).toContainText("1h");
     await expect(page.locator("#dashboardSalaryForm [name='salaryResult']")).toHaveValue(Math.round(nightAllowance).toLocaleString("vi-VN") + " VND");
+
+    await page.locator("[data-salary-action='edit']").click();
+    await page.locator("#dashboardSalaryEditForm [name='code'][data-salary-shift-index='0']").fill("X");
+    await page.locator("#dashboardSalaryEditForm").evaluate(function (form) {
+      form.requestSubmit();
+    });
+    await expect(page.locator("#dashboardSalaryForm [name='shiftCode'] option[value='X']")).toHaveCount(1);
   });
 
   test("employees page loads from local static server", async ({ page }) => {

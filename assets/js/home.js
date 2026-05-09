@@ -7,6 +7,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   const employeesDataApi = window.YiDingEmployeesData || null;
   const SCHEDULE_STORAGE_KEY = "yiding_schedule_module_v3";
   const HOME_TAB_STORAGE_KEY = "yiding_dashboard_active_tab_v2";
+  const SALARY_SHIFT_STORAGE_KEY = "yiding_salary_shift_definitions_v1";
   const REDIRECT_TO_LOGIN = "../index.html";
   const CHI_CHI_URL = "http://46.225.160.243";
   const PDF_FORM_URL = new URL("../pdf/ito-representative-application-form.pdf", import.meta.url).href;
@@ -17,11 +18,32 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   const STANDARD_HOURS_PER_DAY = 8;
   const NIGHT_ALLOWANCE_RATE = 0.3;
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
-  // Sua gio ca tai day neu sau nay thay doi quy uoc ca lam.
-  const SALARY_SHIFT_DEFINITIONS = Object.freeze([
-    { code: "A", start: "08:00", end: "16:00" },
+  // Quy uoc ca mac dinh. Co the sua tren giao dien Tinh luong va luu lai trong may.
+  const DEFAULT_SALARY_SHIFT_DEFINITIONS = Object.freeze([
+    { code: "A", start: "07:00", end: "15:00" },
+    { code: "A1", start: "08:00", end: "16:00" },
+    { code: "A2", start: "09:00", end: "17:00" },
+    { code: "A3", start: "10:00", end: "18:00" },
+    { code: "A4", start: "11:00", end: "19:00" },
+    { code: "A5", start: "12:00", end: "20:00" },
+    { code: "A6", start: "13:00", end: "21:00" },
+    { code: "A7", start: "14:00", end: "22:00" },
     { code: "B", start: "15:00", end: "23:00" },
-    { code: "C", start: "22:00", end: "06:00" }
+    { code: "B1", start: "16:00", end: "00:00" },
+    { code: "B2", start: "17:00", end: "01:00" },
+    { code: "B3", start: "18:00", end: "02:00" },
+    { code: "B4", start: "19:00", end: "03:00" },
+    { code: "B5", start: "20:00", end: "04:00" },
+    { code: "B6", start: "21:00", end: "05:00" },
+    { code: "B7", start: "22:00", end: "06:00" },
+    { code: "C", start: "23:00", end: "07:00" },
+    { code: "C1", start: "00:00", end: "08:00" },
+    { code: "C2", start: "01:00", end: "09:00" },
+    { code: "C3", start: "02:00", end: "10:00" },
+    { code: "C4", start: "03:00", end: "11:00" },
+    { code: "C5", start: "04:00", end: "12:00" },
+    { code: "C6", start: "05:00", end: "13:00" },
+    { code: "C7", start: "06:00", end: "14:00" }
   ]);
   const SHIFT_CODE_DEFINITIONS = Object.freeze([
     { code: "A", checkIn: "7", checkOut: "15", hoursPay: 8 },
@@ -208,6 +230,10 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     accountFeedback: { text: "", type: "" },
     salaryMonthlyInput: "",
     salaryShiftCode: "B",
+    salaryShiftDefinitions: getStoredSalaryShiftDefinitions(),
+    salaryShiftDraft: [],
+    salaryEditing: false,
+    salaryEditFeedback: "",
     salaryResult: null,
     salaryFeedback: "",
     pdfZoom: 1.25,
@@ -555,7 +581,16 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     salaryPreviewTitle: "Quy tắc đang áp dụng",
     salaryShiftWindow: "Giờ ca",
     salaryNightWindow: "Ca đêm 22:00 - 06:00",
-    salaryTestHint: "Ví dụ: 20.000.000 + ca B có 1 giờ đêm từ 22:00 đến 23:00."
+    salaryTestHint: "Ví dụ: 20.000.000 + ca B có 1 giờ đêm từ 22:00 đến 23:00.",
+    salaryEdit: "Edit",
+    salarySave: "Save",
+    salaryCancel: "Hủy",
+    salaryCode: "Mã ca",
+    salaryStart: "Bắt đầu",
+    salaryEnd: "Kết thúc",
+    salaryEditTitle: "Sửa quy ước ca",
+    salaryEditInvalid: "Mã ca và giờ phải hợp lệ, không được trùng mã.",
+    salaryEditSaved: "Đã lưu quy ước ca."
   });
   Object.assign(customText.vi, {
     menuPdf: "Làm file pdf",
@@ -587,7 +622,16 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     salaryPreviewTitle: "Quy tắc đang áp dụng",
     salaryShiftWindow: "Giờ ca",
     salaryNightWindow: "Ca đêm 22:00 - 06:00",
-    salaryTestHint: "Ví dụ: 20.000.000 + ca B có 1 giờ đêm từ 22:00 đến 23:00."
+    salaryTestHint: "Ví dụ: 20.000.000 + ca B có 1 giờ đêm từ 22:00 đến 23:00.",
+    salaryEdit: "Edit",
+    salarySave: "Save",
+    salaryCancel: "Hủy",
+    salaryCode: "Mã ca",
+    salaryStart: "Bắt đầu",
+    salaryEnd: "Kết thúc",
+    salaryEditTitle: "Sửa quy ước ca",
+    salaryEditInvalid: "Mã ca và giờ phải hợp lệ, không được trùng mã.",
+    salaryEditSaved: "Đã lưu quy ước ca."
   });
   Object.assign(customText.en, {
     menuPdf: "Make PDF",
@@ -619,7 +663,16 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     salaryPreviewTitle: "Active Rules",
     salaryShiftWindow: "Shift Window",
     salaryNightWindow: "Night shift 22:00 - 06:00",
-    salaryTestHint: "Example: 20,000,000 + shift B has 1 night hour from 22:00 to 23:00."
+    salaryTestHint: "Example: 20,000,000 + shift B has 1 night hour from 22:00 to 23:00.",
+    salaryEdit: "Edit",
+    salarySave: "Save",
+    salaryCancel: "Cancel",
+    salaryCode: "Code",
+    salaryStart: "Start",
+    salaryEnd: "End",
+    salaryEditTitle: "Edit Shift Rules",
+    salaryEditInvalid: "Shift codes and times must be valid, with no duplicate codes.",
+    salaryEditSaved: "Shift rules saved."
   });
   const menuConfigs = [
     { id: "employees", labelKey: "menuEmployees", icon: "👥", adminOnly: true },
@@ -732,6 +785,12 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     });
 
     chatBody.addEventListener("click", function (event) {
+      const salaryAction = event.target.closest("[data-salary-action]");
+      if (salaryAction) {
+        handleSalaryAction(salaryAction);
+        return;
+      }
+
       const exportButton = event.target.closest("[data-pdf-export]");
       if (exportButton) {
         exportFilledPdf(exportButton);
@@ -774,6 +833,13 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     });
 
     chatBody.addEventListener("submit", function (event) {
+      const salaryEditForm = event.target.closest("#dashboardSalaryEditForm");
+      if (salaryEditForm) {
+        event.preventDefault();
+        saveSalaryShiftEditForm(salaryEditForm);
+        return;
+      }
+
       const salaryForm = event.target.closest("#dashboardSalaryForm");
       if (!salaryForm) {
         return;
@@ -1285,17 +1351,19 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   }
 
   function renderSalaryPanel() {
-    const selectedShift = getSalaryShift(uiState.salaryShiftCode) || SALARY_SHIFT_DEFINITIONS[0];
+    const selectedShift = getSalaryShift(uiState.salaryShiftCode) || getSalaryShiftDefinitions()[0];
     const result = uiState.salaryResult;
     const resultValue = result ? formatCurrency(result.allowance) : "";
+    const shiftDefinitions = getSalaryShiftDefinitions();
 
     return [
       '<section class="dashboard-salary-stage">',
+      '<div class="dashboard-salary-tool-row">',
       '<form id="dashboardSalaryForm" class="dashboard-salary-board" autocomplete="off">',
       '<label class="dashboard-salary-field"><span>' + escapeHtml(t("salaryMonthlyLabel")) + "</span>" +
         '<input class="dashboard-salary-input" name="monthlySalary" inputmode="numeric" type="text" value="' + escapeHtml(uiState.salaryMonthlyInput) + '"></label>',
       '<label class="dashboard-salary-field"><span>' + escapeHtml(t("salaryShiftLabel")) + "</span>" +
-        '<select class="dashboard-salary-select" name="shiftCode">' + SALARY_SHIFT_DEFINITIONS.map(function (shift) {
+        '<select class="dashboard-salary-select" name="shiftCode">' + shiftDefinitions.map(function (shift) {
           return '<option value="' + escapeHtml(shift.code) + '"' + (shift.code === selectedShift.code ? " selected" : "") + ">" + escapeHtml(getSalaryShiftLabel(shift.code)) + "</option>";
         }).join("") + "</select></label>",
       '<label class="dashboard-salary-field dashboard-salary-field--result"><span>' + escapeHtml(t("salaryAllowance")) + "</span>" +
@@ -1307,7 +1375,39 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
       renderSalaryMetric("workingDays", t("salaryWorkingDays"), result ? String(result.workingDays) : String(getSalaryMonthRules(new Date()).workingDays)),
       "</div>",
       "</form>",
+      '<button type="button" class="dashboard-salary-edit-button" data-salary-action="edit">' + escapeHtml(t("salaryEdit")) + "</button>",
+      "</div>",
+      uiState.salaryEditing ? renderSalaryShiftEditor() : "",
       "</section>"
+    ].join("");
+  }
+
+  function renderSalaryShiftEditor() {
+    const rows = uiState.salaryShiftDraft.length ? uiState.salaryShiftDraft : cloneSalaryShiftDefinitions(getSalaryShiftDefinitions());
+
+    return [
+      '<form id="dashboardSalaryEditForm" class="dashboard-salary-editor" autocomplete="off">',
+      '<div class="dashboard-salary-editor__head">',
+      '<strong>' + escapeHtml(t("salaryEditTitle")) + "</strong>",
+      '<div class="dashboard-salary-editor__actions">',
+      '<button type="button" class="dashboard-button dashboard-button--ghost" data-salary-action="cancel-edit">' + escapeHtml(t("salaryCancel")) + "</button>",
+      '<button type="submit" class="dashboard-button dashboard-button--accent">' + escapeHtml(t("salarySave")) + "</button>",
+      "</div>",
+      "</div>",
+      '<div class="dashboard-salary-editor__grid">',
+      '<span>' + escapeHtml(t("salaryCode")) + "</span>",
+      '<span>' + escapeHtml(t("salaryStart")) + "</span>",
+      '<span>' + escapeHtml(t("salaryEnd")) + "</span>",
+      rows.map(function (shift, index) {
+        return [
+          '<input class="dashboard-salary-editor__input" name="code" data-salary-shift-index="' + index + '" value="' + escapeHtml(shift.code) + '">',
+          '<input class="dashboard-salary-editor__input" name="start" data-salary-shift-index="' + index + '" value="' + escapeHtml(shift.start) + '">',
+          '<input class="dashboard-salary-editor__input" name="end" data-salary-shift-index="' + index + '" value="' + escapeHtml(shift.end) + '">'
+        ].join("");
+      }).join(""),
+      "</div>",
+      '<p class="dashboard-salary-editor__feedback">' + escapeHtml(uiState.salaryEditFeedback || "") + "</p>",
+      "</form>"
     ].join("");
   }
 
@@ -1737,6 +1837,79 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     ].join("");
   }
 
+  function handleSalaryAction(button) {
+    const action = button.getAttribute("data-salary-action");
+
+    if (action === "edit") {
+      uiState.salaryEditing = true;
+      uiState.salaryEditFeedback = "";
+      uiState.salaryShiftDraft = cloneSalaryShiftDefinitions(getSalaryShiftDefinitions());
+      renderChatPanel();
+      return;
+    }
+
+    if (action === "cancel-edit") {
+      uiState.salaryEditing = false;
+      uiState.salaryEditFeedback = "";
+      uiState.salaryShiftDraft = [];
+      renderChatPanel();
+    }
+  }
+
+  function saveSalaryShiftEditForm(form) {
+    const nextDefinitions = collectSalaryShiftEditForm(form);
+
+    if (!nextDefinitions.length) {
+      uiState.salaryEditFeedback = t("salaryEditInvalid");
+      renderChatPanel();
+      return;
+    }
+
+    uiState.salaryShiftDefinitions = nextDefinitions;
+    uiState.salaryShiftDraft = [];
+    uiState.salaryEditing = false;
+    uiState.salaryEditFeedback = t("salaryEditSaved");
+    storeSalaryShiftDefinitions(nextDefinitions);
+
+    if (!getSalaryShift(uiState.salaryShiftCode)) {
+      uiState.salaryShiftCode = nextDefinitions[0].code;
+    }
+
+    if (parseCurrencyInput(uiState.salaryMonthlyInput) > 0) {
+      uiState.salaryResult = calculateSalaryAllowance(parseCurrencyInput(uiState.salaryMonthlyInput), uiState.salaryShiftCode, new Date());
+    }
+
+    renderChatPanel();
+  }
+
+  function collectSalaryShiftEditForm(form) {
+    const rows = [];
+    const seenCodes = Object.create(null);
+    const rowCount = form.querySelectorAll("[name='code']").length;
+
+    for (let index = 0; index < rowCount; index += 1) {
+      const raw = {
+        code: form.querySelector("[name='code'][data-salary-shift-index='" + index + "']"),
+        start: form.querySelector("[name='start'][data-salary-shift-index='" + index + "']"),
+        end: form.querySelector("[name='end'][data-salary-shift-index='" + index + "']")
+      };
+      const shift = normalizeSalaryShiftDefinition({
+        code: raw.code ? raw.code.value : "",
+        start: raw.start ? raw.start.value : "",
+        end: raw.end ? raw.end.value : ""
+      });
+
+      if (!shift || seenCodes[shift.code]) {
+        return [];
+      }
+
+      seenCodes[shift.code] = true;
+      rows.push(shift);
+    }
+
+    return rows;
+  }
+
   function submitSalaryForm(form) {
     updateSalaryFromForm(form, true);
   }
@@ -1809,6 +1982,90 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     };
   }
 
+  function getStoredSalaryShiftDefinitions() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SALARY_SHIFT_STORAGE_KEY) || "null");
+      if (Array.isArray(parsed)) {
+        const normalized = normalizeSalaryShiftDefinitions(parsed);
+        if (normalized.length) {
+          return normalized;
+        }
+      }
+    } catch (error) {}
+
+    return cloneSalaryShiftDefinitions(DEFAULT_SALARY_SHIFT_DEFINITIONS);
+  }
+
+  function storeSalaryShiftDefinitions(definitions) {
+    localStorage.setItem(SALARY_SHIFT_STORAGE_KEY, JSON.stringify(definitions));
+  }
+
+  function getSalaryShiftDefinitions() {
+    return uiState.salaryShiftDefinitions && uiState.salaryShiftDefinitions.length
+      ? uiState.salaryShiftDefinitions
+      : DEFAULT_SALARY_SHIFT_DEFINITIONS;
+  }
+
+  function cloneSalaryShiftDefinitions(definitions) {
+    return (definitions || []).map(function (shift) {
+      return {
+        code: shift.code,
+        start: shift.start,
+        end: shift.end
+      };
+    });
+  }
+
+  function normalizeSalaryShiftDefinitions(definitions) {
+    const seenCodes = Object.create(null);
+    const normalized = [];
+
+    (definitions || []).forEach(function (definition) {
+      const shift = normalizeSalaryShiftDefinition(definition);
+      if (!shift || seenCodes[shift.code]) {
+        return;
+      }
+
+      seenCodes[shift.code] = true;
+      normalized.push(shift);
+    });
+
+    return normalized;
+  }
+
+  function normalizeSalaryShiftDefinition(definition) {
+    const code = normalizeShiftCode(definition && definition.code);
+    const start = formatSalaryClock(definition && definition.start);
+    const end = formatSalaryClock(definition && definition.end);
+
+    if (!code || !start || !end) {
+      return null;
+    }
+
+    return {
+      code: code,
+      start: start,
+      end: end
+    };
+  }
+
+  function formatSalaryClock(value) {
+    const raw = normalizeString(value);
+    if (!raw) {
+      return "";
+    }
+
+    const parts = raw.indexOf(":") >= 0 ? raw.split(":") : [raw, "0"];
+    const hours = Number(parts[0]);
+    const minutes = Number(parts[1] || 0);
+
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return "";
+    }
+
+    return String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
+  }
+
   function getSalaryNightHours(shiftCode) {
     const shift = getSalaryShift(shiftCode);
     if (!shift) {
@@ -1839,7 +2096,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
   function getSalaryShift(shiftCode) {
     const code = normalizeShiftCode(shiftCode);
-    return SALARY_SHIFT_DEFINITIONS.find(function (shift) {
+    return getSalaryShiftDefinitions().find(function (shift) {
       return shift.code === code;
     }) || null;
   }
