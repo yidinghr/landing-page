@@ -72,6 +72,8 @@ test.describe("Local smoke routes", () => {
     await page.goto("/home/home.html", { waitUntil: "domcontentloaded" });
 
     await page.locator("#dashboardMainButton-salary").click();
+    await expect(page.locator("#dashboardSalaryForm [name='monthlySalary']")).toHaveValue("");
+    await expect(page.locator(".dashboard-salary-submit")).toHaveCount(0);
     await page.locator("#dashboardSalaryForm [name='monthlySalary']").fill("20.000.000");
     await page.locator("#dashboardSalaryForm [name='shiftCode']").selectOption("B");
     await page.locator("#dashboardSalaryForm").evaluate(function (form) {

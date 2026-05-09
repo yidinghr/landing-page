@@ -7,6 +7,7 @@
   const isSchedulePage = Boolean(document.body && document.body.classList.contains("edit-page"));
   const isDashboardPage = Boolean(document.body && document.body.classList.contains("dashboard-page"));
   const isLoginPage = Boolean(document.body && document.body.classList.contains("login-page"));
+  const useBrightGalaxy = isSchedulePage || isDashboardPage;
 
   if (!canvas) {
     return;
@@ -33,13 +34,13 @@
       }
     : isDashboardPage
     ? {
-        dprCap: 1.28,
-        baseDensity: 0.00042,
-        baseMaxCount: 1720,
-        twinkleDensity: 0.00024,
-        twinkleMaxCount: 760,
-        constellationCount: 12,
-        glowCount: 14
+        dprCap: 1.22,
+        baseDensity: 0.00068,
+        baseMaxCount: 2780,
+        twinkleDensity: 0.00038,
+        twinkleMaxCount: 1240,
+        constellationCount: 16,
+        glowCount: 16
       }
     : isLoginPage
     ? {
@@ -78,9 +79,9 @@
   const COLORS = Object.freeze({
     spaceTop: "#090313",
     spaceBottom: "#020108",
-    warm: isSchedulePage ? [174, 162, 255] : [246, 224, 178],
+    warm: useBrightGalaxy ? [174, 162, 255] : [246, 224, 178],
     violet: [194, 130, 255],
-    amber: isSchedulePage ? [112, 134, 235] : [236, 194, 102],
+    amber: useBrightGalaxy ? [112, 134, 235] : [236, 194, 102],
     cool: [132, 154, 255],
     electric: [176, 164, 255],
     white: [250, 245, 235]
@@ -162,7 +163,7 @@
         y: randomBetween(height * -0.08, height * 1.04, rng),
         radius: randomBetween(width * 0.14, width * 0.34, rng),
         alpha: randomBetween(0.04, 0.1, rng),
-        color: isSchedulePage
+        color: useBrightGalaxy
           ? (index % 3 === 0 ? COLORS.electric : index % 2 === 0 ? COLORS.cool : COLORS.violet)
           : (index % 3 === 0 ? COLORS.cool : index % 2 === 0 ? COLORS.amber : COLORS.violet)
       });
@@ -264,9 +265,9 @@
     for (let index = 0; index < count; index += 1) {
       const x = rng() * width;
       const y = rng() * height;
-      const radius = randomBetween(isSchedulePage ? 0.28 : 0.22, isSchedulePage ? 1.9 : 1.62, rng);
-      const alpha = randomBetween(isSchedulePage ? 0.24 : 0.2, isSchedulePage ? 0.94 : 0.86, rng);
-      const color = isSchedulePage
+      const radius = randomBetween(useBrightGalaxy ? 0.28 : 0.22, useBrightGalaxy ? 1.9 : 1.62, rng);
+      const alpha = randomBetween(useBrightGalaxy ? 0.24 : 0.2, useBrightGalaxy ? 0.94 : 0.86, rng);
+      const color = useBrightGalaxy
         ? (rng() < 0.34 ? COLORS.cool : rng() < 0.68 ? COLORS.violet : COLORS.electric)
         : (rng() < 0.14 ? COLORS.cool : rng() < 0.36 ? COLORS.violet : COLORS.warm);
 
@@ -294,18 +295,18 @@
     twinkleStars = [];
 
     for (let index = 0; index < count; index += 1) {
-      const sparkle = rng() < (isSchedulePage ? 0.38 : 0.24);
+      const sparkle = rng() < (useBrightGalaxy ? 0.38 : 0.24);
       twinkleStars.push({
         x: rng() * width,
         y: rng() * height,
-        radius: randomBetween(isSchedulePage ? 0.64 : 0.5, sparkle ? (isSchedulePage ? 2.4 : 1.8) : (isSchedulePage ? 1.55 : 1.2), rng),
-        baseAlpha: randomBetween(isSchedulePage ? 0.24 : 0.18, isSchedulePage ? 0.98 : 0.92, rng),
-        pulseMin: randomBetween(isSchedulePage ? 0.18 : 0.3, 0.7, rng),
-        pulseMax: randomBetween(0.9, isSchedulePage ? 1.8 : 1.35, rng),
-        speed: randomBetween(isSchedulePage ? 0.58 : 0.32, isSchedulePage ? 2.15 : 1.24, rng),
+        radius: randomBetween(useBrightGalaxy ? 0.64 : 0.5, sparkle ? (useBrightGalaxy ? 2.4 : 1.8) : (useBrightGalaxy ? 1.55 : 1.2), rng),
+        baseAlpha: randomBetween(useBrightGalaxy ? 0.24 : 0.18, useBrightGalaxy ? 0.98 : 0.92, rng),
+        pulseMin: randomBetween(useBrightGalaxy ? 0.18 : 0.3, 0.7, rng),
+        pulseMax: randomBetween(0.9, useBrightGalaxy ? 1.8 : 1.35, rng),
+        speed: randomBetween(useBrightGalaxy ? 0.58 : 0.32, useBrightGalaxy ? 2.15 : 1.24, rng),
         phase: rng() * Math.PI * 2,
         sparkle: sparkle,
-        color: isSchedulePage
+        color: useBrightGalaxy
           ? (rng() < 0.42 ? COLORS.cool : rng() < 0.82 ? COLORS.electric : COLORS.violet)
           : (rng() < 0.18 ? COLORS.cool : rng() < 0.4 ? COLORS.violet : COLORS.white)
       });
@@ -390,7 +391,7 @@
   }
 
   function queueNextFlare(timestamp) {
-    nextFlareAt = timestamp + randomBetween(isSchedulePage ? 260 : 880, isSchedulePage ? 980 : 2600, Math.random);
+    nextFlareAt = timestamp + randomBetween(useBrightGalaxy ? 260 : 880, useBrightGalaxy ? 980 : 2600, Math.random);
   }
 
   function spawnFlares(timestamp) {
@@ -398,7 +399,7 @@
       return;
     }
 
-    const count = isSchedulePage
+    const count = useBrightGalaxy
       ? (Math.random() < 0.58 ? 1 : 2)
       : (Math.random() < 0.68 ? 1 : 2);
     for (let index = 0; index < count; index += 1) {
@@ -406,11 +407,11 @@
       flareStars.push({
         x: source.x,
         y: source.y,
-        radius: source.radius * randomBetween(isSchedulePage ? 2.1 : 1.4, isSchedulePage ? 3.4 : 2.4, Math.random),
+        radius: source.radius * randomBetween(useBrightGalaxy ? 2.1 : 1.4, useBrightGalaxy ? 3.4 : 2.4, Math.random),
         color: source.color,
         start: timestamp,
-        duration: randomBetween(isSchedulePage ? 780 : 620, isSchedulePage ? 1480 : 1180, Math.random),
-        alpha: randomBetween(isSchedulePage ? 0.78 : 0.62, isSchedulePage ? 1 : 0.95, Math.random)
+        duration: randomBetween(useBrightGalaxy ? 780 : 620, useBrightGalaxy ? 1480 : 1180, Math.random),
+        alpha: randomBetween(useBrightGalaxy ? 0.78 : 0.62, useBrightGalaxy ? 1 : 0.95, Math.random)
       });
     }
   }
@@ -442,7 +443,7 @@
       const progress = clamp((timestamp - star.start) / star.duration, 0, 1);
       const fade = Math.sin(progress * Math.PI);
       const alpha = star.alpha * fade;
-      const glowRadius = star.radius * (isSchedulePage ? 12.5 : 8.8);
+      const glowRadius = star.radius * (useBrightGalaxy ? 12.5 : 8.8);
 
       drawGlow(context, star.x, star.y, glowRadius, star.color, alpha * 0.42);
 
@@ -459,20 +460,20 @@
 
   function resetMeteors() {
     meteors = [];
-    nextMeteorAt = isSchedulePage ? performance.now() + randomBetween(700, 1500, Math.random) : 0;
+    nextMeteorAt = useBrightGalaxy ? performance.now() + randomBetween(1000, 5000, Math.random) : 0;
     lastMeteorFrameAt = 0;
   }
 
   function queueNextMeteor(timestamp, quickFollow) {
     const delay = quickFollow
       ? randomBetween(340, 920, Math.random)
-      : randomBetween(isSchedulePage ? 1600 : 7000, isSchedulePage ? 5200 : 16000, Math.random);
+      : randomBetween(useBrightGalaxy ? 1000 : 7000, useBrightGalaxy ? 5000 : 16000, Math.random);
     nextMeteorAt = timestamp + delay;
   }
 
   function spawnMeteor() {
     const angle = randomBetween(0.58, 0.82, Math.random);
-    const speed = randomBetween(isSchedulePage ? 620 : 520, isSchedulePage ? 920 : 760, Math.random);
+    const speed = randomBetween(useBrightGalaxy ? 620 : 520, useBrightGalaxy ? 920 : 760, Math.random);
     const startFromTop = Math.random() < 0.72;
 
     meteors.push({
@@ -480,8 +481,8 @@
       y: startFromTop ? randomBetween(height * -0.16, height * 0.16, Math.random) : randomBetween(height * 0.04, height * 0.38, Math.random),
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      length: randomBetween(isSchedulePage ? 118 : 86, isSchedulePage ? 230 : 168, Math.random),
-      radius: randomBetween(0.9, isSchedulePage ? 1.9 : 1.6, Math.random),
+      length: randomBetween(useBrightGalaxy ? 118 : 86, useBrightGalaxy ? 230 : 168, Math.random),
+      radius: randomBetween(0.9, useBrightGalaxy ? 1.9 : 1.6, Math.random),
       alpha: randomBetween(0.52, 0.88, Math.random),
       life: 0,
       maxLife: randomBetween(1.05, 1.7, Math.random)
@@ -489,11 +490,11 @@
   }
 
   function spawnMeteorBurst() {
-    const count = isSchedulePage
+    const count = useBrightGalaxy
       ? Math.floor(randomBetween(1, 4, Math.random))
       : 1;
     for (let index = 0; index < count; index += 1) {
-      if (meteors.length >= (isSchedulePage ? 3 : 2)) {
+      if (meteors.length >= (useBrightGalaxy ? 3 : 2)) {
         break;
       }
       spawnMeteor();
@@ -505,10 +506,10 @@
       queueNextMeteor(timestamp, false);
     }
 
-    const maxMeteors = isSchedulePage ? 3 : 2;
+    const maxMeteors = useBrightGalaxy ? 3 : 2;
     if (timestamp >= nextMeteorAt && meteors.length < maxMeteors) {
       spawnMeteorBurst();
-      queueNextMeteor(timestamp, meteors.length < maxMeteors && Math.random() < 0.32);
+      queueNextMeteor(timestamp, !useBrightGalaxy && meteors.length < maxMeteors && Math.random() < 0.32);
     }
 
     const delta = lastMeteorFrameAt ? Math.min(0.05, (timestamp - lastMeteorFrameAt) / 1000) : 0;

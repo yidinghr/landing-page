@@ -641,8 +641,7 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .dashboard-salary-field--result,
-  .dashboard-salary-submit {
+  .dashboard-salary-field--result {
     grid-column: span 1;
   }
 }
@@ -1278,6 +1277,7 @@ body[data-dashboard-tab="salary"] .dashboard-layout {
 body[data-dashboard-tab="salary"] .dashboard-chat-card {
   background: rgba(5, 3, 14, 0.03);
   border-color: rgba(242, 214, 154, 0.06);
+  backdrop-filter: none;
   box-shadow: none;
 }
 
@@ -1311,7 +1311,7 @@ body[data-dashboard-tab="salary"] .dashboard-chat-body {
 .dashboard-salary-board {
   width: min(980px, 100%);
   display: grid;
-  grid-template-columns: minmax(190px, 1fr) minmax(230px, 1.05fr) minmax(210px, 1fr) auto;
+  grid-template-columns: minmax(190px, 1fr) minmax(230px, 1.05fr) minmax(230px, 1fr);
   gap: 12px;
   align-items: end;
   padding: clamp(16px, 2vw, 22px);
@@ -1358,22 +1358,6 @@ body[data-dashboard-tab="salary"] .dashboard-chat-body {
 .dashboard-salary-output {
   color: #f8dfa0;
   cursor: not-allowed;
-}
-
-.dashboard-salary-submit {
-  min-width: 108px;
-  min-height: 52px;
-  padding: 0 18px;
-  border-radius: 14px;
-  border: 1px solid rgba(242, 214, 154, 0.22);
-  background:
-    linear-gradient(135deg, rgba(242, 212, 134, 0.18), rgba(129, 80, 210, 0.16)),
-    rgba(2, 1, 8, 0.24);
-  color: var(--dashboard-text);
-  font-size: 14px;
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
 }
 
 .dashboard-salary-error {
@@ -1504,8 +1488,7 @@ body[data-dashboard-tab="salary"] .dashboard-chat-body {
     grid-template-columns: 1fr;
   }
 
-  .dashboard-salary-field--result,
-  .dashboard-salary-submit {
+  .dashboard-salary-field--result {
     grid-column: auto;
   }
 
