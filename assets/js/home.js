@@ -762,6 +762,30 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
       window.open(CHI_CHI_URL, "_blank", "noopener,noreferrer");
     });
 
+    chatBody.addEventListener("input", function (event) {
+      const salaryForm = event.target.closest("#dashboardSalaryForm");
+      if (salaryForm) {
+        updateSalaryFromForm(salaryForm, false);
+      }
+    });
+
+    chatBody.addEventListener("change", function (event) {
+      const salaryForm = event.target.closest("#dashboardSalaryForm");
+      if (salaryForm) {
+        updateSalaryFromForm(salaryForm, true);
+      }
+    });
+
+    chatBody.addEventListener("submit", function (event) {
+      const salaryForm = event.target.closest("#dashboardSalaryForm");
+      if (!salaryForm) {
+        return;
+      }
+
+      event.preventDefault();
+      updateSalaryFromForm(salaryForm, true);
+    });
+
     detailBody.addEventListener("click", function (event) {
       const accountToggle = event.target.closest("[data-account-action='toggle-form']");
       const accountCancel = event.target.closest("[data-account-action='cancel-form']");
@@ -847,6 +871,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
   function renderAll() {
     document.title = i18n.t("home.pageTitle");
+    document.body.setAttribute("data-dashboard-tab", uiState.activeTab);
     renderProfile();
     renderTopActions();
     renderSidebarMenu();
@@ -1033,33 +1058,9 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     }
 
     if (uiState.activeTab === "salary") {
-      const currentRules = getSalaryMonthRules(new Date());
-      const result = uiState.salaryResult;
-
       chatTitle.textContent = t("salaryTitle");
       chatBadge.textContent = t("salaryBadge");
-      chatBody.innerHTML = [
-        '<div class="dashboard-chat-stack">',
-        '<section class="dashboard-chat-surface">',
-        '<h3 class="dashboard-chat-surface__title">' + escapeHtml(t("salaryTitle")) + "</h3>",
-        '<p class="dashboard-chat-surface__body">' + escapeHtml(t("salaryBody")) + "</p>",
-        '<div class="dashboard-chat-chip-grid">',
-        renderChatChip(t("salaryMonthDays"), String(currentRules.daysInMonth)),
-        renderChatChip(t("salaryWorkingDays"), String(currentRules.workingDays)),
-        renderChatChip(t("salaryNightWindow"), "22:00 - 06:00"),
-        renderChatChip(t("salaryShiftWindow"), getSalaryShiftLabel(uiState.salaryShiftCode)),
-        "</div>",
-        "</section>",
-        result
-          ? '<section class="dashboard-chat-surface"><div class="dashboard-chat-chip-grid">' +
-              renderChatChip(t("salaryHourly"), formatCurrency(result.hourlySalary)) +
-              renderChatChip(t("salaryNightHours"), formatHours(result.nightHours)) +
-              renderChatChip(t("salaryAllowance"), formatCurrency(result.allowance)) +
-              renderChatChip(t("salaryWorkingDays"), String(result.workingDays)) +
-            "</div></section>"
-          : '<section class="dashboard-chat-surface"><div class="dashboard-empty">' + escapeHtml(t("salaryTestHint")) + "</div></section>",
-        "</div>"
-      ].join("");
+      chatBody.innerHTML = renderSalaryPanel();
       return;
     }
 
@@ -1134,7 +1135,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
     if (uiState.activeTab === "salary") {
       detailTitle.textContent = t("salaryTitle");
-      detailBody.innerHTML = renderSalaryPanel();
+      detailBody.innerHTML = "";
       return;
     }
 
@@ -1289,45 +1290,36 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   function renderSalaryPanel() {
     const selectedShift = getSalaryShift(uiState.salaryShiftCode) || SALARY_SHIFT_DEFINITIONS[0];
     const result = uiState.salaryResult;
+    const resultValue = result ? formatCurrency(result.allowance) : "";
 
     return [
-      '<section class="dashboard-surface-stack">',
-      '<section class="dashboard-surface-card dashboard-salary-card">',
-      '<h3 class="dashboard-panel__title">' + escapeHtml(t("salaryTitle")) + "</h3>",
-      '<p class="dashboard-readonly-note">' + escapeHtml(t("salaryBody")) + "</p>",
-      '<form id="dashboardSalaryForm" class="dashboard-salary-form" autocomplete="off">',
-      '<label class="dashboard-form-label">' + escapeHtml(t("salaryMonthlyLabel")) +
-        '<input class="dashboard-input" name="monthlySalary" inputmode="numeric" type="text" placeholder="20.000.000" value="' + escapeHtml(uiState.salaryMonthlyInput) + '"></label>',
-      '<label class="dashboard-form-label">' + escapeHtml(t("salaryShiftLabel")) +
-        '<select class="dashboard-select" name="shiftCode">' + SALARY_SHIFT_DEFINITIONS.map(function (shift) {
+      '<section class="dashboard-salary-stage">',
+      '<form id="dashboardSalaryForm" class="dashboard-salary-board" autocomplete="off">',
+      '<label class="dashboard-salary-field"><span>' + escapeHtml(t("salaryMonthlyLabel")) + "</span>" +
+        '<input class="dashboard-salary-input" name="monthlySalary" inputmode="numeric" type="text" placeholder="20.000.000" value="' + escapeHtml(uiState.salaryMonthlyInput) + '"></label>',
+      '<label class="dashboard-salary-field"><span>' + escapeHtml(t("salaryShiftLabel")) + "</span>" +
+        '<select class="dashboard-salary-select" name="shiftCode">' + SALARY_SHIFT_DEFINITIONS.map(function (shift) {
           return '<option value="' + escapeHtml(shift.code) + '"' + (shift.code === selectedShift.code ? " selected" : "") + ">" + escapeHtml(getSalaryShiftLabel(shift.code)) + "</option>";
         }).join("") + "</select></label>",
-      '<button type="submit" class="dashboard-button dashboard-button--accent">' + escapeHtml(t("salarySubmit")) + "</button>",
-      "</form>",
-      uiState.salaryFeedback ? '<p class="dashboard-feedback is-error">' + escapeHtml(uiState.salaryFeedback) + "</p>" : "",
-      result ? renderSalaryResult(result) : '<div class="dashboard-empty">' + escapeHtml(t("salaryTestHint")) + "</div>",
-      "</section>",
-      '<section class="dashboard-surface-card">',
-      '<h3 class="dashboard-panel__title">' + escapeHtml(t("salaryPreviewTitle")) + "</h3>",
-      '<div class="dashboard-info-grid">',
-      renderInfoCard(t("salaryMonthDays"), String(getSalaryMonthRules(new Date()).daysInMonth)),
-      renderInfoCard(t("salaryWorkingDays"), String(getSalaryMonthRules(new Date()).workingDays)),
-      renderInfoCard(t("salaryNightWindow"), "22:00 - 06:00"),
-      renderInfoCard(t("salaryShiftWindow"), getSalaryShiftLabel(selectedShift.code)),
+      '<label class="dashboard-salary-field dashboard-salary-field--result"><span>' + escapeHtml(t("salaryAllowance")) + "</span>" +
+        '<input class="dashboard-salary-output" name="salaryResult" type="text" value="' + escapeHtml(resultValue) + '" readonly tabindex="-1"></label>',
+      '<button type="submit" class="dashboard-salary-submit">' + escapeHtml(t("salarySubmit")) + "</button>",
+      '<p class="dashboard-salary-error" data-salary-feedback>' + escapeHtml(uiState.salaryFeedback || "") + "</p>",
+      '<div class="dashboard-salary-metrics">',
+      renderSalaryMetric("hourly", t("salaryHourly"), result ? formatCurrency(result.hourlySalary) : "--"),
+      renderSalaryMetric("nightHours", t("salaryNightHours"), result ? formatHours(result.nightHours) : "--"),
+      renderSalaryMetric("workingDays", t("salaryWorkingDays"), result ? String(result.workingDays) : String(getSalaryMonthRules(new Date()).workingDays)),
       "</div>",
-      '<div class="dashboard-empty">' + escapeHtml(t("salaryFormulaText")) + "</div>",
-      "</section>",
+      "</form>",
       "</section>"
     ].join("");
   }
 
-  function renderSalaryResult(result) {
+  function renderSalaryMetric(key, label, value) {
     return [
-      '<div class="dashboard-salary-result">',
-      renderInfoCard(t("salaryHourly"), formatCurrency(result.hourlySalary)),
-      renderInfoCard(t("salaryNightHours"), formatHours(result.nightHours)),
-      renderInfoCard(t("salaryAllowance"), formatCurrency(result.allowance)),
-      renderInfoCard(t("salaryWorkingDays"), String(result.workingDays)),
+      '<div class="dashboard-salary-metric">',
+      '<span>' + escapeHtml(label) + "</span>",
+      '<strong data-salary-metric="' + escapeHtml(key) + '">' + escapeHtml(value) + "</strong>",
       "</div>"
     ].join("");
   }
@@ -1750,6 +1742,10 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   }
 
   function submitSalaryForm(form) {
+    updateSalaryFromForm(form, true);
+  }
+
+  function updateSalaryFromForm(form, shouldRender) {
     const monthlySalary = parseCurrencyInput(form.querySelector("[name='monthlySalary']").value);
     const shiftCode = normalizeShiftCode(form.querySelector("[name='shiftCode']").value);
 
@@ -1758,14 +1754,35 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
     if (!monthlySalary || monthlySalary <= 0) {
       uiState.salaryResult = null;
-      uiState.salaryFeedback = t("salaryMissing");
-      renderAll();
+      uiState.salaryFeedback = uiState.salaryMonthlyInput ? t("salaryMissing") : "";
+      updateSalaryFormOutput(form);
+      if (shouldRender) {
+        renderChatPanel();
+      }
       return;
     }
 
     uiState.salaryFeedback = "";
     uiState.salaryResult = calculateSalaryAllowance(monthlySalary, shiftCode, new Date());
-    renderAll();
+    updateSalaryFormOutput(form);
+    if (shouldRender) {
+      renderChatPanel();
+    }
+  }
+
+  function updateSalaryFormOutput(form) {
+    const result = uiState.salaryResult;
+    const output = form.querySelector("[name='salaryResult']");
+    const feedback = form.querySelector("[data-salary-feedback]");
+    const hourly = form.querySelector("[data-salary-metric='hourly']");
+    const nightHours = form.querySelector("[data-salary-metric='nightHours']");
+    const workingDays = form.querySelector("[data-salary-metric='workingDays']");
+
+    if (output) output.value = result ? formatCurrency(result.allowance) : "";
+    if (feedback) feedback.textContent = uiState.salaryFeedback || "";
+    if (hourly) hourly.textContent = result ? formatCurrency(result.hourlySalary) : "--";
+    if (nightHours) nightHours.textContent = result ? formatHours(result.nightHours) : "--";
+    if (workingDays) workingDays.textContent = result ? String(result.workingDays) : String(getSalaryMonthRules(new Date()).workingDays);
   }
 
   function calculateSalaryAllowance(monthlySalary, shiftCode, date) {

@@ -78,9 +78,9 @@ test.describe("Local smoke routes", () => {
       form.requestSubmit();
     });
 
-    await expect(page.locator("#dashboardDetailBody")).toContainText(Math.round(hourlyPay).toLocaleString("vi-VN") + " VND");
-    await expect(page.locator("#dashboardDetailBody")).toContainText("1h");
-    await expect(page.locator("#dashboardDetailBody")).toContainText(Math.round(nightAllowance).toLocaleString("vi-VN") + " VND");
+    await expect(page.locator("#dashboardChatBody")).toContainText(Math.round(hourlyPay).toLocaleString("vi-VN") + " VND");
+    await expect(page.locator("#dashboardChatBody")).toContainText("1h");
+    await expect(page.locator("#dashboardSalaryForm [name='salaryResult']")).toHaveValue(Math.round(nightAllowance).toLocaleString("vi-VN") + " VND");
   });
 
   test("employees page loads from local static server", async ({ page }) => {

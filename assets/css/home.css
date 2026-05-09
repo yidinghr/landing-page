@@ -632,6 +632,19 @@ body {
   .dashboard-layout {
     grid-template-columns: minmax(230px, 0.9fr) minmax(0, 1.7fr) minmax(300px, 1fr);
   }
+
+  body[data-dashboard-tab="salary"] .dashboard-layout {
+    grid-template-columns: minmax(230px, 280px) minmax(0, 1fr);
+  }
+
+  .dashboard-salary-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-salary-field--result,
+  .dashboard-salary-submit {
+    grid-column: span 1;
+  }
 }
 
 @media (max-width: 1080px) {
@@ -1258,6 +1271,152 @@ body.dashboard-page {
   margin-top: 12px;
 }
 
+body[data-dashboard-tab="salary"] .dashboard-layout {
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+}
+
+body[data-dashboard-tab="salary"] .dashboard-chat-card {
+  background: rgba(5, 3, 14, 0.03);
+  border-color: rgba(242, 214, 154, 0.06);
+  box-shadow: none;
+}
+
+body[data-dashboard-tab="salary"] .dashboard-chat-card::before {
+  background:
+    radial-gradient(circle at 30% 22%, rgba(110, 76, 170, 0.1), transparent 30%),
+    linear-gradient(160deg, rgba(255, 230, 186, 0.025), transparent 34%, transparent 70%, rgba(112, 66, 180, 0.035));
+}
+
+body[data-dashboard-tab="salary"] .dashboard-detail-card {
+  display: none;
+}
+
+body[data-dashboard-tab="salary"] .dashboard-chat-card .dashboard-card__head {
+  display: none;
+}
+
+body[data-dashboard-tab="salary"] .dashboard-chat-body {
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 4vw, 52px);
+}
+
+.dashboard-salary-stage {
+  width: 100%;
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.dashboard-salary-board {
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(230px, 1.05fr) minmax(210px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: clamp(16px, 2vw, 22px);
+  border-radius: 22px;
+  border: 1px solid rgba(242, 214, 154, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.006)),
+    rgba(7, 5, 17, 0.22);
+  backdrop-filter: blur(10px) saturate(1.08);
+  box-shadow: 0 24px 70px rgba(2, 1, 8, 0.34);
+}
+
+.dashboard-salary-field {
+  display: grid;
+  gap: 8px;
+  color: var(--dashboard-text-soft);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dashboard-salary-input,
+.dashboard-salary-select,
+.dashboard-salary-output {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(242, 214, 154, 0.18);
+  background: rgba(2, 1, 8, 0.28);
+  color: var(--dashboard-text);
+  font-size: 18px;
+  font-weight: 800;
+  outline: none;
+}
+
+.dashboard-salary-input:focus,
+.dashboard-salary-select:focus {
+  border-color: rgba(242, 214, 154, 0.5);
+  box-shadow: 0 0 0 3px rgba(242, 214, 154, 0.08);
+}
+
+.dashboard-salary-output {
+  color: #f8dfa0;
+  cursor: not-allowed;
+}
+
+.dashboard-salary-submit {
+  min-width: 108px;
+  min-height: 52px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(242, 214, 154, 0.22);
+  background:
+    linear-gradient(135deg, rgba(242, 212, 134, 0.18), rgba(129, 80, 210, 0.16)),
+    rgba(2, 1, 8, 0.24);
+  color: var(--dashboard-text);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.dashboard-salary-error {
+  grid-column: 1 / -1;
+  min-height: 18px;
+  margin: 0;
+  color: #ffd0a6;
+  font-size: 13px;
+}
+
+.dashboard-salary-metrics {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-salary-metric {
+  min-height: 74px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(242, 214, 154, 0.1);
+  background: rgba(2, 1, 8, 0.18);
+}
+
+.dashboard-salary-metric span,
+.dashboard-salary-metric strong {
+  display: block;
+}
+
+.dashboard-salary-metric span {
+  color: var(--dashboard-text-faint);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dashboard-salary-metric strong {
+  margin-top: 8px;
+  font-size: 20px;
+}
+
 .dashboard-permission-block {
   margin: 0;
   padding: 12px;
@@ -1327,6 +1486,10 @@ body.dashboard-page {
     max-height: none;
     overflow: visible;
   }
+
+  body[data-dashboard-tab="salary"] .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
@@ -1334,9 +1497,16 @@ body.dashboard-page {
   .dashboard-stat-grid,
   .dashboard-info-grid,
   .dashboard-salary-result,
+  .dashboard-salary-board,
+  .dashboard-salary-metrics,
   .dashboard-form-grid,
   .dashboard-form-grid--permissions {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-salary-field--result,
+  .dashboard-salary-submit {
+    grid-column: auto;
   }
 
   .dashboard-list__item {
