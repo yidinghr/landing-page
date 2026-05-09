@@ -61,6 +61,28 @@ test.describe("Local smoke routes", () => {
     await expect(page.locator("#dashboardDetailBody")).toBeVisible();
   });
 
+  test("admin can calculate night-shift salary allowance", async ({ page }) => {
+    const today = new Date();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const hourlyPay = 20000000 / ((daysInMonth - 4) * 8);
+    const nightAllowance = hourlyPay * 0.3;
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await seedAdminAuth(page);
+    await page.goto("/home/home.html", { waitUntil: "domcontentloaded" });
+
+    await page.locator("#dashboardMainButton-salary").click();
+    await page.locator("#dashboardSalaryForm [name='monthlySalary']").fill("20.000.000");
+    await page.locator("#dashboardSalaryForm [name='shiftCode']").selectOption("B");
+    await page.locator("#dashboardSalaryForm").evaluate(function (form) {
+      form.requestSubmit();
+    });
+
+    await expect(page.locator("#dashboardDetailBody")).toContainText(Math.round(hourlyPay).toLocaleString("vi-VN") + " VND");
+    await expect(page.locator("#dashboardDetailBody")).toContainText("1h");
+    await expect(page.locator("#dashboardDetailBody")).toContainText(Math.round(nightAllowance).toLocaleString("vi-VN") + " VND");
+  });
+
   test("employees page loads from local static server", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await seedAdminAuth(page);

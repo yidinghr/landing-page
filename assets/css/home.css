@@ -1245,6 +1245,19 @@ body.dashboard-page {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.dashboard-salary-form {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 12px;
+}
+
+.dashboard-salary-result {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 12px;
+}
+
 .dashboard-permission-block {
   margin: 0;
   padding: 12px;
@@ -1320,6 +1333,7 @@ body.dashboard-page {
   .dashboard-chat-chip-grid,
   .dashboard-stat-grid,
   .dashboard-info-grid,
+  .dashboard-salary-result,
   .dashboard-form-grid,
   .dashboard-form-grid--permissions {
     grid-template-columns: 1fr;
