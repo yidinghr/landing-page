@@ -1091,7 +1091,27 @@
 }
 
 .schedule-legend__list-toggle {
-  display: none;
+  flex: 0 0 auto;
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: rgba(130, 112, 214, 0.85);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  pointer-events: none;
+}
+
+.schedule-legend__list-toggle:hover,
+.schedule-legend__list-toggle:focus-visible {
+  color: rgba(170, 150, 240, 1);
+  outline: none;
 }
 
 .schedule-legend__code-edit-toggle {
@@ -2718,13 +2738,14 @@ body.edit-page {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Keep the sticky column-label row opaque so scrolling rows hide behind it */
+/* Sticky column-label row: transparent so galaxy stars show through, but
+   backdrop-blur smears any scrolling row behind it so the labels stay readable */
 .schedule-legend-table thead .schedule-legend-table__label-row th {
   position: sticky !important;
   top: 0 !important;
   z-index: 4 !important;
-  background: rgba(8, 6, 18, 0.96) !important;
-  backdrop-filter: blur(6px) !important;
-  -webkit-backdrop-filter: blur(6px) !important;
+  background: rgba(6, 4, 16, 0.18) !important;
+  backdrop-filter: blur(14px) saturate(0.85) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(0.85) !important;
   box-shadow: 0 1px 0 rgba(130, 112, 214, 0.32);
 }

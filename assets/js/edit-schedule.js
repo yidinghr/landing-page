@@ -644,6 +644,7 @@
   function renderLegendListState() {
     if (!dom.legendContent || !dom.legendListToggle) { return; }
     dom.legendContent.hidden = !uiState.legendListOpen;
+    dom.legendListToggle.textContent = uiState.legendListOpen ? "▲" : "▼";
     dom.legendListToggle.setAttribute("aria-expanded", String(Boolean(uiState.legendListOpen)));
     renderLegendCodeEditToggle();
   }
