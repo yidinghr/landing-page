@@ -1114,32 +1114,14 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
         '<h3 class="dashboard-chat-surface__title">' + escapeHtml(t("scheduleLiveTitle")) + "</h3>",
         '<p class="dashboard-chat-surface__hint">' + escapeHtml(t("scheduleLiveHint")) + "</p>",
         '<div class="dashboard-chat-chip-grid">',
-        renderChatChip(t("scheduleOnShiftNow"), String(liveSchedule.staff.length)),
+        renderChatChip(t("scheduleOnShiftNow"), String(liveSchedule.activeStaffCount)),
         renderChatChip(t("scheduleActiveDepartments"), String(liveSchedule.departments.length)),
         renderChatChip(t("scheduleCurrentDate"), liveSchedule.dateLabel),
         renderChatChip(t("scheduleCurrentTime"), liveSchedule.timeLabel, { liveClock: true }),
         "</div>",
         "</section>",
         liveSchedule.staff.length
-          ? '<section class="dashboard-chat-surface"><h4 class="dashboard-chat-surface__subhead">' + escapeHtml(t("scheduleDepartmentActive")) + '</h4><div class="dashboard-live-groups">' + liveSchedule.departments.map(function (department) {
-              return [
-                '<article class="dashboard-live-group">',
-                '<div class="dashboard-live-group__head">',
-                '<strong class="dashboard-live-group__title">' + escapeHtml(department.name) + "</strong>",
-                '<span class="dashboard-role-badge">' + escapeHtml(String(department.members.length)) + "</span>",
-                "</div>",
-                '<div class="dashboard-live-group__members">' + department.members.map(function (member) {
-                  const secondary = member.position ? member.position + " · " + member.code : member.code;
-                  return [
-                    '<div class="dashboard-live-member">',
-                    '<strong>' + escapeHtml(member.name) + "</strong>",
-                    '<span>' + escapeHtml(secondary) + "</span>",
-                    "</div>"
-                  ].join("");
-                }).join("") + "</div>",
-                "</article>"
-              ].join("");
-            }).join("") + "</div></section>"
+          ? '<section class="dashboard-chat-surface dashboard-chat-surface--cards"><div class="dashboard-shift-cards">' + liveSchedule.staff.map(renderShiftCard).join("") + "</div></section>"
           : '<section class="dashboard-chat-surface"><div class="dashboard-empty">' + escapeHtml(t("scheduleLiveEmpty")) + "</div></section>",
         "</div>"
       ].join("");
@@ -2175,6 +2157,31 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     ].join("");
   }
 
+  function renderShiftCard(member) {
+    const status = member.status === "ended" ? "ended" : (member.status === "ending" ? "ending" : "active");
+    const engName = member.engName || member.name || "";
+    const vieName = member.vieName || "";
+    const position = member.position || "";
+    const ydiId = member.ydiId || "";
+    const meta = [position, ydiId].filter(function (part) { return part; }).join(" · ");
+    const initial = (engName || vieName || ydiId || "?").trim().charAt(0).toUpperCase();
+    const avatarMarkup = member.avatarSrc
+      ? '<img class="dashboard-shift-card__avatar-img" src="' + escapeHtml(member.avatarSrc) + '" alt="' + escapeHtml(engName || vieName || ydiId) + '">'
+      : '<span class="dashboard-shift-card__avatar-fallback">' + escapeHtml(initial) + '</span>';
+    return [
+      '<article class="dashboard-shift-card dashboard-shift-card--' + status + '">',
+      '<span class="dashboard-shift-card__status" aria-hidden="true"></span>',
+      '<div class="dashboard-shift-card__avatar">' + avatarMarkup + '</div>',
+      '<div class="dashboard-shift-card__info">',
+      '<strong class="dashboard-shift-card__name">' + escapeHtml(engName || vieName || ydiId || member.id) + '</strong>',
+      vieName && vieName !== engName ? '<span class="dashboard-shift-card__vie">' + escapeHtml(vieName) + '</span>' : '',
+      meta ? '<span class="dashboard-shift-card__meta">' + escapeHtml(meta) + '</span>' : '',
+      '<span class="dashboard-shift-card__shift">' + escapeHtml(member.code || "") + '</span>',
+      '</div>',
+      '</article>'
+    ].join("");
+  }
+
   function submitAccountForm(form) {
     const values = {
       username: normalizeString(form.querySelector("[name='username']").value),
@@ -2425,40 +2432,93 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     ].join("-");
   }
 
-  function collectLiveMembers(liveMap, monthState, dayNumber, currentMinutes, sourceType) {
+  function classifyShiftStatus(window, currentMinutes, isOvernightCarry) {
+    if (!window) {
+      return null;
+    }
+    if (isOvernightCarry) {
+      if (!window.overnight) { return null; }
+      const remaining = window.endMinutes - currentMinutes;
+      if (remaining > 120) { return { status: "active", remainingMinutes: remaining }; }
+      if (remaining > 0) { return { status: "ending", remainingMinutes: remaining }; }
+      if (-remaining <= 120) { return { status: "ended", remainingMinutes: remaining }; }
+      return null;
+    }
+    if (window.overnight) {
+      if (currentMinutes < window.startMinutes) { return null; }
+      const remaining = (24 * 60 - currentMinutes) + window.endMinutes;
+      if (remaining > 120) { return { status: "active", remainingMinutes: remaining }; }
+      return { status: "ending", remainingMinutes: remaining };
+    }
+    if (currentMinutes < window.startMinutes) { return null; }
+    if (currentMinutes >= window.endMinutes) {
+      const since = currentMinutes - window.endMinutes;
+      if (since <= 120) { return { status: "ended", remainingMinutes: -since }; }
+      return null;
+    }
+    const remaining = window.endMinutes - currentMinutes;
+    if (remaining > 120) { return { status: "active", remainingMinutes: remaining }; }
+    return { status: "ending", remainingMinutes: remaining };
+  }
+
+  function collectLiveMembers(liveMap, monthState, dayNumber, currentMinutes, isOvernightCarry) {
     (monthState.rows || []).forEach(function (row) {
       const shifts = row && row.shifts ? row.shifts : {};
       const code = normalizeShiftCode(shifts[String(dayNumber)]);
       const window = getShiftWindow(code);
       const snapshot = row && row.employeeSnapshot ? row.employeeSnapshot : {};
-
-      if (!window) {
-        return;
-      }
-
-      const isActive = sourceType === "carry"
-        ? window.overnight && currentMinutes < window.endMinutes
-        : (
-            window.overnight
-              ? currentMinutes >= window.startMinutes
-              : currentMinutes >= window.startMinutes && currentMinutes < window.endMinutes
-          );
-
-      if (!isActive) {
-        return;
-      }
+      const classification = classifyShiftStatus(window, currentMinutes, isOvernightCarry);
+      if (!classification) { return; }
 
       const memberKey = String(row.employeeId || snapshot.employeeId || snapshot.ydiId || row.id || "");
-      liveMap[memberKey] = {
+      const existing = liveMap[memberKey];
+      const incoming = {
         id: memberKey,
         code: window.code,
+        ydiId: normalizeString(snapshot.ydiId),
         department: normalizeString(snapshot.department),
+        engName: normalizeString(snapshot.engName),
+        vieName: normalizeString(snapshot.vieName),
         name: normalizeString(snapshot.engName) || normalizeString(snapshot.vieName) || normalizeString(snapshot.ydiId) || memberKey,
         secondaryName: normalizeString(snapshot.vieName),
         position: normalizeString(snapshot.position),
-        sourceType: sourceType
+        status: classification.status,
+        remainingMinutes: classification.remainingMinutes,
+        sourceType: isOvernightCarry ? "carry" : "current"
       };
+      if (!existing) {
+        liveMap[memberKey] = incoming;
+        return;
+      }
+      const rank = { active: 3, ending: 2, ended: 1 };
+      if ((rank[incoming.status] || 0) > (rank[existing.status] || 0)) {
+        liveMap[memberKey] = incoming;
+      }
     });
+  }
+
+  function buildEmployeeAvatarMap() {
+    const employeesState = getEmployeesState();
+    const byYdiId = {};
+    const byEngName = {};
+    const byVieName = {};
+    (employeesState.employees || []).forEach(function (emp) {
+      const basic = emp.basic || {};
+      if (basic.ydiId) { byYdiId[String(basic.ydiId).trim().toUpperCase()] = emp; }
+      if (basic.engName) { byEngName[String(basic.engName).trim().toUpperCase()] = emp; }
+      if (basic.vieName) { byVieName[String(basic.vieName).trim().toUpperCase()] = emp; }
+    });
+    return { byYdiId: byYdiId, byEngName: byEngName, byVieName: byVieName };
+  }
+
+  function findEmployeeForMember(member, avatarMap) {
+    const ydiKey = String(member.ydiId || "").trim().toUpperCase();
+    const engKey = String(member.engName || "").trim().toUpperCase();
+    const vieKey = String(member.vieName || "").trim().toUpperCase();
+    return (ydiKey && avatarMap.byYdiId[ydiKey])
+      || (engKey && avatarMap.byEngName[engKey])
+      || (vieKey && avatarMap.byVieName[vieKey])
+      || null;
   }
 
   function getCurrentLiveSchedule(account) {
@@ -2470,14 +2530,31 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     const previousMonthKey = buildMonthKey(previousDate.getFullYear(), previousDate.getMonth() + 1);
     const liveMap = {};
 
-    collectLiveMembers(liveMap, getVisibleMonthState(getScheduleState(), previousMonthKey, account), previousDate.getDate(), currentMinutes, "carry");
-    collectLiveMembers(liveMap, getVisibleMonthState(getScheduleState(), currentMonthKey, account), now.getDate(), currentMinutes, "current");
+    collectLiveMembers(liveMap, getVisibleMonthState(getScheduleState(), previousMonthKey, account), previousDate.getDate(), currentMinutes, true);
+    collectLiveMembers(liveMap, getVisibleMonthState(getScheduleState(), currentMonthKey, account), now.getDate(), currentMinutes, false);
 
+    const avatarMap = buildEmployeeAvatarMap();
+    const statusRank = { active: 0, ending: 1, ended: 2 };
     const staff = Object.keys(liveMap).map(function (key) {
-      return liveMap[key];
+      const member = liveMap[key];
+      const employee = findEmployeeForMember(member, avatarMap);
+      member.avatarSrc = employee && employee.avatarSrc ? employee.avatarSrc : "";
+      if (employee) {
+        const basic = employee.basic || {};
+        const work = employee.work || {};
+        if (!member.engName && basic.engName) { member.engName = basic.engName; }
+        if (!member.vieName && basic.vieName) { member.vieName = basic.vieName; }
+        if (!member.position && work.position) { member.position = work.position; }
+        if (!member.ydiId && basic.ydiId) { member.ydiId = basic.ydiId; }
+        if (!member.department && work.departmentName) { member.department = work.departmentName; }
+        member.name = member.engName || member.vieName || member.name;
+      }
+      return member;
     }).sort(function (left, right) {
-      const departmentCompare = left.department.localeCompare(right.department);
-      return departmentCompare || left.name.localeCompare(right.name);
+      const statusCompare = (statusRank[left.status] || 0) - (statusRank[right.status] || 0);
+      if (statusCompare !== 0) { return statusCompare; }
+      const departmentCompare = String(left.department || "").localeCompare(String(right.department || ""));
+      return departmentCompare || String(left.name || "").localeCompare(String(right.name || ""));
     });
 
     const groupedDepartments = {};
@@ -2494,6 +2571,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
       timeLabel: formatClock(now),
       dateLabel: formatDateLabel(now),
       staff: staff,
+      activeStaffCount: staff.filter(function (m) { return m.status !== "ended"; }).length,
       departments: Object.keys(groupedDepartments).sort().map(function (name) {
         return {
           name: name,
