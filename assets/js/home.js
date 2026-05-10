@@ -236,6 +236,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     salaryEditFeedback: "",
     salaryResult: null,
     salaryFeedback: "",
+    salaryTableMonthKey: defaultSalaryTableMonthKey(),
     pdfZoom: 1.25,
     pdfValues: Object.create(null)
   };
@@ -852,6 +853,11 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     });
 
     chatBody.addEventListener("input", function (event) {
+      const salaryInput = event.target.closest("[data-salary-field]");
+      if (salaryInput) {
+        handleSalaryTableInput(salaryInput);
+        return;
+      }
       const salaryForm = event.target.closest("#dashboardSalaryForm");
       if (salaryForm) {
         updateSalaryFromForm(salaryForm, false);
@@ -859,6 +865,10 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     });
 
     chatBody.addEventListener("change", function (event) {
+      if (event.target && event.target.id === "salaryMonthSelect") {
+        handleSalaryTableMonthChange(event.target.value);
+        return;
+      }
       const salaryForm = event.target.closest("#dashboardSalaryForm");
       if (salaryForm) {
         updateSalaryFromForm(salaryForm, true);
@@ -1366,35 +1376,398 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   }
 
   function renderSalaryPanel() {
-    const selectedShift = getSalaryShift(uiState.salaryShiftCode) || getSalaryShiftDefinitions()[0];
-    const result = uiState.salaryResult;
-    const resultValue = result ? formatCurrency(result.allowance) : "";
-    const shiftDefinitions = getSalaryShiftDefinitions();
+    const monthKey = uiState.salaryTableMonthKey;
+    const monthOptions = buildSalaryMonthOptions();
+    const rows = getSalaryTableRows(monthKey);
+    const totals = rows.reduce(function (acc, row) {
+      const calc = computeSalaryRow(row);
+      acc.payTotal += calc.actualPay;
+      acc.headcount += 1;
+      return acc;
+    }, { payTotal: 0, headcount: 0 });
+
+    const headerCells = getSalaryTableColumns().map(function (col) {
+      return '<th class="salary-table__th salary-table__th--' + col.key + '">' + escapeHtml(col.label) + "</th>";
+    }).join("");
+
+    const bodyRows = rows.map(function (row, index) {
+      return renderSalaryRow(row, index);
+    }).join("");
 
     return [
-      '<section class="dashboard-salary-stage">',
-      '<div class="dashboard-salary-tool-row">',
-      '<form id="dashboardSalaryForm" class="dashboard-salary-board" autocomplete="off">',
-      '<label class="dashboard-salary-field"><span>' + escapeHtml(t("salaryMonthlyLabel")) + "</span>" +
-        '<input class="dashboard-salary-input" name="monthlySalary" inputmode="numeric" type="text" value="' + escapeHtml(uiState.salaryMonthlyInput) + '"></label>',
-      '<label class="dashboard-salary-field"><span>' + escapeHtml(t("salaryShiftLabel")) + "</span>" +
-        '<select class="dashboard-salary-select" name="shiftCode">' + shiftDefinitions.map(function (shift) {
-          return '<option value="' + escapeHtml(shift.code) + '"' + (shift.code === selectedShift.code ? " selected" : "") + ">" + escapeHtml(getSalaryShiftLabel(shift.code)) + "</option>";
-        }).join("") + "</select></label>",
-      '<label class="dashboard-salary-field dashboard-salary-field--result"><span>' + escapeHtml(t("salaryAllowance")) + "</span>" +
-        '<input class="dashboard-salary-output" name="salaryResult" type="text" value="' + escapeHtml(resultValue) + '" readonly tabindex="-1"></label>',
-      '<p class="dashboard-salary-error" data-salary-feedback>' + escapeHtml(uiState.salaryFeedback || "") + "</p>",
-      '<div class="dashboard-salary-metrics">',
-      renderSalaryMetric("hourly", t("salaryHourly"), result ? formatCurrency(result.hourlySalary) : "--"),
-      renderSalaryMetric("nightHours", t("salaryNightHours"), result ? formatHours(result.nightHours) : "--"),
-      renderSalaryMetric("workingDays", t("salaryWorkingDays"), result ? String(result.workingDays) : String(getSalaryMonthRules(new Date()).workingDays)),
+      '<section class="salary-board">',
+      '<header class="salary-board__bar">',
+      '<label class="salary-board__period"><span>Tháng</span>',
+      '<select id="salaryMonthSelect" class="salary-board__select">' + monthOptions.map(function (opt) {
+        return '<option value="' + escapeHtml(opt.value) + '"' + (opt.value === monthKey ? " selected" : "") + ">" + escapeHtml(opt.label) + "</option>";
+      }).join("") + "</select></label>",
+      '<div class="salary-board__totals">',
+      '<span class="salary-board__total-chip"><em>Số nhân sự</em><strong>' + String(totals.headcount) + "</strong></span>",
+      '<span class="salary-board__total-chip"><em>Tổng thực phát</em><strong>' + escapeHtml(formatVnd(totals.payTotal)) + "</strong></span>",
       "</div>",
-      "</form>",
-      '<button type="button" class="dashboard-salary-edit-button" data-salary-action="edit">' + escapeHtml(t("salaryEdit")) + "</button>",
+      '<div class="salary-board__actions">',
+      '<button type="button" class="salary-board__btn" data-salary-action="add-row">+ Thêm nhân viên</button>',
+      '<button type="button" class="salary-board__btn salary-board__btn--ghost" data-salary-action="reset-month">Khôi phục tháng 04 mẫu</button>',
       "</div>",
-      uiState.salaryEditing ? renderSalaryShiftEditor() : "",
+      "</header>",
+      '<div class="salary-table-scroll">',
+      '<table class="salary-table">',
+      "<thead><tr>" + headerCells + "</tr></thead>",
+      '<tbody id="salaryTableBody">' + (bodyRows || ('<tr><td class="salary-table__empty" colspan="' + getSalaryTableColumns().length + '">Chưa có dữ liệu lương cho tháng này. Nhấn "+ Thêm nhân viên" để bắt đầu.</td></tr>')) + "</tbody>",
+      "</table>",
+      "</div>",
       "</section>"
     ].join("");
+  }
+
+  function renderSalaryRow(row, index) {
+    const calc = computeSalaryRow(row);
+    return "<tr data-salary-row=\"" + escapeHtml(row.uid) + "\">" + getSalaryTableColumns().map(function (col) {
+      const isAuto = col.kind === "auto";
+      const isIdentity = col.kind === "identity";
+      let value;
+      if (isAuto) {
+        value = calc[col.key];
+      } else {
+        value = row[col.key] != null ? row[col.key] : "";
+      }
+      const display = col.format ? col.format(value, row, calc) : (value === 0 || value ? String(value) : "");
+      const cellClass = "salary-table__td salary-table__td--" + col.key + (isAuto ? " salary-table__td--auto" : "") + (isIdentity ? " salary-table__td--identity" : "");
+      if (isAuto || isIdentity) {
+        return '<td class="' + cellClass + '">' + escapeHtml(display) + "</td>";
+      }
+      return '<td class="' + cellClass + '"><input class="salary-table__input" type="text" inputmode="' + (col.numeric ? "decimal" : "text") + '" data-salary-field="' + escapeHtml(col.key) + '" data-salary-uid="' + escapeHtml(row.uid) + '" value="' + escapeHtml(display) + '"></td>';
+    }).join("") + "</tr>";
+  }
+
+  // ─── Salary table (replaces legacy tool) ───────────────────────────────
+  function getSalaryStorageKey() { return "yiding_salary_table_v1"; }
+  var _SALARY_TABLE_COLUMNS_CACHE = null;
+  function getSalaryTableColumns() {
+    if (!_SALARY_TABLE_COLUMNS_CACHE) {
+      _SALARY_TABLE_COLUMNS_CACHE = buildSalaryTableColumns();
+    }
+    return _SALARY_TABLE_COLUMNS_CACHE;
+  }
+  function buildSalaryTableColumns() {
+    return [
+      { key: "ydiId",         label: "Mã YDI",         kind: "identity" },
+      { key: "vieName",       label: "Họ tên",         kind: "identity" },
+      { key: "engName",       label: "Tên EN",         kind: "identity" },
+      { key: "department",    label: "Bộ phận",        kind: "identity" },
+      { key: "monthly",       label: "Lương tháng",    kind: "edit",  numeric: true, format: function (v) { return v ? formatVnd(v) : ""; } },
+      { key: "dailySalary",   label: "Lương ngày",     kind: "auto",  format: function (v) { return formatVnd(v); } },
+      { key: "hourlySalary",  label: "Lương giờ",      kind: "auto",  format: function (v) { return formatVnd(v); } },
+      { key: "nightHourly",   label: "Lương giờ đêm",  kind: "auto",  format: function (v) { return formatVnd(v); } },
+      { key: "insurance",     label: "Bảo hiểm",       kind: "edit",  numeric: true, format: function (v) { return v ? formatVnd(v) : ""; } },
+      { key: "transfer",      label: "Chuyển khoản",   kind: "edit",  numeric: true, format: function (v) { return v ? formatVnd(v) : ""; } },
+      { key: "meal",          label: "Tiền ăn",        kind: "edit",  numeric: true, format: function (v) { return v ? formatVnd(v) : ""; } },
+      { key: "deductDays",    label: "Ngày khấu trừ",  kind: "edit",  numeric: true },
+      { key: "deductAmount",  label: "Tiền khấu trừ",  kind: "auto",  format: function (v) { return formatVnd(v); } },
+      { key: "holidayDays",   label: "Ngày làm lễ",    kind: "edit",  numeric: true },
+      { key: "holidayAmount", label: "Tiền làm lễ",    kind: "auto",  format: function (v) { return formatVnd(v); } },
+      { key: "overtimeHours", label: "Giờ tăng ca",    kind: "edit",  numeric: true },
+      { key: "overtimePay",   label: "Tiền tăng ca",   kind: "auto",  format: function (v) { return formatVnd(v); } },
+      { key: "nightHours",    label: "Giờ ca đêm",     kind: "edit",  numeric: true },
+      { key: "nightPay",      label: "Tiền ca đêm",    kind: "auto",  format: function (v) { return formatVnd(v); } },
+      { key: "otherDeduct",   label: "Khấu trừ khác",  kind: "edit",  numeric: true, format: function (v) { return v ? formatVnd(v) : ""; } },
+      { key: "otherBonus",    label: "Bù khác",        kind: "edit",  numeric: true, format: function (v) { return v ? formatVnd(v) : ""; } },
+      { key: "actualPay",     label: "Thực phát",      kind: "auto",  format: function (v) { return formatVnd(v); } }
+    ];
+  }
+
+  function defaultSalaryTableMonthKey() {
+    const now = new Date();
+    return buildMonthKey(now.getFullYear(), now.getMonth() + 1);
+  }
+
+  function getSalaryTableState() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(getSalaryStorageKey()) || "null");
+      if (parsed && typeof parsed === "object" && parsed.months && typeof parsed.months === "object") {
+        return parsed;
+      }
+    } catch (error) {}
+    return { months: {} };
+  }
+
+  function saveSalaryTableState(state) {
+    try {
+      localStorage.setItem(getSalaryStorageKey(), JSON.stringify(state));
+    } catch (error) {}
+  }
+
+  function buildSalaryMonthOptions() {
+    const state = getSalaryTableState();
+    const set = {};
+    Object.keys(state.months || {}).forEach(function (k) { set[k] = true; });
+    set[uiState.salaryTableMonthKey] = true;
+    set["2026-04"] = true;
+    set[defaultSalaryTableMonthKey()] = true;
+    return Object.keys(set).sort().reverse().map(function (key) {
+      return { value: key, label: key };
+    });
+  }
+
+  function ensureMonthSeeded(monthKey) {
+    const state = getSalaryTableState();
+    if (state.months[monthKey]) { return state; }
+    if (monthKey === "2026-04") {
+      state.months[monthKey] = { rows: SEED_SALARY_APRIL_2026().map(toSalaryRow) };
+      saveSalaryTableState(state);
+    } else {
+      state.months[monthKey] = { rows: [] };
+      saveSalaryTableState(state);
+    }
+    return state;
+  }
+
+  function getSalaryTableRows(monthKey) {
+    const state = ensureMonthSeeded(monthKey);
+    return (state.months[monthKey] && state.months[monthKey].rows) || [];
+  }
+
+  function toSalaryRow(seedArr) {
+    return {
+      uid: seedArr[0] + "::" + seedArr[2],
+      ydiId: seedArr[0],
+      vieName: seedArr[1],
+      engName: seedArr[2],
+      department: seedArr[3],
+      monthly: seedArr[4],
+      insurance: seedArr[5],
+      transfer: seedArr[6],
+      meal: seedArr[7],
+      deductDays: seedArr[8],
+      holidayDays: seedArr[9],
+      overtimeHours: seedArr[10],
+      nightHours: seedArr[11],
+      otherDeduct: seedArr[12],
+      otherBonus: seedArr[13]
+    };
+  }
+
+  function computeSalaryRow(row) {
+    const monthly = Number(row.monthly) || 0;
+    const dailySalary = monthly / 26;
+    const hourlySalary = dailySalary / 8;
+    const nightHourly = hourlySalary * 0.3;
+    const insurance = Number(row.insurance) || 0;
+    const transfer = Number(row.transfer) || 0;
+    const meal = Number(row.meal) || 0;
+    const deductDays = Number(row.deductDays) || 0;
+    const holidayDays = Number(row.holidayDays) || 0;
+    const overtimeHours = Number(row.overtimeHours) || 0;
+    const nightHours = Number(row.nightHours) || 0;
+    const otherDeduct = Number(row.otherDeduct) || 0;
+    const otherBonus = Number(row.otherBonus) || 0;
+    const deductAmount = -dailySalary * deductDays;
+    const holidayAmount = dailySalary * holidayDays * 2;
+    const overtimePay = hourlySalary * overtimeHours;
+    const nightPay = nightHourly * nightHours;
+    const actualPay = monthly + insurance + transfer + meal + deductAmount + holidayAmount + overtimePay + nightPay + otherDeduct + otherBonus;
+    return {
+      dailySalary: dailySalary,
+      hourlySalary: hourlySalary,
+      nightHourly: nightHourly,
+      deductAmount: deductAmount,
+      holidayAmount: holidayAmount,
+      overtimePay: overtimePay,
+      nightPay: nightPay,
+      actualPay: actualPay
+    };
+  }
+
+  function formatVnd(value) {
+    const n = Number(value) || 0;
+    const rounded = Math.round(n);
+    const sign = rounded < 0 ? "-" : "";
+    const abs = String(Math.abs(rounded));
+    const grouped = abs.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return sign + grouped;
+  }
+
+  function parseSalaryNumber(text) {
+    if (text == null) { return 0; }
+    const cleaned = String(text).replace(/[,\s]/g, "").replace(",", ".");
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  }
+
+  function handleSalaryTableInput(input) {
+    const uid = input.getAttribute("data-salary-uid");
+    const field = input.getAttribute("data-salary-field");
+    if (!uid || !field) { return; }
+    const monthKey = uiState.salaryTableMonthKey;
+    const state = ensureMonthSeeded(monthKey);
+    const rows = state.months[monthKey].rows;
+    const row = rows.find(function (r) { return r.uid === uid; });
+    if (!row) { return; }
+    const col = getSalaryTableColumns().find(function (c) { return c.key === field; });
+    row[field] = col && col.numeric ? parseSalaryNumber(input.value) : input.value;
+    saveSalaryTableState(state);
+    refreshSalaryRow(uid);
+    refreshSalaryTotals();
+  }
+
+  function refreshSalaryRow(uid) {
+    const tr = document.querySelector('tr[data-salary-row="' + cssEscape(uid) + '"]');
+    if (!tr) { return; }
+    const monthKey = uiState.salaryTableMonthKey;
+    const rows = getSalaryTableRows(monthKey);
+    const row = rows.find(function (r) { return r.uid === uid; });
+    if (!row) { return; }
+    const calc = computeSalaryRow(row);
+    getSalaryTableColumns().forEach(function (col) {
+      if (col.kind !== "auto") { return; }
+      const td = tr.querySelector(".salary-table__td--" + col.key);
+      if (!td) { return; }
+      const value = calc[col.key];
+      const display = col.format ? col.format(value, row, calc) : String(value);
+      td.textContent = display;
+    });
+  }
+
+  function refreshSalaryTotals() {
+    const monthKey = uiState.salaryTableMonthKey;
+    const rows = getSalaryTableRows(monthKey);
+    const totals = rows.reduce(function (acc, row) {
+      acc.payTotal += computeSalaryRow(row).actualPay;
+      acc.headcount += 1;
+      return acc;
+    }, { payTotal: 0, headcount: 0 });
+    const chips = document.querySelectorAll(".salary-board__total-chip strong");
+    if (chips.length >= 2) {
+      chips[0].textContent = String(totals.headcount);
+      chips[1].textContent = formatVnd(totals.payTotal);
+    }
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && window.CSS.escape) { return window.CSS.escape(value); }
+    return String(value).replace(/["\\]/g, "\\$&");
+  }
+
+  function handleSalaryTableMonthChange(value) {
+    uiState.salaryTableMonthKey = value;
+    renderChatPanel();
+  }
+
+  function handleSalaryAddRow() {
+    const monthKey = uiState.salaryTableMonthKey;
+    const state = ensureMonthSeeded(monthKey);
+    const employees = (getEmployeesState().employees || []);
+    const existingKeys = {};
+    state.months[monthKey].rows.forEach(function (r) { existingKeys[r.uid] = true; });
+    const candidate = employees.find(function (e) {
+      const basic = e.basic || {};
+      const uid = (basic.ydiId || e.id) + "::" + (basic.engName || basic.vieName || "");
+      return !existingKeys[uid];
+    });
+    let row;
+    if (candidate) {
+      const basic = candidate.basic || {};
+      const work = candidate.work || {};
+      row = {
+        uid: (basic.ydiId || candidate.id) + "::" + (basic.engName || basic.vieName || ""),
+        ydiId: basic.ydiId || "",
+        vieName: basic.vieName || "",
+        engName: basic.engName || "",
+        department: work.departmentName || "",
+        monthly: 0, insurance: 0, transfer: 0, meal: 0,
+        deductDays: 0, holidayDays: 0, overtimeHours: 0, nightHours: 0,
+        otherDeduct: 0, otherBonus: 0
+      };
+    } else {
+      const stamp = Date.now().toString(36);
+      row = {
+        uid: "manual-" + stamp,
+        ydiId: "", vieName: "", engName: "", department: "",
+        monthly: 0, insurance: 0, transfer: 0, meal: 0,
+        deductDays: 0, holidayDays: 0, overtimeHours: 0, nightHours: 0,
+        otherDeduct: 0, otherBonus: 0
+      };
+    }
+    state.months[monthKey].rows.push(row);
+    saveSalaryTableState(state);
+    renderChatPanel();
+  }
+
+  function handleSalaryResetMonth() {
+    const monthKey = uiState.salaryTableMonthKey;
+    if (monthKey !== "2026-04") {
+      return;
+    }
+    const state = getSalaryTableState();
+    delete state.months[monthKey];
+    saveSalaryTableState(state);
+    renderChatPanel();
+  }
+
+  function SEED_SALARY_APRIL_2026() {
+    return [
+      ["YDI0009", "ZHANG PENG", "PENG", "CAGE", 3000, 0, 0, 360, 0, 1, 0, 74, 0, 135],
+      ["YDI0062", "SUN YU", "RAIN", "CAGE", 3500, 0, 0, 360, 0, 2, 11, 97, 0, 186],
+      ["YDI0062B", "COCO", "COCO", "CAGE", 2500, 0, 0, 360, 0, 2, 12, 83, 0, 197],
+      ["YDI0016", "ĐOÀN THỊ TÍNH", "FLORA", "CAGE", 19000000, 1411200, 0, 0, 0, 2, 7, 42, 0, 1461538],
+      ["YDI0021", "NGUYỄN NHƯ QUỲNH", "QUINN", "CAGE", 19000000, 1411200, 0, 0, 0, 2, 11, 60, 0, 1461538],
+      ["YDI0047", "TRƯƠNG CÔNG TÍN", "TONI", "CAGE", 21000000, 1411200, 0, -153576, 0, 2, 6, 100, 0, 0],
+      ["YDI0042", "ĐẶNG THỊ THU HƯƠNG", "AUMIE", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 5, 74, 0, 0],
+      ["YDI0044", "LÊ THỊ ANH THI", "DION", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 7, 92, 0, 0],
+      ["YDI0013", "BÙI THU HƯƠNG", "HARLEY", "CAGE", 21000000, 1411200, 0, 0, 0, 1, 0, 67, 0, 0],
+      ["YDI0020", "NGUYỄN VĨNH KIM NGÂN", "SUZY", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 0, 74, 0, 0],
+      ["YDI0034", "HỒ THỊ HỒNG NHẬT", "SUNNY", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 7, 57, 0, 0],
+      ["YDI0038", "NGUYỄN THỊ HỒNG THÚY", "MEI", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 7, 55, 0, 0],
+      ["YDI0051", "NGUYỄN ĐOÀN THẢO NGUYÊN", "MAE", "CAGE", 21000000, 1411200, 0, 0, 0, 1, 11, 78, 0, 0],
+      ["YDI0015", "LƯƠNG Ý NHI", "SCARLETT", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 1, 62, 0, 0],
+      ["YDI0001", "HAO GE", "JIMSTER", "OPERATION", 7000, 0, 0, 360, 0, 0, 0, 0, 0, 0],
+      ["YDI0007", "SĂM MỸ DUNG", "SAMMY", "OPERATION", 33000000, 0, -10150000, 0, 0, 2, 26, 95, 0, 0],
+      ["YDI0008", "DƯƠNG HUỲNH QUYÊN QUYÊN", "QUEENIE", "OPERATION", 25000000, 1411200, 0, -115344, 0, 1, 19, 90, 0, 0],
+      ["YDI0056", "TRANG DỊ TRIẾT", "WILSON", "OPERATION", 23000000, 1411200, 0, 0, 0, 2, 25, 66, 0, 0],
+      ["YDI0011", "PHÙNG THỊ NGỌC HIỀN", "JOY", "OPERATION", 20000000, 1411200, 0, 0, 0, 2, 6, 82, 0, 0],
+      ["YDI0014", "VÕ THỊ NHƯ PHƯỚC", "MIA", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 5, 61, 0, 0],
+      ["YDI0018", "LÊ QUANG HUY", "HENRY", "OPERATION", 20000000, 1411200, 0, -665496, 0, 1, 4, 88, 0, 0],
+      ["YDI0019", "NGUYỄN THỊ QUÝ HẬU", "HANNI", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 6, 99, 0, 0],
+      ["YDI0033", "NGUYỄN THỊ HOÀI THƯƠNG", "SAM", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 3, 71, 0, 0],
+      ["YDI0036", "LÊ VIỆT HÙNG", "LEWIN", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 10, 89, 0, 0],
+      ["YDI0037", "DƯƠNG THỊ MINH THƯ", "TYRA", "OPERATION", 20000000, 1411200, 0, -51192, 0, 2, 9, 37, 0, 0],
+      ["YDI0043", "BÙI TRƯƠNG THANH THẢO", "LIMMI", "OPERATION", 20000000, 1411200, 0, -51192, 0, 2, 10, 50, 0, 0],
+      ["YDI0046", "ĐOÀN NHẬT LINH", "KAYLIN", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 6, 93, 0, 0],
+      ["YDI0049", "NGUYỄN THỊ NGỌC ÁNH", "ALANA", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 6, 59, 0, 0],
+      ["YDI0055", "NGÔ THỊ HỒNG NHÂN", "ALICE", "OPERATION", 20000000, 1411200, 0, 0, 0, 2, 5, 55, 0, 0],
+      ["YDI0058", "NGUYỄN TRUNG", "TRUMP", "OPERATION", 20000000, 1411200, 0, 0, 0, 2, 3, 42, 0, 0],
+      ["YDI0076", "NGUYỄN LÊ XUÂN ANH", "TIFFANY", "OPERATION", 18000000, 1411200, 0, 0, 0, 2, 3, 44, 0, 0],
+      ["YDI0080", "NGUYỄN LÊ PHƯƠNG TRINH", "JEII", "OPERATION", 18000000, 1411200, 0, 0, 0, 1, 7, 47, 0, 0],
+      ["YDI0083", "BÙI NGUYỄN BẢO KHÁNH", "MISTY", "OPERATION", 18000000, 1411200, 0, 0, 8, 2, 0, 25, 0, 0],
+      ["YDI0082", "VO THI THU HA", "TRACY", "OPERATION", 18000000, 1411200, 0, -243216, 12, 2, 0, 37, 0, 0],
+      ["YDI0066", "NAN GE", "JONNY", "BOOKING AND SERVICE", 2000, 0, 0, 360, 0, 0, 0, 0, 0, 0],
+      ["YDI0003", "NGUYỄN THỊ KIM TRANG", "CANDY", "BOOKING AND SERVICE", 50000000, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      ["YDI0028", "MAI THỊ THÊU", "JUDY", "BOOKING AND SERVICE", 25000000, 1411200, 0, 0, 0, 2, 49.5, 41, 0, 0],
+      ["YDI0039", "TỐNG NỮ THÙY LINH", "LIN", "BOOKING AND SERVICE", 22000000, 1411200, 0, 0, 0, 1, 16, 62, 0, 0],
+      ["YDI0059", "NGUYỄN THỊ HIỀN", "HANNI-BS", "BOOKING AND SERVICE", 22000000, 1411200, 0, -102384, 0, 1, 15, 67, 0, 0],
+      ["YDI0070", "NGUYỄN THÁI NHẬT ANH", "LUNA", "BOOKING AND SERVICE", 22000000, 1411200, 0, -281664, 0, 1, 14, 47, 0, 592593],
+      ["YDI0071", "LÊ THỊ HỒNG HẠNH", "TINY", "BOOKING AND SERVICE", 20000000, 1411200, 0, -102384, 0, 1, 4, 88, 0, 592593],
+      ["YDI0026", "TRẦN NGUYỄN THANH DUNG", "LINA", "BOOKING AND SERVICE", 25000000, 1411200, 0, 0, 0, 1, 0, 5, 0, 0],
+      ["YDI0040", "NGUYỄN PHÙNG NHƯ QUỲNH", "BAOBAO", "BOOKING AND SERVICE", 20000000, 1411200, 0, 0, 0, 1, 0, 50, 0, 0],
+      ["YDI0029", "HOÀNG NGỌC HẰNG", "JENNIE", "BOOKING AND SERVICE", 20000000, 1411200, 0, 0, 0, 1, 4.5, 4, 0, 0],
+      ["YDI0045", "TRẦN THỊ TRÀ GIANG", "JULIE", "BOOKING AND SERVICE", 20000000, 1411200, 0, -204984, 0, 1, 7.5, 39, 0, 0],
+      ["YDI0073", "TRẦN THỊ MỸ TÂM", "CHOCOPIE", "BOOKING AND SERVICE", 16000000, 1411200, 0, 0, 0, 1, 4.5, 77, 0, 1185186],
+      ["YDI0078", "MAI THỊ THANH NGA", "TANA", "BOOKING AND SERVICE", 16000000, 1411200, 0, 0, 0, 1, 0, 36, 0, 2368212],
+      ["YDI0025", "TRẦN THỊ LIÊN", "ALICE-BS", "BOOKING AND SERVICE", 20000000, 1411200, 0, 0, 0, 1, 10, 40, 0, 0],
+      ["YDI0030", "THÁI THỊ THU HƯƠNG", "ROSE", "BOOKING AND SERVICE", 20000000, 1411200, 0, 0, 0, 1, 11, 49, 0, 0],
+      ["YDI0069", "NGUYỄN THỊ NGỌC ANH", "TINA", "BOOKING AND SERVICE", 16000000, 1411200, 0, -204768, 0, 1, 18, 33, 0, 1185186],
+      ["YDI0006", "NGUYỄN NGỌC ĐĂNG", "MICHAEL", "HR", 40000000, 0, -10150000, 9000000, 0, 0, 0, 0, 0, 0],
+      ["YDI0072", "HỨA PHƯƠNG THẢO", "HANNAH", "HR", 18000000, 1411200, 0, 0, 0, 0, 0, 0, 0, 0],
+      ["YDI0004", "KATE AO", "KK", "FINANCE", 5000, 0, 0, 360, 0, 0, 0, 0, 0, 0],
+      ["YDI0084", "TAO GE", "TAO", "FINANCE", 3000, 0, 0, 360, 0, 0, 0, 0, 0, 222],
+      ["YDI0085", "YIN YIN~", "YIN", "FINANCE", 3000, 0, 0, 360, 0, 0, 0, 0, 0, 333],
+      ["YDI0072B", "NGUYỄN THỊ LIỄU", "NARI", "CAGE", 19000000, 0, 0, 0, 0, 0, 0, 0, 0, 2923077],
+      ["YDI0022", "HỒ THỊ PHƯƠNG THẢO", "SOPHIA", "CAGE", 19000000, 0, 0, 0, 0, 0, 0, 0, 0, 2923077],
+      ["YDI0050", "TRẦN THỊ HOÀNG", "DAISY", "CAGE", 19000000, 0, 0, 0, 0, 0, 0, 0, 0, 2923077],
+      ["YDI0039B", "TRẦN THỊ PHƯỚC BẢO", "PHOEBE", "BOOKING AND SERVICE", 16000000, 1411200, 0, -51192, 18, 0, 0, 29, 0, 0],
+      ["YDI0060", "ĐÀO HỮU BÌNH", "BINH", "司机", 0, 0, 0, -1280016, 0, 0, 0, 0, 0, 0],
+      ["YDI0061", "NGUYỄN ĐỨC PHƯƠNG", "PHUONG", "司机", 0, 0, 0, -716688, 0, 0, 0, 0, 0, 0]
+    ];
   }
 
   function renderSalaryShiftEditor() {
@@ -1854,6 +2227,16 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
   function handleSalaryAction(button) {
     const action = button.getAttribute("data-salary-action");
+
+    if (action === "add-row") {
+      handleSalaryAddRow();
+      return;
+    }
+
+    if (action === "reset-month") {
+      handleSalaryResetMonth();
+      return;
+    }
 
     if (action === "edit") {
       uiState.salaryEditing = true;
