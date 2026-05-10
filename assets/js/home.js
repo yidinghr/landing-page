@@ -1477,8 +1477,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   }
 
   function defaultSalaryTableMonthKey() {
-    const now = new Date();
-    return buildMonthKey(now.getFullYear(), now.getMonth() + 1);
+    return "2026-04";
   }
 
   function getSalaryTableState() {
