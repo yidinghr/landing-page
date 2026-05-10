@@ -693,10 +693,35 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
   renderAll();
   bindEvents();
+  startLiveClockTicker();
 
   i18n.subscribe(function () {
     renderAll();
   });
+
+  function tickLiveClock() {
+    if (uiState.activeTab !== "schedule") {
+      return;
+    }
+    const label = formatClock(new Date());
+    if (chatBadge && chatBadge.textContent !== label) {
+      chatBadge.textContent = label;
+    }
+    document.querySelectorAll('[data-live-clock-value="true"]').forEach(function (node) {
+      if (node.textContent !== label) {
+        node.textContent = label;
+      }
+    });
+  }
+
+  function startLiveClockTicker() {
+    tickLiveClock();
+    const msToNextSecond = 1000 - (Date.now() % 1000);
+    setTimeout(function loop() {
+      tickLiveClock();
+      setTimeout(loop, 1000 - (Date.now() % 1000));
+    }, msToNextSecond);
+  }
 
   function bindEvents() {
     homeMenu.addEventListener("click", function (event) {
@@ -1084,7 +1109,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
         renderChatChip(t("scheduleOnShiftNow"), String(liveSchedule.staff.length)),
         renderChatChip(t("scheduleActiveDepartments"), String(liveSchedule.departments.length)),
         renderChatChip(t("scheduleCurrentDate"), liveSchedule.dateLabel),
-        renderChatChip(t("scheduleCurrentTime"), liveSchedule.timeLabel),
+        renderChatChip(t("scheduleCurrentTime"), liveSchedule.timeLabel, { liveClock: true }),
         "</div>",
         "</section>",
         liveSchedule.staff.length
@@ -2132,11 +2157,12 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     return rounded.toLocaleString("vi-VN") + "h";
   }
 
-  function renderChatChip(label, value) {
+  function renderChatChip(label, value, options) {
+    const liveAttr = options && options.liveClock ? ' data-live-clock-value="true"' : "";
     return [
       '<article class="dashboard-chat-chip">',
       '<span class="dashboard-chat-chip__label">' + escapeHtml(label) + "</span>",
-      '<strong class="dashboard-chat-chip__value">' + escapeHtml(value) + "</strong>",
+      '<strong class="dashboard-chat-chip__value"' + liveAttr + ">" + escapeHtml(value) + "</strong>",
       "</article>"
     ].join("");
   }
@@ -2378,7 +2404,9 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   }
 
   function formatClock(date) {
-    return String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
+    return String(date.getHours()).padStart(2, "0") + ":" +
+      String(date.getMinutes()).padStart(2, "0") + ":" +
+      String(date.getSeconds()).padStart(2, "0");
   }
 
   function formatDateLabel(date) {
