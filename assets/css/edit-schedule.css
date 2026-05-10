@@ -2510,6 +2510,29 @@ body.edit-page {
   opacity: 0.48;
 }
 
+/* Year/Month period selects must always be clickable, even when the schedule is locked */
+.schedule-period-bar,
+.schedule-period-bar__inner,
+.schedule-period-grid,
+.schedule-period-pair,
+.schedule-period-pair__value,
+.schedule-period-pair__value select {
+  pointer-events: auto !important;
+}
+
+.schedule-app--schedule-locked .schedule-period-pair,
+.schedule-app--schedule-locked .schedule-period-pair__value,
+.schedule-app--schedule-locked .schedule-period-pair__value select {
+  opacity: 1 !important;
+  filter: none !important;
+  cursor: pointer !important;
+}
+
+.schedule-period-pair__value select {
+  position: relative;
+  z-index: 2;
+}
+
 /* ── Legend panel: flex layout so calendar section stacks below ──────── */
 .schedule-legend {
   display: flex !important;

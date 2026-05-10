@@ -1967,7 +1967,8 @@
     if (uiState.scheduleLocked) {
       const target = event.target;
       const isTypingField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-      if (!isTypingField || target === dom.selectionInput) {
+      const isPeriodSelect = target === dom.yearSelect || target === dom.monthSelect;
+      if (!isTypingField && !isPeriodSelect || target === dom.selectionInput) {
         if (["Escape", "Tab"].indexOf(key) < 0) {
           event.preventDefault();
         }
