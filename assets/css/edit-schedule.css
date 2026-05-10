@@ -83,6 +83,7 @@
   letter-spacing: 0.1em;
   justify-self: center;
   text-align: center;
+  pointer-events: none;
 }
 
 .schedule-header__tools {
@@ -2531,6 +2532,28 @@ body.edit-page {
 .schedule-period-pair__value select {
   position: relative;
   z-index: 2;
+}
+
+/* Inline editor for meta cells (Vie/Eng/Position/Department/ID) */
+.schedule-meta-edit {
+  width: 100%;
+  height: 100%;
+  min-height: 22px;
+  padding: 0 6px;
+  border: 1px solid rgba(170, 150, 240, 0.7);
+  background: rgba(8, 6, 18, 0.95);
+  color: #fff9e8;
+  font: inherit;
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.schedule-meta-edit:focus {
+  border-color: rgba(200, 180, 255, 0.95);
+  box-shadow: 0 0 0 2px rgba(170, 150, 240, 0.28);
 }
 
 /* ── Legend panel: flex layout so calendar section stacks below ──────── */

@@ -1934,6 +1934,9 @@
     if (event.target.closest("[data-row-handle]")) {
       return;
     }
+    if (event.target.closest("[data-meta-edit]")) {
+      return;
+    }
     const cell = event.target.closest("[data-grid-cell]");
     if (!cell || event.button !== 0) {
       return;
@@ -1943,9 +1946,83 @@
       setSelection(uiState.anchor, point, true);
       return;
     }
+    const column = getColumnInfo(point.colIndex);
+    if (column.type === "meta") {
+      event.preventDefault();
+      uiState.anchor = point;
+      setSelection(point, point, false);
+      beginMetaCellEdit(cell, point, column);
+      return;
+    }
     uiState.isSelecting = true;
     uiState.anchor = point;
     setSelection(point, point, true);
+  }
+
+  function beginMetaCellEdit(cell, point, column) {
+    if (cell.querySelector("[data-meta-edit]")) {
+      const existing = cell.querySelector("[data-meta-edit]");
+      existing.focus();
+      existing.select();
+      return;
+    }
+    const monthState = ensureCurrentMonthState();
+    const row = monthState.rows[point.rowIndex];
+    if (!row) {
+      return;
+    }
+    const currentValue = String(row.employeeSnapshot[column.meta.key] || "");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "schedule-meta-edit";
+    input.value = currentValue;
+    input.setAttribute("data-meta-edit", "true");
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("spellcheck", "false");
+    cell.textContent = "";
+    cell.appendChild(input);
+    requestAnimationFrame(function () {
+      input.focus();
+      input.select();
+    });
+    let committed = false;
+    function commit() {
+      if (committed) { return; }
+      committed = true;
+      const next = input.value;
+      if (next !== currentValue) {
+        row.sourceType = "manual";
+        row.employeeId = "";
+        row.employeeSnapshot[column.meta.key] = next;
+        saveState();
+      }
+      renderAll();
+    }
+    function cancel() {
+      if (committed) { return; }
+      committed = true;
+      renderAll();
+    }
+    input.addEventListener("keydown", function (event) {
+      event.stopPropagation();
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commit();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        cancel();
+      } else if (event.key === "Tab") {
+        event.preventDefault();
+        commit();
+      }
+    });
+    input.addEventListener("blur", commit);
+    input.addEventListener("mousedown", function (event) {
+      event.stopPropagation();
+    });
+    input.addEventListener("click", function (event) {
+      event.stopPropagation();
+    });
   }
 
   function handleCellPointerMove(event) {
