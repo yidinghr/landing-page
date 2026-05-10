@@ -532,6 +532,52 @@ test.describe("Schedule module", () => {
     expect(selectedStyle.boxShadow).not.toBe("none");
   });
 
+  test("header rows stay transparent and final summary columns stay fixed", async ({ page }) => {
+    await page.setViewportSize({ width: 900, height: 720 });
+    await prepareSchedulePage(page, {
+      scheduleState: createScheduleState([
+        createScheduleRow("fixed-summary", {
+          ydiId: "YDI8222",
+          department: "Operation",
+          vieName: "TRAN THI B",
+          engName: "BELLA",
+          position: "Staff"
+        }, { "1": "A", "18": "B6", "30": "C" })
+      ], 2026, 7)
+    });
+
+    const headerStyle = await page.locator("#scheduleFrozenLayer").evaluate((layer) => {
+      const before = getComputedStyle(layer, "::before");
+      const headCell = document.querySelector("#scheduleFrozenTableHead .schedule-table__day-head");
+      const cellStyle = headCell ? getComputedStyle(headCell) : null;
+      return {
+        layerBackground: before.backgroundColor,
+        layerBackdropFilter: before.backdropFilter || before.webkitBackdropFilter || "",
+        cellBackground: cellStyle ? cellStyle.backgroundColor : "",
+        cellBackdropFilter: cellStyle ? (cellStyle.backdropFilter || cellStyle.webkitBackdropFilter || "") : ""
+      };
+    });
+
+    expect(headerStyle.layerBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(headerStyle.layerBackdropFilter).toBe("none");
+    expect(headerStyle.cellBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(headerStyle.cellBackdropFilter).toBe("none");
+
+    const before = await page.locator("#scheduleSummaryTable").boundingBox();
+    const dayBefore = await page.locator("[data-schedule-cell][data-row-index='0'][data-day='18']").boundingBox();
+    await scrollSheet(page, 0, 500);
+    await page.waitForTimeout(50);
+    const after = await page.locator("#scheduleSummaryTable").boundingBox();
+    const dayAfter = await page.locator("[data-schedule-cell][data-row-index='0'][data-day='18']").boundingBox();
+
+    expect(before).not.toBeNull();
+    expect(after).not.toBeNull();
+    expect(dayBefore).not.toBeNull();
+    expect(dayAfter).not.toBeNull();
+    expect(Math.abs(after.x - before.x)).toBeLessThan(2);
+    expect(dayAfter.x).toBeLessThan(dayBefore.x - 100);
+  });
+
   test("copy and paste shift codes across the schedule grid", async ({ page }) => {
     await prepareSchedulePage(page, {
       scheduleState: createScheduleState([

@@ -1987,10 +1987,9 @@ body.edit-page {
   height: calc(var(--schedule-frozen-band-height) + 2px);
   z-index: 0;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(7, 6, 16, 0.24) 0%, rgba(7, 6, 16, 0.08) 100%);
-  backdrop-filter: blur(16px) brightness(0.86) saturate(0.9);
-  -webkit-backdrop-filter: blur(16px) brightness(0.86) saturate(0.9);
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
   border-bottom: 1px solid rgba(130, 112, 214, 0.16);
 }
@@ -2004,6 +2003,30 @@ body.edit-page {
   z-index: 1;
   background: transparent !important;
   min-height: var(--schedule-frozen-band-height);
+}
+
+.schedule-sheet-summary,
+.schedule-frozen-summary {
+  position: sticky !important;
+  right: 0;
+  z-index: 32;
+  width: max-content;
+  min-width: max-content;
+  max-width: max-content;
+  justify-self: start;
+  align-self: start;
+  flex: 0 0 auto;
+  background: transparent !important;
+  isolation: isolate;
+}
+
+.schedule-frozen-summary {
+  z-index: 39;
+}
+
+.schedule-sheet-stage,
+.schedule-frozen-stage {
+  grid-template-columns: max-content max-content !important;
 }
 
 .schedule-sheet-scroll > .schedule-sheet-zoom > .schedule-sheet-stage > .schedule-sheet-main > .schedule-table > thead,
@@ -2052,12 +2075,12 @@ body.edit-page {
 .schedule-legend-table th,
 .schedule-frozen-layer .schedule-table thead th,
 .schedule-frozen-layer .schedule-summary-table thead th {
-  background: rgba(7, 6, 16, 0.18) !important;
+  background: transparent !important;
   color: rgba(255, 248, 232, 0.98) !important;
   text-shadow: 0 0 10px rgba(255, 236, 190, 0.08);
   border-color: rgba(130, 112, 214, 0.14) !important;
-  backdrop-filter: blur(5px) saturate(1.02) !important;
-  -webkit-backdrop-filter: blur(5px) saturate(1.02) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .schedule-table__meta-head,
@@ -2274,6 +2297,10 @@ body.edit-page {
 }
 
 .schedule-grid-cell--under-frozen {
+  visibility: hidden !important;
+}
+
+.schedule-grid-cell--under-fixed-summary {
   visibility: hidden !important;
 }
 

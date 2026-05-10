@@ -2732,22 +2732,42 @@
     const frozenEdge = frozenEdgeSource
       ? Math.round(frozenEdgeSource.getBoundingClientRect().right)
       : Math.round(scrollRect.left);
+    const summaryEdgeSource =
+      document.querySelector("#scheduleSummaryBody td") ||
+      document.querySelector("#scheduleSummaryHead th:not(.schedule-summary-table__blank)") ||
+      document.querySelector("#scheduleFrozenSummaryHead th:not(.schedule-summary-table__blank)");
+    const summaryRect = summaryEdgeSource ? summaryEdgeSource.getBoundingClientRect() : null;
+    const summaryLeft = summaryRect ? Math.round(summaryRect.left) : Math.round(scrollRect.right);
+    const summaryRight = summaryRect ? Math.round(summaryRect.right) : Math.round(scrollRect.right);
     const isShifted = dom.sheetScroll.scrollLeft > 1;
-    const candidates = document.querySelectorAll([
+    const leftCandidates = document.querySelectorAll([
       "#scheduleFrozenTableHead .schedule-table__day-head",
       "#scheduleFrozenTableHead .schedule-table__weekday-head",
       "#scheduleTableBody .schedule-table__cell",
-      "#scheduleSummaryHead th:not(.schedule-summary-table__blank)",
-      "#scheduleFrozenSummaryHead th:not(.schedule-summary-table__blank)",
-      "#scheduleSummaryBody td",
       "#dailySummaryHead th:not(.schedule-daily-table__sticky)",
       "#dailySummaryBody td:not(.schedule-daily-table__sticky)"
     ].join(", "));
 
-    candidates.forEach(function (cell) {
+    leftCandidates.forEach(function (cell) {
       const rect = cell.getBoundingClientRect();
       const isUnderFrozenColumns = isShifted && rect.left < frozenEdge - 1;
       cell.classList.toggle("schedule-grid-cell--under-frozen", isUnderFrozenColumns);
+    });
+
+    const rightCandidates = document.querySelectorAll([
+      "#scheduleFrozenTableHead .schedule-table__day-head",
+      "#scheduleFrozenTableHead .schedule-table__weekday-head",
+      "#scheduleTableBody .schedule-table__cell"
+    ].join(", "));
+
+    rightCandidates.forEach(function (cell) {
+      const rect = cell.getBoundingClientRect();
+      const overlapsFixedSummary =
+        summaryRect &&
+        rect.right > summaryLeft + 1 &&
+        rect.left < summaryRight - 1 &&
+        rect.left < scrollRect.right - 1;
+      cell.classList.toggle("schedule-grid-cell--under-fixed-summary", Boolean(overlapsFixedSummary));
     });
   }
 
