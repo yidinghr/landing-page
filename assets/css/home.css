@@ -1669,51 +1669,41 @@ body[data-dashboard-tab="salary"] .dashboard-chat-body {
   color: #fff9e8;
 }
 
-.salary-board__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.salary-board__btn {
-  height: 30px;
-  padding: 0 12px;
-  border: 1px solid rgba(170, 150, 240, 0.5);
-  border-radius: 6px;
-  background: rgba(130, 112, 214, 0.16);
-  color: #fff9e8;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.salary-board__btn:hover {
-  background: rgba(130, 112, 214, 0.28);
-  border-color: rgba(190, 170, 255, 0.7);
-}
-
-.salary-board__btn--ghost {
-  background: transparent;
-}
-
 .salary-table-scroll {
   width: 100%;
-  overflow-x: auto;
-  overflow-y: visible;
+  max-height: calc(100vh - 220px);
+  overflow-x: scroll;
+  overflow-y: auto;
   border: 1px solid rgba(130, 112, 214, 0.22);
   border-radius: 10px;
   background: rgba(7, 5, 16, 0.18);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(130, 112, 214, 0.5) transparent;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(170, 150, 240, 0.85) rgba(20, 14, 40, 0.4);
+  scrollbar-gutter: stable;
 }
 
 .salary-table-scroll::-webkit-scrollbar {
-  height: 8px;
+  width: 12px;
+  height: 12px;
+}
+
+.salary-table-scroll::-webkit-scrollbar-track {
+  background: rgba(20, 14, 40, 0.4);
+  border-radius: 999px;
 }
 
 .salary-table-scroll::-webkit-scrollbar-thumb {
-  background: rgba(130, 112, 214, 0.55);
+  background: rgba(170, 150, 240, 0.85);
   border-radius: 999px;
+  border: 2px solid rgba(20, 14, 40, 0.4);
+}
+
+.salary-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 180, 255, 1);
+}
+
+.salary-table-scroll::-webkit-scrollbar-corner {
+  background: rgba(20, 14, 40, 0.4);
 }
 
 .salary-table {
