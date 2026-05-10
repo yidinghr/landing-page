@@ -1409,7 +1409,7 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
       '<div class="salary-table-scroll">',
       '<table class="salary-table">',
       "<thead><tr>" + headerCells + "</tr></thead>",
-      '<tbody id="salaryTableBody">' + (bodyRows || ('<tr><td class="salary-table__empty" colspan="' + getSalaryTableColumns().length + '">Chưa có dữ liệu lương cho tháng này. Nhấn "+ Thêm nhân viên" để bắt đầu.</td></tr>')) + "</tbody>",
+      '<tbody id="salaryTableBody">' + (bodyRows || ('<tr><td class="salary-table__empty" colspan="' + getSalaryTableColumns().length + '">Chưa có nhân viên nào trong bảng Ca làm cho tháng ' + escapeHtml(monthKey) + '. Mở "Ca làm" để thêm nhân viên — bảng lương sẽ tự cập nhật.</td></tr>')) + "</tbody>",
       "</table>",
       "</div>",
       "</section>"
@@ -1473,7 +1473,8 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   }
 
   function defaultSalaryTableMonthKey() {
-    return "2026-04";
+    const now = new Date();
+    return buildMonthKey(now.getFullYear(), now.getMonth() + 1);
   }
 
   function getSalaryTableState() {
@@ -1493,53 +1494,55 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
   }
 
   function buildSalaryMonthOptions() {
-    const state = getSalaryTableState();
     const set = {};
-    Object.keys(state.months || {}).forEach(function (k) { set[k] = true; });
     set[uiState.salaryTableMonthKey] = true;
-    set["2026-04"] = true;
     set[defaultSalaryTableMonthKey()] = true;
+    const scheduleState = getScheduleState();
+    Object.keys((scheduleState && scheduleState.months) || {}).forEach(function (k) { set[k] = true; });
+    const salaryState = getSalaryTableState();
+    Object.keys(salaryState.months || {}).forEach(function (k) { set[k] = true; });
     return Object.keys(set).sort().reverse().map(function (key) {
       return { value: key, label: key };
     });
   }
 
-  function ensureMonthSeeded(monthKey) {
-    const state = getSalaryTableState();
-    if (state.months[monthKey]) { return state; }
-    if (monthKey === "2026-04") {
-      state.months[monthKey] = { rows: SEED_SALARY_APRIL_2026().map(toSalaryRow) };
-      saveSalaryTableState(state);
-    } else {
-      state.months[monthKey] = { rows: [] };
-      saveSalaryTableState(state);
-    }
-    return state;
+  function getSalaryEditableFields(salaryMonth, rowKey) {
+    const month = salaryMonth && salaryMonth.byRowKey ? salaryMonth.byRowKey : {};
+    return month[rowKey] || {};
   }
 
   function getSalaryTableRows(monthKey) {
-    const state = ensureMonthSeeded(monthKey);
-    return (state.months[monthKey] && state.months[monthKey].rows) || [];
+    const account = authStore.getCurrentAccount() || currentAccount;
+    const monthState = getVisibleMonthState(getScheduleState(), monthKey, account);
+    const scheduleRows = (monthState && monthState.rows) || [];
+    const salaryState = getSalaryTableState();
+    const salaryMonth = salaryState.months && salaryState.months[monthKey];
+    return scheduleRows.map(function (row) {
+      const snapshot = (row && row.employeeSnapshot) || {};
+      const rowKey = String(row.id || row.employeeId || snapshot.ydiId || "");
+      const edits = getSalaryEditableFields(salaryMonth, rowKey);
+      return {
+        uid: rowKey,
+        ydiId: snapshot.ydiId || "",
+        vieName: snapshot.vieName || "",
+        engName: snapshot.engName || "",
+        department: snapshot.department || "",
+        monthly: edits.monthly != null ? edits.monthly : 0,
+        insurance: edits.insurance != null ? edits.insurance : 0,
+        transfer: edits.transfer != null ? edits.transfer : 0,
+        meal: edits.meal != null ? edits.meal : 0,
+        deductDays: edits.deductDays != null ? edits.deductDays : 0,
+        holidayDays: edits.holidayDays != null ? edits.holidayDays : 0,
+        overtimeHours: edits.overtimeHours != null ? edits.overtimeHours : 0,
+        nightHours: edits.nightHours != null ? edits.nightHours : 0,
+        otherDeduct: edits.otherDeduct != null ? edits.otherDeduct : 0,
+        otherBonus: edits.otherBonus != null ? edits.otherBonus : 0
+      };
+    });
   }
 
-  function toSalaryRow(seedArr) {
-    return {
-      uid: seedArr[0] + "::" + seedArr[2],
-      ydiId: seedArr[0],
-      vieName: seedArr[1],
-      engName: seedArr[2],
-      department: seedArr[3],
-      monthly: seedArr[4],
-      insurance: seedArr[5],
-      transfer: seedArr[6],
-      meal: seedArr[7],
-      deductDays: seedArr[8],
-      holidayDays: seedArr[9],
-      overtimeHours: seedArr[10],
-      nightHours: seedArr[11],
-      otherDeduct: seedArr[12],
-      otherBonus: seedArr[13]
-    };
+  function findSalaryRow(monthKey, rowKey) {
+    return getSalaryTableRows(monthKey).find(function (r) { return r.uid === rowKey; }) || null;
   }
 
   function computeSalaryRow(row) {
@@ -1593,13 +1596,15 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     const uid = input.getAttribute("data-salary-uid");
     const field = input.getAttribute("data-salary-field");
     if (!uid || !field) { return; }
-    const monthKey = uiState.salaryTableMonthKey;
-    const state = ensureMonthSeeded(monthKey);
-    const rows = state.months[monthKey].rows;
-    const row = rows.find(function (r) { return r.uid === uid; });
-    if (!row) { return; }
     const col = getSalaryTableColumns().find(function (c) { return c.key === field; });
-    row[field] = col && col.numeric ? parseSalaryNumber(input.value) : input.value;
+    if (!col || col.kind !== "edit") { return; }
+    const monthKey = uiState.salaryTableMonthKey;
+    const state = getSalaryTableState();
+    if (!state.months[monthKey]) { state.months[monthKey] = { byRowKey: {} }; }
+    if (!state.months[monthKey].byRowKey) { state.months[monthKey].byRowKey = {}; }
+    const bucket = state.months[monthKey].byRowKey;
+    if (!bucket[uid]) { bucket[uid] = {}; }
+    bucket[uid][field] = col.numeric ? parseSalaryNumber(input.value) : input.value;
     saveSalaryTableState(state);
     refreshSalaryRow(uid);
     refreshSalaryTotals();
@@ -1648,122 +1653,6 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     renderChatPanel();
   }
 
-  function handleSalaryAddRow() {
-    const monthKey = uiState.salaryTableMonthKey;
-    const state = ensureMonthSeeded(monthKey);
-    const employees = (getEmployeesState().employees || []);
-    const existingKeys = {};
-    state.months[monthKey].rows.forEach(function (r) { existingKeys[r.uid] = true; });
-    const candidate = employees.find(function (e) {
-      const basic = e.basic || {};
-      const uid = (basic.ydiId || e.id) + "::" + (basic.engName || basic.vieName || "");
-      return !existingKeys[uid];
-    });
-    let row;
-    if (candidate) {
-      const basic = candidate.basic || {};
-      const work = candidate.work || {};
-      row = {
-        uid: (basic.ydiId || candidate.id) + "::" + (basic.engName || basic.vieName || ""),
-        ydiId: basic.ydiId || "",
-        vieName: basic.vieName || "",
-        engName: basic.engName || "",
-        department: work.departmentName || "",
-        monthly: 0, insurance: 0, transfer: 0, meal: 0,
-        deductDays: 0, holidayDays: 0, overtimeHours: 0, nightHours: 0,
-        otherDeduct: 0, otherBonus: 0
-      };
-    } else {
-      const stamp = Date.now().toString(36);
-      row = {
-        uid: "manual-" + stamp,
-        ydiId: "", vieName: "", engName: "", department: "",
-        monthly: 0, insurance: 0, transfer: 0, meal: 0,
-        deductDays: 0, holidayDays: 0, overtimeHours: 0, nightHours: 0,
-        otherDeduct: 0, otherBonus: 0
-      };
-    }
-    state.months[monthKey].rows.push(row);
-    saveSalaryTableState(state);
-    renderChatPanel();
-  }
-
-  function handleSalaryResetMonth() {
-    const monthKey = uiState.salaryTableMonthKey;
-    if (monthKey !== "2026-04") {
-      return;
-    }
-    const state = getSalaryTableState();
-    delete state.months[monthKey];
-    saveSalaryTableState(state);
-    renderChatPanel();
-  }
-
-  function SEED_SALARY_APRIL_2026() {
-    return [
-      ["YDI0009", "ZHANG PENG", "PENG", "CAGE", 3000, 0, 0, 360, 0, 1, 0, 74, 0, 135],
-      ["YDI0062", "SUN YU", "RAIN", "CAGE", 3500, 0, 0, 360, 0, 2, 11, 97, 0, 186],
-      ["YDI0062B", "COCO", "COCO", "CAGE", 2500, 0, 0, 360, 0, 2, 12, 83, 0, 197],
-      ["YDI0016", "ĐOÀN THỊ TÍNH", "FLORA", "CAGE", 19000000, 1411200, 0, 0, 0, 2, 7, 42, 0, 1461538],
-      ["YDI0021", "NGUYỄN NHƯ QUỲNH", "QUINN", "CAGE", 19000000, 1411200, 0, 0, 0, 2, 11, 60, 0, 1461538],
-      ["YDI0047", "TRƯƠNG CÔNG TÍN", "TONI", "CAGE", 21000000, 1411200, 0, -153576, 0, 2, 6, 100, 0, 0],
-      ["YDI0042", "ĐẶNG THỊ THU HƯƠNG", "AUMIE", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 5, 74, 0, 0],
-      ["YDI0044", "LÊ THỊ ANH THI", "DION", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 7, 92, 0, 0],
-      ["YDI0013", "BÙI THU HƯƠNG", "HARLEY", "CAGE", 21000000, 1411200, 0, 0, 0, 1, 0, 67, 0, 0],
-      ["YDI0020", "NGUYỄN VĨNH KIM NGÂN", "SUZY", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 0, 74, 0, 0],
-      ["YDI0034", "HỒ THỊ HỒNG NHẬT", "SUNNY", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 7, 57, 0, 0],
-      ["YDI0038", "NGUYỄN THỊ HỒNG THÚY", "MEI", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 7, 55, 0, 0],
-      ["YDI0051", "NGUYỄN ĐOÀN THẢO NGUYÊN", "MAE", "CAGE", 21000000, 1411200, 0, 0, 0, 1, 11, 78, 0, 0],
-      ["YDI0015", "LƯƠNG Ý NHI", "SCARLETT", "CAGE", 21000000, 1411200, 0, 0, 0, 2, 1, 62, 0, 0],
-      ["YDI0001", "HAO GE", "JIMSTER", "OPERATION", 7000, 0, 0, 360, 0, 0, 0, 0, 0, 0],
-      ["YDI0007", "SĂM MỸ DUNG", "SAMMY", "OPERATION", 33000000, 0, -10150000, 0, 0, 2, 26, 95, 0, 0],
-      ["YDI0008", "DƯƠNG HUỲNH QUYÊN QUYÊN", "QUEENIE", "OPERATION", 25000000, 1411200, 0, -115344, 0, 1, 19, 90, 0, 0],
-      ["YDI0056", "TRANG DỊ TRIẾT", "WILSON", "OPERATION", 23000000, 1411200, 0, 0, 0, 2, 25, 66, 0, 0],
-      ["YDI0011", "PHÙNG THỊ NGỌC HIỀN", "JOY", "OPERATION", 20000000, 1411200, 0, 0, 0, 2, 6, 82, 0, 0],
-      ["YDI0014", "VÕ THỊ NHƯ PHƯỚC", "MIA", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 5, 61, 0, 0],
-      ["YDI0018", "LÊ QUANG HUY", "HENRY", "OPERATION", 20000000, 1411200, 0, -665496, 0, 1, 4, 88, 0, 0],
-      ["YDI0019", "NGUYỄN THỊ QUÝ HẬU", "HANNI", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 6, 99, 0, 0],
-      ["YDI0033", "NGUYỄN THỊ HOÀI THƯƠNG", "SAM", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 3, 71, 0, 0],
-      ["YDI0036", "LÊ VIỆT HÙNG", "LEWIN", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 10, 89, 0, 0],
-      ["YDI0037", "DƯƠNG THỊ MINH THƯ", "TYRA", "OPERATION", 20000000, 1411200, 0, -51192, 0, 2, 9, 37, 0, 0],
-      ["YDI0043", "BÙI TRƯƠNG THANH THẢO", "LIMMI", "OPERATION", 20000000, 1411200, 0, -51192, 0, 2, 10, 50, 0, 0],
-      ["YDI0046", "ĐOÀN NHẬT LINH", "KAYLIN", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 6, 93, 0, 0],
-      ["YDI0049", "NGUYỄN THỊ NGỌC ÁNH", "ALANA", "OPERATION", 20000000, 1411200, 0, 0, 0, 1, 6, 59, 0, 0],
-      ["YDI0055", "NGÔ THỊ HỒNG NHÂN", "ALICE", "OPERATION", 20000000, 1411200, 0, 0, 0, 2, 5, 55, 0, 0],
-      ["YDI0058", "NGUYỄN TRUNG", "TRUMP", "OPERATION", 20000000, 1411200, 0, 0, 0, 2, 3, 42, 0, 0],
-      ["YDI0076", "NGUYỄN LÊ XUÂN ANH", "TIFFANY", "OPERATION", 18000000, 1411200, 0, 0, 0, 2, 3, 44, 0, 0],
-      ["YDI0080", "NGUYỄN LÊ PHƯƠNG TRINH", "JEII", "OPERATION", 18000000, 1411200, 0, 0, 0, 1, 7, 47, 0, 0],
-      ["YDI0083", "BÙI NGUYỄN BẢO KHÁNH", "MISTY", "OPERATION", 18000000, 1411200, 0, 0, 8, 2, 0, 25, 0, 0],
-      ["YDI0082", "VO THI THU HA", "TRACY", "OPERATION", 18000000, 1411200, 0, -243216, 12, 2, 0, 37, 0, 0],
-      ["YDI0066", "NAN GE", "JONNY", "BOOKING AND SERVICE", 2000, 0, 0, 360, 0, 0, 0, 0, 0, 0],
-      ["YDI0003", "NGUYỄN THỊ KIM TRANG", "CANDY", "BOOKING AND SERVICE", 50000000, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      ["YDI0028", "MAI THỊ THÊU", "JUDY", "BOOKING AND SERVICE", 25000000, 1411200, 0, 0, 0, 2, 49.5, 41, 0, 0],
-      ["YDI0039", "TỐNG NỮ THÙY LINH", "LIN", "BOOKING AND SERVICE", 22000000, 1411200, 0, 0, 0, 1, 16, 62, 0, 0],
-      ["YDI0059", "NGUYỄN THỊ HIỀN", "HANNI-BS", "BOOKING AND SERVICE", 22000000, 1411200, 0, -102384, 0, 1, 15, 67, 0, 0],
-      ["YDI0070", "NGUYỄN THÁI NHẬT ANH", "LUNA", "BOOKING AND SERVICE", 22000000, 1411200, 0, -281664, 0, 1, 14, 47, 0, 592593],
-      ["YDI0071", "LÊ THỊ HỒNG HẠNH", "TINY", "BOOKING AND SERVICE", 20000000, 1411200, 0, -102384, 0, 1, 4, 88, 0, 592593],
-      ["YDI0026", "TRẦN NGUYỄN THANH DUNG", "LINA", "BOOKING AND SERVICE", 25000000, 1411200, 0, 0, 0, 1, 0, 5, 0, 0],
-      ["YDI0040", "NGUYỄN PHÙNG NHƯ QUỲNH", "BAOBAO", "BOOKING AND SERVICE", 20000000, 1411200, 0, 0, 0, 1, 0, 50, 0, 0],
-      ["YDI0029", "HOÀNG NGỌC HẰNG", "JENNIE", "BOOKING AND SERVICE", 20000000, 1411200, 0, 0, 0, 1, 4.5, 4, 0, 0],
-      ["YDI0045", "TRẦN THỊ TRÀ GIANG", "JULIE", "BOOKING AND SERVICE", 20000000, 1411200, 0, -204984, 0, 1, 7.5, 39, 0, 0],
-      ["YDI0073", "TRẦN THỊ MỸ TÂM", "CHOCOPIE", "BOOKING AND SERVICE", 16000000, 1411200, 0, 0, 0, 1, 4.5, 77, 0, 1185186],
-      ["YDI0078", "MAI THỊ THANH NGA", "TANA", "BOOKING AND SERVICE", 16000000, 1411200, 0, 0, 0, 1, 0, 36, 0, 2368212],
-      ["YDI0025", "TRẦN THỊ LIÊN", "ALICE-BS", "BOOKING AND SERVICE", 20000000, 1411200, 0, 0, 0, 1, 10, 40, 0, 0],
-      ["YDI0030", "THÁI THỊ THU HƯƠNG", "ROSE", "BOOKING AND SERVICE", 20000000, 1411200, 0, 0, 0, 1, 11, 49, 0, 0],
-      ["YDI0069", "NGUYỄN THỊ NGỌC ANH", "TINA", "BOOKING AND SERVICE", 16000000, 1411200, 0, -204768, 0, 1, 18, 33, 0, 1185186],
-      ["YDI0006", "NGUYỄN NGỌC ĐĂNG", "MICHAEL", "HR", 40000000, 0, -10150000, 9000000, 0, 0, 0, 0, 0, 0],
-      ["YDI0072", "HỨA PHƯƠNG THẢO", "HANNAH", "HR", 18000000, 1411200, 0, 0, 0, 0, 0, 0, 0, 0],
-      ["YDI0004", "KATE AO", "KK", "FINANCE", 5000, 0, 0, 360, 0, 0, 0, 0, 0, 0],
-      ["YDI0084", "TAO GE", "TAO", "FINANCE", 3000, 0, 0, 360, 0, 0, 0, 0, 0, 222],
-      ["YDI0085", "YIN YIN~", "YIN", "FINANCE", 3000, 0, 0, 360, 0, 0, 0, 0, 0, 333],
-      ["YDI0072B", "NGUYỄN THỊ LIỄU", "NARI", "CAGE", 19000000, 0, 0, 0, 0, 0, 0, 0, 0, 2923077],
-      ["YDI0022", "HỒ THỊ PHƯƠNG THẢO", "SOPHIA", "CAGE", 19000000, 0, 0, 0, 0, 0, 0, 0, 0, 2923077],
-      ["YDI0050", "TRẦN THỊ HOÀNG", "DAISY", "CAGE", 19000000, 0, 0, 0, 0, 0, 0, 0, 0, 2923077],
-      ["YDI0039B", "TRẦN THỊ PHƯỚC BẢO", "PHOEBE", "BOOKING AND SERVICE", 16000000, 1411200, 0, -51192, 18, 0, 0, 29, 0, 0],
-      ["YDI0060", "ĐÀO HỮU BÌNH", "BINH", "司机", 0, 0, 0, -1280016, 0, 0, 0, 0, 0, 0],
-      ["YDI0061", "NGUYỄN ĐỨC PHƯƠNG", "PHUONG", "司机", 0, 0, 0, -716688, 0, 0, 0, 0, 0, 0]
-    ];
-  }
 
   function renderSalaryShiftEditor() {
     const rows = uiState.salaryShiftDraft.length ? uiState.salaryShiftDraft : cloneSalaryShiftDefinitions(getSalaryShiftDefinitions());
@@ -2222,16 +2111,6 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
   function handleSalaryAction(button) {
     const action = button.getAttribute("data-salary-action");
-
-    if (action === "add-row") {
-      handleSalaryAddRow();
-      return;
-    }
-
-    if (action === "reset-month") {
-      handleSalaryResetMonth();
-      return;
-    }
 
     if (action === "edit") {
       uiState.salaryEditing = true;
