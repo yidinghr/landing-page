@@ -164,13 +164,19 @@
 </table>
 </div>
 <div class="schedule-legend__head schedule-legend__head--section">
-<span class="schedule-legend__title">Bảng lịch</span>
+<span class="schedule-legend__title">Cài đặt ngày lễ</span>
 <button id="scheduleCalendarToggle" type="button" class="schedule-legend__list-toggle" aria-expanded="false" aria-label="Toggle calendar">▼</button>
 </div>
 <div id="scheduleCalendarContent" class="schedule-legend__calendar" hidden>
 <div class="schedule-cal__bar">
+<span class="schedule-cal__select-wrap">
 <select id="scheduleCalYear" class="schedule-cal__select" aria-label="Year"></select>
+<span class="schedule-cal__select-arrow" aria-hidden="true">▾</span>
+</span>
+<span class="schedule-cal__select-wrap">
 <select id="scheduleCalMonth" class="schedule-cal__select" aria-label="Month"></select>
+<span class="schedule-cal__select-arrow" aria-hidden="true">▾</span>
+</span>
 <button id="scheduleCalSave" type="button" class="schedule-cal__save">Save</button>
 </div>
 <div id="scheduleCalGrid" class="schedule-cal__grid"></div>

@@ -171,7 +171,7 @@
     legendCodesEditable: false,
     legendListOpen: false,
     scheduleLocked: true,
-    exportReady: false,
+    exportReady: true,
     hasSavedSchedule: true,
     lockedScrollY: null,
     stickyMetricsObserver: null,
