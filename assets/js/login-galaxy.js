@@ -460,18 +460,41 @@
 
   function resetMeteors() {
     meteors = [];
-    nextMeteorAt = useBrightGalaxy ? performance.now() + randomBetween(1000, 5000, Math.random) : 0;
+    nextMeteorAt = isSchedulePage
+      ? performance.now() + randomBetween(1500, 3500, Math.random)
+      : (useBrightGalaxy ? performance.now() + randomBetween(1000, 5000, Math.random) : 0);
     lastMeteorFrameAt = 0;
   }
 
   function queueNextMeteor(timestamp, quickFollow) {
-    const delay = quickFollow
-      ? randomBetween(340, 920, Math.random)
-      : randomBetween(useBrightGalaxy ? 1000 : 7000, useBrightGalaxy ? 5000 : 16000, Math.random);
+    let delay;
+    if (isSchedulePage) {
+      delay = randomBetween(9000, 11000, Math.random);
+    } else if (quickFollow) {
+      delay = randomBetween(340, 920, Math.random);
+    } else {
+      delay = randomBetween(useBrightGalaxy ? 1000 : 7000, useBrightGalaxy ? 5000 : 16000, Math.random);
+    }
     nextMeteorAt = timestamp + delay;
   }
 
   function spawnMeteor() {
+    if (isSchedulePage) {
+      const angle = randomBetween(1.05, 1.32, Math.random);
+      const speed = randomBetween(140, 200, Math.random);
+      meteors.push({
+        x: randomBetween(width * 0.12, width * 0.78, Math.random),
+        y: randomBetween(height * -0.18, height * -0.04, Math.random),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        length: randomBetween(360, 460, Math.random),
+        radius: randomBetween(3.4, 4.6, Math.random),
+        alpha: randomBetween(0.92, 1, Math.random),
+        life: 0,
+        maxLife: randomBetween(4.2, 5.4, Math.random)
+      });
+      return;
+    }
     const angle = randomBetween(0.58, 0.82, Math.random);
     const speed = randomBetween(useBrightGalaxy ? 620 : 520, useBrightGalaxy ? 920 : 760, Math.random);
     const startFromTop = Math.random() < 0.72;
@@ -490,6 +513,12 @@
   }
 
   function spawnMeteorBurst() {
+    if (isSchedulePage) {
+      if (!meteors.length) {
+        spawnMeteor();
+      }
+      return;
+    }
     const count = useBrightGalaxy
       ? Math.floor(randomBetween(1, 4, Math.random))
       : 1;
@@ -506,10 +535,10 @@
       queueNextMeteor(timestamp, false);
     }
 
-    const maxMeteors = useBrightGalaxy ? 3 : 2;
+    const maxMeteors = isSchedulePage ? 1 : (useBrightGalaxy ? 3 : 2);
     if (timestamp >= nextMeteorAt && meteors.length < maxMeteors) {
       spawnMeteorBurst();
-      queueNextMeteor(timestamp, !useBrightGalaxy && meteors.length < maxMeteors && Math.random() < 0.32);
+      queueNextMeteor(timestamp, !isSchedulePage && !useBrightGalaxy && meteors.length < maxMeteors && Math.random() < 0.32);
     }
 
     const delta = lastMeteorFrameAt ? Math.min(0.05, (timestamp - lastMeteorFrameAt) / 1000) : 0;

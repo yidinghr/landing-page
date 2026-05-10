@@ -2485,12 +2485,33 @@
     showFeedback(i18n.t("schedule.feedback.undoDone"), "success");
   }
 
-  function adjustZoom(delta) {
-    state.zoomLevel = sanitizeZoom(state.zoomLevel + delta);
+  let pendingZoomDelta = 0;
+  let pendingZoomFrame = 0;
+
+  function flushPendingZoom() {
+    pendingZoomFrame = 0;
+    if (pendingZoomDelta === 0) {
+      return;
+    }
+    const delta = pendingZoomDelta;
+    pendingZoomDelta = 0;
+    const next = sanitizeZoom(state.zoomLevel + delta);
+    if (next === state.zoomLevel) {
+      return;
+    }
+    state.zoomLevel = next;
     saveState();
     renderZoom();
     updateStickyMetrics();
     updateSheetOverflowState();
+  }
+
+  function adjustZoom(delta) {
+    pendingZoomDelta += delta;
+    if (pendingZoomFrame) {
+      return;
+    }
+    pendingZoomFrame = requestAnimationFrame(flushPendingZoom);
   }
 
   function renderZoom() {
