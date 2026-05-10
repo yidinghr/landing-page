@@ -699,11 +699,14 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
     renderAll();
   });
 
+  let lastLiveScheduleMinute = -1;
+
   function tickLiveClock() {
     if (uiState.activeTab !== "schedule") {
       return;
     }
-    const label = formatClock(new Date());
+    const now = new Date();
+    const label = formatClock(now);
     if (chatBadge && chatBadge.textContent !== label) {
       chatBadge.textContent = label;
     }
@@ -712,6 +715,11 @@ import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
         node.textContent = label;
       }
     });
+    const currentMinuteKey = now.getFullYear() * 1e8 + (now.getMonth() + 1) * 1e6 + now.getDate() * 1e4 + now.getHours() * 100 + now.getMinutes();
+    if (currentMinuteKey !== lastLiveScheduleMinute) {
+      lastLiveScheduleMinute = currentMinuteKey;
+      renderChatPanel();
+    }
   }
 
   function startLiveClockTicker() {
